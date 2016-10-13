@@ -1,0 +1,59 @@
+#include "camerawidget.h"
+
+CameraWidget::CameraWidget(QWidget *parent) : QWidget(parent)
+{
+    // create image widget
+
+    label = new QLabel;
+    label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+
+    // set layout
+
+    QGridLayout *layout = new QGridLayout;
+    layout->addWidget(label, 0, 0);
+    setLayout(layout);
+}
+
+CameraWidget::~CameraWidget(void)
+{
+
+}
+
+void CameraWidget::setSize(int W, int H)
+{
+    SizeW = W;
+    SizeH = H;
+}
+
+QSize CameraWidget::sizeHint() const
+{
+    return QSize(SizeW, SizeH);
+}
+
+void CameraWidget::setImage(const cv::Mat& cvimage)
+{
+    QImage img(cvimage.cols, cvimage.rows, QImage::Format_RGB32);
+
+    int cvLineStart = 0;
+
+    for (int y = 0; y < cvimage.rows; y++)
+    {
+        int cvIndex = cvLineStart;
+
+        uchar *ptr = cvimage.data;
+
+        for (int x = 0; x < cvimage.cols; x++)
+        {
+            unsigned char red = ptr[cvIndex + 2];
+            unsigned char grn = ptr[cvIndex + 1];
+            unsigned char blu = ptr[cvIndex + 0];
+
+            img.setPixel(x, y, qRgb(red, grn, blu));
+            cvIndex += 3;
+        }
+
+        cvLineStart += cvimage.step;
+    }
+
+    label->setPixmap(QPixmap::fromImage(img));
+}
