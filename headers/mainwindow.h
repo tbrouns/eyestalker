@@ -145,6 +145,7 @@ private:
     int cameraSubSamplingFactor;
     int camImageHght;
     int camImageWdth;
+    int cameraFrameRateDesired;
     int cameraPixelClock;
     int editDataIndex;
     int editImageIndex;
@@ -213,6 +214,7 @@ private:
     QSlider *FlashStandbySlider;
     QSlider *GlintRadiusSlider;
     QSlider *ReviewImageSlider;
+    QSpinBox *CameraFrameRateDesiredSpinBox;
     QSpinBox *TrialIndexSpinBox;
     QString editDataDirectory;
     QString editSubjectName;

@@ -23,6 +23,7 @@ void MainWindow::loadSettings(QString fileName)
     cameraAOIFractionWdth = settings.value("CamAOIWdthFraction", cameraAOIFractionWdth).toDouble();
     cameraAOIFractionXPos = settings.value("CamAOIXPosFraction", cameraAOIFractionXPos).toDouble();
     cameraAOIFractionYPos = settings.value("CamAOIYPosFraction", cameraAOIFractionYPos).toDouble();
+    cameraFrameRateDesired = settings.value("CameraFrameRateDesired", cameraFrameRateDesired).toInt();
     cameraPixelClock = settings.value("CameraPixelClock", cameraPixelClock).toInt();
     cameraSubSamplingFactor = settings.value("SubSamplingFactor", 1).toInt();
     dataFilename = settings.value("DataFilename", "experiment_data").toString().toStdString();
@@ -87,6 +88,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CamAOIWdthFraction", cameraAOIFractionWdth);
     settings.setValue("CamAOIXPosFraction", cameraAOIFractionXPos);
     settings.setValue("CamAOIYPosFraction", cameraAOIFractionYPos);
+    settings.setValue("CameraFrameRateDesired", cameraFrameRateDesired);
     settings.setValue("CameraPixelClock", cameraPixelClock);
     settings.setValue("CannyBlurLevel", mEyePropertiesParameters.cannyBlurLevel);
     settings.setValue("CannyKernelSize", mEyePropertiesParameters.cannyKernelSize);
@@ -365,15 +367,16 @@ void MainWindow::setEllipseFitErrorMaximum(double value)
 
 void MainWindow::setCameraPixelClock(int value)
 {
-    mUEyeOpencvCam.setPixelClock(value);
-    CameraPixelClockLabel->setText(QString::number(value));
+    cameraPixelClock = value;
+    mUEyeOpencvCam.setPixelClock(cameraPixelClock);
+    CameraPixelClockLabel->setText(QString::number(cameraPixelClock));
 
     // Set new frame rate
 
     std::vector<double> frameRateRange = mUEyeOpencvCam.getFrameRateRange();
     CameraFrameRateSlider->setDoubleRange(frameRateRange[0], frameRateRange[1]);
     CameraFrameRateSlider->setDoubleValue(frameRateRange[1]);
-    setCameraFrameRate(frameRateRange[1]);
+    setCameraFrameRate(frameRateRange[1]); // set frame-rate to maximum
 }
 
 void MainWindow::setCameraFrameRate(double value)

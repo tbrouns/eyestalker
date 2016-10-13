@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     cameraAOIHghtStepSize = 2;
     cameraAOIWdthMin = 32;
     cameraAOIWdthStepSize = 4;
+    cameraFrameRateDesired = 250;
     cameraPixelClock = 24;
     cameraSubSamplingFactor = 2;
     camImageHght = 200;
@@ -394,6 +395,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraFrameRateLabel = new QLabel;
     CameraFrameRateLabel->setText(QString::number(0.0, 'f', 1));
 
+    QLabel *CameraFrameRateDesiredTextBox = new QLabel;
+    CameraFrameRateDesiredTextBox->setText("<b>Desired frame-rate (Hz): </b>");
+
+    CameraFrameRateDesiredSpinBox = new QSpinBox;
+    CameraFrameRateDesiredSpinBox->setRange(0, 500);
+    CameraFrameRateDesiredSpinBox->setValue(cameraFrameRateDesired);
+    CameraFrameRateDesiredSpinBox->setAlignment(Qt::AlignRight);
+
     // Exposure
 
     QLabel *CameraExposureTextBox = new QLabel;
@@ -486,23 +495,31 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraParametersLayout->addWidget(CameraFrameRateTextBox, 1, 0);
     CameraParametersLayout->addWidget(CameraFrameRateSlider, 1, 1);
     CameraParametersLayout->addWidget(CameraFrameRateLabel, 1, 2);
-    CameraParametersLayout->addWidget(CameraExposureTextBox, 2, 0);
-    CameraParametersLayout->addWidget(CameraExposureSlider, 2, 1);
-    CameraParametersLayout->addWidget(CameraExposureLabel, 2, 2);
-    CameraParametersLayout->addWidget(CameraBlackLevelOffsetTextBox, 3, 0);
-    CameraParametersLayout->addWidget(CameraBlackLevelOffsetSlider, 3, 1);
-    CameraParametersLayout->addWidget(CameraBlackLevelOffsetLabel, 3, 2);
+
+    QHBoxLayout *CameraFrameRateDesiredLayout = new QHBoxLayout;
+    CameraFrameRateDesiredLayout->addWidget(CameraFrameRateDesiredTextBox);
+    CameraFrameRateDesiredLayout->addWidget(CameraFrameRateDesiredSpinBox);
+    CameraFrameRateDesiredLayout->addStretch();
+
+    CameraParametersLayout->addLayout(CameraFrameRateDesiredLayout, 2, 1);
+
+    CameraParametersLayout->addWidget(CameraExposureTextBox, 3, 0);
+    CameraParametersLayout->addWidget(CameraExposureSlider, 3, 1);
+    CameraParametersLayout->addWidget(CameraExposureLabel, 3, 2);
+    CameraParametersLayout->addWidget(CameraBlackLevelOffsetTextBox, 4, 0);
+    CameraParametersLayout->addWidget(CameraBlackLevelOffsetSlider, 4, 1);
+    CameraParametersLayout->addWidget(CameraBlackLevelOffsetLabel, 4, 2);
 
     QHBoxLayout *CameraBlackLevelModeLayout = new QHBoxLayout;
     CameraBlackLevelModeLayout->addWidget(CameraBlackLevelModeTextBox);
     CameraBlackLevelModeLayout->addWidget(CameraBlackLevelModeCheckBox);
     CameraBlackLevelModeLayout->addStretch();
 
-    CameraParametersLayout->addLayout(CameraBlackLevelModeLayout, 4, 1);
+    CameraParametersLayout->addLayout(CameraBlackLevelModeLayout, 5, 1);
 
-    CameraParametersLayout->addWidget(CameraHardwareGainTextBox, 5, 0);
-    CameraParametersLayout->addWidget(CameraHardwareGainSlider, 5, 1);
-    CameraParametersLayout->addWidget(CameraHardwareGainLabel, 5, 2);
+    CameraParametersLayout->addWidget(CameraHardwareGainTextBox, 6, 0);
+    CameraParametersLayout->addWidget(CameraHardwareGainSlider, 6, 1);
+    CameraParametersLayout->addWidget(CameraHardwareGainLabel, 6, 2);
 
     QHBoxLayout *CameraHardwareGainOptionsLayout = new QHBoxLayout;
     CameraHardwareGainOptionsLayout->addWidget(CameraHardwareGainAutoTextBox);
@@ -511,7 +528,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraHardwareGainOptionsLayout->addWidget(CameraHardwareGainBoostCheckBox);
     CameraHardwareGainOptionsLayout->addStretch();
 
-    CameraParametersLayout->addLayout(CameraHardwareGainOptionsLayout, 6, 1);
+    CameraParametersLayout->addLayout(CameraHardwareGainOptionsLayout, 7, 1);
 
     //    CameraParametersLayout->addWidget(CameraSubSamplingTextBox, 7, 0);
     //    CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 7, 1);
@@ -1279,7 +1296,7 @@ void MainWindow::pupilTracking()
         int imgWdth = imageOriginal.cols;
         int imgHght = imageOriginal.rows;
 
-        if (imgHght < (eyeAOIYPosTemp + eyeAOIHghtTemp) || imgWdth < (eyeAOIXPosTemp + eyeAOIWdthTemp)) // From most to least likely
+        if (imgHght < (eyeAOIYPosTemp + eyeAOIHghtTemp) || imgWdth < (eyeAOIXPosTemp + eyeAOIWdthTemp))
         {
             continue;
         }
@@ -1484,6 +1501,13 @@ void MainWindow::updateCameraImage()
                     CameraHardwareGainSlider->setValue(hardwareGain);
                     CameraHardwareGainLabel->setText(QString::number(hardwareGain));
                 }
+
+                // increase pixel clock if desired frame-rate has not been reached
+                if ((cameraPixelClock =! CameraPixelClockSlider->maximum()) && (CameraFrameRateDesiredSpinBox->value() < cameraFrameRate))
+                {
+                    CameraPixelClockSlider->setValue(cameraPixelClock++);
+                }
+
             }
             else if (!Parameters::CAMERA_RUNNING)
             {
