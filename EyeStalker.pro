@@ -13,12 +13,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
-TARGET = EyeTrackingTB
+TARGET = EyeStalker
 TEMPLATE = app
 
 QT       += core gui
@@ -69,19 +68,20 @@ SOURCES += main.cpp\
     source/sliderdouble.cpp \
     source/startupwindow.cpp \
     source/ueyeopencv.cpp \
-    source/confirmationwindow.cpp
+    source/confirmationwindow.cpp \
 
 HEADERS  += \
-    source/constants.h \
-    source/drawfunctions.h \
-    source/eyetracking.h \
-    source/parameters.h \
-    source/qimageopencv.h \
-    source/sliderdouble.h \
-    source/startupwindow.h \
-    source/structures.h \
-    source/ueyeopencv.h \
-    source/confirmationwindow.h
+    headers/confirmationwindow.h \
+    headers/constants.h \
+    headers/drawfunctions.h \
+    headers/eyetracking.h \
+    headers/mainwindow.h \
+    headers/parameters.h \
+    headers/qimageopencv.h \
+    headers/sliderdouble.h \
+    headers/startupwindow.h \
+    headers/structures.h \
+    headers/ueyeopencv.h
 
 RESOURCES += \
     resources/qdarkstyle/style.qrc

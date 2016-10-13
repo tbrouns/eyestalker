@@ -18,14 +18,15 @@
 
 // Files
 
-#include "source/confirmationwindow.h"
-#include "source/constants.h"
-#include "source/drawfunctions.h"
-#include "source/eyetracking.h"
-#include "source/parameters.h"
-#include "source/sliderdouble.h"
-#include "source/structures.h"
-#include "source/qimageopencv.h"
+#include "headers/confirmationwindow.h"
+#include "headers/constants.h"
+#include "headers/drawfunctions.h"
+#include "headers/eyetracking.h"
+#include "headers/parameters.h"
+#include "headers/sliderdouble.h"
+#include "headers/structures.h"
+#include "headers/qimageopencv.h"
+#include <headers/ueyeopencv.h>
 
 // Standard Template
 
@@ -56,7 +57,6 @@
 // uEye
 
 #include <ueye.h>
-#include <source/ueyeopencv.h>
 
 // QT
 

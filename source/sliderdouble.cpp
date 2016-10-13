@@ -13,7 +13,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#include "sliderdouble.h"
+#include "headers/sliderdouble.h"
 
 SliderDouble::SliderDouble(QWidget *parent) : QSlider(parent)
 {

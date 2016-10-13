@@ -14,8 +14,8 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
-#include "mainwindow.h"
-#include "source/startupwindow.h"
+#include "headers/mainwindow.h"
+#include "headers/startupwindow.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
