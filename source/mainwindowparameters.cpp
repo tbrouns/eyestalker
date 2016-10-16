@@ -38,7 +38,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.alphaGeneral = settings.value("AlphaGeneral", 0.75).toDouble();
     mEyePropertiesParameters.alphaMomentum = settings.value("AlphaMomentum", 0.5).toDouble();
     mEyePropertiesParameters.alphaPupil = settings.value("AlphaPupil", 0.75).toDouble();
-    mEyePropertiesParameters.alphaPosition = settings.value("AlphaSearchArea", 0.75).toDouble();
+    mEyePropertiesParameters.alphaPrediction = settings.value("AlphaPrediction", 0.75).toDouble();
     mEyePropertiesParameters.alphaVelocity = settings.value("AlphaVelocity", 0.5).toDouble();
     mEyePropertiesParameters.cannyBlurLevel = settings.value("CannyBlurLevel", 0).toInt();
     mEyePropertiesParameters.cannyKernelSize = settings.value("CannyKernelSize", 5).toInt();
@@ -76,7 +76,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("AlphaGeneral", mEyePropertiesParameters.alphaGeneral);
     settings.setValue("AlphaMomentum", mEyePropertiesParameters.alphaMomentum);
     settings.setValue("AlphaPupil", mEyePropertiesParameters.alphaPupil);
-    settings.setValue("AlphaSearchArea", mEyePropertiesParameters.alphaPosition);
+    settings.setValue("AlphaPrediction", mEyePropertiesParameters.alphaPrediction);
     settings.setValue("AlphaVelocity", mEyePropertiesParameters.alphaVelocity);
     settings.setValue("AOIHghtFraction", eyeAOIHghtFraction);
     settings.setValue("AOIWdthFraction", eyeAOIWdthFraction);
@@ -299,10 +299,10 @@ void MainWindow::setAlphaPupil(double value)
     AlphaPupilLabel->setText(QString::number(value, 'f', 2));
 }
 
-void MainWindow::setAlphaSearchArea(double value)
+void MainWindow::setAlphaPrediction(double value)
 {
-    mEyePropertiesParameters.alphaPosition = value;
-    AlphaSearchAreaLabel->setText(QString::number(value, 'f', 2));
+    mEyePropertiesParameters.alphaPrediction = value;
+    AlphaPredictionLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setAlphaGeneral(double value)

@@ -740,61 +740,71 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     LearningRatesTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *AlphaPupilTextBox = new QLabel;
-    QLabel *AlphaSearchAreaTextBox = new QLabel;
+    QLabel *AlphaPositionTextBox = new QLabel;
+    QLabel *AlphaPredictionTextBox = new QLabel;
     QLabel *AlphaGeneralTextBox = new QLabel;
     QLabel *AlphaMomentumTextBox = new QLabel;
     QLabel *AlphaVelocityTextBox = new QLabel;
 
     AlphaPupilTextBox->setText("<b>Pupil:</b>");
-    AlphaSearchAreaTextBox->setText("<b>Search area:</b>");
+    AlphaPositionTextBox->setText("<b>Position:</b>");
+    AlphaPredictionTextBox->setText("<b>Prediction:</b>");
     AlphaGeneralTextBox->setText("<b>Search radius:</b>");
     AlphaMomentumTextBox->setText("<b>Momentum:</b>");
     AlphaVelocityTextBox->setText("<b>Velocity:</b>");
 
     AlphaPupilSlider = new SliderDouble;
-    AlphaSearchAreaSlider = new SliderDouble;
+    AlphaPositionSlider = new SliderDouble;
+    AlphaPredictionSlider = new SliderDouble;
     AlphaGeneralSlider = new SliderDouble;
     AlphaMomentumSlider = new SliderDouble;
     AlphaVelocitySlider = new SliderDouble;
 
     AlphaPupilSlider->setPrecision(2);
-    AlphaSearchAreaSlider->setPrecision(2);
+    AlphaPositionSlider->setPrecision(2);
+    AlphaPredictionSlider->setPrecision(2);
     AlphaGeneralSlider->setPrecision(2);
     AlphaMomentumSlider->setPrecision(2);
     AlphaVelocitySlider->setPrecision(2);
 
     AlphaPupilSlider->setDoubleRange(0, 1.0);
-    AlphaSearchAreaSlider->setDoubleRange(0, 1.0);
+    AlphaPositionSlider->setDoubleRange(0, 1.0);
+    AlphaPredictionSlider->setDoubleRange(0, 1.0);
     AlphaGeneralSlider->setDoubleRange(0, 1.0);
     AlphaMomentumSlider->setDoubleRange(0, 1.0);
     AlphaVelocitySlider->setDoubleRange(0, 1.0);
 
     AlphaPupilSlider->setDoubleValue(mEyePropertiesParameters.alphaPupil);
-    AlphaSearchAreaSlider->setDoubleValue(mEyePropertiesParameters.alphaPosition);
+    AlphaPositionSlider->setDoubleValue(mEyePropertiesParameters.alphaPosition);
+    AlphaPredictionSlider->setDoubleValue(mEyePropertiesParameters.alphaPrediction);
     AlphaGeneralSlider->setDoubleValue(mEyePropertiesParameters.alphaGeneral);
     AlphaMomentumSlider->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
     AlphaVelocitySlider->setDoubleValue(mEyePropertiesParameters.alphaVelocity);
 
     AlphaPupilSlider->setOrientation(Qt::Horizontal);
-    AlphaSearchAreaSlider->setOrientation(Qt::Horizontal);
+    AlphaPositionSlider->setOrientation(Qt::Horizontal);
+    AlphaPredictionSlider->setOrientation(Qt::Horizontal);
     AlphaGeneralSlider->setOrientation(Qt::Horizontal);
     AlphaMomentumSlider->setOrientation(Qt::Horizontal);
     AlphaVelocitySlider->setOrientation(Qt::Horizontal);
 
     QObject::connect(AlphaPupilSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPupil(double)));
-    QObject::connect(AlphaSearchAreaSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaSearchArea(double)));
+    QObject::connect(AlphaPositionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPosition(double)));
+    QObject::connect(AlphaPredictionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPrediction(double)));
     QObject::connect(AlphaGeneralSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaGeneral(double)));
     QObject::connect(AlphaMomentumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMomentum(double)));
     QObject::connect(AlphaVelocitySlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaVelocity(double)));
 
     AlphaPupilLabel = new QLabel;
-    AlphaSearchAreaLabel = new QLabel;
+    AlphaPositionLabel = new QLabel;
+    AlphaPredictionLabel = new QLabel;
     AlphaGeneralLabel = new QLabel;
     AlphaMomentumLabel = new QLabel;
     AlphaVelocityLabel = new QLabel;
 
     AlphaPupilLabel->setText(QString::number(mEyePropertiesParameters.alphaPupil, 'f', 2));
-    AlphaSearchAreaLabel->setText(QString::number(mEyePropertiesParameters.alphaPosition, 'f', 2));
+    AlphaPositionLabel->setText(QString::number(mEyePropertiesParameters.alphaPosition, 'f', 2));
+    AlphaPredictionLabel->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
     AlphaGeneralLabel->setText(QString::number(mEyePropertiesParameters.alphaGeneral, 'f', 2));
     AlphaMomentumLabel->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
     AlphaVelocityLabel->setText(QString::number(mEyePropertiesParameters.alphaVelocity, 'f', 2));
@@ -1082,9 +1092,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     LearningRateLayout->addWidget(AlphaMomentumTextBox, 1, 0);
     LearningRateLayout->addWidget(AlphaMomentumSlider, 1, 1);
     LearningRateLayout->addWidget(AlphaMomentumLabel, 1, 2);
-    LearningRateLayout->addWidget(AlphaSearchAreaTextBox, 2, 0);
-    LearningRateLayout->addWidget(AlphaSearchAreaSlider, 2, 1);
-    LearningRateLayout->addWidget(AlphaSearchAreaLabel, 2, 2);
+    LearningRateLayout->addWidget(AlphaPredictionTextBox, 2, 0);
+    LearningRateLayout->addWidget(AlphaPredictionSlider, 2, 1);
+    LearningRateLayout->addWidget(AlphaPredictionLabel, 2, 2);
     LearningRateLayout->addWidget(AlphaGeneralTextBox, 3, 0);
     LearningRateLayout->addWidget(AlphaGeneralSlider, 3, 1);
     LearningRateLayout->addWidget(AlphaGeneralLabel, 3, 2);
@@ -1734,13 +1744,13 @@ void MainWindow::setParameterWidgets()
     CannyKernelSizeLabel->setText(QString::number(mEyePropertiesParameters.cannyKernelSize));
 
     AlphaPupilSlider->setDoubleValue(mEyePropertiesParameters.alphaPupil);
-    AlphaSearchAreaSlider->setDoubleValue(mEyePropertiesParameters.alphaPosition);
+    AlphaPredictionSlider->setDoubleValue(mEyePropertiesParameters.alphaPrediction);
     AlphaGeneralSlider->setDoubleValue(mEyePropertiesParameters.alphaGeneral);
     AlphaMomentumSlider->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
     AlphaVelocitySlider->setDoubleValue(mEyePropertiesParameters.alphaVelocity);
 
     AlphaPupilLabel->setText(QString::number(mEyePropertiesParameters.alphaPupil, 'f', 2));
-    AlphaSearchAreaLabel->setText(QString::number(mEyePropertiesParameters.alphaPosition, 'f', 2));
+    AlphaPredictionLabel->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
     AlphaGeneralLabel->setText(QString::number(mEyePropertiesParameters.alphaGeneral, 'f', 2));
     AlphaMomentumLabel->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
     AlphaVelocityLabel->setText(QString::number(mEyePropertiesParameters.alphaVelocity, 'f', 2));

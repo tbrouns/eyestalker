@@ -36,8 +36,9 @@ struct eyePropertiesParameters
 {
     double alphaGeneral;
     double alphaMomentum;
-    double alphaPupil;
     double alphaPosition;
+    double alphaPrediction;
+    double alphaPupil;
     double alphaVelocity;
     double curvatureOffset;
     double edgeIntensityIni;

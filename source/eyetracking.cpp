@@ -1599,8 +1599,8 @@ eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeP
         mEyePropertiesNew.v.xVelocity = mEyeProperties.v.xVelocity * mEyeProperties.p.alphaVelocity;
         mEyePropertiesNew.v.yVelocity = mEyeProperties.v.yVelocity * mEyeProperties.p.alphaVelocity;
 
-        mEyePropertiesNew.v.xPosPredicted = mEyeProperties.v.xPosPredicted + mEyeProperties.p.alphaPosition * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.xPosPredicted) + mEyeProperties.v.xVelocity;
-        mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPosition * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
+        mEyePropertiesNew.v.xPosPredicted = mEyeProperties.v.xPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.xPosPredicted) + mEyeProperties.v.xVelocity;
+        mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
 
         mEyePropertiesNew.v.searchRadius = mEyeProperties.v.searchRadius * (2 - mEyeProperties.p.alphaGeneral);
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyeProperties.v.thresholdCircumferenceChange * (2 - mEyeProperties.p.alphaGeneral);
@@ -1624,8 +1624,8 @@ eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeP
         mEyePropertiesNew.v.xVelocity = (mEyeProperties.v.xVelocity + (mEyePropertiesNew.v.xPosPredicted - mEyeProperties.v.xPosPredicted)) * mEyeProperties.p.alphaVelocity;
         mEyePropertiesNew.v.yVelocity = (mEyeProperties.v.yVelocity + (mEyePropertiesNew.v.yPosPredicted - mEyeProperties.v.yPosPredicted)) * mEyeProperties.p.alphaVelocity;
 
-        mEyePropertiesNew.v.xPosPredicted = mEyeProperties.v.xPosPredicted + mEyeProperties.p.alphaPosition * (mEyePropertiesNew.v.xPos - mEyeProperties.v.xPosPredicted) + mEyeProperties.v.xVelocity;
-        mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPosition * (mEyePropertiesNew.v.yPos - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
+        mEyePropertiesNew.v.xPosPredicted = mEyeProperties.v.xPosPredicted + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.xPos - mEyeProperties.v.xPosPredicted) + mEyeProperties.v.xVelocity;
+        mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.yPos - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
         
         mEyePropertiesNew.v.searchRadius = mEyeProperties.v.searchRadius * mEyeProperties.p.alphaGeneral;
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyeProperties.v.thresholdCircumferenceChange * mEyeProperties.p.alphaGeneral;
