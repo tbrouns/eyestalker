@@ -35,11 +35,11 @@ void MainWindow::loadSettings(QString fileName)
     flashThreshold = settings.value("FlashThreshold", 0.90).toDouble();
     GAIN_AUTO = settings.value("GainAuto", GAIN_AUTO).toBool();
     GAIN_BOOST = settings.value("GainBoost", GAIN_BOOST).toBool();
-    mEyePropertiesParameters.alphaGeneral = settings.value("AlphaGeneral", 0.8).toDouble();
-    mEyePropertiesParameters.alphaMomentum = settings.value("AlphaMomentum", 0.1).toDouble();
-    mEyePropertiesParameters.alphaPupil = settings.value("AlphaPupil", 0.2).toDouble();
-    mEyePropertiesParameters.alphaSearchArea = settings.value("AlphaSearchArea", 0.1).toDouble();
-    mEyePropertiesParameters.alphaVelocity = settings.value("AlphaVelocity", 0.1).toDouble();
+    mEyePropertiesParameters.alphaGeneral = settings.value("AlphaGeneral", 0.75).toDouble();
+    mEyePropertiesParameters.alphaMomentum = settings.value("AlphaMomentum", 0.5).toDouble();
+    mEyePropertiesParameters.alphaPupil = settings.value("AlphaPupil", 0.75).toDouble();
+    mEyePropertiesParameters.alphaPosition = settings.value("AlphaSearchArea", 0.75).toDouble();
+    mEyePropertiesParameters.alphaVelocity = settings.value("AlphaVelocity", 0.5).toDouble();
     mEyePropertiesParameters.cannyBlurLevel = settings.value("CannyBlurLevel", 0).toInt();
     mEyePropertiesParameters.cannyKernelSize = settings.value("CannyKernelSize", 5).toInt();
     mEyePropertiesParameters.cannyLowerLimit = settings.value("CannyLowerLimit", 300).toInt();
@@ -76,7 +76,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("AlphaGeneral", mEyePropertiesParameters.alphaGeneral);
     settings.setValue("AlphaMomentum", mEyePropertiesParameters.alphaMomentum);
     settings.setValue("AlphaPupil", mEyePropertiesParameters.alphaPupil);
-    settings.setValue("AlphaSearchArea", mEyePropertiesParameters.alphaSearchArea);
+    settings.setValue("AlphaSearchArea", mEyePropertiesParameters.alphaPosition);
     settings.setValue("AlphaVelocity", mEyePropertiesParameters.alphaVelocity);
     settings.setValue("AOIHghtFraction", eyeAOIHghtFraction);
     settings.setValue("AOIWdthFraction", eyeAOIWdthFraction);
@@ -301,7 +301,7 @@ void MainWindow::setAlphaPupil(double value)
 
 void MainWindow::setAlphaSearchArea(double value)
 {
-    mEyePropertiesParameters.alphaSearchArea = value;
+    mEyePropertiesParameters.alphaPosition = value;
     AlphaSearchAreaLabel->setText(QString::number(value, 'f', 2));
 }
 

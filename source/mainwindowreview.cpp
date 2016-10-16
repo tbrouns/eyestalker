@@ -66,48 +66,67 @@ void MainWindow::loadReviewSession()
 
         updateReviewSession();
         updateReviewImages(0);
+
+        std::stringstream directoryName;
+        directoryName << editDataDirectory.toStdString() << "/processed";
+
+        if (!boost::filesystem::exists(directoryName.str()))
+        {
+            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        }
+
+        // count number of trials
+
+        editDataTotal = 0;
+
+        while (true)
+        {
+            std::stringstream folderName;
+            folderName << editDataDirectory.toStdString() << "/../trial_" << editDataTotal;
+
+            if (!boost::filesystem::exists(folderName.str()))
+            {
+                break;
+            }
+
+            editDataTotal++;
+        }
+
+        ReviewTrialSlider->setMaximum(editDataTotal);
+        ReviewTrialSpinBox->setMaximum(editDataTotal);
+
+        // get time stamps
+
+        if (timeVector.empty())
+        {
+            // Grab time stamps
+
+            double times[editImageTotal + 2][editDataTotal];
+
+            std::stringstream filename;
+            filename << editDataDirectory.toStdString()
+                     << "/../timestamps.dat";
+
+            std::ifstream data;
+            data.open(filename.str().c_str());
+
+            if (data.is_open())
+            {
+                for (int j = 0; j < editImageTotal + 2; j++)
+                {
+                    for (int i = 0; i < editDataTotal; i++)
+                    {
+                        data >> times[j][i];
+                        timeVector.push_back(times[j][i]);
+                    }
+                }
+            }
+        }
     }
 }
 
-void MainWindow::prevReviewSession()
+void MainWindow::changeReviewSession(int index)
 {
-    int index = editDataIndex - 1;
-
-    if (index >= 0)
-    {
-        QString infoFilePath = editDataDirectory;
-
-        int numOfDigits;
-
-        if (editDataIndex != 0)
-        {
-            numOfDigits = floor(log10(editDataIndex)) + 1;
-        }
-        else
-        {
-            numOfDigits = 1;
-        }
-
-        infoFilePath.replace(infoFilePath.size() - numOfDigits, numOfDigits, QString::number(index)); // replace last character(s)
-
-        QString infoFileDataDirectory = infoFilePath;
-        infoFilePath.append("/info.ini");
-
-        if (boost::filesystem::exists(infoFilePath.toStdString()))
-        {
-            loadSettings(infoFilePath);
-            editDataDirectory = infoFileDataDirectory;
-
-            updateReviewSession();
-            updateReviewImages(0);
-        }
-    }
-}
-
-void MainWindow::nextReviewSession()
-{
-    int index = editDataIndex + 1;
-
     QString infoFilePath = editDataDirectory;
 
     int numOfDigits;
@@ -121,7 +140,7 @@ void MainWindow::nextReviewSession()
         numOfDigits = 1;
     }
 
-    infoFilePath.replace(infoFilePath.size() - numOfDigits, numOfDigits, QString::number(index)); // replace last character(s)
+    infoFilePath.replace(infoFilePath.size() - numOfDigits, numOfDigits, QString::number(index - 1)); // replace last character(s)
 
     QString infoFileDataDirectory = infoFilePath;
     infoFilePath.append("/info.ini");
@@ -129,6 +148,7 @@ void MainWindow::nextReviewSession()
     if (boost::filesystem::exists(infoFilePath.toStdString()))
     {
         loadSettings(infoFilePath);
+        editDataIndex = index - 1;
         editDataDirectory = infoFileDataDirectory;
 
         updateReviewSession();
@@ -142,11 +162,6 @@ void MainWindow::updateReviewSession()
     {
         setParameterWidgets();
 
-        std::stringstream ss;
-        ss << "<b>SubjectID: </b>" << "<i>" << editSubjectName.toStdString() << "</i><b> - Trial " << editDataIndex + 1 << "</b>";
-        QString title = QString::fromStdString(ss.str());
-        ReviewSessionTitleTextBox->setText(title);
-
         vEyePropertiesVariables.resize(editImageTotal + 1);
         vEyePropertiesVariables[0] = mEyePropertiesVariables;
 
@@ -158,7 +173,7 @@ void MainWindow::updateReviewSession()
         // Create folder
 
         std::stringstream directoryName;
-        directoryName << editDataDirectory.toStdString() << "/images/processed/";
+        directoryName << editDataDirectory.toStdString() << "/processed/";
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
@@ -177,8 +192,8 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);
 
         mEyePropertiesVariables.searchRadius = ceil(0.5 * pupilHaarWdthOffset);
-        mEyePropertiesVariables.searchXPos = xPos;
-        mEyePropertiesVariables.searchYPos = yPos;
+        mEyePropertiesVariables.xPosPredicted = xPos;
+        mEyePropertiesVariables.yPosPredicted = yPos;
 
         if (editImageIndex == 0)
         {
@@ -201,8 +216,7 @@ void MainWindow::updateReviewImages(int imgIndex)
 
         std::stringstream fileNameRaw;
         fileNameRaw << editDataDirectory.toStdString()
-                    << "/images/raw/" << editSubjectName.toStdString()
-                    << "_" << editDataIndex << "_" << imgIndex << ".png";
+                    << "/raw/" << imgIndex << ".png";
 
         if (boost::filesystem::exists(fileNameRaw.str()))
         {
@@ -219,8 +233,7 @@ void MainWindow::updateReviewImages(int imgIndex)
 
         std::stringstream fileName;
         fileName << editDataDirectory.toStdString()
-                 << "/images/processed/" << editSubjectName.toStdString()
-                 << "_" << editDataIndex << "_" << imgIndex << ".png";
+                 << "/processed/" << imgIndex << ".png";
 
         if (boost::filesystem::exists(fileName.str()))
         {
@@ -243,12 +256,11 @@ void MainWindow::updateReviewImages(int imgIndex)
     }
 }
 
-void MainWindow::updateRawImage()
+void MainWindow::updateRawImage() // for signal from qimageopencv
 {
     std::stringstream fileNameRaw;
     fileNameRaw << editDataDirectory.toStdString()
-                << "/images/raw/" << editSubjectName.toStdString()
-                << "_" << editDataIndex << "_" << editImageIndex << ".png";
+                << "/raw/" << editImageIndex << ".png";
 
     if (boost::filesystem::exists(fileNameRaw.str()))
     {
@@ -284,10 +296,11 @@ void MainWindow::nextReviewImage()
 
 void MainWindow::setReviewImageFrame(int frame)
 {
-    if (!DETECTION_IN_PROGRESS)
+    if (!PROCESSING_ALL_IMAGES)
     {
         editImageIndex = frame;
-        setVariableWidgets(vEyePropertiesVariables[editImageIndex]);
+        mEyePropertiesVariables = vEyePropertiesVariables[editImageIndex];
+        setVariableWidgets(mEyePropertiesVariables);
         updateReviewImages(editImageIndex);
     }
 }
@@ -298,8 +311,7 @@ void MainWindow::reviewPupilDetectionOneFrame()
 
     std::stringstream fileNameRaw;
     fileNameRaw << editDataDirectory.toStdString()
-                << "/images/raw/" << editSubjectName.toStdString()
-                << "_" << editDataIndex << "_" << editImageIndex << ".png";
+                << "/raw/" << editImageIndex << ".png";
 
     if (boost::filesystem::exists(fileNameRaw.str()))
     {
@@ -336,32 +348,31 @@ void MainWindow::reviewPupilDetectionOneFrame()
     // Pupil tracking algorithm
 
     cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-    mEyePropertiesTemp = pupilDetector(rawEyeImage(eyeRegion), mEyePropertiesTemp);
+    eyeProperties mEyePropertiesNew = pupilDetector(rawEyeImage(eyeRegion), mEyePropertiesTemp);
 
     // Save processed images
 
-    cv::Mat imageEye = mEyePropertiesTemp.m.image.clone();
-    drawAll(imageEye, mEyePropertiesTemp);
+    cv::Mat imageEye = mEyePropertiesNew.m.image.clone();
+    drawAll(imageEye, mEyePropertiesNew);
 
     std::stringstream filename;
     filename << editDataDirectory.toStdString()
-             << "/images/processed/" << editSubjectName.toStdString()
-             << "_" << editDataIndex << "_" << editImageIndex << ".png";
+             << "/processed/" << editImageIndex << ".png";
 
     cv::imwrite(filename.str(), imageEye);
 
     // Get pupil coords in screen coords
 
-    mEyePropertiesTemp.v.xPosAbs = mEyePropertiesTemp.v.xPos + eyeAOIXPosTemp;
-    mEyePropertiesTemp.v.yPosAbs = mEyePropertiesTemp.v.yPos + eyeAOIYPosTemp;
+    mEyePropertiesNew.v.xPosAbs = mEyePropertiesNew.v.xPos + eyeAOIXPosTemp;
+    mEyePropertiesNew.v.yPosAbs = mEyePropertiesNew.v.yPos + eyeAOIYPosTemp;
 
     // Record pupil positions
 
     {
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
-        vEyePropertiesVariables[editImageIndex + 1] = mEyePropertiesTemp.v;
-        mEyePropertiesMiscellaneous = mEyePropertiesTemp.m;
+        vEyePropertiesVariables[editImageIndex + 1] = mEyePropertiesNew.v;
+        mEyePropertiesMiscellaneous = mEyePropertiesNew.m;
     }
 }
 
@@ -373,14 +384,14 @@ void MainWindow::detectPupilOneFrame()
 
 void MainWindow::detectPupilAllFrames()
 {
-    if (!DETECTION_IN_PROGRESS)
+    if (!PROCESSING_ALL_IMAGES)
     {
-        DETECTION_IN_PROGRESS = true;
+        PROCESSING_ALL_IMAGES = true;
 
         std::thread pupilDetectionThread(&MainWindow::reviewPupilDetectionAllFrames, this);
         pupilDetectionThread.detach();
 
-        while (DETECTION_IN_PROGRESS)
+        while (PROCESSING_ALL_IMAGES)
         {
             ReviewImageSlider->setValue(editImageIndex);
 
@@ -394,7 +405,7 @@ void MainWindow::detectPupilAllFrames()
     }
     else
     {
-        DETECTION_IN_PROGRESS = false;
+        PROCESSING_ALL_IMAGES = false;
     }
 }
 
@@ -402,52 +413,36 @@ void MainWindow::reviewPupilDetectionAllFrames()
 {
     int initialIndex = editImageIndex; // needed for progressbar
 
-    for (int i = initialIndex; i < editImageTotal && DETECTION_IN_PROGRESS; i++)
+    for (editImageIndex = initialIndex; editImageIndex < editImageTotal && PROCESSING_ALL_IMAGES; editImageIndex++)
     {
-        editImageIndex = i;
         mEyePropertiesVariables = vEyePropertiesVariables[editImageIndex];
         reviewPupilDetectionOneFrame();
     }
 
-    if (DETECTION_IN_PROGRESS)
+    if (PROCESSING_ALL_IMAGES)
     {
         ReviewImageSlider->setValue(editImageIndex);
-
         reviewSaveExperimentData();
-
-        DETECTION_IN_PROGRESS = false;
+        PROCESSING_ALL_IMAGES = false;
     }
 }
 
-void MainWindow::reviewPupilDetectionAllSessions()
+void MainWindow::detectPupilAllTrials()
 {
-    int i = editDataIndex;
-    int stringSize = editDataDirectory.size();
-
-    while(true)
+    if (!PROCESSING_ALL_TRIALS)
     {
-        QString editDataDirectoryNew = editDataDirectory;
-        editDataDirectoryNew.replace(stringSize - 1, 1, QString::number(i));
+        PROCESSING_ALL_TRIALS = true;
 
-        if (boost::filesystem::exists(editDataDirectoryNew.toStdString()))
+        for (int i = editDataIndex; i < editDataTotal && PROCESSING_ALL_TRIALS; i++)
         {
-            editDataIndex = i;
-            editDataDirectory = editDataDirectoryNew;
-
-            std::thread pupilDetectionThread(&MainWindow::reviewPupilDetectionAllFrames, this);
-            pupilDetectionThread.detach();
-
-            // add lock
-
-            i++;
-        }
-        else
-        {
-            break;
+            ReviewTrialSlider->setValue(i + 1);
+            detectPupilAllFrames();
         }
     }
-}
 
+    PROCESSING_ALL_IMAGES = false;
+    PROCESSING_ALL_TRIALS = false;
+}
 
 void MainWindow::onSavePupilData()
 {
@@ -456,57 +451,37 @@ void MainWindow::onSavePupilData()
 
 void MainWindow::reviewSaveExperimentData()
 {
-    std::vector<double> timeStamps;
-
-    {
-        // Grab time stamps
-
-        std::stringstream filename;
-        filename << editDataDirectory.toStdString()
-                 << "/" << editSubjectName.toStdString()
-                 << "_tracking_data_timestamps_" << editDataIndex << ".dat";
-
-        std::ifstream data(filename.str().c_str(), std::ios::in);
-
-        if (data.is_open())
-        {
-            std::string line;
-            while (std::getline(data, line))
-            {
-                std::istringstream iss(line);
-                double time;
-
-                if (!(iss >> time))
-                {
-                    break; // error
-                }
-
-                timeStamps.push_back(time);
-            }
-        }
-    }
-
     // save data
 
     std::stringstream filename;
     filename << editDataDirectory.toStdString()
-             << "/" << editSubjectName.toStdString()
-             << "_tracking_data_raw_" << editDataIndex << ".dat";
+             << "/tracking_data.dat";
 
     std::ofstream file;
-    file.open(filename.str(), std::ios::out | std::ios::ate);
+    file.open(filename.str());
+
+    file << std::setw(3) << std::setfill('0') << timeVector[editDataIndex * (editImageTotal + 2)] << ";"; // print with leading zeros
+    file << (int) timeVector[editDataIndex * (editImageTotal + 2) + 1] << ";"; // time of day in milliseconds
+
+    file << std::fixed;
+    file << std::setprecision(3);
+
+    eyeXPositions.resize(editImageTotal);
+    eyeYPositions.resize(editImageTotal);
+    eyeDetectionFlags.resize(editImageTotal);
+    timeStamps.resize(editImageTotal);
 
     for (int i = 0; i < editImageTotal; i++)
     {
-        file << vEyePropertiesVariables[i + 1].xPosAbs
-                << " "
-                << vEyePropertiesVariables[i + 1].yPosAbs
-                << " "
-                << vEyePropertiesVariables[i + 1].pupilDetected
-                << " "
-                << timeStamps[i]
-                   << "\n";
+        eyeXPositions[i] = vEyePropertiesVariables[i + 1].xPosAbs;
+        eyeYPositions[i] = vEyePropertiesVariables[i + 1].yPosAbs;
+        eyeDetectionFlags[i] = vEyePropertiesVariables[i + 1].pupilDetected;
+        timeStamps[i] = timeVector[i + editDataIndex * (editImageTotal + 2) + 2];
     }
+
+    writeToFile(file, eyeDetectionFlags, timeStamps);
+    writeToFile(file, eyeDetectionFlags, eyeXPositions);
+    writeToFile(file, eyeDetectionFlags, eyeYPositions);
 
     file.close();
 }

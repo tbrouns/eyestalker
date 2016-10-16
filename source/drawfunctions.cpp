@@ -151,8 +151,12 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
     cv::Vec3b blue(255, 0, 0);
     cv::Vec3b green(0, 255, 0);
     cv::Vec3b red(0, 0, 255);
+
+    cv::Vec3b cyan(255, 255, 0);
     cv::Vec3b yellow(0, 255, 255);
+
     cv::Vec3b white(255, 255, 255);
+
 
     if (Parameters::drawFlags.haar)
     {
@@ -176,6 +180,9 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
             drawEllipseCross(I, mEyeProperties.v.xPos, mEyeProperties.v.yPos, Parameters::ellipseDrawCrossSize, white);
         }
     }
+
+    drawEllipseCross(I, mEyeProperties.v.xPosPredicted, mEyeProperties.v.yPosPredicted, Parameters::ellipseDrawCrossSize, cyan);
+
 }
 
 void drawROI(cv::Mat& I, int x0, int y0, int W, int H, cv::Vec3b col)

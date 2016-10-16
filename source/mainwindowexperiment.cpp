@@ -78,7 +78,7 @@ void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlag
 {
     int paddingTotal = 0;
 
-    for (int i = 0; i < trialFrameTotal; i++) // write data
+    for (int i = 0, vSize = v.size(); i < vSize; i++) // write data
     {
         if (vFlags[i]) // only detected pupil data
         {

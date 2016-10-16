@@ -37,7 +37,7 @@ struct eyePropertiesParameters
     double alphaGeneral;
     double alphaMomentum;
     double alphaPupil;
-    double alphaSearchArea;
+    double alphaPosition;
     double alphaVelocity;
     double curvatureOffset;
     double edgeIntensityIni;
@@ -65,21 +65,22 @@ struct eyePropertiesVariables
     double edgeIntensity;
     double momentumCircumference;
     double momentumFraction;
-    double momentumWidth;
+    double momentumRadius;
     double pupilCircumference;
     double pupilCircumferenceExact;
     double pupilFraction;
     double pupilFractionExact;
+    double pupilRadius;
     double searchRadius;
-    double searchXPos;
-    double searchYPos;
     double thresholdCircumferenceChange;
     double thresholdFractionChange;
     double xPos;
     double xPosAbs;
+    double xPosPredicted;
     double xVelocity;
     double yPos;
     double yPosAbs;
+    double yPosPredicted;
     double yVelocity;
 };
 
@@ -109,13 +110,6 @@ struct eyeProperties
     eyePropertiesMiscellaneous  m;
 };
 
-struct drawBooleans
-{    
-    bool haar;
-    bool edge;
-    bool elps;
-};
-
 struct haarProperties
 {
     int x_pos;
@@ -124,6 +118,7 @@ struct haarProperties
 
 struct edgeProperties
 {
+    std::vector<double> curvatures;
     std::vector<double> intensities;
     std::vector<int> lengths;
     std::vector<int> sizes;
@@ -136,7 +131,7 @@ struct ellipseProperties
     double circumference;
     double fraction;
     double intensity;
-    double width;
+    double radius;
     double xPos;
     double yPos;
     std::vector<double> coefficients;
@@ -146,6 +141,13 @@ struct imageInfo
 {
     unsigned long long time;
     cv::Mat image;
+};
+
+struct drawBooleans
+{
+    bool haar;
+    bool edge;
+    bool elps;
 };
 
 #endif // STRUCTURES_H

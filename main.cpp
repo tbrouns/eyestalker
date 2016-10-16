@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     MainWindow mMainWindow;
-    mMainWindow.setWindowTitle("Eye-tracking application");
+    mMainWindow.setWindowTitle("EyeStalker");
 
     StartUpWindow *mStartUpWindow = new StartUpWindow;
 

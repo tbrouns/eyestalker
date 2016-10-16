@@ -107,9 +107,10 @@ private:
     bool APP_RUNNING;
     bool GAIN_AUTO;
     bool GAIN_BOOST;
-    bool DETECTION_IN_PROGRESS;
     bool EXPERIMENT_TRIAL_RECORDING;
     bool FLASH_STANDBY;
+    bool PROCESSING_ALL_IMAGES;
+    bool PROCESSING_ALL_TRIALS;
     bool SAVE_EYE_IMAGE;
     char currentDate[80];
     cv::Mat imageCamera;
@@ -133,6 +134,7 @@ private:
     double flashThreshold;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime; // in ms
+    std::vector<double> timeVector;
     eyePropertiesMiscellaneous mEyePropertiesMiscellaneous;
     eyePropertiesParameters    mEyePropertiesParameters;
     eyePropertiesVariables     mEyePropertiesVariables;
@@ -148,6 +150,7 @@ private:
     int cameraFrameRateDesired;
     int cameraPixelClock;
     int editDataIndex;
+    int editDataTotal;
     int editImageIndex;
     int editImageTotal;
     int experimentIndex;
@@ -196,7 +199,6 @@ private:
     QLabel *PupilFractLabel;
     QLabel *PupilHaarOffsetLabel;
     QLabel *ReviewImageFrameTextBox;
-    QLabel *ReviewSessionTitleTextBox;
     QLabel *ThresholdCircumferenceLabel;
     QLabel *ThresholdFractionLabel;
     QLineEdit *DataFilenameLineEdit;
@@ -214,7 +216,9 @@ private:
     QSlider *FlashStandbySlider;
     QSlider *GlintRadiusSlider;
     QSlider *ReviewImageSlider;
+    QSlider *ReviewTrialSlider;
     QSpinBox *CameraFrameRateDesiredSpinBox;
+    QSpinBox *ReviewTrialSpinBox;
     QSpinBox *TrialIndexSpinBox;
     QString editDataDirectory;
     QString editSubjectName;
@@ -300,18 +304,17 @@ public slots:
 
 private slots:
 
+    void changeReviewSession(int index);
     void cropAOI();
     void detectPupilAllFrames();
+    void detectPupilAllTrials();
     void detectPupilOneFrame();
     void loadReviewSession();
     void nextReviewImage();
-    void nextReviewSession();
     void onQuitButtonClicked();
     void onSavePupilData();
     void onFlashStandbySlider(int);
     void prevReviewImage();
-    void prevReviewSession();
-    void reviewPupilDetectionAllSessions();
     void selectDirectory();
     void setAlphaGeneral(double value);
     void setAlphaMomentum(double value);

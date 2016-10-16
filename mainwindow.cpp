@@ -61,7 +61,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     cameraSubSamplingFactor = 2;
     camImageHght = 200;
     camImageWdth = 480; // size of image in widget
-    DETECTION_IN_PROGRESS = false;
+    PROCESSING_ALL_IMAGES = false;
+    PROCESSING_ALL_TRIALS = false;
     editImageIndex = 0;
     editImageTotal = 0;
     experimentIndex = 0;
@@ -134,15 +135,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     mEyePropertiesVariables.momentumCircumference = 0;
     mEyePropertiesVariables.momentumFraction = 0;
-    mEyePropertiesVariables.momentumWidth = 0;
+    mEyePropertiesVariables.momentumRadius = 0;
 
     mEyePropertiesVariables.xPosAbs = 0;
     mEyePropertiesVariables.yPosAbs = 0;
 
     // Set search area parameters
 
-    mEyePropertiesVariables.searchXPos = Parameters::eyeAOIWdth;
-    mEyePropertiesVariables.searchYPos = Parameters::eyeAOIHght;
+    mEyePropertiesVariables.xPosPredicted = Parameters::eyeAOIWdth;
+    mEyePropertiesVariables.yPosPredicted = Parameters::eyeAOIHght;
     mEyePropertiesVariables.searchRadius = Parameters::eyeAOIWdth;
 
     mEyePropertiesVariables.xVelocity = 0;
@@ -235,9 +236,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(ElpsCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setDrawElps(int)));
 
     QHBoxLayout *DrawFunctionsLayout = new QHBoxLayout;
-    DrawFunctionsLayout->addStretch();
-    DrawFunctionsLayout->addWidget(AOICropButton);
-    DrawFunctionsLayout->addStretch();
     DrawFunctionsLayout->addWidget(HaarTextBox);
     DrawFunctionsLayout->addWidget(HaarCheckBox);
     DrawFunctionsLayout->addWidget(EdgeTextBox);
@@ -306,8 +304,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton *ReviewPupilDetectionOneButton = new QPushButton("Current");
     QObject::connect(ReviewPupilDetectionOneButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilOneFrame()));
 
-    QPushButton *ReviewPupilDetectionAllButton = new QPushButton("All");
-    QObject::connect(ReviewPupilDetectionAllButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllFrames()));
+    QPushButton *ReviewPupilDetectionAllFramesButton = new QPushButton("All frames");
+    QObject::connect(ReviewPupilDetectionAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllFrames()));
+
+    QPushButton *ReviewPupilDetectionAllTrialsButton = new QPushButton("All trials");
+    QObject::connect(ReviewPupilDetectionAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllTrials()));
 
     QPushButton *SavePupilDataButton = new QPushButton("Save");
     QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(onSavePupilData()));
@@ -316,34 +317,46 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QHBoxLayout *EyeTrackingReviewLayout = new QHBoxLayout(EyeTrackingReviewWidget);
     EyeTrackingReviewLayout->addStretch();
     EyeTrackingReviewLayout->addWidget(ReviewLoadSessionButton);
+    EyeTrackingReviewLayout->addWidget(SavePupilDataButton);
     EyeTrackingReviewLayout->addWidget(ReviewPrevImageButton);
     EyeTrackingReviewLayout->addWidget(ReviewImageSlider);
     EyeTrackingReviewLayout->addWidget(ReviewNextImageButton);
     EyeTrackingReviewLayout->addWidget(ReviewImageFrameTextBox);
     EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionTextBox);
     EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionOneButton);
-    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionAllButton);
-    EyeTrackingReviewLayout->addWidget(SavePupilDataButton);
+    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionAllFramesButton);
+    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionAllTrialsButton);
     EyeTrackingReviewLayout->addStretch();
 
     EyeTrackingReviewWidget->setVisible(false);
 
-    ReviewSessionTitleTextBox = new QLabel;
-    ReviewSessionTitleTextBox->setText("<b>Review mode</b>");
-    ReviewSessionTitleTextBox->setAlignment(Qt::AlignCenter);
+    QLabel* ReviewTrialTitle = new QLabel;
+    ReviewTrialTitle->setText("<b>Review mode - Trial:</b>");
 
-    QPushButton *ReviewPrevSessionButton = new QPushButton("<");
-    QObject::connect(ReviewPrevSessionButton, SIGNAL(clicked(bool)), this, SLOT(prevReviewSession()));
+    ReviewTrialSpinBox = new QSpinBox;
+    ReviewTrialSpinBox->setValue(1);
+    ReviewTrialSpinBox->setMinimum(1);
+    ReviewTrialSpinBox->setAlignment(Qt::AlignRight);
 
-    QPushButton *ReviewNextSessionButton = new QPushButton(">");
-    QObject::connect(ReviewNextSessionButton, SIGNAL(clicked(bool)), this, SLOT(nextReviewSession()));
+    ReviewTrialSlider = new QSlider;
+    ReviewTrialSlider->setValue(1);
+    ReviewTrialSlider->setMinimum(1);
+    ReviewTrialSlider->setOrientation(Qt::Horizontal);
 
-    QHBoxLayout *ReviewSessionTitleLayout = new QHBoxLayout;
-    ReviewSessionTitleLayout->addStretch();
-    ReviewSessionTitleLayout->addWidget(ReviewPrevSessionButton);
-    ReviewSessionTitleLayout->addWidget(ReviewSessionTitleTextBox);
-    ReviewSessionTitleLayout->addWidget(ReviewNextSessionButton);
-    ReviewSessionTitleLayout->addStretch();
+    QObject::connect(ReviewTrialSlider, SIGNAL(valueChanged(int)),this,SLOT(changeReviewSession(int)));
+
+    QObject::connect(ReviewTrialSlider, SIGNAL(valueChanged(int)),ReviewTrialSpinBox,SLOT(setValue(int)));
+    QObject::connect(ReviewTrialSpinBox, SIGNAL(valueChanged(int)),ReviewTrialSlider,SLOT(setValue(int)));
+
+    QGridLayout *ReviewSessionTitleLayout = new QGridLayout;
+    ReviewSessionTitleLayout->addWidget(ReviewTrialTitle, 0, 1);
+    ReviewSessionTitleLayout->addWidget(ReviewTrialSpinBox, 0, 2);
+    ReviewSessionTitleLayout->addWidget(ReviewTrialSlider, 0, 3);
+    ReviewSessionTitleLayout->setColumnStretch(0, 1);
+    ReviewSessionTitleLayout->setColumnStretch(1, 3);
+    ReviewSessionTitleLayout->setColumnStretch(2, 1);
+    ReviewSessionTitleLayout->setColumnStretch(3, 3);
+    ReviewSessionTitleLayout->setColumnStretch(4, 1);
 
     QWidget *CameraSettings = new QWidget;
     QGridLayout* CameraOutputLayout = new QGridLayout(CameraSettings);
@@ -757,7 +770,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AlphaVelocitySlider->setDoubleRange(0, 1.0);
 
     AlphaPupilSlider->setDoubleValue(mEyePropertiesParameters.alphaPupil);
-    AlphaSearchAreaSlider->setDoubleValue(mEyePropertiesParameters.alphaSearchArea);
+    AlphaSearchAreaSlider->setDoubleValue(mEyePropertiesParameters.alphaPosition);
     AlphaGeneralSlider->setDoubleValue(mEyePropertiesParameters.alphaGeneral);
     AlphaMomentumSlider->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
     AlphaVelocitySlider->setDoubleValue(mEyePropertiesParameters.alphaVelocity);
@@ -781,7 +794,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AlphaVelocityLabel = new QLabel;
 
     AlphaPupilLabel->setText(QString::number(mEyePropertiesParameters.alphaPupil, 'f', 2));
-    AlphaSearchAreaLabel->setText(QString::number(mEyePropertiesParameters.alphaSearchArea, 'f', 2));
+    AlphaSearchAreaLabel->setText(QString::number(mEyePropertiesParameters.alphaPosition, 'f', 2));
     AlphaGeneralLabel->setText(QString::number(mEyePropertiesParameters.alphaGeneral, 'f', 2));
     AlphaMomentumLabel->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
     AlphaVelocityLabel->setText(QString::number(mEyePropertiesParameters.alphaVelocity, 'f', 2));
@@ -1312,7 +1325,7 @@ void MainWindow::pupilTracking()
 
                 mEyePropertiesTemp.v.momentumFraction = mEyePropertiesTemp.v.momentumFraction * mEyePropertiesTemp.p.alphaMomentum;
                 mEyePropertiesTemp.v.momentumCircumference = mEyePropertiesTemp.v.momentumCircumference * mEyePropertiesTemp.p.alphaMomentum;
-                mEyePropertiesTemp.v.momentumWidth = mEyePropertiesTemp.v.momentumWidth * mEyePropertiesTemp.p.alphaMomentum;
+                mEyePropertiesTemp.v.momentumRadius = mEyePropertiesTemp.v.momentumRadius * mEyePropertiesTemp.p.alphaMomentum;
 
                 mEyePropertiesTemp.v.edgeIntensity = mEyePropertiesTemp.v.edgeIntensity + mEyePropertiesTemp.p.alphaPupil * (mEyePropertiesTemp.p.edgeIntensityIni - mEyePropertiesTemp.v.edgeIntensity);
 
@@ -1503,9 +1516,10 @@ void MainWindow::updateCameraImage()
                 }
 
                 // increase pixel clock if desired frame-rate has not been reached
-                if ((cameraPixelClock =! CameraPixelClockSlider->maximum()) && (CameraFrameRateDesiredSpinBox->value() < cameraFrameRate))
+                if ((cameraPixelClock < CameraPixelClockSlider->maximum()) && (CameraFrameRateDesiredSpinBox->value() > cameraFrameRate))
                 {
-                    CameraPixelClockSlider->setValue(cameraPixelClock++);
+                    cameraPixelClock = cameraPixelClock + 1;
+                    CameraPixelClockSlider->setValue(cameraPixelClock);
                 }
 
             }
@@ -1720,13 +1734,13 @@ void MainWindow::setParameterWidgets()
     CannyKernelSizeLabel->setText(QString::number(mEyePropertiesParameters.cannyKernelSize));
 
     AlphaPupilSlider->setDoubleValue(mEyePropertiesParameters.alphaPupil);
-    AlphaSearchAreaSlider->setDoubleValue(mEyePropertiesParameters.alphaSearchArea);
+    AlphaSearchAreaSlider->setDoubleValue(mEyePropertiesParameters.alphaPosition);
     AlphaGeneralSlider->setDoubleValue(mEyePropertiesParameters.alphaGeneral);
     AlphaMomentumSlider->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
     AlphaVelocitySlider->setDoubleValue(mEyePropertiesParameters.alphaVelocity);
 
     AlphaPupilLabel->setText(QString::number(mEyePropertiesParameters.alphaPupil, 'f', 2));
-    AlphaSearchAreaLabel->setText(QString::number(mEyePropertiesParameters.alphaSearchArea, 'f', 2));
+    AlphaSearchAreaLabel->setText(QString::number(mEyePropertiesParameters.alphaPosition, 'f', 2));
     AlphaGeneralLabel->setText(QString::number(mEyePropertiesParameters.alphaGeneral, 'f', 2));
     AlphaMomentumLabel->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
     AlphaVelocityLabel->setText(QString::number(mEyePropertiesParameters.alphaVelocity, 'f', 2));
