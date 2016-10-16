@@ -170,7 +170,7 @@ private:
     QLabel *AlphaGeneralLabel;
     QLabel *AlphaMomentumLabel;
     QLabel *AlphaPupilLabel;
-    QLabel *AlphaPositionLabel;
+    QLabel *AlphaAverageLabel;
     QLabel *AlphaPredictionLabel;
     QLabel *AlphaVelocityLabel;
     QLabel *CameraBlackLevelOffsetLabel;
@@ -232,7 +232,7 @@ private:
     SliderDouble *AlphaGeneralSlider;
     SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaPupilSlider;
-    SliderDouble *AlphaPositionSlider;
+    SliderDouble *AlphaAverageSlider;
     SliderDouble *AlphaPredictionSlider;
     SliderDouble *AlphaVelocitySlider;
     SliderDouble *CameraExposureSlider;
@@ -321,7 +321,7 @@ private slots:
     void setAlphaGeneral(double value);
     void setAlphaMomentum(double value);
     void setAlphaPupil(double value);
-    void setAlphaPosition(double value);
+    void setAlphaAverage(double value);
     void setAlphaPrediction(double value);
     void setAlphaVelocity(double value);
     void setCameraAutoGain(int state);

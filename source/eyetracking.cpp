@@ -1590,11 +1590,13 @@ eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeP
         mEyePropertiesNew.v.pupilCircumference = mEyeProperties.v.pupilCircumference + mEyeProperties.p.alphaPupil * (mEyeProperties.p.pupilCircfIni - mEyeProperties.v.pupilCircumference);
         mEyePropertiesNew.v.pupilRadius = mEyeProperties.v.pupilCircumference / (2 * M_PI);
 
+        mEyePropertiesNew.v.pupilCircumferenceAvg =
+
         mEyePropertiesNew.v.momentumFraction = mEyeProperties.v.momentumFraction * mEyeProperties.p.alphaMomentum;
         mEyePropertiesNew.v.momentumCircumference = mEyeProperties.v.momentumCircumference * mEyeProperties.p.alphaMomentum;
         mEyePropertiesNew.v.momentumRadius = mEyeProperties.v.momentumRadius * mEyeProperties.p.alphaMomentum;
         
-        mEyePropertiesNew.v.edgeIntensity = mEyeProperties.v.edgeIntensity + mEyeProperties.p.alphaPupil * (mEyeProperties.p.edgeIntensityIni - mEyeProperties.v.edgeIntensity);
+        mEyePropertiesNew.v.edgeIntensity = mEyeProperties.v.edgeIntensity + mEyeProperties.p.alphaPupil * (255 - mEyeProperties.v.edgeIntensity);
 
         mEyePropertiesNew.v.xVelocity = mEyeProperties.v.xVelocity * mEyeProperties.p.alphaVelocity;
         mEyePropertiesNew.v.yVelocity = mEyeProperties.v.yVelocity * mEyeProperties.p.alphaVelocity;

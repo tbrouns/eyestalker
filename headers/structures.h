@@ -41,7 +41,6 @@ struct eyePropertiesParameters
     double alphaPupil;
     double alphaVelocity;
     double curvatureOffset;
-    double edgeIntensityIni;
     double edgeIntensityOffset;
     double ellipseFitErrorMaximum;
     double pupilCircfIni;
@@ -68,8 +67,10 @@ struct eyePropertiesVariables
     double momentumFraction;
     double momentumRadius;
     double pupilCircumference;
+    double pupilCircumferenceAvg;
     double pupilCircumferenceExact;
     double pupilFraction;
+    double pupilFractionAvg;
     double pupilFractionExact;
     double pupilRadius;
     double searchRadius;

@@ -38,6 +38,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.alphaGeneral = settings.value("AlphaGeneral", 0.75).toDouble();
     mEyePropertiesParameters.alphaMomentum = settings.value("AlphaMomentum", 0.5).toDouble();
     mEyePropertiesParameters.alphaPupil = settings.value("AlphaPupil", 0.75).toDouble();
+    mEyePropertiesParameters.alphaPosition = settings.value("AlphaAverage", 0.05).toDouble();
     mEyePropertiesParameters.alphaPrediction = settings.value("AlphaPrediction", 0.75).toDouble();
     mEyePropertiesParameters.alphaVelocity = settings.value("AlphaVelocity", 0.5).toDouble();
     mEyePropertiesParameters.cannyBlurLevel = settings.value("CannyBlurLevel", 0).toInt();
@@ -45,7 +46,6 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.cannyLowerLimit = settings.value("CannyLowerLimit", 300).toInt();
     mEyePropertiesParameters.cannyUpperLimit = settings.value("CannyUpperLimit", 600).toInt();
     mEyePropertiesParameters.curvatureOffset = settings.value("CurvatureOffset", 5).toDouble();
-    mEyePropertiesParameters.edgeIntensityIni = settings.value("EdgeIntensityIni", 255).toDouble();
     mEyePropertiesParameters.edgeIntensityOffset = settings.value("EdgeIntensityOffset", 40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber = settings.value("EdgeMaximumFitNumber", 3).toInt();
     mEyePropertiesParameters.ellipseFitErrorMaximum = settings.value("EllipseFitErrorMaximum", 40).toDouble();
@@ -99,7 +99,6 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CircumferenceMin", mEyePropertiesParameters.pupilCircumferenceMin);
     settings.setValue("CurvatureOffset", mEyePropertiesParameters.curvatureOffset);
     settings.setValue("DataFilename", QString::fromStdString(dataFilename));
-    settings.setValue("EdgeIntensityIni", mEyePropertiesParameters.edgeIntensityIni);
     settings.setValue("EdgeIntensityOffset", mEyePropertiesParameters.edgeIntensityOffset);
     settings.setValue("EdgeMaximumFitNumber", mEyePropertiesParameters.edgeMaximumFitNumber);
     settings.setValue("EditDataIndex", editDataIndex);
@@ -297,6 +296,12 @@ void MainWindow::setAlphaPupil(double value)
 {
     mEyePropertiesParameters.alphaPupil = value;
     AlphaPupilLabel->setText(QString::number(value, 'f', 2));
+}
+
+void MainWindow::setAlphaAverage(double value)
+{
+    mEyePropertiesParameters.alphaPosition = value;
+    AlphaAverageLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setAlphaPrediction(double value)
