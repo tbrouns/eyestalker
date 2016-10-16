@@ -35,12 +35,10 @@ void MainWindow::loadSettings(QString fileName)
     flashThreshold = settings.value("FlashThreshold", 0.90).toDouble();
     GAIN_AUTO = settings.value("GainAuto", GAIN_AUTO).toBool();
     GAIN_BOOST = settings.value("GainBoost", GAIN_BOOST).toBool();
-    mEyePropertiesParameters.alphaGeneral = settings.value("AlphaGeneral", 0.75).toDouble();
+    mEyePropertiesParameters.alphaAverage = settings.value("AlphaAverage", 0.05).toDouble();
+    mEyePropertiesParameters.alphaMiscellaneous = settings.value("AlphaMiscellaneous", 0.75).toDouble();
     mEyePropertiesParameters.alphaMomentum = settings.value("AlphaMomentum", 0.5).toDouble();
-    mEyePropertiesParameters.alphaPupil = settings.value("AlphaPupil", 0.75).toDouble();
-    mEyePropertiesParameters.alphaPosition = settings.value("AlphaAverage", 0.05).toDouble();
     mEyePropertiesParameters.alphaPrediction = settings.value("AlphaPrediction", 0.75).toDouble();
-    mEyePropertiesParameters.alphaVelocity = settings.value("AlphaVelocity", 0.5).toDouble();
     mEyePropertiesParameters.cannyBlurLevel = settings.value("CannyBlurLevel", 0).toInt();
     mEyePropertiesParameters.cannyKernelSize = settings.value("CannyKernelSize", 5).toInt();
     mEyePropertiesParameters.cannyLowerLimit = settings.value("CannyLowerLimit", 300).toInt();
@@ -50,10 +48,8 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.edgeMaximumFitNumber = settings.value("EdgeMaximumFitNumber", 3).toInt();
     mEyePropertiesParameters.ellipseFitErrorMaximum = settings.value("EllipseFitErrorMaximum", 40).toDouble();
     mEyePropertiesParameters.glintRadius = settings.value("GlintRadius", 6).toInt();
-    mEyePropertiesParameters.pupilCircfIni = settings.value("CircumferenceIni", 180).toDouble();
-    mEyePropertiesParameters.pupilCircumferenceMax = settings.value("CircumferenceMax", 280).toDouble();
+    mEyePropertiesParameters.pupilCircumferenceMax = settings.value("CircumferenceMax", 320).toDouble();
     mEyePropertiesParameters.pupilCircumferenceMin = settings.value("CircumferenceMin", 80).toDouble();
-    mEyePropertiesParameters.pupilFractIni = settings.value("FractionIni", 0.9).toDouble();
     mEyePropertiesParameters.pupilFractMin = settings.value("FractionMin", 0.4).toDouble();
     mEyePropertiesParameters.pupilOffset = settings.value("PupilOffset", 0.4).toDouble();
     mEyePropertiesParameters.thresholdCircumferenceChangeMin = settings.value("ThresholdCircumferenceChangeMin", 10.0).toDouble();
@@ -73,11 +69,10 @@ void MainWindow::saveSettings(QString fileName)
 {
     QSettings settings(fileName, QSettings::IniFormat);
 
-    settings.setValue("AlphaGeneral", mEyePropertiesParameters.alphaGeneral);
+    settings.setValue("AlphaAverage", mEyePropertiesParameters.alphaAverage);
+    settings.setValue("AlphaMiscellaneous", mEyePropertiesParameters.alphaMiscellaneous);
     settings.setValue("AlphaMomentum", mEyePropertiesParameters.alphaMomentum);
-    settings.setValue("AlphaPupil", mEyePropertiesParameters.alphaPupil);
     settings.setValue("AlphaPrediction", mEyePropertiesParameters.alphaPrediction);
-    settings.setValue("AlphaVelocity", mEyePropertiesParameters.alphaVelocity);
     settings.setValue("AOIHghtFraction", eyeAOIHghtFraction);
     settings.setValue("AOIWdthFraction", eyeAOIWdthFraction);
     settings.setValue("AOIXPosRelative", Parameters::eyeAOIXPosFraction);
@@ -94,7 +89,6 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CannyKernelSize", mEyePropertiesParameters.cannyKernelSize);
     settings.setValue("CannyLowerLimit", mEyePropertiesParameters.cannyLowerLimit);
     settings.setValue("CannyUpperLimit", mEyePropertiesParameters.cannyUpperLimit);
-    settings.setValue("CircumferenceIni", mEyePropertiesParameters.pupilCircfIni);
     settings.setValue("CircumferenceMax", mEyePropertiesParameters.pupilCircumferenceMax);
     settings.setValue("CircumferenceMin", mEyePropertiesParameters.pupilCircumferenceMin);
     settings.setValue("CurvatureOffset", mEyePropertiesParameters.curvatureOffset);
@@ -109,7 +103,6 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("FlashAOIXPos", Parameters::flashAOIXPos);
     settings.setValue("FlashAOIYPos", Parameters::flashAOIYPos);
     settings.setValue("FlashThreshold", flashThreshold);
-    settings.setValue("FractionIni", mEyePropertiesParameters.pupilFractIni);
     settings.setValue("FractionMin", mEyePropertiesParameters.pupilFractMin);
     settings.setValue("GlintRadius", mEyePropertiesParameters.glintRadius);
     settings.setValue("PupilOffset", mEyePropertiesParameters.pupilOffset);
@@ -194,7 +187,7 @@ void MainWindow::setPupilCircumference(double value)
 {
     if (!Parameters::REALTIME_PROCESSING)
     {
-        mEyePropertiesVariables.pupilCircumference = value;
+        mEyePropertiesVariables.pupilCircumferencePrediction = value;
         PupilCircfLabel->setText(QString::number(value, 'f', 1));
     }
 }
@@ -203,7 +196,7 @@ void MainWindow::setPupilFraction(double value)
 {
     if (!Parameters::REALTIME_PROCESSING)
     {
-        mEyePropertiesVariables.pupilFraction = value;
+        mEyePropertiesVariables.pupilFractionPrediction = value;
         PupilFractLabel->setText(QString::number(value, 'f', 2));
     }
 }
@@ -212,43 +205,31 @@ void MainWindow::setEdgeIntensity(double value)
 {
     if (!Parameters::REALTIME_PROCESSING)
     {
-        mEyePropertiesVariables.edgeIntensity = value;
+        mEyePropertiesVariables.edgeIntensityPrediction = value;
         EdgeIntensityLabel->setText(QString::number(value, 'f', 1));
     }
 }
 
-void MainWindow::setPupilCircumferenceIni(double value)
+void MainWindow::setPupilCircumferenceMin(double value)
 {
-    mEyePropertiesParameters.pupilCircfIni = value;
-
-    if (circumferenceOffset > value)
+    if (mEyePropertiesParameters.pupilCircumferenceMax < value)
     {
-        circumferenceOffset = value;
-        PupilCircumferenceOffSlider->setValue(circumferenceOffset);
-    }
-    else
-    {
-        setPupilCircumferenceOff(circumferenceOffset);
+        PupilCircumferenceMaxSlider->setDoubleValue(value);
     }
 
-    PupilCircumferenceOffSlider->setDoubleMaximum(value);
-    PupilCircumferenceIniLabel->setText(QString::number(value, 'f', 1));
+    mEyePropertiesParameters.pupilCircumferenceMin = value;
+    PupilCircumferenceMinLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMin, 'f', 1));
 }
 
-void MainWindow::setPupilCircumferenceOff(double value)
+void MainWindow::setPupilCircumferenceMax(double value)
 {
-    circumferenceOffset = value;
-    mEyePropertiesParameters.pupilCircumferenceMin = mEyePropertiesParameters.pupilCircfIni - value;
-    mEyePropertiesParameters.pupilCircumferenceMax = mEyePropertiesParameters.pupilCircfIni + value;
-    PupilCircfSliderDouble->setDoubleRange(mEyePropertiesParameters.pupilCircumferenceMin, mEyePropertiesParameters.pupilCircumferenceMax);
-    PupilCircumferenceOffLabel->setText(QString::number(value, 'f', 1));
-}
+    if (mEyePropertiesParameters.pupilCircumferenceMin > value)
+    {
+        PupilCircumferenceMinSlider->setDoubleValue(value);
+    }
 
-void MainWindow::setPupilFractionIni(double value)
-{
-    mEyePropertiesParameters.pupilFractIni = value;
-    PupilFractionMinSlider->setDoubleMaximum(mEyePropertiesParameters.pupilFractIni);
-    PupilFractionIniLabel->setText(QString::number(value, 'f', 2));
+    mEyePropertiesParameters.pupilCircumferenceMax = value;
+    PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
 }
 
 void MainWindow::setPupilFractionMin(double value)
@@ -292,15 +273,9 @@ void MainWindow::setCannyBlurLevel(int value)
     CannyBlurLevelLabel->setText(QString::number(value));
 }
 
-void MainWindow::setAlphaPupil(double value)
-{
-    mEyePropertiesParameters.alphaPupil = value;
-    AlphaPupilLabel->setText(QString::number(value, 'f', 2));
-}
-
 void MainWindow::setAlphaAverage(double value)
 {
-    mEyePropertiesParameters.alphaPosition = value;
+    mEyePropertiesParameters.alphaAverage = value;
     AlphaAverageLabel->setText(QString::number(value, 'f', 2));
 }
 
@@ -310,22 +285,16 @@ void MainWindow::setAlphaPrediction(double value)
     AlphaPredictionLabel->setText(QString::number(value, 'f', 2));
 }
 
-void MainWindow::setAlphaGeneral(double value)
+void MainWindow::setAlphaMiscellaneous(double value)
 {
-    mEyePropertiesParameters.alphaGeneral = value;
-    AlphaGeneralLabel->setText(QString::number(value, 'f', 2));
+    mEyePropertiesParameters.alphaMiscellaneous = value;
+    AlphaMiscellaneousLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setAlphaMomentum(double value)
 {
     mEyePropertiesParameters.alphaMomentum = value;
     AlphaMomentumLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setAlphaVelocity(double value)
-{
-    mEyePropertiesParameters.alphaVelocity = value;
-    AlphaVelocityLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setThresholdCircumference(double value)
@@ -475,7 +444,6 @@ void MainWindow::setCameraSubSampling(int state)
     cameraAOIWdthMax = cameraAOIWdthMax * subSamplingChange;
     cameraAOIHghtMax = cameraAOIHghtMax * subSamplingChange;
 
-    PupilCircumferenceIniSlider->setDoubleValue(mEyePropertiesParameters.pupilCircfIni * subSamplingChange);
     ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.thresholdCircumferenceChangeMin * subSamplingChange);
 
     updateCamAOIx();

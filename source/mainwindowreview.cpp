@@ -188,7 +188,7 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
     {
-        int pupilHaarWdth = round(mEyePropertiesVariables.pupilCircumference / M_PI);
+        int pupilHaarWdth = round(mEyePropertiesVariables.pupilCircumferencePrediction / M_PI);
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);
 
         mEyePropertiesVariables.searchRadius = ceil(0.5 * pupilHaarWdthOffset);
@@ -197,8 +197,8 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
         if (editImageIndex == 0)
         {
-            mEyePropertiesVariables.xPos = xPos;
-            mEyePropertiesVariables.yPos = yPos;
+            mEyePropertiesVariables.xPosExact = xPos;
+            mEyePropertiesVariables.yPosExact = yPos;
         }
     }
 }
@@ -294,11 +294,11 @@ void MainWindow::nextReviewImage()
     }
 }
 
-void MainWindow::setReviewImageFrame(int frame)
+void MainWindow::setReviewImageFrame(int imageIndex)
 {
     if (!PROCESSING_ALL_IMAGES)
     {
-        editImageIndex = frame;
+        editImageIndex = imageIndex;
         mEyePropertiesVariables = vEyePropertiesVariables[editImageIndex];
         setVariableWidgets(mEyePropertiesVariables);
         updateReviewImages(editImageIndex);
@@ -363,8 +363,8 @@ void MainWindow::reviewPupilDetectionOneFrame()
 
     // Get pupil coords in screen coords
 
-    mEyePropertiesNew.v.xPosAbs = mEyePropertiesNew.v.xPos + eyeAOIXPosTemp;
-    mEyePropertiesNew.v.yPosAbs = mEyePropertiesNew.v.yPos + eyeAOIYPosTemp;
+    mEyePropertiesNew.v.xPosAbsolute = mEyePropertiesNew.v.xPosExact + eyeAOIXPosTemp;
+    mEyePropertiesNew.v.yPosAbsolute = mEyePropertiesNew.v.yPosExact + eyeAOIYPosTemp;
 
     // Record pupil positions
 
@@ -444,11 +444,6 @@ void MainWindow::detectPupilAllTrials()
     PROCESSING_ALL_TRIALS = false;
 }
 
-void MainWindow::onSavePupilData()
-{
-    reviewSaveExperimentData();
-}
-
 void MainWindow::reviewSaveExperimentData()
 {
     // save data
@@ -473,8 +468,8 @@ void MainWindow::reviewSaveExperimentData()
 
     for (int i = 0; i < editImageTotal; i++)
     {
-        eyeXPositions[i] = vEyePropertiesVariables[i + 1].xPosAbs;
-        eyeYPositions[i] = vEyePropertiesVariables[i + 1].yPosAbs;
+        eyeXPositions[i] = vEyePropertiesVariables[i + 1].xPosAbsolute;
+        eyeYPositions[i] = vEyePropertiesVariables[i + 1].yPosAbsolute;
         eyeDetectionFlags[i] = vEyePropertiesVariables[i + 1].pupilDetected;
         timeStamps[i] = timeVector[i + editDataIndex * (editImageTotal + 2) + 2];
     }
@@ -486,6 +481,47 @@ void MainWindow::reviewSaveExperimentData()
     file.close();
 }
 
+void MainWindow::reviewCombineExperimentData()
+{
+    for (int iTrial = 0; iTrial < editDataTotal; iTrial++)
+    {
+        ReviewTrialSlider->setValue(iTrial + 1);
+
+        std::stringstream fileNameRead;
+        fileNameRead << editDataDirectory.toStdString()
+                     << "/tracking_data.dat";
+
+        std::ifstream dataFile;
+        dataFile.open(fileNameRead.str().c_str());
+
+        std::string line;
+        while (dataFile)
+        {
+            if (!std::getline(dataFile, line)) break;
+        }
+
+        dataFilename = (DataFilenameLineEdit->text()).toStdString();
+
+        std::stringstream fileNameWrite;
+        fileNameWrite << dataDirectory
+                      << "/" << dataFilename;
+
+        std::ofstream file;
+        if (!boost::filesystem::exists(fileNameWrite.str()))
+        {
+            file.open(fileNameWrite.str(), std::ios::out | std::ios::ate);
+        }
+        else
+        {
+            file.open(fileNameWrite.str(), std::ios_base::app);
+            file << "\n";
+        }
+
+        file << line;
+
+        file.close();
+    }
+}
 
 
 

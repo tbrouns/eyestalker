@@ -34,19 +34,15 @@
 
 struct eyePropertiesParameters
 {
-    double alphaGeneral;
+    double alphaMiscellaneous;
     double alphaMomentum;
-    double alphaPosition;
+    double alphaAverage;
     double alphaPrediction;
-    double alphaPupil;
-    double alphaVelocity;
     double curvatureOffset;
     double edgeIntensityOffset;
     double ellipseFitErrorMaximum;
-    double pupilCircfIni;
     double pupilCircumferenceMax;
     double pupilCircumferenceMin;
-    double pupilFractIni;
     double pupilFractMin;
     double pupilOffset;
     double thresholdCircumferenceChangeMin;
@@ -62,26 +58,27 @@ struct eyePropertiesParameters
 struct eyePropertiesVariables
 {
     bool pupilDetected;
-    double edgeIntensity;
+    double edgeIntensityPrediction;
+    double edgeIntensityAverage;
     double momentumCircumference;
     double momentumFraction;
     double momentumRadius;
-    double pupilCircumference;
-    double pupilCircumferenceAvg;
+    double pupilCircumferencePrediction;
+    double pupilCircumferenceAverage;
     double pupilCircumferenceExact;
-    double pupilFraction;
-    double pupilFractionAvg;
+    double pupilFractionPrediction;
+    double pupilFractionAverage;
     double pupilFractionExact;
-    double pupilRadius;
+    double pupilRadiusPrediction;
     double searchRadius;
     double thresholdCircumferenceChange;
     double thresholdFractionChange;
-    double xPos;
-    double xPosAbs;
+    double xPosExact;
+    double xPosAbsolute;
     double xPosPredicted;
     double xVelocity;
-    double yPos;
-    double yPosAbs;
+    double yPosExact;
+    double yPosAbsolute;
     double yPosPredicted;
     double yVelocity;
 };

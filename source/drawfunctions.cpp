@@ -177,12 +177,11 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
         if (mEyeProperties.v.pupilDetected)
         {
             drawEllipse(I, mEyeProperties.m.ellipseCoefficients, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, white);
-            drawEllipseCross(I, mEyeProperties.v.xPos, mEyeProperties.v.yPos, Parameters::ellipseDrawCrossSize, white);
+            drawEllipseCross(I, mEyeProperties.v.xPosExact, mEyeProperties.v.yPosExact, Parameters::ellipseDrawCrossSize, white);
         }
     }
 
     drawEllipseCross(I, mEyeProperties.v.xPosPredicted, mEyeProperties.v.yPosPredicted, Parameters::ellipseDrawCrossSize, cyan);
-
 }
 
 void drawROI(cv::Mat& I, int x0, int y0, int W, int H, cv::Vec3b col)
