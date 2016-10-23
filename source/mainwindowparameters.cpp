@@ -32,7 +32,7 @@ void MainWindow::loadSettings(QString fileName)
     editSubjectName = settings.value("SubjectName", "").toString();
     eyeAOIHghtFraction = settings.value("AOIHghtFraction", eyeAOIHghtFraction).toDouble();
     eyeAOIWdthFraction = settings.value("AOIWdthFraction", eyeAOIWdthFraction).toDouble();
-    flashThreshold = settings.value("FlashThreshold", 0.90).toDouble();
+    flashThreshold = settings.value("FlashThreshold", 230).toInt();
     GAIN_AUTO = settings.value("GainAuto", GAIN_AUTO).toBool();
     GAIN_BOOST = settings.value("GainBoost", GAIN_BOOST).toBool();
     mEyePropertiesParameters.alphaAverage = settings.value("AlphaAverage", 0.05).toDouble();
@@ -113,6 +113,14 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("TrialTimeLength", (TrialTimeLengthLineEdit->text()).toInt());
 }
 
+void MainWindow::startRecordingManual()
+{
+    if (!FLASH_STANDBY)
+    {
+        startTrialRecording();
+    }
+}
+
 void MainWindow::setRealTimeEyeTracking(int state)
 {
     if (state)
@@ -181,6 +189,12 @@ void MainWindow::onFlashStandbySlider(int val)
     {
         FlashStandbySlider->setValue(0);
     }
+}
+
+void MainWindow::resetFlashMinIntensity()
+{
+    FlashThresholdSlider->setMinimum(0);
+    FlashThresholdSlider->setValue(0);
 }
 
 void MainWindow::setPupilCircumference(double value)
@@ -670,10 +684,10 @@ void MainWindow::setFlashAOIHght(int val)
     CamQImage->setFlashAOI(Parameters::flashAOIXPos, Parameters::flashAOIYPos, Parameters::flashAOIWdth, Parameters::flashAOIHght);
 }
 
-void MainWindow::setFlashThreshold(double val)
+void MainWindow::setFlashThreshold(int val)
 {
     flashThreshold = val;
-    FlashThresholdLabel->setText(QString::number(flashThreshold, 'f', 3));
+    FlashThresholdLabel->setText(QString::number(flashThreshold));
 }
 
 void MainWindow::setTrialIndex(int val)

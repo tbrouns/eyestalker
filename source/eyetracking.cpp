@@ -1670,12 +1670,11 @@ eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeP
     return mEyePropertiesNew;
 }
 
-bool flashDetection(const cv::Mat& imgBGR, double threshold)
+double flashDetection(const cv::Mat& imgBGR)
 {
     cv::Mat img;
     cv::cvtColor(imgBGR, img, cv::COLOR_BGR2GRAY);
 
-    bool flashDetected = false;
     unsigned long long intensityTotal = 0;
     uchar *ptr = img.data;
     int imgSize = img.cols * img.rows;
@@ -1685,12 +1684,5 @@ bool flashDetection(const cv::Mat& imgBGR, double threshold)
         intensityTotal += ptr[iPixel];
     }
 
-    double avgIntensity = intensityTotal / (double) imgSize;
-
-    if (avgIntensity > (255 * threshold))
-    {
-        flashDetected = true; // flash detected
-    }
-
-    return flashDetected;
+    return (intensityTotal / (double) imgSize);
 }

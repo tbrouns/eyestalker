@@ -131,7 +131,7 @@ private:
     double circumferenceOffset;
     double eyeAOIHghtFraction;
     double eyeAOIWdthFraction;
-    double flashThreshold;
+    double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime; // in ms
     std::vector<double> timeVector;
@@ -158,6 +158,7 @@ private:
     int eyeAOIWdthMin;
     int eyeImageHght;
     int eyeImageWdth;
+    int flashThreshold;
     int frameCount;
     int getCurrentTime();
     int trialFrameTotal;
@@ -211,6 +212,7 @@ private:
     QSlider *CannyUpperLimitSlider;
     QSlider *EdgeMaximumFitNumberSlider;
     QSlider *ExperimentEyeVideoSlider;
+    QSlider *FlashThresholdSlider;
     QSlider *FlashStandbySlider;
     QSlider *GlintRadiusSlider;
     QSlider *ReviewImageSlider;
@@ -310,6 +312,7 @@ private slots:
     void onFlashStandbySlider(int);
     void prevReviewImage();
     void selectDirectory();
+    void resetFlashMinIntensity();
     void reviewSaveExperimentData();
     void reviewCombineExperimentData();
     void setAlphaMiscellaneous(double value);
@@ -347,7 +350,7 @@ private slots:
     void setFlashAOIYPos(int);
     void setFlashAOIWdth(int);
     void setFlashAOIHght(int);
-    void setFlashThreshold(double);
+    void setFlashThreshold(int);
     void setGlintRadius(int value);
     void setAOILeftEye();
     void setPupilCircumference(double);
@@ -365,6 +368,7 @@ private slots:
     void setThresholdFraction(double);
     void setTrialIndex(int);
     void startReviewSession();
+    void startRecordingManual();
     void updateCameraImage();
     void updateRawImage();
 

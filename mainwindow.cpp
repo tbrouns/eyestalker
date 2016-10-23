@@ -917,19 +917,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FlashStandbyLabel = new QLabel;
     FlashStandbyLabel->setText("<font color='red'><b>OFF</b></font>");
 
-    QLabel* FlashThresholdTextBox = new QLabel;
-    FlashThresholdTextBox->setText("<b>Flash threshold:</b>");
-
-    SliderDouble* FlashThresholdSlider = new SliderDouble;
-    FlashThresholdSlider->setPrecision(3);
-    FlashThresholdSlider->setDoubleRange(0.80, 1.00);
-    FlashThresholdSlider->setDoubleValue(flashThreshold);
+    FlashThresholdSlider = new QSlider;
+    FlashThresholdSlider->setRange(0, 255);
+    FlashThresholdSlider->setValue(0);
     FlashThresholdSlider->setOrientation(Qt::Horizontal);
 
     FlashThresholdLabel = new QLabel;
-    FlashThresholdLabel->setText(QString::number(flashThreshold, 'f', 3));
+    FlashThresholdLabel->setText(QString::number(flashThreshold));
 
-    QObject::connect(FlashThresholdSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setFlashThreshold(double)));
+    QObject::connect(FlashThresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(setFlashThreshold(int)));
+
+    QPushButton* FlashMinIntensityResetButton = new QPushButton("Reset");
+    QObject::connect(FlashMinIntensityResetButton, SIGNAL(clicked()), this, SLOT(resetFlashMinIntensity()));
+
+    QLabel* FlashThresholdTextBox = new QLabel;
+    FlashThresholdTextBox->setText("<b>Flash threshold:</b>");
 
     QSpinBox* FlashXPosSpinBox = new QSpinBox;
     QSpinBox* FlashYPosSpinBox = new QSpinBox;
@@ -990,6 +992,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     TrialIndexSpinBoxLayout->addStretch();
     TrialIndexSpinBoxLayout->addWidget(TrialIndexSpinBox);
 
+    QPushButton* StartRecordingButton = new QPushButton("Start");
+    QObject::connect(StartRecordingButton, SIGNAL(clicked()), this, SLOT(startRecordingManual()));
+
     QWidget* ExperimentTabWidget = new QWidget;
     QGridLayout *ExperimentTabLayout = new QGridLayout(ExperimentTabWidget);
     ExperimentTabLayout->addWidget(NameInputTextBox, 0, 0);
@@ -1003,18 +1008,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ExperimentTabLayout->addLayout(TrialIndexSpinBoxLayout, 3, 1);
     ExperimentTabLayout->addWidget(TrialTimeLengthTextBox, 4, 0);
     ExperimentTabLayout->addWidget(TrialTimeLengthLineEdit, 4, 1);
+    ExperimentTabLayout->addWidget(StartRecordingButton, 4, 2);
     ExperimentTabLayout->addWidget(FlashStandbyTextBox, 5, 0);
     ExperimentTabLayout->addWidget(FlashStandbySlider, 5, 1);
     ExperimentTabLayout->addWidget(FlashStandbyLabel, 5, 2);
     ExperimentTabLayout->addWidget(FlashThresholdTextBox, 6, 0);
     ExperimentTabLayout->addWidget(FlashThresholdSlider, 6, 1);
     ExperimentTabLayout->addWidget(FlashThresholdLabel, 6, 2);
-    ExperimentTabLayout->addLayout(FlashCoordinatesLayout, 7, 0, 1, 3);
+    ExperimentTabLayout->addWidget(FlashMinIntensityResetButton, 6, 3, Qt::AlignLeft);
+    ExperimentTabLayout->addLayout(FlashCoordinatesLayout, 8, 0, 1, 3);
 
     ExperimentTabLayout->setColumnStretch(0, 1);
     ExperimentTabLayout->setColumnStretch(1, 2);
     ExperimentTabLayout->setColumnStretch(2, 1);
-    ExperimentTabLayout->setColumnStretch(3, 5);
+    ExperimentTabLayout->setColumnStretch(3, 1);
+    ExperimentTabLayout->setColumnStretch(4, 5);
 
     // Set-up parameter settings layout
 
@@ -1284,6 +1292,9 @@ void MainWindow::pupilTracking()
 
         if (!EXPERIMENT_TRIAL_RECORDING)
         {
+            cv::Rect flashRegion(flashAOIXPosTemp, flashAOIYPosTemp, flashAOIWdthTemp, flashAOIHghtTemp);
+            double avgIntensity = flashDetection(imageOriginal(flashRegion));
+
             if (FLASH_STANDBY)
             {
                 // reset variables
@@ -1306,9 +1317,7 @@ void MainWindow::pupilTracking()
                 mEyePropertiesTemp.v.thresholdCircumferenceChange = mEyePropertiesTemp.p.pupilCircumferenceMax;
                 mEyePropertiesTemp.v.thresholdFractionChange = 1.0;
 
-                cv::Rect flashRegion(flashAOIXPosTemp, flashAOIYPosTemp, flashAOIWdthTemp, flashAOIHghtTemp);
-
-                if (flashDetection(imageOriginal(flashRegion), flashThreshold))
+                if (avgIntensity > flashThreshold)
                 {
                     startTime = mImageInfo.time;
                     startTrialRecording();
@@ -1316,6 +1325,12 @@ void MainWindow::pupilTracking()
             }
             else
             {
+                if (avgIntensity > flashMinIntensity)
+                {
+                    flashMinIntensity = avgIntensity;
+                    FlashThresholdSlider->setMinimum(flashMinIntensity);
+                }
+
                 cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
                 mEyePropertiesTemp = pupilDetector(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
             }
