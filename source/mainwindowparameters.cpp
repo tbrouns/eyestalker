@@ -193,6 +193,7 @@ void MainWindow::onFlashStandbySlider(int val)
 
 void MainWindow::resetFlashMinIntensity()
 {
+    flashMinIntensity = 0;
     FlashThresholdSlider->setMinimum(0);
     FlashThresholdSlider->setValue(0);
 }

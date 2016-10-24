@@ -286,7 +286,7 @@ private:
     void updateEyeAOIy();
     void updateReviewImages(int);
     void updateReviewSession();
-    void writeToFile(std::ofstream& file, const std::vector<bool>&, const std::vector<double>&);
+    void writeToFile(std::ofstream& file, const std::vector<bool>&, const std::vector<double>&, std::string);
 
 protected:
 

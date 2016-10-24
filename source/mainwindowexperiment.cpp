@@ -74,7 +74,7 @@ void MainWindow::startTrialRecording()
     }
 }
 
-void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlags, const std::vector<double>& v)
+void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlags, const std::vector<double>& v, std::string delimiter)
 {
     int paddingTotal = 0;
 
@@ -82,7 +82,7 @@ void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlag
     {
         if (vFlags[i]) // only detected pupil data
         {
-            file << v[i] << ";";
+            file << v[i] << delimiter;
         }
         else
         {
@@ -92,7 +92,7 @@ void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlag
 
     for (int i = 0; i < paddingTotal; i++) // write padding of zeroes
     {
-        file << 0 << ";";
+        file << 0 << delimiter;
     }
 }
 
@@ -118,15 +118,15 @@ void MainWindow::saveTrialData()
             file << "\n";
         }
 
-        file << std::setw(3) << std::setfill('0') << trialIndex << ";"; // print with leading zeros
-        file << trialStartTime << ";"; // time of day in milliseconds
+        file << std::setw(3) << std::setfill('0') << trialIndex << " "; // print with leading zeros
+        file << trialStartTime << " "; // time of day in milliseconds
 
         file << std::fixed;
         file << std::setprecision(3);
 
-        writeToFile(file, eyeDetectionFlags, timeStamps);
-        writeToFile(file, eyeDetectionFlags, eyeXPositions);
-        writeToFile(file, eyeDetectionFlags, eyeYPositions);
+        writeToFile(file, eyeDetectionFlags, timeStamps, ";");
+        writeToFile(file, eyeDetectionFlags, eyeXPositions, ";");
+        writeToFile(file, eyeDetectionFlags, eyeYPositions, ";");
 
         file.close();
     }
@@ -169,13 +169,13 @@ void MainWindow::saveTrialData()
             file << "\n";
         }
 
-        file << std::setw(3) << std::setfill('0') << trialIndex << ";"; // print with leading zeros
-        file << trialStartTime << ";"; // time of day in milliseconds
+        file << std::setw(3) << std::setfill('0') << trialIndex << " "; // print with leading zeros
+        file << trialStartTime << " "; // time of day in milliseconds
 
         file << std::fixed;
         file << std::setprecision(3);
 
-        writeToFile(file, eyeDetectionFlags, timeStamps);
+        writeToFile(file, eyeDetectionFlags, timeStamps, " ");
 
         file.close();
     }

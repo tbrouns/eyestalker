@@ -1223,7 +1223,7 @@ void MainWindow::pupilTracking()
             eyeAOIWdthTemp = Parameters::eyeAOIWdth;
             eyeAOIHghtTemp = Parameters::eyeAOIHght;
 
-            if (FLASH_STANDBY)
+            if (!EXPERIMENT_TRIAL_RECORDING)
             {
                 flashAOIXPosTemp = Parameters::flashAOIXPos - Parameters::cameraAOIXPos;
                 flashAOIYPosTemp = Parameters::flashAOIYPos - Parameters::cameraAOIYPos;

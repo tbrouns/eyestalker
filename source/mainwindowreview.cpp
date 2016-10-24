@@ -474,9 +474,9 @@ void MainWindow::reviewSaveExperimentData()
         timeStamps[i] = timeVector[i + editDataIndex * (editImageTotal + 2) + 2];
     }
 
-    writeToFile(file, eyeDetectionFlags, timeStamps);
-    writeToFile(file, eyeDetectionFlags, eyeXPositions);
-    writeToFile(file, eyeDetectionFlags, eyeYPositions);
+    writeToFile(file, eyeDetectionFlags, timeStamps, ";");
+    writeToFile(file, eyeDetectionFlags, eyeXPositions, ";");
+    writeToFile(file, eyeDetectionFlags, eyeYPositions, ";");
 
     file.close();
 }
