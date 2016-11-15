@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     GAIN_BOOST = false;
     guiUpdateFrequency = 30;
     relativeTime = 0;
-    SAVE_EYE_IMAGE = false;
+    SAVE_EYE_IMAGE = true;
     startTime = 0;
     subjectIdentifier = "";
     trialIndex = 0;
@@ -1500,9 +1500,22 @@ void MainWindow::updateCameraImage()
                 }
 
                 // increase pixel clock if desired frame-rate has not been reached
-                if ((cameraPixelClock < CameraPixelClockSlider->maximum()) && (CameraFrameRateDesiredSpinBox->value() > cameraFrameRate))
+                int desiredFrameRate = CameraFrameRateDesiredSpinBox->value();
+
+                if ((cameraPixelClock < CameraPixelClockSlider->maximum()) && (desiredFrameRate > cameraFrameRate))
                 {
                     cameraPixelClock = cameraPixelClock + 1;
+                    CameraPixelClockSlider->setValue(cameraPixelClock);
+
+                    if (cameraFrameRate > desiredFrameRate)
+                    {
+                        CameraFrameRateSlider->setDoubleValue(desiredFrameRate);
+                    }
+                }
+
+                if (desiredFrameRate < cameraFrameRate - 1.0)
+                {
+                    cameraPixelClock = cameraPixelClock - 1;
                     CameraPixelClockSlider->setValue(cameraPixelClock);
                 }
 

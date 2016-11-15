@@ -1672,17 +1672,24 @@ eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeP
 
 double flashDetection(const cv::Mat& imgBGR)
 {
-    cv::Mat img;
-    cv::cvtColor(imgBGR, img, cv::COLOR_BGR2GRAY);
+    int imgSize = imgBGR.cols * imgBGR.rows;
 
-    unsigned long long intensityTotal = 0;
-    uchar *ptr = img.data;
-    int imgSize = img.cols * img.rows;
-
-    for (int iPixel = 0; iPixel < imgSize; iPixel++)
+    if (imgSize > 0)
     {
-        intensityTotal += ptr[iPixel];
-    }
+        unsigned long long intensityTotal = 0;
+        cv::Mat img;
+        cv::cvtColor(imgBGR, img, cv::COLOR_BGR2GRAY);
+        uchar *ptr = img.data;
 
-    return (intensityTotal / (double) imgSize);
+        for (int iPixel = 0; iPixel < imgSize; iPixel++)
+        {
+            intensityTotal += ptr[iPixel];
+        }
+
+        return (intensityTotal / (double) imgSize);
+    }
+    else
+    {
+        return 0;
+    }
 }
