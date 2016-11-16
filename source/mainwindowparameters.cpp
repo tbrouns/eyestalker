@@ -56,9 +56,10 @@ void MainWindow::loadSettings(QString fileName)
     Parameters::eyeAOIXPosFraction = settings.value("AOIXPosRelative", Parameters::eyeAOIXPosFraction).toDouble();
     Parameters::eyeAOIYPosFraction = settings.value("AOIYPosRelative", Parameters::eyeAOIYPosFraction).toDouble();
     Parameters::flashAOIHght = settings.value("FlashAOIHght", 100).toInt();
-    Parameters::flashAOIWdth = settings.value("FlashAOIWdth", 60).toInt();
+    Parameters::flashAOIWdth = settings.value("FlashAOIWdth", 30).toInt();
     Parameters::flashAOIXPos = settings.value("FlashAOIXPos", 257).toInt();
     Parameters::flashAOIYPos = settings.value("FlashAOIYPos", 500).toInt();
+    SAVE_EYE_IMAGE = settings.value("SaveEyeImage", true).toBool();
     subjectIdentifier = settings.value("SubjectIdentifier", "").toString();
     trialIndex = settings.value("TrialIndex", trialIndex).toInt();
     trialTimeLength = settings.value("TrialTimeLength", trialTimeLength).toInt();
@@ -104,6 +105,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("FractionMin", mEyePropertiesParameters.pupilFractMin);
     settings.setValue("GlintRadius", mEyePropertiesParameters.glintRadius);
     settings.setValue("PupilOffset", mEyePropertiesParameters.pupilOffset);
+    settings.setValue("SaveEyeImage", SAVE_EYE_IMAGE);
     settings.setValue("SubjectName", subjectIdentifier);
     settings.setValue("SubSamplingFactor", cameraSubSamplingFactor);
     settings.setValue("ThresholdCircumferenceChangeMin", mEyePropertiesParameters.thresholdCircumferenceChangeMin);

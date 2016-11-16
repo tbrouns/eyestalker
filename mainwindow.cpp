@@ -243,7 +243,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     RealTimeEyeTrackingTextBox->setText("<b>Real-time eye tracking: </b>");
 
     QCheckBox *RealTimeEyeTrackingCheckBox = new QCheckBox;
-    RealTimeEyeTrackingCheckBox->setChecked(true);
+    RealTimeEyeTrackingCheckBox->setChecked(!SAVE_EYE_IMAGE);
     QObject::connect(RealTimeEyeTrackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setRealTimeEyeTracking(int)));
 
     QLabel *ReviewModeTextBox = new QLabel;
