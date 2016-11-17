@@ -1463,6 +1463,11 @@ eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeP
             offsetPupilHaarWdth = imageHght - 1;
         }
 
+        if (offsetPupilHaarWdth >= imageWdth)
+        {
+            offsetPupilHaarWdth = imageWdth - 1;
+        }
+
         if (offsetPupilHaarXPos < 0)
         {
             offsetPupilHaarXPos = 0;
