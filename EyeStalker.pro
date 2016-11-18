@@ -15,7 +15,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = EyeStalker
 TEMPLATE = app
@@ -24,6 +24,7 @@ QT       += core gui
 
 CONFIG += c++11
 
+unix {
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 
@@ -46,7 +47,7 @@ INCLUDEPATH += $$PWD/../../../../usr/local/include
 DEPENDPATH += $$PWD/../../../../usr/local/include
 
 # Qwt
-unix:!macx: LIBS += -L$$PWD/../../../../usr/local/qwt-6.1.2/lib/ -lqwt
+LIBS += -L$$PWD/../../../../usr/local/qwt-6.1.2/lib/ -lqwt
 INCLUDEPATH += $$PWD/../../../../usr/local/qwt-6.1.2/include
 DEPENDPATH += $$PWD/../../../../usr/local/qwt-6.1.2/include
 
@@ -54,7 +55,50 @@ DEPENDPATH += $$PWD/../../../../usr/local/qwt-6.1.2/include
 LIBS += -L$$PWD/../../../../../usr/lib/ -lueye_api
 INCLUDEPATH += $$PWD/../../../../../usr/include
 DEPENDPATH += $$PWD/../../../../../usr/include
+}
 
+win32 {
+# OpenCV
+INCLUDEPATH += C:/libs/OpenCV-2.4.9/include
+LIBS += -LC:\\libs\\OpenCV-2.4.9\\build-qt\\lib \
+    -lopencv_calib3d249d \
+    -lopencv_contrib249d \
+    -lopencv_core249d \
+    -lopencv_features2d249d \
+    -lopencv_flann249d \
+    -lopencv_gpu249d \
+    -lopencv_highgui249d \
+    -lopencv_imgproc249d \
+    -lopencv_legacy249d \
+    -lopencv_ml249d \
+    -lopencv_nonfree249d \
+    -lopencv_objdetect249d \
+    -lopencv_ocl249d \
+    -lopencv_photo249d \
+    -lopencv_stitching249d \
+    -lopencv_superres249d \
+    -lopencv_ts249d \
+    -lopencv_video249d \
+    -lopencv_videostab249d
+
+# Eigen
+INCLUDEPATH += C://libs//Eigen_3.3.0
+
+# Boost
+INCLUDEPATH += C://libs//boost_1_62_0
+
+LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_filesystem-mgw49-mt-1_62
+LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_system-mgw49-mt-1_62
+LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_filesystem-mgw49-mt-d-1_62
+LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_system-mgw49-mt-d-1_62
+
+# UEye
+INCLUDEPATH += C://libs//UEye//include
+LIBS += C://libs//UEye//Lib//uEye_api.lib
+LIBS += C://libs//UEye//Lib//uEye_api_64.lib
+LIBS += C://libs//UEye//Lib//uEye_tools.lib
+LIBS += C://libs//UEye//Lib//ueye_tools_64.lib
+}
 
 SOURCES += main.cpp\
         mainwindow.cpp \

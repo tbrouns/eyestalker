@@ -37,8 +37,11 @@ void UEyeOpencvCam::setDeviceInfo(int idV, int idP)
 
 bool UEyeOpencvCam::findCamera()
 {
-    THREAD_ACTIVE = true;
     bool returnVal = false;
+
+#ifdef __linux__
+
+    THREAD_ACTIVE = true;
 
     libusb_context *context = NULL;
     libusb_device **list = NULL;
@@ -68,6 +71,12 @@ bool UEyeOpencvCam::findCamera()
     std::unique_lock<std::mutex> lck(exitMutex);
     THREAD_ACTIVE = false;
     exitCV.notify_one();
+
+#else
+
+    returnVal = true;
+
+#endif
 
     return returnVal;
 }
@@ -237,11 +246,22 @@ void UEyeOpencvCam::threadFrameCapture()
 {
     THREAD_ACTIVE = true;
 
+#ifdef _WIN32
+    HANDLE hEvent = CreateEvent(NULL,FALSE,FALSE,NULL);
+    is_InitEvent(hCam,hEvent,IS_SET_EVENT_FRAME);
+#endif
+
     is_EnableEvent(hCam, IS_SET_EVENT_FRAME);
 
     while(Parameters::CAMERA_RUNNING && Parameters::REALTIME_PROCESSING)
     {
+
+#ifdef __linux__
         if (is_WaitEvent(hCam, IS_SET_EVENT_FRAME, 1000) == IS_SUCCESS)
+#else
+        if (WaitForSingleObject(hEvent,1000) == WAIT_OBJECT_0)
+#endif
+
         {
             std::unique_lock<std::mutex> lck(Parameters::frameCaptureMutex);
 
@@ -289,6 +309,12 @@ void UEyeOpencvCam::threadFrameCapture()
     }
 
     is_DisableEvent(hCam, IS_SET_EVENT_FRAME);
+
+#ifdef _WIN32
+    is_ExitEvent(hCam,IS_SET_EVENT_FRAME);
+    CloseHandle(hEvent);
+#endif
+
     is_StopLiveVideo(hCam, IS_FORCE_VIDEO_STOP);
 
     std::unique_lock<std::mutex> lck(exitMutex);
