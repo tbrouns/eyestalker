@@ -72,7 +72,7 @@ void MainWindow::loadReviewSession()
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
-            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            boost::filesystem::create_directory(directoryName.str().c_str());
         }
 
         // count number of trials
@@ -177,7 +177,7 @@ void MainWindow::updateReviewSession()
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
-            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            boost::filesystem::create_directory(directoryName.str().c_str());
         }
     }
 }

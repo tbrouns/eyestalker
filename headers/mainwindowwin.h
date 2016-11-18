@@ -16,10 +16,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 // Files
 
 #include "headers/confirmationwindow.h"
@@ -30,13 +26,7 @@
 #include "headers/sliderdouble.h"
 #include "headers/structures.h"
 #include "headers/qimageopencv.h"
-
-#ifdef __linux__
-    #include "headers/ueyeopencv.h"
-#elif _WIN32
-    #include "headers/ueyeopencvwin.h"
-#else
-#endif
+#include <headers/ueyeopencv.h>
 
 // Standard Template
 

@@ -48,28 +48,28 @@ void MainWindow::startTrialRecording()
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
-            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            boost::filesystem::create_directory(directoryName.str().c_str());
         }
 
         directoryName << "/" << (NameInputLineEdit->text()).toStdString();
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
-            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            boost::filesystem::create_directory(directoryName.str().c_str());
         }
 
         directoryName << "/trial_" << trialIndex;
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
-            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            boost::filesystem::create_directory(directoryName.str().c_str());
         }
 
         directoryName << "/raw/";
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
-            mkdir(directoryName.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            boost::filesystem::create_directory(directoryName.str().c_str());
         }
     }
 }
