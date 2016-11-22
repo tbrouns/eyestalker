@@ -101,7 +101,8 @@ void MainWindow::loadReviewSession()
         {
             // Grab time stamps
 
-            double times[editImageTotal + 2][editDataTotal];
+            //double *times = new double[(editImageTotal + 2) * editDataTotal];
+            std::vector<double> times((editImageTotal + 2) * editDataTotal);
 
             std::stringstream filename;
             filename << editDataDirectory.toStdString()
@@ -112,15 +113,18 @@ void MainWindow::loadReviewSession()
 
             if (data.is_open())
             {
-                for (int j = 0; j < editImageTotal + 2; j++)
+                for (int i = 0; i < editDataTotal; i++)
                 {
-                    for (int i = 0; i < editDataTotal; i++)
+                    for (int j = 0; j < editImageTotal + 2; j++)
                     {
-                        data >> times[j][i];
-                        timeVector.push_back(times[j][i]);
+                        int k = j + i * (editImageTotal + 2);
+                        data >> times[k];
+                        timeVector.push_back(times[k]);
                     }
                 }
             }
+
+            //delete [] times;
         }
     }
 }

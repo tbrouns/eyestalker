@@ -82,15 +82,15 @@ LIBS += -LC:\\libs\\OpenCV-2.4.9\\build-qt\\lib \
     -lopencv_videostab249d
 
 # Eigen
-INCLUDEPATH += C://libs//Eigen_3.3.0
+INCLUDEPATH += C://libs//eigen
 
 # Boost
-INCLUDEPATH += C://libs//boost_1_62_0
+INCLUDEPATH += C://libs//boost
 
-LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_filesystem-mgw49-mt-1_62
-LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_system-mgw49-mt-1_62
-LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_filesystem-mgw49-mt-d-1_62
-LIBS += -L$$PWD/../../../../libs/boost_1_62_0/stage/lib/ -lboost_system-mgw49-mt-d-1_62
+LIBS += -L$$PWD/../../../../libs/boost/stage/lib/ -lboost_filesystem-mgw49-mt-1_62
+LIBS += -L$$PWD/../../../../libs/boost/stage/lib/ -lboost_system-mgw49-mt-1_62
+LIBS += -L$$PWD/../../../../libs/boost/stage/lib/ -lboost_filesystem-mgw49-mt-d-1_62
+LIBS += -L$$PWD/../../../../libs/boost/stage/lib/ -lboost_system-mgw49-mt-d-1_62
 
 # UEye
 INCLUDEPATH += C://libs//UEye//include
