@@ -30,13 +30,7 @@
 #include "headers/sliderdouble.h"
 #include "headers/structures.h"
 #include "headers/qimageopencv.h"
-
-#ifdef __linux__
-    #include "headers/ueyeopencv.h"
-#elif _WIN32
-    #include "headers/ueyeopencvwin.h"
-#else
-#endif
+#include "headers/ueyeopencv.h"
 
 // Standard Template
 
