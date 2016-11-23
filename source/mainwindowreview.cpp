@@ -101,7 +101,6 @@ void MainWindow::loadReviewSession()
         {
             // Grab time stamps
 
-            //double *times = new double[(editImageTotal + 2) * editDataTotal];
             std::vector<double> times((editImageTotal + 2) * editDataTotal);
 
             std::stringstream filename;
@@ -117,14 +116,12 @@ void MainWindow::loadReviewSession()
                 {
                     for (int j = 0; j < editImageTotal + 2; j++)
                     {
-                        int k = j + i * (editImageTotal + 2);
+                        unsigned long long k = j + i * (editImageTotal + 2);
                         data >> times[k];
                         timeVector.push_back(times[k]);
                     }
                 }
             }
-
-            //delete [] times;
         }
     }
 }
