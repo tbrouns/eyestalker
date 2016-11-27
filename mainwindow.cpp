@@ -1185,15 +1185,17 @@ void MainWindow::pupilTracking()
     {
         eyeProperties mEyePropertiesTemp;
 
-        int eyeAOIXPosTemp;
-        int eyeAOIYPosTemp;
-        int eyeAOIWdthTemp;
-        int eyeAOIHghtTemp;
+        int eyeAOIXPosTemp = 0;
+        int eyeAOIYPosTemp = 0;
+        int eyeAOIWdthTemp = 0;
+        int eyeAOIHghtTemp = 0;
 
-        int flashAOIXPosTemp;
-        int flashAOIYPosTemp;
-        int flashAOIWdthTemp;
-        int flashAOIHghtTemp;
+        int flashAOIXPosTemp = 0;
+        int flashAOIYPosTemp = 0;
+        int flashAOIWdthTemp = 0;
+        int flashAOIHghtTemp = 0;
+
+        bool FLASH_REGION_VISIBLE = true;
 
         imageInfo mImageInfo = mUEyeOpencvCam.getFrame(); // get new frame from camera
 
@@ -1235,7 +1237,7 @@ void MainWindow::pupilTracking()
                     if (flashAOIXPosTemp + flashAOIWdthTemp < 0) // Flash AOI not in camera AOI
                     {
                         FlashStandbySlider->setValue(0);
-                        continue;
+                        FLASH_REGION_VISIBLE = false;
                     }
                     else
                     {
@@ -1250,7 +1252,7 @@ void MainWindow::pupilTracking()
                     if (flashAOIWdthTemp <= 0)
                     {
                         FlashStandbySlider->setValue(0);
-                        continue;
+                        FLASH_REGION_VISIBLE = false;
                     }
                 }
 
@@ -1259,7 +1261,7 @@ void MainWindow::pupilTracking()
                     if (flashAOIYPosTemp + flashAOIHghtTemp < 0) // Flash AOI not in camera AOI
                     {
                         FlashStandbySlider->setValue(0);
-                        continue;
+                        FLASH_REGION_VISIBLE = false;
                     }
                     else
                     {
@@ -1274,7 +1276,7 @@ void MainWindow::pupilTracking()
                     if (flashAOIHghtTemp <= 0)
                     {
                         FlashStandbySlider->setValue(0);
-                        continue;
+                        FLASH_REGION_VISIBLE = false;
                     }
                 }
             }
@@ -1292,8 +1294,13 @@ void MainWindow::pupilTracking()
 
         if (!EXPERIMENT_TRIAL_RECORDING)
         {
-            cv::Rect flashRegion(flashAOIXPosTemp, flashAOIYPosTemp, flashAOIWdthTemp, flashAOIHghtTemp);
-            double avgIntensity = flashDetection(imageOriginal(flashRegion));
+            double avgIntensity = 0;
+
+            if (FLASH_REGION_VISIBLE)
+            {
+                cv::Rect flashRegion(flashAOIXPosTemp, flashAOIYPosTemp, flashAOIWdthTemp, flashAOIHghtTemp);
+                avgIntensity = flashDetection(imageOriginal(flashRegion));
+            }
 
             if (FLASH_STANDBY)
             {
@@ -1323,7 +1330,7 @@ void MainWindow::pupilTracking()
                     startTrialRecording();
                 }
             }
-            else
+            else // Default mode
             {
                 if (avgIntensity > flashMinIntensity)
                 {
@@ -1335,7 +1342,7 @@ void MainWindow::pupilTracking()
                 mEyePropertiesTemp = pupilDetector(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
             }
         }
-        else
+        else // Trial recording
         {
             if (!SAVE_EYE_IMAGE)
             {
@@ -1362,10 +1369,11 @@ void MainWindow::pupilTracking()
                 // Saving screens
                 std::stringstream filename;
                 filename << dataDirectory << "/"
-                         << currentDate << "/"
+                         << currentDate   << "/"
                          << (NameInputLineEdit->text()).toStdString()
-                         << "/trial_" << trialIndex
-                         << "/raw/" << frameCount << ".png";
+                         << "/trial_"     << trialIndex
+                         << "/raw/"       << frameCount
+                         << ".png";
 
                 cv::imwrite(filename.str(), imageOriginal);
 

@@ -158,7 +158,8 @@ void MainWindow::onFlashStandbySlider(int val)
             std::stringstream filename;
             filename << dataDirectory
                      << "/experiment_data_"
-                     << currentDate << "_"
+                     << currentDate
+                     << "_"
                      << (NameInputLineEdit->text()).toStdString();
 
             if (boost::filesystem::exists(filename.str()))
