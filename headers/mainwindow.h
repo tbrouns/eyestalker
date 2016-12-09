@@ -138,7 +138,7 @@ private:
     double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime; // in ms
-    std::vector<double> timeVector;
+    std::vector<std::vector<double>> timeMatrix;
     eyePropertiesMiscellaneous mEyePropertiesMiscellaneous;
     eyePropertiesParameters    mEyePropertiesParameters;
     eyePropertiesVariables     mEyePropertiesVariables;

@@ -97,11 +97,9 @@ void MainWindow::loadReviewSession()
 
         // get time stamps
 
-        if (timeVector.empty())
+        if (timeMatrix.empty())
         {
             // Grab time stamps
-
-            std::vector<double> times((editImageTotal + 2) * editDataTotal);
 
             std::stringstream filename;
             filename << editDataDirectory.toStdString()
@@ -112,14 +110,19 @@ void MainWindow::loadReviewSession()
 
             if (data.is_open())
             {
-                for (int i = 0; i < editDataTotal; i++)
+                std::string str;
+
+                for (int i = 0; i < editDataTotal && std::getline(data, str); i++)
                 {
-                    for (int j = 0; j < editImageTotal + 2; j++)
+                    std::vector<double> times;
+                    std::istringstream sin(str);
+                    double time;
+                    while (sin >> time)
                     {
-                        unsigned long long k = j + i * (editImageTotal + 2);
-                        data >> times[k];
-                        timeVector.push_back(times[k]);
+                        times.push_back(time);
                     }
+
+                    timeMatrix.push_back(times);
                 }
             }
         }
@@ -456,8 +459,8 @@ void MainWindow::reviewSaveExperimentData()
     std::ofstream file;
     file.open(filename.str());
 
-    file << std::setw(3) << std::setfill('0') << timeVector[editDataIndex * (editImageTotal + 2)] << ";"; // print with leading zeros
-    file << (int) timeVector[editDataIndex * (editImageTotal + 2) + 1] << ";"; // time of day in milliseconds
+    file << std::setw(3) << std::setfill('0') << timeMatrix[editDataIndex][0] << ";"; // print with leading zeros
+    file << (int) timeMatrix[editDataIndex][1] << ";"; // time of day in milliseconds
 
     file << std::fixed;
     file << std::setprecision(3);
@@ -469,13 +472,13 @@ void MainWindow::reviewSaveExperimentData()
 
     for (int i = 0; i < editImageTotal; i++)
     {
-        eyeXPositions[i] = vEyePropertiesVariables[i + 1].xPosAbsolute;
-        eyeYPositions[i] = vEyePropertiesVariables[i + 1].yPosAbsolute;
+        eyeXPositions[i]     = vEyePropertiesVariables[i + 1].xPosAbsolute;
+        eyeYPositions[i]     = vEyePropertiesVariables[i + 1].yPosAbsolute;
         eyeDetectionFlags[i] = vEyePropertiesVariables[i + 1].pupilDetected;
-        timeStamps[i] = timeVector[i + editDataIndex * (editImageTotal + 2) + 2];
+        timeStamps[i]        = timeMatrix[editDataIndex][i + 2];
     }
 
-    writeToFile(file, eyeDetectionFlags, timeStamps, ";");
+    writeToFile(file, eyeDetectionFlags, timeStamps,    ";");
     writeToFile(file, eyeDetectionFlags, eyeXPositions, ";");
     writeToFile(file, eyeDetectionFlags, eyeYPositions, ";");
 

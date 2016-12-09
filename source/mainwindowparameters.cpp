@@ -444,7 +444,7 @@ void MainWindow::setCameraHardwareGain(int val)
 
 void MainWindow::setCameraSubSampling(int state)
 {
-    double subSamplingChange;
+    double subSamplingChange = 0;
 
     if (state == 1)
     {
