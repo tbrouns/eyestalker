@@ -1375,7 +1375,13 @@ void MainWindow::pupilTracking()
                          << "/raw/"       << frameCount
                          << ".png";
 
-                cv::imwrite(filename.str(), imageOriginal);
+                std::vector<int> compression_params;
+                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+                compression_params.push_back(0);
+
+                cv::Mat imageOriginalGray;
+                cv::cvtColor(imageOriginal, imageOriginalGray, cv::COLOR_BGR2GRAY);
+                cv::imwrite(filename.str(), imageOriginalGray, compression_params);
 
                 frameCount++;
             }

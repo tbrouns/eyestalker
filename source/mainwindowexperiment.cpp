@@ -118,8 +118,8 @@ void MainWindow::saveTrialData()
             file << "\n";
         }
 
-        file << std::setw(3) << std::setfill('0') << trialIndex << " "; // print with leading zeros
-        file << trialStartTime << " "; // time of day in milliseconds
+        file << std::setw(3) << std::setfill('0') << trialIndex << ";"; // print with leading zeros
+        file << trialStartTime << ";"; // time of day in milliseconds
 
         file << std::fixed;
         file << std::setprecision(3);
