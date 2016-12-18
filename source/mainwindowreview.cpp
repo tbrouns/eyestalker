@@ -311,6 +311,8 @@ void MainWindow::setReviewImageFrame(int imageIndex)
 
 void MainWindow::reviewPupilDetectionOneFrame()
 {
+    // Grab raw images
+
     cv::Mat rawEyeImage;
 
     std::stringstream fileNameRaw;
@@ -325,6 +327,8 @@ void MainWindow::reviewPupilDetectionOneFrame()
     {
         return;
     }
+
+    // Detect pupil
 
     eyeProperties mEyePropertiesTemp;
 
@@ -347,12 +351,8 @@ void MainWindow::reviewPupilDetectionOneFrame()
         eyeAOIHghtTemp = Parameters::eyeAOIHght;
     }
 
-    // Grab raw images
-
-    // Pupil tracking algorithm
-
     cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-    eyeProperties mEyePropertiesNew = pupilDetector(rawEyeImage(eyeRegion), mEyePropertiesTemp);
+    eyeProperties mEyePropertiesNew = pupilDetection(rawEyeImage(eyeRegion), mEyePropertiesTemp);
 
     // Save processed images
 
@@ -374,7 +374,6 @@ void MainWindow::reviewPupilDetectionOneFrame()
 
     {
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-
         vEyePropertiesVariables[editImageIndex + 1] = mEyePropertiesNew.v;
         mEyePropertiesMiscellaneous = mEyePropertiesNew.m;
     }

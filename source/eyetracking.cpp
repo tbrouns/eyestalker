@@ -1343,7 +1343,7 @@ ellipseProperties findBestEllipseFit(const edgeProperties& mEdgeProperties, int 
     return mEllipseProperties;
 }
 
-eyeProperties pupilDetector(const cv::Mat& imageOriginalBGR, eyeProperties mEyeProperties)
+eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEyeProperties)
 {
     // Define some variables
     

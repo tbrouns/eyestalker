@@ -1339,7 +1339,7 @@ void MainWindow::pupilTracking()
                 }
 
                 cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-                mEyePropertiesTemp = pupilDetector(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
+                mEyePropertiesTemp = pupilDetection(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
             }
         }
         else // Trial recording
@@ -1347,7 +1347,7 @@ void MainWindow::pupilTracking()
             if (!SAVE_EYE_IMAGE)
             {
                 cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-                mEyePropertiesTemp = pupilDetector(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
+                mEyePropertiesTemp = pupilDetection(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
 
                 timeStamps[frameCount] = relativeTime; // save time stamps
 

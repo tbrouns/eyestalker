@@ -56,7 +56,7 @@ double calculateMean(const std::vector<double>&);
 
 /// eye-tracking functions
 
-eyeProperties pupilDetector(const cv::Mat&, eyeProperties);
+eyeProperties pupilDetection(const cv::Mat&, eyeProperties);
 double flashDetection(const cv::Mat&);
 
 #endif // EYETRACKING
