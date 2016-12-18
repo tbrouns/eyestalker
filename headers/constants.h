@@ -31,6 +31,7 @@ const double pupilFractionMinIni = 0.4;
 const double pupilFractionIni = 0.9;
 const double edgeIntensityIni = 255;
 const double pupilCircumferenceUpperLimit = 500;
+const double pupilRadiusPredictionFactor = 0.75;
 
 const int cameraFrameRateUpperLimit = 500;
 
