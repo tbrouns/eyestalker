@@ -842,12 +842,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CurvatureOffsetSlider = new SliderDouble;
     CurvatureOffsetSlider->setPrecision(1);
     CurvatureOffsetSlider->setDoubleRange(0, 30);
-    CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffset);
+    CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
 
     CurvatureOffsetLabel = new QLabel;
-    CurvatureOffsetLabel->setText(QString::number(mEyePropertiesParameters.curvatureOffset, 'f', 1));
+    CurvatureOffsetLabel->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
 
     QLabel *EdgeMaximumFitNumberTextBox = new QLabel;
     EdgeMaximumFitNumberTextBox->setText("<b>Edge maximum fit number:</b>");
@@ -1759,8 +1759,8 @@ void MainWindow::setParameterWidgets()
     GlintRadiusSlider->setValue(mEyePropertiesParameters.glintRadius);
     GlintRadiusLabel->setText(QString::number(mEyePropertiesParameters.glintRadius));
 
-    CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffset);
-    CurvatureOffsetLabel->setText(QString::number(mEyePropertiesParameters.curvatureOffset, 'f', 1));
+    CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
+    CurvatureOffsetLabel->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
 
     EdgeMaximumFitNumberSlider->setValue(mEyePropertiesParameters.edgeMaximumFitNumber);
     EdgeMaximumFitNumberLabel->setText(QString::number(mEyePropertiesParameters.edgeMaximumFitNumber));

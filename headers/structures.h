@@ -38,15 +38,15 @@ struct eyePropertiesParameters
     double alphaMomentum;
     double alphaAverage;
     double alphaPrediction;
-    double curvatureOffset;
+    double curvatureOffsetMin;
     double edgeIntensityOffset;
     double ellipseFitErrorMaximum;
     double pupilCircumferenceMax;
     double pupilCircumferenceMin;
-    double pupilFractMin;
+    double pupilAspectRatioMin;
     double pupilOffset;
     double thresholdCircumferenceChangeMin;
-    double thresholdFractionChangeMin;
+    double thresholdAspectRatioChangeMin;
     int cannyBlurLevel;
     int cannyKernelSize;
     int cannyLowerLimit;
@@ -58,6 +58,7 @@ struct eyePropertiesParameters
 struct eyePropertiesVariables
 {
     bool pupilDetected;
+    double curvatureOffset;
     double edgeCurvaturePrediction;
     double edgeIntensityPrediction;
     double edgeIntensityAverage;
@@ -67,13 +68,13 @@ struct eyePropertiesVariables
     double pupilCircumferencePrediction;
     double pupilCircumferenceAverage;
     double pupilCircumferenceExact;
-    double pupilFractionPrediction;
-    double pupilFractionAverage;
-    double pupilFractionExact;
+    double pupilAspectRatioPrediction;
+    double pupilAspectRatioAverage;
+    double pupilAspectRatioExact;
     double pupilRadiusPrediction;
     double searchRadius;
     double thresholdCircumferenceChange;
-    double thresholdFractionChange;
+    double thresholdAspectRatioChange;
     double xPosExact;
     double xPosAbsolute;
     double xPosPredicted;
@@ -109,6 +110,7 @@ struct eyePropertiesMiscellaneous
     std::vector<double> edgeCurvaturesAvg;
     std::vector<int>    edgeLengths;
     std::vector<int>    edgeSizes;
+    std::vector<double> edgeDistances;
     std::vector<double> edgeIntensities;
 
 };
@@ -128,14 +130,14 @@ struct haarProperties
 
 struct edgeProperties
 {
-    std::vector<double> curvaturesMax;
-    std::vector<double> curvaturesMin;
-    std::vector<double> curvaturesAvg;
-    std::vector<double> intensities;
-    std::vector<double> distances;
-    std::vector<int> edgeIndices;
-    std::vector<int> lengths;
-    std::vector<int> sizes;
+    std::vector<double> curvatureMax;
+    std::vector<double> curvatureMin;
+    std::vector<double> curvatureAvg;
+    std::vector<double> intensity;
+    std::vector<double> distance;
+    std::vector<int> index;
+    std::vector<int> length;
+    std::vector<int> size;
     std::vector<std::vector<int>> pointIndices;
 };
 
@@ -143,13 +145,17 @@ struct ellipseProperties
 {
     bool pupilDetected;
     double circumference;
-    double fraction;
+    double aspectRatio;
     double intensity;
     double radius;
     double xPos;
     double yPos;
+    double width;
+    double height;
+    int edgeLength;
     std::vector<double> coefficients;
     std::vector<int> edgeIndices;
+
 };
 
 struct imageInfo

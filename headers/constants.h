@@ -20,12 +20,12 @@
 
 // window length for curvature
 
-const int curvatureWindowLength = 10;
+const int    curvatureWindowLength = 10;
 const double pupilHaarFraction = 0.75;
 const double edgeCollectionFraction = 0.40;
 const double minimumFitFraction = 0.50;
 const double minimumRefinementFraction = 0.05;
-const int edgeIntensityPositionOffset = 2;
+const int    edgeIntensityPositionOffset = 2;
 
 const double pupilFractionMinIni = 0.4;
 const double pupilFractionIni = 0.9;

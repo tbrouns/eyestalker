@@ -375,6 +375,7 @@ void MainWindow::reviewPupilDetectionOneFrame()
     {
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
         vEyePropertiesVariables[editImageIndex + 1] = mEyePropertiesNew.v;
+        vEyePropertiesMiscellaneous[editImageIndex] = mEyePropertiesNew.m;
         mEyePropertiesMiscellaneous = mEyePropertiesNew.m;
     }
 }
@@ -449,77 +450,69 @@ void MainWindow::detectPupilAllTrials()
 
 void MainWindow::reviewSaveExperimentData()
 {
-    {
-    // save data
+    { // save pupil data
 
-    std::stringstream filename;
-    filename << editDataDirectory.toStdString()
-             << "/tracking_data.dat";
+        std::stringstream filename;
+        filename << editDataDirectory.toStdString()
+                 << "/tracking_data.dat";
 
-    std::ofstream file;
-    file.open(filename.str());
+        std::ofstream file;
+        file.open(filename.str());
 
-    file << std::setw(3) << std::setfill('0') << timeMatrix[editDataIndex][0] << ";"; // print with leading zeros
-    file << (int) timeMatrix[editDataIndex][1] << ";"; // time of day in milliseconds
+        file << std::setw(3) << std::setfill('0') << timeMatrix[editDataIndex][0] << ";"; // print with leading zeros
+        file << (int) timeMatrix[editDataIndex][1] << ";"; // time of day in milliseconds
 
-    file << std::fixed;
-    file << std::setprecision(3);
+        file << std::fixed;
+        file << std::setprecision(3);
 
-    eyeXPositions.resize(editImageTotal);
-    eyeYPositions.resize(editImageTotal);
-    eyeDetectionFlags.resize(editImageTotal);
-    timeStamps.resize(editImageTotal);
+        std::string delimiter = ";";
 
-    for (int i = 0; i < editImageTotal; i++)
-    {
-        eyeXPositions[i]     = vEyePropertiesVariables[i + 1].xPosAbsolute;
-        eyeYPositions[i]     = vEyePropertiesVariables[i + 1].yPosAbsolute;
-        eyeDetectionFlags[i] = vEyePropertiesVariables[i + 1].pupilDetected;
-        timeStamps[i]        = timeMatrix[editDataIndex][i + 2];
-    }
+        // write data
 
-    std::string delimiter = ";";
+        for (int i = 0; i < editImageTotal; i++) { file << timeMatrix[editDataIndex][i + 2]             << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
 
-    // write data
-    for (int i = 0; i < editImageTotal; i++) { file << timeStamps[i]        << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << eyeXPositions[i]     << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << eyeYPositions[i]     << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << eyeDetectionFlags[i] << delimiter; }
+        // additional data
 
-    // additional data
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilCircumferenceExact << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilFractionExact[i]   << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected[i]        << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction[i]  << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction[i]  << delimiter; }
 
-    std::vector<double> pupilCircumference(editImageTotal);
-    std::vector<double> pupilAxisRatio(editImageTotal);
-    std::vector<double> pupilRadiusPrediction(editImageTotal);
-    std::vector<double> edgeCurvaturePrediction(editImageTotal);
-    std::vector<double> edgeIntensityPrediction(editImageTotal);
-
-    for (int i = 0; i < editImageTotal; i++)
-    {
-        pupilCircumference[i]      = vEyePropertiesVariables[i + 1].pupilCircumferenceExact;
-        pupilAxisRatio[i]          = vEyePropertiesVariables[i + 1].pupilFractionExact;
-        pupilRadiusPrediction[i]   = vEyePropertiesVariables[i + 1].pupilDetected;
-        edgeCurvaturePrediction[i] = vEyePropertiesVariables[i].edgeCurvaturePrediction;
-        edgeIntensityPrediction[i] = vEyePropertiesVariables[i].edgeIntensityPrediction;
-    }
-
-    for (int i = 0; i < editImageTotal; i++) { file << pupilCircumference[i]      << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << pupilAxisRatio[i]          << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << pupilRadiusPrediction[i]   << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << edgeCurvaturePrediction[i] << delimiter; }
-    for (int i = 0; i < editImageTotal; i++) { file << edgeIntensityPrediction[i] << delimiter; }
-
-    file.close();
+        file.close();
 
     }
 
-    // save edge data
+    { // save edge data
 
-    // save data
+        std::stringstream filename;
+        filename << editDataDirectory.toStdString()
+                 << "/edge_data.dat";
 
-    std::stringstream filename;
-    filename << editDataDirectory.toStdString()
-             << "/edge_data.dat";
+        std::ofstream file;
+        file.open(filename.str());
+
+        for (int i = 0; i < editImageTotal; i++)
+        {
+            int numEdges = vEyePropertiesMiscellaneous[i].edgeFlags.size();
+
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeFlags[j]         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeCurvaturesMax[j] << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeCurvaturesMin[j] << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeCurvaturesAvg[j] << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeLengths[j]       << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeSizes[j]         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeDistances[j]     << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeIntensities[j]   << delimiter; }
+            file << "\n";
+
+        }
+
+        file.close();
+    }
 }
 
 void MainWindow::reviewCombineExperimentData()

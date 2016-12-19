@@ -42,7 +42,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.cannyKernelSize = settings.value("CannyKernelSize", 5).toInt();
     mEyePropertiesParameters.cannyLowerLimit = settings.value("CannyLowerLimit", 300).toInt();
     mEyePropertiesParameters.cannyUpperLimit = settings.value("CannyUpperLimit", 600).toInt();
-    mEyePropertiesParameters.curvatureOffset = settings.value("CurvatureOffset", 5).toDouble();
+    mEyePropertiesParameters.curvatureOffsetMin = settings.value("CurvatureOffset", 5).toDouble();
     mEyePropertiesParameters.edgeIntensityOffset = settings.value("EdgeIntensityOffset", 40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber = settings.value("EdgeMaximumFitNumber", 3).toInt();
     mEyePropertiesParameters.ellipseFitErrorMaximum = settings.value("EllipseFitErrorMaximum", 40).toDouble();
@@ -90,7 +90,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CannyUpperLimit", mEyePropertiesParameters.cannyUpperLimit);
     settings.setValue("CircumferenceMax", mEyePropertiesParameters.pupilCircumferenceMax);
     settings.setValue("CircumferenceMin", mEyePropertiesParameters.pupilCircumferenceMin);
-    settings.setValue("CurvatureOffset", mEyePropertiesParameters.curvatureOffset);
+    settings.setValue("CurvatureOffset", mEyePropertiesParameters.curvatureOffsetMin);
     settings.setValue("DataFilename", QString::fromStdString(dataFilename));
     settings.setValue("EdgeIntensityOffset", mEyePropertiesParameters.edgeIntensityOffset);
     settings.setValue("EdgeMaximumFitNumber", mEyePropertiesParameters.edgeMaximumFitNumber);
@@ -339,7 +339,7 @@ void MainWindow::setGlintRadius(int value)
 
 void MainWindow::setCurvatureOffset(double value)
 {
-    mEyePropertiesParameters.curvatureOffset = value;
+    mEyePropertiesParameters.curvatureOffsetMin = value;
     CurvatureOffsetLabel->setText(QString::number(value, 'f', 1));
 }
 

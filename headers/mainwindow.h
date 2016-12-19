@@ -267,6 +267,7 @@ private:
     std::vector<double> eyeXPositions;
     std::vector<double> eyeYPositions;
     std::vector<double> timeStamps;
+    std::vector<eyePropertiesMiscellaneous> vEyePropertiesMiscellaneous;
     std::vector<eyePropertiesVariables> vEyePropertiesVariables;
     UEyeOpencvCam mUEyeOpencvCam;
     unsigned long long absoluteTime; // in units of 0.1 microseconds
