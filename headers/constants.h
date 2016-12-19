@@ -35,4 +35,6 @@ const double pupilRadiusPredictionFactor = 0.75;
 
 const int cameraFrameRateUpperLimit = 500;
 
+const double pupilImageFactor = 1.1;
+
 #endif

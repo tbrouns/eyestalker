@@ -449,6 +449,7 @@ void MainWindow::detectPupilAllTrials()
 
 void MainWindow::reviewSaveExperimentData()
 {
+    {
     // save data
 
     std::stringstream filename;
@@ -477,11 +478,48 @@ void MainWindow::reviewSaveExperimentData()
         timeStamps[i]        = timeMatrix[editDataIndex][i + 2];
     }
 
-    writeToFile(file, eyeDetectionFlags, timeStamps,    ";");
-    writeToFile(file, eyeDetectionFlags, eyeXPositions, ";");
-    writeToFile(file, eyeDetectionFlags, eyeYPositions, ";");
+    std::string delimiter = ";";
+
+    // write data
+    for (int i = 0; i < editImageTotal; i++) { file << timeStamps[i]        << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << eyeXPositions[i]     << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << eyeYPositions[i]     << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << eyeDetectionFlags[i] << delimiter; }
+
+    // additional data
+
+    std::vector<double> pupilCircumference(editImageTotal);
+    std::vector<double> pupilAxisRatio(editImageTotal);
+    std::vector<double> pupilRadiusPrediction(editImageTotal);
+    std::vector<double> edgeCurvaturePrediction(editImageTotal);
+    std::vector<double> edgeIntensityPrediction(editImageTotal);
+
+    for (int i = 0; i < editImageTotal; i++)
+    {
+        pupilCircumference[i]      = vEyePropertiesVariables[i + 1].pupilCircumferenceExact;
+        pupilAxisRatio[i]          = vEyePropertiesVariables[i + 1].pupilFractionExact;
+        pupilRadiusPrediction[i]   = vEyePropertiesVariables[i + 1].pupilDetected;
+        edgeCurvaturePrediction[i] = vEyePropertiesVariables[i].edgeCurvaturePrediction;
+        edgeIntensityPrediction[i] = vEyePropertiesVariables[i].edgeIntensityPrediction;
+    }
+
+    for (int i = 0; i < editImageTotal; i++) { file << pupilCircumference[i]      << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << pupilAxisRatio[i]          << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << pupilRadiusPrediction[i]   << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << edgeCurvaturePrediction[i] << delimiter; }
+    for (int i = 0; i < editImageTotal; i++) { file << edgeIntensityPrediction[i] << delimiter; }
 
     file.close();
+
+    }
+
+    // save edge data
+
+    // save data
+
+    std::stringstream filename;
+    filename << editDataDirectory.toStdString()
+             << "/edge_data.dat";
 }
 
 void MainWindow::reviewCombineExperimentData()

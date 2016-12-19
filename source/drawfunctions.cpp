@@ -162,13 +162,13 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
     {
         drawHaarDetector(I, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, blue);
         drawHaarDetector(I, mEyeProperties.m.pupilHaarXPos, mEyeProperties.m.pupilHaarYPos, mEyeProperties.m.pupilHaarWdth, blue);
-        drawHaarDetector(I, mEyeProperties.m.glintHaarXPos, mEyeProperties.m.glintHaarYPos, mEyeProperties.m.glintHaarWidth, blue);
+        drawHaarDetector(I, mEyeProperties.m.glintHaarXPos, mEyeProperties.m.glintHaarYPos, mEyeProperties.m.glintHaarWdth, blue);
     }
 
     if (Parameters::drawFlags.edge)
     {
         drawEdges(I, mEyeProperties.m.cannyEdges, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, red);
-        drawOutline(I, mEyeProperties.m.edgeIndices, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, yellow);
+        drawOutline(I, mEyeProperties.m.edgeIndicesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, yellow);
         drawOutline(I, mEyeProperties.m.edgeIndicesNew, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, green);
     }
 

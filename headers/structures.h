@@ -58,6 +58,7 @@ struct eyePropertiesParameters
 struct eyePropertiesVariables
 {
     bool pupilDetected;
+    double edgeCurvaturePrediction;
     double edgeIntensityPrediction;
     double edgeIntensityAverage;
     double momentumCircumference;
@@ -87,7 +88,8 @@ struct eyePropertiesMiscellaneous
 {
     bool errorDetected;
     cv::Mat image;
-    int glintHaarWidth;
+    cv::Mat imagePupil;
+    int glintHaarWdth;
     int glintHaarXPos;
     int glintHaarYPos;
     int offsetPupilHaarWdth;
@@ -98,8 +100,17 @@ struct eyePropertiesMiscellaneous
     int pupilHaarYPos;
     std::vector<char> cannyEdges;
     std::vector<double> ellipseCoefficients;
-    std::vector<std::vector<int>> edgeIndices;
+    std::vector<std::vector<int>> edgeIndicesAll;
     std::vector<std::vector<int>> edgeIndicesNew;
+
+    std::vector<int>    edgeFlags;
+    std::vector<double> edgeCurvaturesMax;
+    std::vector<double> edgeCurvaturesMin;
+    std::vector<double> edgeCurvaturesAvg;
+    std::vector<int>    edgeLengths;
+    std::vector<int>    edgeSizes;
+    std::vector<double> edgeIntensities;
+
 };
 
 struct eyeProperties
@@ -117,11 +128,15 @@ struct haarProperties
 
 struct edgeProperties
 {
-    std::vector<double> curvatures;
+    std::vector<double> curvaturesMax;
+    std::vector<double> curvaturesMin;
+    std::vector<double> curvaturesAvg;
     std::vector<double> intensities;
+    std::vector<double> distances;
+    std::vector<int> edgeIndices;
     std::vector<int> lengths;
     std::vector<int> sizes;
-    std::vector<std::vector<int>> indices;
+    std::vector<std::vector<int>> pointIndices;
 };
 
 struct ellipseProperties
@@ -134,6 +149,7 @@ struct ellipseProperties
     double xPos;
     double yPos;
     std::vector<double> coefficients;
+    std::vector<int> edgeIndices;
 };
 
 struct imageInfo
