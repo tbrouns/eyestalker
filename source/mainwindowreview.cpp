@@ -477,13 +477,12 @@ void MainWindow::reviewSaveExperimentData()
         // additional data
 
         for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilCircumferenceExact << delimiter; }
-        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilFractionExact[i]   << delimiter; }
-        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected[i]        << delimiter; }
-        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction[i]  << delimiter; }
-        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction[i]  << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilAspectRatioExact   << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected           << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction     << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction     << delimiter; }
 
         file.close();
-
     }
 
     { // save edge data
@@ -497,18 +496,19 @@ void MainWindow::reviewSaveExperimentData()
 
         for (int i = 0; i < editImageTotal; i++)
         {
-            int numEdges = vEyePropertiesMiscellaneous[i].edgeFlags.size();
+            int numEdges = vEyePropertiesMiscellaneous[i].edgePropertiesAll.size();
 
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeFlags[j]         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeCurvaturesMax[j] << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeCurvaturesMin[j] << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeCurvaturesAvg[j] << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeLengths[j]       << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeSizes[j]         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeDistances[j]     << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgeIntensities[j]   << delimiter; }
+            std::string delimiter = ";";
+
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].flag         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMax << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMin << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].length       << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].size         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].distance     << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].intensity    << delimiter; }
             file << "\n";
-
         }
 
         file.close();

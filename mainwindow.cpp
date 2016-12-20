@@ -127,8 +127,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     mEyePropertiesVariables.pupilCircumferenceAverage = 0.5 * (mEyePropertiesParameters.pupilCircumferenceMax + mEyePropertiesParameters.pupilCircumferenceMin);
     mEyePropertiesVariables.pupilCircumferencePrediction = mEyePropertiesVariables.pupilCircumferenceAverage;
-    mEyePropertiesVariables.pupilFractionAverage = pupilFractionIni;
-    mEyePropertiesVariables.pupilFractionPrediction = pupilFractionIni;
+    mEyePropertiesVariables.pupilAspectRatioAverage = pupilAspectRatioIni;
+    mEyePropertiesVariables.pupilAspectRatioPrediction = pupilAspectRatioIni;
     mEyePropertiesVariables.edgeIntensityAverage = edgeIntensityIni;
     mEyePropertiesVariables.edgeIntensityPrediction = edgeIntensityIni;
 
@@ -570,12 +570,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     PupilFractSliderDouble = new SliderDouble();
     PupilFractSliderDouble->setPrecision(2);
-    PupilFractSliderDouble->setDoubleRange(mEyePropertiesParameters.pupilFractMin, 1.0);
-    PupilFractSliderDouble->setDoubleValue(pupilFractionIni);
+    PupilFractSliderDouble->setDoubleRange(mEyePropertiesParameters.pupilAspectRatioMin, 1.0);
+    PupilFractSliderDouble->setDoubleValue(pupilAspectRatioIni);
     PupilFractSliderDouble->setOrientation(Qt::Horizontal);
 
     PupilFractLabel = new QLabel();
-    PupilFractLabel->setText(QString::number(pupilFractionIni, 'f', 2));
+    PupilFractLabel->setText(QString::number(pupilAspectRatioIni, 'f', 2));
 
     // Edge intensity
 
@@ -639,12 +639,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilFractionMinSlider = new SliderDouble;
     PupilFractionMinSlider->setPrecision(2);
     PupilFractionMinSlider->setDoubleRange(0.0, 1.0);
-    PupilFractionMinSlider->setDoubleValue(mEyePropertiesParameters.pupilFractMin);
+    PupilFractionMinSlider->setDoubleValue(mEyePropertiesParameters.pupilAspectRatioMin);
     PupilFractionMinSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilFractionMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilFractionMin(double)));
 
     PupilFractionMinLabel = new QLabel;
-    PupilFractionMinLabel->setText(QString::number(mEyePropertiesParameters.pupilFractMin, 'f', 2));
+    PupilFractionMinLabel->setText(QString::number(mEyePropertiesParameters.pupilAspectRatioMin, 'f', 2));
 
     // Edge intensity
 
@@ -795,7 +795,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ThresholdFractionSlider = new SliderDouble;
     ThresholdFractionSlider->setPrecision(2);
     ThresholdFractionSlider->setDoubleRange(0, 1.0);
-    ThresholdFractionSlider->setDoubleValue(mEyePropertiesParameters.thresholdFractionChangeMin);
+    ThresholdFractionSlider->setDoubleValue(mEyePropertiesParameters.thresholdAspectRatioChangeMin);
     ThresholdFractionSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdFractionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdFraction(double)));
 
@@ -803,7 +803,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ThresholdCircumferenceLabel->setText(QString::number(mEyePropertiesParameters.thresholdCircumferenceChangeMin, 'f', 1));
 
     ThresholdFractionLabel = new QLabel;
-    ThresholdFractionLabel->setText(QString::number(mEyePropertiesParameters.thresholdFractionChangeMin, 'f', 2));
+    ThresholdFractionLabel->setText(QString::number(mEyePropertiesParameters.thresholdAspectRatioChangeMin, 'f', 2));
 
     // Miscellaneous parameters
 
@@ -1306,7 +1306,7 @@ void MainWindow::pupilTracking()
             {
                 // reset variables
 
-                mEyePropertiesTemp.v.pupilFractionPrediction = pupilFractionIni;
+                mEyePropertiesTemp.v.pupilAspectRatioPrediction = pupilAspectRatioIni;
                 mEyePropertiesTemp.v.pupilCircumferencePrediction = mEyePropertiesTemp.v.pupilCircumferenceAverage;
                 mEyePropertiesTemp.v.pupilRadiusPrediction = mEyePropertiesTemp.v.pupilCircumferencePrediction / (2 * M_PI);
 
@@ -1322,7 +1322,7 @@ void MainWindow::pupilTracking()
 
                 mEyePropertiesTemp.v.searchRadius = imgWdth;
                 mEyePropertiesTemp.v.thresholdCircumferenceChange = mEyePropertiesTemp.p.pupilCircumferenceMax;
-                mEyePropertiesTemp.v.thresholdFractionChange = 1.0;
+                mEyePropertiesTemp.v.thresholdAspectRatioChange = 1.0;
 
                 if (avgIntensity > flashThreshold)
                 {
@@ -1500,8 +1500,8 @@ void MainWindow::updateCameraImage()
                 PupilCircfSliderDouble->setDoubleValue(mEyePropertiesTemp.v.pupilCircumferencePrediction);
                 PupilCircfLabel->setText(QString::number(mEyePropertiesTemp.v.pupilCircumferencePrediction, 'f', 1));
 
-                PupilFractSliderDouble->setDoubleValue(mEyePropertiesTemp.v.pupilFractionPrediction);
-                PupilFractLabel->setText(QString::number(mEyePropertiesTemp.v.pupilFractionPrediction, 'f', 2));
+                PupilFractSliderDouble->setDoubleValue(mEyePropertiesTemp.v.pupilAspectRatioPrediction);
+                PupilFractLabel->setText(QString::number(mEyePropertiesTemp.v.pupilAspectRatioPrediction, 'f', 2));
 
                 EdgeIntensitySliderDouble->setDoubleValue(mEyePropertiesTemp.v.edgeIntensityPrediction);
                 EdgeIntensityLabel->setText(QString::number(mEyePropertiesTemp.v.edgeIntensityPrediction, 'f', 1));
@@ -1717,8 +1717,8 @@ void MainWindow::setParameterWidgets()
     PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
 
     PupilFractionMinSlider->setDoubleRange(0.0, 1.0);
-    PupilFractionMinSlider->setDoubleValue(mEyePropertiesParameters.pupilFractMin);
-    PupilFractionMinLabel->setText(QString::number(mEyePropertiesParameters.pupilFractMin, 'f', 2));
+    PupilFractionMinSlider->setDoubleValue(mEyePropertiesParameters.pupilAspectRatioMin);
+    PupilFractionMinLabel->setText(QString::number(mEyePropertiesParameters.pupilAspectRatioMin, 'f', 2));
 
     EdgeIntensityOffsetSlider->setDoubleValue(mEyePropertiesParameters.edgeIntensityOffset);
     EdgeIntensityOffsetLabel->setText(QString::number(mEyePropertiesParameters.edgeIntensityOffset, 'f', 1));
@@ -1750,8 +1750,8 @@ void MainWindow::setParameterWidgets()
     ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.thresholdCircumferenceChangeMin);
     ThresholdCircumferenceLabel->setText(QString::number(mEyePropertiesParameters.thresholdCircumferenceChangeMin, 'f', 1));
 
-    ThresholdFractionSlider->setDoubleValue(mEyePropertiesParameters.thresholdFractionChangeMin);
-    ThresholdFractionLabel->setText(QString::number(mEyePropertiesParameters.thresholdFractionChangeMin, 'f', 2));
+    ThresholdFractionSlider->setDoubleValue(mEyePropertiesParameters.thresholdAspectRatioChangeMin);
+    ThresholdFractionLabel->setText(QString::number(mEyePropertiesParameters.thresholdAspectRatioChangeMin, 'f', 2));
 
     PupilHaarOffsetSlider->setDoubleValue(mEyePropertiesParameters.pupilOffset);
     PupilHaarOffsetLabel->setText(QString::number(mEyePropertiesParameters.pupilOffset, 'f', 2));
@@ -1774,8 +1774,8 @@ void MainWindow::setVariableWidgets(const eyePropertiesVariables& leftEyeVariabl
     PupilCircfSliderDouble->setDoubleValue(leftEyeVariables.pupilCircumferencePrediction);
     PupilCircfLabel->setText(QString::number(leftEyeVariables.pupilCircumferencePrediction, 'f', 1));
 
-    PupilFractSliderDouble->setDoubleValue(leftEyeVariables.pupilFractionPrediction);
-    PupilFractLabel->setText(QString::number(leftEyeVariables.pupilFractionPrediction, 'f', 2));
+    PupilFractSliderDouble->setDoubleValue(leftEyeVariables.pupilAspectRatioPrediction);
+    PupilFractLabel->setText(QString::number(leftEyeVariables.pupilAspectRatioPrediction, 'f', 2));
 
     EdgeIntensitySliderDouble->setDoubleValue(leftEyeVariables.edgeIntensityPrediction);
     EdgeIntensityLabel->setText(QString::number(leftEyeVariables.edgeIntensityPrediction, 'f', 1));

@@ -32,6 +32,43 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+struct haarProperties
+{
+    int x_pos;
+    int y_pos;
+};
+
+struct edgeProperties
+{
+    double curvatureMax;
+    double curvatureMin;
+    double curvatureAvg;
+    double intensity;
+    double distance;
+    int index;
+    int length;
+    int size;
+    int flag;
+    std::vector<int> pointIndices;
+};
+
+struct ellipseProperties
+{
+    bool pupilDetected;
+    double circumference;
+    double aspectRatio;
+    double intensity;
+    double radius;
+    double xPos;
+    double yPos;
+    double width;
+    double height;
+    int edgeLength;
+    std::vector<double> coefficients;
+    std::vector<int> edgeIndices;
+
+};
+
 struct eyePropertiesParameters
 {
     double alphaMiscellaneous;
@@ -101,18 +138,7 @@ struct eyePropertiesMiscellaneous
     int pupilHaarYPos;
     std::vector<char> cannyEdges;
     std::vector<double> ellipseCoefficients;
-    std::vector<std::vector<int>> edgeIndicesAll;
-    std::vector<std::vector<int>> edgeIndicesNew;
-
-    std::vector<int>    edgeFlags;
-    std::vector<double> edgeCurvaturesMax;
-    std::vector<double> edgeCurvaturesMin;
-    std::vector<double> edgeCurvaturesAvg;
-    std::vector<int>    edgeLengths;
-    std::vector<int>    edgeSizes;
-    std::vector<double> edgeDistances;
-    std::vector<double> edgeIntensities;
-
+    std::vector<edgeProperties> edgePropertiesAll;
 };
 
 struct eyeProperties
@@ -120,42 +146,6 @@ struct eyeProperties
     eyePropertiesParameters     p;
     eyePropertiesVariables      v;
     eyePropertiesMiscellaneous  m;
-};
-
-struct haarProperties
-{
-    int x_pos;
-    int y_pos;
-};
-
-struct edgeProperties
-{
-    std::vector<double> curvatureMax;
-    std::vector<double> curvatureMin;
-    std::vector<double> curvatureAvg;
-    std::vector<double> intensity;
-    std::vector<double> distance;
-    std::vector<int> index;
-    std::vector<int> length;
-    std::vector<int> size;
-    std::vector<std::vector<int>> pointIndices;
-};
-
-struct ellipseProperties
-{
-    bool pupilDetected;
-    double circumference;
-    double aspectRatio;
-    double intensity;
-    double radius;
-    double xPos;
-    double yPos;
-    double width;
-    double height;
-    int edgeLength;
-    std::vector<double> coefficients;
-    std::vector<int> edgeIndices;
-
 };
 
 struct imageInfo

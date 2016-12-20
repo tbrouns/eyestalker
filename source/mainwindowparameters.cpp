@@ -49,10 +49,10 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.glintRadius = settings.value("GlintRadius", 6).toInt();
     mEyePropertiesParameters.pupilCircumferenceMax = settings.value("CircumferenceMax", 320).toDouble();
     mEyePropertiesParameters.pupilCircumferenceMin = settings.value("CircumferenceMin", 80).toDouble();
-    mEyePropertiesParameters.pupilFractMin = settings.value("FractionMin", 0.4).toDouble();
+    mEyePropertiesParameters.pupilAspectRatioMin = settings.value("AspectRatioMin", 0.4).toDouble();
     mEyePropertiesParameters.pupilOffset = settings.value("PupilOffset", 0.4).toDouble();
     mEyePropertiesParameters.thresholdCircumferenceChangeMin = settings.value("ThresholdCircumferenceChangeMin", 10.0).toDouble();
-    mEyePropertiesParameters.thresholdFractionChangeMin = settings.value("ThresholdFractionChangeMin", 0.2).toDouble();
+    mEyePropertiesParameters.thresholdAspectRatioChangeMin = settings.value("ThresholdAspectRatioChangeMin", 0.2).toDouble();
     Parameters::eyeAOIXPosFraction = settings.value("AOIXPosRelative", Parameters::eyeAOIXPosFraction).toDouble();
     Parameters::eyeAOIYPosFraction = settings.value("AOIYPosRelative", Parameters::eyeAOIYPosFraction).toDouble();
     Parameters::flashAOIHght = settings.value("FlashAOIHght", 100).toInt();
@@ -102,14 +102,14 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("FlashAOIXPos", Parameters::flashAOIXPos);
     settings.setValue("FlashAOIYPos", Parameters::flashAOIYPos);
     settings.setValue("FlashThreshold", flashThreshold);
-    settings.setValue("FractionMin", mEyePropertiesParameters.pupilFractMin);
+    settings.setValue("AspectRatioMin", mEyePropertiesParameters.pupilAspectRatioMin);
     settings.setValue("GlintRadius", mEyePropertiesParameters.glintRadius);
     settings.setValue("PupilOffset", mEyePropertiesParameters.pupilOffset);
     settings.setValue("SaveEyeImage", SAVE_EYE_IMAGE);
     settings.setValue("SubjectName", subjectIdentifier);
     settings.setValue("SubSamplingFactor", cameraSubSamplingFactor);
     settings.setValue("ThresholdCircumferenceChangeMin", mEyePropertiesParameters.thresholdCircumferenceChangeMin);
-    settings.setValue("ThresholdFractionChangeMin", mEyePropertiesParameters.thresholdFractionChangeMin);
+    settings.setValue("ThresholdAspectRatioChangeMin", mEyePropertiesParameters.thresholdAspectRatioChangeMin);
     settings.setValue("TrialTimeLength", (TrialTimeLengthLineEdit->text()).toInt());
 }
 
@@ -212,7 +212,7 @@ void MainWindow::setPupilFraction(double value)
 {
     if (!Parameters::REALTIME_PROCESSING)
     {
-        mEyePropertiesVariables.pupilFractionPrediction = value;
+        mEyePropertiesVariables.pupilAspectRatioPrediction = value;
         PupilFractLabel->setText(QString::number(value, 'f', 2));
     }
 }
@@ -250,8 +250,8 @@ void MainWindow::setPupilCircumferenceMax(double value)
 
 void MainWindow::setPupilFractionMin(double value)
 {
-    mEyePropertiesParameters.pupilFractMin = value;
-    PupilFractSliderDouble->setDoubleMinimum(mEyePropertiesParameters.pupilFractMin);
+    mEyePropertiesParameters.pupilAspectRatioMin = value;
+    PupilFractSliderDouble->setDoubleMinimum(mEyePropertiesParameters.pupilAspectRatioMin);
     PupilFractionMinLabel->setText(QString::number(value, 'f', 2));
 }
 
@@ -321,7 +321,7 @@ void MainWindow::setThresholdCircumference(double value)
 
 void MainWindow::setThresholdFraction(double value)
 {
-    mEyePropertiesParameters.thresholdFractionChangeMin = value;
+    mEyePropertiesParameters.thresholdAspectRatioChangeMin = value;
     ThresholdFractionLabel->setText(QString::number(value, 'f', 2));
 }
 

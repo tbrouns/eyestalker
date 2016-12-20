@@ -433,9 +433,9 @@ std::vector<int> findCannyIndices(const std::vector<char>& binaryImageVector)
     return cannyEdgeIndices;
 }
 
-std::vector<edgeProperties> EdgeFilter(const cv::Mat& img, std::vector<char>& p, int haarWidth, double curvatureLowerLimit, double curvatureUpperLimit)
+std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p, int haarWidth, double curvatureLowerLimit, double curvatureUpperLimit)
 {
-    edgeProperties vEdgePropertiesAll; // new structure containing length and indices of all edges
+    std::vector<edgeProperties> vEdgePropertiesAll; // new structure containing length and indices of all edges
     
     int haarArea = haarWidth * haarWidth;
     
@@ -909,12 +909,12 @@ std::vector<edgeProperties> EdgeFilter(const cv::Mat& img, std::vector<char>& p,
     return vEdgePropertiesAll; // return structure
 }
 
-std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const edgeProperties& mEdgePropertiesAll)
+std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const std::vector<edgeProperties>& vEdgePropertiesAll)
 {
     double expectedCurvature = mEyeProperties.v.edgeCurvaturePrediction;
 
     int numEdgesMax = mEyeProperties.p.edgeMaximumFitNumber;
-    int numEdges    = mEdgePropertiesAll.sizes.size();
+    int numEdges    = vEdgePropertiesAll.size();
 
     std::vector<int> acceptedEdges(numEdgesMax);
 
@@ -923,17 +923,17 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const edgePropertie
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
         // intensity score
-        double intensity = mEdgePropertiesAll.intensities[iEdge];
+        double intensity = vEdgePropertiesAll[iEdge].intensity;
         double intensityScore = (20 / (1 + 0.01 * pow(0.90, -intensity + mEyeProperties.v.edgeIntensityPrediction)));
         if (intensityScore < 0) { intensityScore = 0; }
 
         // position score
-        double dR = std::abs(mEdgePropertiesAll.distances[iEdge] - pupilRadiusPredictionFactor * mEyeProperties.v.pupilRadiusPrediction); // reduce prediction by constant factor, because actual pupil edge should envelop prediction
+        double dR = std::abs(vEdgePropertiesAll[iEdge].distance - pupilRadiusPredictionFactor * mEyeProperties.v.pupilRadiusPrediction); // reduce prediction by constant factor, because actual pupil edge should envelop prediction
         double positionScore = (-15 / (mEyeProperties.v.pupilRadiusPrediction)) * dR + 15;
         if (positionScore < 0) { positionScore = 0; }
 
         // length score
-        double length = mEdgePropertiesAll.lengths[iEdge];
+        double length = vEdgePropertiesAll[iEdge].length;
         double lengthScore;
         if (length <= mEyeProperties.v.pupilCircumferencePrediction)
         {
@@ -946,7 +946,7 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const edgePropertie
         if (lengthScore < 0) { lengthScore = 0; }
 
         // curvature score
-        double dC = std::abs(mEdgePropertiesAll.curvaturesAvg[iEdge] - expectedCurvature); // closer to prediction = better
+        double dC = std::abs(vEdgePropertiesAll[iEdge].curvatureAvg - expectedCurvature); // closer to prediction = better
         double curvatureScore = (-7 / expectedCurvature) * dC + 7;
         if (curvatureScore < 0) { curvatureScore = 0; }
 
@@ -1129,12 +1129,12 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
     return mEllipseProperties;
 }
 
-ellipseProperties findBestEllipseFit(const edgeProperties& mEdgeProperties, int haarWidth, eyeProperties mEyeProperties, std::vector<int> cannyEdgePointIndices)
+ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePropertiesAll, int haarWidth, eyeProperties mEyeProperties, std::vector<int> cannyEdgePointIndices)
 {
     ellipseProperties mEllipseProperties;
     mEllipseProperties.pupilDetected = false;
     
-    int totalNumberOfEdges = mEdgeProperties.sizes.size(); // total number of edges
+    int totalNumberOfEdges = vEdgePropertiesAll.size(); // total number of edges
     int totalNumberOfEdgePoints = cannyEdgePointIndices.size();
 
     std::vector<ellipseProperties> vEllipsePropertiesAll; // vector to record information for each accepted ellipse fit
@@ -1158,11 +1158,11 @@ ellipseProperties findBestEllipseFit(const edgeProperties& mEdgeProperties, int 
             {
                 if (edgeCombination[iEdge])
                 {
-                    combiEdgeIntensities[jEdge]  = mEdgeProperties.intensities[iEdge];
-                    combiEdgeIndices[jEdge]      = mEdgeProperties.edgeIndices[iEdge];
-                    combiEdgeLengths[jEdge]      = mEdgeProperties.lengths[iEdge];
-                    combiEdgeSizes[jEdge]        = mEdgeProperties.sizes[iEdge];
-                    combiEdgePointIndices[jEdge] = mEdgeProperties.pointIndices[iEdge];
+                    combiEdgeIntensities[jEdge]  = vEdgePropertiesAll[iEdge].intensity;
+                    combiEdgeIndices[jEdge]      = vEdgePropertiesAll[iEdge].index;
+                    combiEdgeLengths[jEdge]      = vEdgePropertiesAll[iEdge].length;
+                    combiEdgeSizes[jEdge]        = vEdgePropertiesAll[iEdge].size;
+                    combiEdgePointIndices[jEdge] = vEdgePropertiesAll[iEdge].pointIndices;
                     jEdge++;
                 }
             }
@@ -1204,7 +1204,7 @@ ellipseProperties findBestEllipseFit(const edgeProperties& mEdgeProperties, int 
                 continue;
             }
 
-            if (mEllipsePropertiesNew.aspectRatio < mEyeProperties.p.pupilFractMin) // no extreme deviations from circular shape
+            if (mEllipsePropertiesNew.aspectRatio < mEyeProperties.p.pupilAspectRatioMin) // no extreme deviations from circular shape
             {
                 continue;
             }
@@ -1214,7 +1214,7 @@ ellipseProperties findBestEllipseFit(const edgeProperties& mEdgeProperties, int 
                 continue;
             }
 
-            if (std::abs(mEllipsePropertiesNew.aspectRatio - mEyeProperties.v.pupilFractionPrediction) > mEyeProperties.v.thresholdFractionChange) // no large pupil size changes
+            if (std::abs(mEllipsePropertiesNew.aspectRatio - mEyeProperties.v.pupilAspectRatioPrediction) > mEyeProperties.v.thresholdAspectRatioChange) // no large pupil size changes
             {
                 continue;
             }
@@ -1318,7 +1318,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     // Define some variables
     
     eyeProperties mEyePropertiesNew = mEyeProperties; // new properties for new frame
-    edgeProperties mEdgePropertiesNew;
+    std::vector<edgeProperties> vEdgePropertiesNew;
     ellipseProperties mEllipseProperties;
 
     mEllipseProperties.pupilDetected  = false;
@@ -1426,7 +1426,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             double D =  0.3801;
             double E = -1.408;
 
-            curvatureLowerLimit = A * exp(B * pow(mEyeProperties.v.pupilCircumferencePrediction, D) + C * pow(mEyeProperties.v.pupilFractionPrediction, E)) - mEyeProperties.v.curvatureOffset;
+            curvatureLowerLimit = A * exp(B * pow(mEyeProperties.v.pupilCircumferencePrediction, D) + C * pow(mEyeProperties.v.pupilAspectRatioPrediction, E)) - mEyeProperties.v.curvatureOffset;
         }
 
         double curvatureUpperLimit;
@@ -1438,10 +1438,10 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             double D = -0.412;
             double E =  0.4122;
 
-            curvatureUpperLimit = A * exp(B * pow(mEyeProperties.v.pupilCircumferencePrediction, D) + C * pow(mEyeProperties.v.pupilFractionPrediction, E)) + mEyeProperties.v.curvatureOffset;
+            curvatureUpperLimit = A * exp(B * pow(mEyeProperties.v.pupilCircumferencePrediction, D) + C * pow(mEyeProperties.v.pupilAspectRatioPrediction, E)) + mEyeProperties.v.curvatureOffset;
         }
 
-        std::vector<edgeProperties> vEdgePropertiesAll = EdgeFilter(imagePupilGray, cannyEdges, offsetPupilHaarWdth, curvatureLowerLimit, curvatureUpperLimit);
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdges, offsetPupilHaarWdth, curvatureLowerLimit, curvatureUpperLimit);
 
         int numEdgesTotal = vEdgePropertiesAll.size();
 
@@ -1458,7 +1458,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
                 for (int iEdgePoint = 0, edgeSize = vEdgePropertiesAll[iEdge].size; iEdgePoint < edgeSize; iEdgePoint++)
                 {
-                    int edgePointIndex = vEdgePropertiesAll[iEdge].pointIndices[iEdge][iEdgePoint];
+                    int edgePointIndex = vEdgePropertiesAll[iEdge].pointIndices[iEdgePoint];
                     int edgePointXPos  =  edgePointIndex % offsetPupilHaarWdth;
                     int edgePointYPos  = (edgePointIndex - edgePointXPos) / offsetPupilHaarWdth;
 
@@ -1472,51 +1472,42 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             }
 
             mEyeProperties.v.edgeCurvaturePrediction = 0.5 * (curvatureUpperLimit + curvatureLowerLimit);
-            std::vector<int> acceptedEdges = edgeThreshold(mEyeProperties, mEdgePropertiesAll);
+            std::vector<int> acceptedEdges = edgeThreshold(mEyeProperties, vEdgePropertiesAll);
 
             for (int iEdge = 0; iEdge < mEyeProperties.p.edgeMaximumFitNumber; iEdge++)
             {
                 int jEdge = acceptedEdges[iEdge];
-
-                mEdgePropertiesNew.lengths.push_back(mEdgePropertiesAll.lengths[jEdge]);
-                mEdgePropertiesNew.sizes.push_back(mEdgePropertiesAll.sizes[jEdge]);
-                mEdgePropertiesNew.pointIndices.push_back(mEdgePropertiesAll.pointIndices[jEdge]);
-                mEdgePropertiesNew.intensities.push_back(mEdgePropertiesAll.intensities[jEdge]);
-                mEdgePropertiesNew.edgeIndices.push_back(jEdge);
+                vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
             }
 
-            mEllipseProperties = findBestEllipseFit(mEdgePropertiesNew, offsetPupilHaarWdth, mEyeProperties, cannyEdgeIndices); // ellipse fitting
+            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mEyeProperties, cannyEdgeIndices); // ellipse fitting
         }
 
         // Classify edges
 
-        int numEdgesNew   = mEllipseProperties.edgeIndices.size();
+        int numEdgesNew = mEllipseProperties.edgeIndices.size();
 
-        std::vector<int> edgeFlags(numEdgesTotal, 0);
+        for (int iEdge = 0; iEdge < numEdgesTotal; iEdge++)
+        {
+            vEdgePropertiesAll[iEdge].flag = 0;
+        }
 
         for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
         {
             int jEdge = mEllipseProperties.edgeIndices[iEdge];
-            edgeFlags[jEdge] = 1; // pupil edge
+            vEdgePropertiesAll[jEdge].flag = 1;
         }
 
         // Features for all edges
 
-        mEyePropertiesNew.m.edgeFlags         = edgeFlags;
-        mEyePropertiesNew.m.edgeCurvaturesMax = mEdgePropertiesAll.curvaturesMax;
-        mEyePropertiesNew.m.edgeCurvaturesMin = mEdgePropertiesAll.curvaturesMin;
-        mEyePropertiesNew.m.edgeCurvaturesAvg = mEdgePropertiesAll.curvaturesAvg;
-        mEyePropertiesNew.m.edgeLengths       = mEdgePropertiesAll.lengths;
-        mEyePropertiesNew.m.edgeSizes         = mEdgePropertiesAll.sizes;
-        mEyePropertiesNew.m.edgeIntensities   = mEdgePropertiesAll.intensities;
-        mEyePropertiesNew.m.edgeDistances     = mEdgePropertiesAll.distances;
+        mEyePropertiesNew.m.edgePropertiesAll = vEdgePropertiesAll;
 
         // Save parameters
 
         mEyePropertiesNew.v.edgeCurvaturePrediction = mEyeProperties.v.edgeCurvaturePrediction;
 
         mEyePropertiesNew.v.pupilCircumferenceExact = mEllipseProperties.circumference;
-        mEyePropertiesNew.v.pupilFractionExact      = mEllipseProperties.aspectRatio;
+        mEyePropertiesNew.v.pupilAspectRatioExact   = mEllipseProperties.aspectRatio;
         mEyePropertiesNew.v.pupilDetected           = mEllipseProperties.pupilDetected;
 
         // For draw functions
@@ -1534,8 +1525,6 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.m.glintHaarWdth = 2 * mEyeProperties.p.glintRadius;
 
         mEyePropertiesNew.m.cannyEdges          = cannyEdgesRaw;
-        mEyePropertiesNew.m.edgeIndicesAll      = mEdgePropertiesAll.pointIndices;
-        mEyePropertiesNew.m.edgeIndicesNew      = mEdgePropertiesNew.pointIndices;
         mEyePropertiesNew.m.ellipseCoefficients = mEllipseProperties.coefficients;
     }
     else
@@ -1547,19 +1536,19 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     
     if (!mEllipseProperties.pupilDetected) // pupil not detected
     {
-        mEyePropertiesNew.v.pupilFractionPrediction = mEyeProperties.v.pupilFractionPrediction + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.pupilFractionAverage - mEyeProperties.v.pupilFractionPrediction);
-        mEyePropertiesNew.v.pupilFractionAverage    = mEyeProperties.v.pupilFractionAverage + mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilFractionPrediction - mEyeProperties.v.pupilFractionAverage);
-        mEyePropertiesNew.v.momentumFraction        = mEyeProperties.v.momentumFraction * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.pupilAspectRatioPrediction = mEyeProperties.v.pupilAspectRatioPrediction + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.pupilAspectRatioAverage - mEyeProperties.v.pupilAspectRatioPrediction);
+        mEyePropertiesNew.v.pupilAspectRatioAverage    = mEyeProperties.v.pupilAspectRatioAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioAverage);
+        mEyePropertiesNew.v.momentumFraction           = mEyeProperties.v.momentumFraction * mEyeProperties.p.alphaMomentum;
 
         mEyePropertiesNew.v.pupilCircumferencePrediction = mEyeProperties.v.pupilCircumferencePrediction + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.pupilCircumferenceAverage - mEyeProperties.v.pupilCircumferencePrediction);
-        mEyePropertiesNew.v.pupilCircumferenceAverage    = mEyeProperties.v.pupilCircumferenceAverage + mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
+        mEyePropertiesNew.v.pupilCircumferenceAverage    = mEyeProperties.v.pupilCircumferenceAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
         mEyePropertiesNew.v.momentumCircumference        = mEyeProperties.v.momentumCircumference * mEyeProperties.p.alphaMomentum;
 
         mEyePropertiesNew.v.pupilRadiusPrediction = mEyeProperties.v.pupilCircumferencePrediction / (2 * M_PI);
         mEyePropertiesNew.v.momentumRadius        = mEyeProperties.v.momentumRadius * mEyeProperties.p.alphaMomentum;
 
         mEyePropertiesNew.v.edgeIntensityPrediction = mEyeProperties.v.edgeIntensityPrediction + mEyeProperties.p.alphaPrediction * (mEyeProperties.v.edgeIntensityAverage - mEyeProperties.v.edgeIntensityPrediction);
-        mEyePropertiesNew.v.edgeIntensityAverage    = mEyeProperties.v.edgeIntensityAverage + mEyeProperties.p.alphaAverage * (mEyeProperties.v.edgeIntensityPrediction - mEyeProperties.v.edgeIntensityAverage);
+        mEyePropertiesNew.v.edgeIntensityAverage    = mEyeProperties.v.edgeIntensityAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.edgeIntensityPrediction - mEyeProperties.v.edgeIntensityAverage);
 
         mEyePropertiesNew.v.xVelocity     = mEyeProperties.v.xVelocity * mEyeProperties.p.alphaMomentum;
         mEyePropertiesNew.v.xPosPredicted = mEyeProperties.v.xPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.xPosPredicted) + mEyeProperties.v.xVelocity;
@@ -1569,7 +1558,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         mEyePropertiesNew.v.searchRadius                 = mEyeProperties.v.searchRadius                 * (2 - mEyeProperties.p.alphaMiscellaneous);
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyeProperties.v.thresholdCircumferenceChange * (2 - mEyeProperties.p.alphaMiscellaneous);
-        mEyePropertiesNew.v.thresholdFractionChange      = mEyeProperties.v.thresholdFractionChange      * (2 - mEyeProperties.p.alphaMiscellaneous);
+        mEyePropertiesNew.v.thresholdAspectRatioChange      = mEyeProperties.v.thresholdAspectRatioChange      * (2 - mEyeProperties.p.alphaMiscellaneous);
         mEyePropertiesNew.v.curvatureOffset              = mEyeProperties.v.curvatureOffset              * (2 - mEyeProperties.p.alphaMiscellaneous);
     }
     else // pupil detected
@@ -1577,13 +1566,13 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.v.xPosExact = mEllipseProperties.xPos + offsetPupilHaarXPos;
         mEyePropertiesNew.v.yPosExact = mEllipseProperties.yPos + offsetPupilHaarYPos;
 
-        mEyePropertiesNew.v.pupilFractionPrediction =  mEyeProperties.v.pupilFractionPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mEyeProperties.v.pupilFractionPrediction) + mEyeProperties.v.momentumFraction;
-        mEyePropertiesNew.v.pupilFractionAverage    =  mEyeProperties.v.pupilFractionAverage + mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilFractionPrediction - mEyeProperties.v.pupilFractionAverage);
-        mEyePropertiesNew.v.momentumFraction        = (mEyeProperties.v.momentumFraction + (mEyePropertiesNew.v.pupilFractionPrediction - mEyeProperties.v.pupilFractionPrediction)) * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.pupilAspectRatioPrediction =  mEyeProperties.v.pupilAspectRatioPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mEyeProperties.v.pupilAspectRatioPrediction) + mEyeProperties.v.momentumFraction;
+        mEyePropertiesNew.v.pupilAspectRatioAverage    =  mEyeProperties.v.pupilAspectRatioAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioAverage);
+        mEyePropertiesNew.v.momentumFraction           = (mEyeProperties.v.momentumFraction + (mEyePropertiesNew.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioPrediction)) * mEyeProperties.p.alphaMomentum;
 
-        mEyePropertiesNew.v.pupilCircumferencePrediction =  mEyeProperties.v.pupilCircumferencePrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.circumference - mEyeProperties.v.pupilCircumferencePrediction) + mEyeProperties.v.momentumCircumference;
-        mEyePropertiesNew.v.pupilCircumferenceAverage    =  mEyeProperties.v.pupilCircumferenceAverage + mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
-        mEyePropertiesNew.v.momentumCircumference        = (mEyeProperties.v.momentumCircumference + (mEyePropertiesNew.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferencePrediction)) * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.pupilCircumferencePrediction =  mEyeProperties.v.pupilCircumferencePrediction +  mEyeProperties.p.alphaPrediction * (mEllipseProperties.circumference - mEyeProperties.v.pupilCircumferencePrediction) + mEyeProperties.v.momentumCircumference;
+        mEyePropertiesNew.v.pupilCircumferenceAverage    =  mEyeProperties.v.pupilCircumferenceAverage    +  mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
+        mEyePropertiesNew.v.momentumCircumference        = (mEyeProperties.v.momentumCircumference        + (mEyePropertiesNew.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferencePrediction)) * mEyeProperties.p.alphaMomentum;
 
         mEyePropertiesNew.v.pupilRadiusPrediction =  mEyeProperties.v.pupilRadiusPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.radius - mEyeProperties.v.pupilRadiusPrediction) + mEyeProperties.v.momentumRadius;
         mEyePropertiesNew.v.momentumRadius        = (mEyeProperties.v.momentumRadius + (mEyePropertiesNew.v.pupilRadiusPrediction - mEyeProperties.v.pupilRadiusPrediction)) * mEyeProperties.p.alphaMomentum;
@@ -1599,7 +1588,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         
         mEyePropertiesNew.v.searchRadius                 = mEyeProperties.v.searchRadius                 * mEyeProperties.p.alphaMiscellaneous;
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyeProperties.v.thresholdCircumferenceChange * mEyeProperties.p.alphaMiscellaneous;
-        mEyePropertiesNew.v.thresholdFractionChange      = mEyeProperties.v.thresholdFractionChange      * mEyeProperties.p.alphaMiscellaneous;
+        mEyePropertiesNew.v.thresholdAspectRatioChange   = mEyeProperties.v.thresholdAspectRatioChange   * mEyeProperties.p.alphaMiscellaneous;
         mEyePropertiesNew.v.curvatureOffset              = mEyeProperties.v.curvatureOffset              * mEyeProperties.p.alphaMiscellaneous;
 
         // Grab pupil image
@@ -1643,13 +1632,13 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyePropertiesNew.p.thresholdCircumferenceChangeMin;
     }
 
-    if (mEyePropertiesNew.v.thresholdFractionChange > 1.0)
+    if (mEyePropertiesNew.v.thresholdAspectRatioChange > 1.0)
     {
-        mEyePropertiesNew.v.thresholdFractionChange = 1.0;
+        mEyePropertiesNew.v.thresholdAspectRatioChange = 1.0;
     }
-    else if (mEyePropertiesNew.v.thresholdFractionChange < mEyePropertiesNew.p.thresholdFractionChangeMin)
+    else if (mEyePropertiesNew.v.thresholdAspectRatioChange < mEyePropertiesNew.p.thresholdAspectRatioChangeMin)
     {
-        mEyePropertiesNew.v.thresholdFractionChange = mEyePropertiesNew.p.thresholdFractionChangeMin;
+        mEyePropertiesNew.v.thresholdAspectRatioChange = mEyePropertiesNew.p.thresholdAspectRatioChangeMin;
     }
 
     if (mEyePropertiesNew.v.curvatureOffset > 180)

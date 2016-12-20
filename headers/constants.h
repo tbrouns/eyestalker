@@ -27,8 +27,9 @@ const double minimumFitFraction = 0.50;
 const double minimumRefinementFraction = 0.05;
 const int    edgeIntensityPositionOffset = 2;
 
-const double pupilFractionMinIni = 0.4;
-const double pupilFractionIni = 0.9;
+const double pupilAspectRatioMinIni = 0.4;
+const double pupilAspectRatioIni    = 0.9;
+
 const double edgeIntensityIni = 255;
 const double pupilCircumferenceUpperLimit = 500;
 const double pupilRadiusPredictionFactor = 0.75;

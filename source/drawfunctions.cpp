@@ -69,17 +69,22 @@ void drawEdges(cv::Mat& I, const std::vector<char>& p, int x0, int y0, int haarW
     }
 }
 
-void drawOutline(cv::Mat& I, const std::vector<std::vector<int>>& edgeIndices, int x0, int y0, int haarWidth, const cv::Vec3b& col)
+void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesAll, int x0, int y0, int haarWidth, const cv::Vec3b& primaryColour, const cv::Vec3b& secondaryColour)
 {
-    int numberOfEdges = edgeIndices.size();
+    int numEdges = vEdgePropertiesAll.size();
 
-    for (int iEdge = 0; iEdge < numberOfEdges; iEdge++)
+    for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        int edgeSize = edgeIndices[iEdge].size();
+        int edgeSize = vEdgePropertiesAll[iEdge].size;
+
+        cv::Vec3b colour;
+
+        if (vEdgePropertiesAll[iEdge].flag) { colour = primaryColour; }
+        else                                { colour = secondaryColour; }
 
         for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
         {
-            int edgePointIndex = edgeIndices[iEdge][iEdgePoint];
+            int edgePointIndex = vEdgePropertiesAll[iEdge].pointIndices[iEdgePoint];
 
             int x = edgePointIndex % haarWidth;
             int y = (edgePointIndex - x) / haarWidth;
@@ -87,7 +92,7 @@ void drawOutline(cv::Mat& I, const std::vector<std::vector<int>>& edgeIndices, i
             int X = x + x0;
             int Y = y + y0;
 
-            I.at<cv::Vec3b>(Y, X) = col;
+            I.at<cv::Vec3b>(Y, X) = colour;
         }
     }
 }
@@ -168,8 +173,7 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
     if (Parameters::drawFlags.edge)
     {
         drawEdges(I, mEyeProperties.m.cannyEdges, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, red);
-        drawOutline(I, mEyeProperties.m.edgeIndicesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, yellow);
-        drawOutline(I, mEyeProperties.m.edgeIndicesNew, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, green);
+        drawOutline(I, mEyeProperties.m.edgePropertiesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, green, yellow);
     }
 
     if (Parameters::drawFlags.elps)
