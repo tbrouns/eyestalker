@@ -19,118 +19,109 @@ void MainWindow::loadSettings(QString fileName)
 {
     QSettings settings(fileName, QSettings::IniFormat);
 
-    cameraAOIFractionHght = settings.value("CamAOIHghtFraction", cameraAOIFractionHght).toDouble();
-    cameraAOIFractionWdth = settings.value("CamAOIWdthFraction", cameraAOIFractionWdth).toDouble();
-    cameraAOIFractionXPos = settings.value("CamAOIXPosFraction", cameraAOIFractionXPos).toDouble();
-    cameraAOIFractionYPos = settings.value("CamAOIYPosFraction", cameraAOIFractionYPos).toDouble();
-    cameraFrameRateDesired = settings.value("CameraFrameRateDesired", cameraFrameRateDesired).toInt();
-    cameraSubSamplingFactor = settings.value("SubSamplingFactor", 1).toInt();
-    dataFilename = settings.value("DataFilename", "experiment_data").toString().toStdString();
-    editDataIndex = settings.value("EditDataIndex", 0).toInt();
-    editImageTotal = settings.value("EditImageTotal", 0).toInt();
-    editSubjectName = settings.value("SubjectName", "").toString();
-    eyeAOIHghtFraction = settings.value("AOIHghtFraction", eyeAOIHghtFraction).toDouble();
-    eyeAOIWdthFraction = settings.value("AOIWdthFraction", eyeAOIWdthFraction).toDouble();
-    flashThreshold = settings.value("FlashThreshold", 230).toInt();
-    GAIN_AUTO = settings.value("GainAuto", GAIN_AUTO).toBool();
-    GAIN_BOOST = settings.value("GainBoost", GAIN_BOOST).toBool();
-    mEyePropertiesParameters.alphaAverage = settings.value("AlphaAverage", 0.05).toDouble();
-    mEyePropertiesParameters.alphaMiscellaneous = settings.value("AlphaMiscellaneous", 0.75).toDouble();
-    mEyePropertiesParameters.alphaMomentum = settings.value("AlphaMomentum", 0.5).toDouble();
-    mEyePropertiesParameters.alphaPrediction = settings.value("AlphaPrediction", 0.75).toDouble();
-    mEyePropertiesParameters.cannyBlurLevel = settings.value("CannyBlurLevel", 0).toInt();
-    mEyePropertiesParameters.cannyKernelSize = settings.value("CannyKernelSize", 5).toInt();
-    mEyePropertiesParameters.cannyLowerLimit = settings.value("CannyLowerLimit", 300).toInt();
-    mEyePropertiesParameters.cannyUpperLimit = settings.value("CannyUpperLimit", 600).toInt();
-    mEyePropertiesParameters.curvatureOffsetMin = settings.value("CurvatureOffset", 5).toDouble();
-    mEyePropertiesParameters.edgeIntensityOffset = settings.value("EdgeIntensityOffset", 40).toDouble();
-    mEyePropertiesParameters.edgeMaximumFitNumber = settings.value("EdgeMaximumFitNumber", 3).toInt();
-    mEyePropertiesParameters.ellipseFitErrorMaximum = settings.value("EllipseFitErrorMaximum", 40).toDouble();
-    mEyePropertiesParameters.glintRadius = settings.value("GlintRadius", 6).toInt();
-    mEyePropertiesParameters.pupilCircumferenceMax = settings.value("CircumferenceMax", 320).toDouble();
-    mEyePropertiesParameters.pupilCircumferenceMin = settings.value("CircumferenceMin", 80).toDouble();
-    mEyePropertiesParameters.pupilAspectRatioMin = settings.value("AspectRatioMin", 0.4).toDouble();
-    mEyePropertiesParameters.pupilOffset = settings.value("PupilOffset", 0.4).toDouble();
-    mEyePropertiesParameters.thresholdCircumferenceChangeMin = settings.value("ThresholdCircumferenceChangeMin", 10.0).toDouble();
-    mEyePropertiesParameters.thresholdAspectRatioChangeMin = settings.value("ThresholdAspectRatioChangeMin", 0.2).toDouble();
-    Parameters::eyeAOIXPosFraction = settings.value("AOIXPosRelative", Parameters::eyeAOIXPosFraction).toDouble();
-    Parameters::eyeAOIYPosFraction = settings.value("AOIYPosRelative", Parameters::eyeAOIYPosFraction).toDouble();
-    Parameters::flashAOIHght = settings.value("FlashAOIHght", 100).toInt();
-    Parameters::flashAOIWdth = settings.value("FlashAOIWdth", 30).toInt();
-    Parameters::flashAOIXPos = settings.value("FlashAOIXPos", 257).toInt();
-    Parameters::flashAOIYPos = settings.value("FlashAOIYPos", 500).toInt();
-    SAVE_EYE_IMAGE = settings.value("SaveEyeImage", true).toBool();
-    subjectIdentifier = settings.value("SubjectIdentifier", "").toString();
-    trialIndex = settings.value("TrialIndex", trialIndex).toInt();
-    trialTimeLength = settings.value("TrialTimeLength", trialTimeLength).toInt();
+    cameraAOIFractionHght                                       = settings.value("CamAOIHghtFraction",              cameraAOIFractionHght).toDouble();
+    cameraAOIFractionWdth                                       = settings.value("CamAOIWdthFraction",              cameraAOIFractionWdth).toDouble();
+    cameraAOIFractionXPos                                       = settings.value("CamAOIXPosFraction",              cameraAOIFractionXPos).toDouble();
+    cameraAOIFractionYPos                                       = settings.value("CamAOIYPosFraction",              cameraAOIFractionYPos).toDouble();
+    cameraFrameRateDesired                                      = settings.value("CameraFrameRateDesired",          cameraFrameRateDesired).toInt();
+    cameraSubSamplingFactor                                     = settings.value("SubSamplingFactor",               1).toInt();
+    dataFilename                                                = settings.value("DataFilename",                    "experiment_data").toString().toStdString();
+    editDataIndex                                               = settings.value("EditDataIndex",                   0).toInt();
+    editImageTotal                                              = settings.value("EditImageTotal",                  0).toInt();
+    editSubjectName                                             = settings.value("SubjectName",                     "").toString();
+    eyeAOIHghtFraction                                          = settings.value("AOIHghtFraction",                 eyeAOIHghtFraction).toDouble();
+    eyeAOIWdthFraction                                          = settings.value("AOIWdthFraction",                 eyeAOIWdthFraction).toDouble();
+    flashThreshold                                              = settings.value("FlashThreshold",                  230).toInt();
+    GAIN_AUTO                                                   = settings.value("GainAuto",                        GAIN_AUTO).toBool();
+    GAIN_BOOST                                                  = settings.value("GainBoost",                       GAIN_BOOST).toBool();
+    mEyePropertiesParameters.alphaAverage                       = settings.value("AlphaAverage",                    0.05).toDouble();
+    mEyePropertiesParameters.alphaMiscellaneous                 = settings.value("AlphaMiscellaneous",              0.75).toDouble();
+    mEyePropertiesParameters.alphaMomentum                      = settings.value("AlphaMomentum",                   0.5).toDouble();
+    mEyePropertiesParameters.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
+    mEyePropertiesParameters.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  0).toInt();
+    mEyePropertiesParameters.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
+    mEyePropertiesParameters.cannyLowerLimit                    = settings.value("CannyLowerLimit",                 300).toInt();
+    mEyePropertiesParameters.cannyUpperLimit                    = settings.value("CannyUpperLimit",                 600).toInt();
+    mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
+    mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
+    mEyePropertiesParameters.edgeMaximumFitNumber               = settings.value("EdgeMaximumFitNumber",            3).toInt();
+    mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          40).toDouble();
+    mEyePropertiesParameters.glintRadius                        = settings.value("GlintRadius",                     6).toInt();
+    mEyePropertiesParameters.pupilCircumferenceMax              = settings.value("CircumferenceMax",                320).toDouble();
+    mEyePropertiesParameters.pupilCircumferenceMin              = settings.value("CircumferenceMin",                80).toDouble();
+    mEyePropertiesParameters.pupilAspectRatioMin                = settings.value("AspectRatioMin",                  0.4).toDouble();
+    mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     0.4).toDouble();
+    mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    10.0).toDouble();
+    mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
+    Parameters::eyeAOIXPosFraction                              = settings.value("AOIXPosRelative",                 Parameters::eyeAOIXPosFraction).toDouble();
+    Parameters::eyeAOIYPosFraction                              = settings.value("AOIYPosRelative",                 Parameters::eyeAOIYPosFraction).toDouble();
+    Parameters::flashAOIHght                                    = settings.value("FlashAOIHght",                    100).toInt();
+    Parameters::flashAOIWdth                                    = settings.value("FlashAOIWdth",                    30).toInt();
+    Parameters::flashAOIXPos                                    = settings.value("FlashAOIXPos",                    257).toInt();
+    Parameters::flashAOIYPos                                    = settings.value("FlashAOIYPos",                    500).toInt();
+    SAVE_EYE_IMAGE                                              = settings.value("SaveEyeImage",                    true).toBool();
+    subjectIdentifier                                           = settings.value("SubjectIdentifier",               "").toString();
+    trialIndex                                                  = settings.value("TrialIndex",                      trialIndex).toInt();
+    trialTimeLength                                             = settings.value("TrialTimeLength",                 trialTimeLength).toInt();
 }
 
 void MainWindow::saveSettings(QString fileName)
 {
     QSettings settings(fileName, QSettings::IniFormat);
 
-    settings.setValue("AlphaAverage", mEyePropertiesParameters.alphaAverage);
-    settings.setValue("AlphaMiscellaneous", mEyePropertiesParameters.alphaMiscellaneous);
-    settings.setValue("AlphaMomentum", mEyePropertiesParameters.alphaMomentum);
-    settings.setValue("AlphaPrediction", mEyePropertiesParameters.alphaPrediction);
-    settings.setValue("AOIHghtFraction", eyeAOIHghtFraction);
-    settings.setValue("AOIWdthFraction", eyeAOIWdthFraction);
-    settings.setValue("AOIXPosRelative", Parameters::eyeAOIXPosFraction);
-    settings.setValue("AOIYPosRelative", Parameters::eyeAOIYPosFraction);
-    settings.setValue("GainAuto", GAIN_AUTO);
-    settings.setValue("GainBoost", GAIN_BOOST);
-    settings.setValue("CamAOIHghtFraction", cameraAOIFractionHght);
-    settings.setValue("CamAOIWdthFraction", cameraAOIFractionWdth);
-    settings.setValue("CamAOIXPosFraction", cameraAOIFractionXPos);
-    settings.setValue("CamAOIYPosFraction", cameraAOIFractionYPos);
-    settings.setValue("CameraFrameRateDesired", cameraFrameRateDesired);
-    settings.setValue("CannyBlurLevel", mEyePropertiesParameters.cannyBlurLevel);
-    settings.setValue("CannyKernelSize", mEyePropertiesParameters.cannyKernelSize);
-    settings.setValue("CannyLowerLimit", mEyePropertiesParameters.cannyLowerLimit);
-    settings.setValue("CannyUpperLimit", mEyePropertiesParameters.cannyUpperLimit);
-    settings.setValue("CircumferenceMax", mEyePropertiesParameters.pupilCircumferenceMax);
-    settings.setValue("CircumferenceMin", mEyePropertiesParameters.pupilCircumferenceMin);
-    settings.setValue("CurvatureOffset", mEyePropertiesParameters.curvatureOffsetMin);
-    settings.setValue("DataFilename", QString::fromStdString(dataFilename));
-    settings.setValue("EdgeIntensityOffset", mEyePropertiesParameters.edgeIntensityOffset);
-    settings.setValue("EdgeMaximumFitNumber", mEyePropertiesParameters.edgeMaximumFitNumber);
-    settings.setValue("EditDataIndex", editDataIndex);
-    settings.setValue("EditImageTotal", editImageTotal);
-    settings.setValue("EllipseFitErrorMaximum", mEyePropertiesParameters.ellipseFitErrorMaximum);
-    settings.setValue("FlashAOIHght", Parameters::flashAOIHght);
-    settings.setValue("FlashAOIWdth", Parameters::flashAOIWdth);
-    settings.setValue("FlashAOIXPos", Parameters::flashAOIXPos);
-    settings.setValue("FlashAOIYPos", Parameters::flashAOIYPos);
-    settings.setValue("FlashThreshold", flashThreshold);
-    settings.setValue("AspectRatioMin", mEyePropertiesParameters.pupilAspectRatioMin);
-    settings.setValue("GlintRadius", mEyePropertiesParameters.glintRadius);
-    settings.setValue("PupilOffset", mEyePropertiesParameters.pupilOffset);
-    settings.setValue("SaveEyeImage", SAVE_EYE_IMAGE);
-    settings.setValue("SubjectName", subjectIdentifier);
-    settings.setValue("SubSamplingFactor", cameraSubSamplingFactor);
-    settings.setValue("ThresholdCircumferenceChangeMin", mEyePropertiesParameters.thresholdCircumferenceChangeMin);
-    settings.setValue("ThresholdAspectRatioChangeMin", mEyePropertiesParameters.thresholdAspectRatioChangeMin);
-    settings.setValue("TrialTimeLength", (TrialTimeLengthLineEdit->text()).toInt());
+    settings.setValue("AlphaAverage",                   mEyePropertiesParameters.alphaAverage);
+    settings.setValue("AlphaMiscellaneous",             mEyePropertiesParameters.alphaMiscellaneous);
+    settings.setValue("AlphaMomentum",                  mEyePropertiesParameters.alphaMomentum);
+    settings.setValue("AlphaPrediction",                mEyePropertiesParameters.alphaPrediction);
+    settings.setValue("AOIHghtFraction",                eyeAOIHghtFraction);
+    settings.setValue("AOIWdthFraction",                eyeAOIWdthFraction);
+    settings.setValue("AOIXPosRelative",                Parameters::eyeAOIXPosFraction);
+    settings.setValue("AOIYPosRelative",                Parameters::eyeAOIYPosFraction);
+    settings.setValue("GainAuto",                       GAIN_AUTO);
+    settings.setValue("GainBoost",                      GAIN_BOOST);
+    settings.setValue("CamAOIHghtFraction",             cameraAOIFractionHght);
+    settings.setValue("CamAOIWdthFraction",             cameraAOIFractionWdth);
+    settings.setValue("CamAOIXPosFraction",             cameraAOIFractionXPos);
+    settings.setValue("CamAOIYPosFraction",             cameraAOIFractionYPos);
+    settings.setValue("CameraFrameRateDesired",         cameraFrameRateDesired);
+    settings.setValue("CannyBlurLevel",                 mEyePropertiesParameters.cannyBlurLevel);
+    settings.setValue("CannyKernelSize",                mEyePropertiesParameters.cannyKernelSize);
+    settings.setValue("CannyLowerLimit",                mEyePropertiesParameters.cannyLowerLimit);
+    settings.setValue("CannyUpperLimit",                mEyePropertiesParameters.cannyUpperLimit);
+    settings.setValue("CircumferenceMax",               mEyePropertiesParameters.pupilCircumferenceMax);
+    settings.setValue("CircumferenceMin",               mEyePropertiesParameters.pupilCircumferenceMin);
+    settings.setValue("CurvatureOffset",                mEyePropertiesParameters.curvatureOffsetMin);
+    settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
+    settings.setValue("EdgeIntensityOffset",            mEyePropertiesParameters.edgeIntensityOffset);
+    settings.setValue("EdgeMaximumFitNumber",           mEyePropertiesParameters.edgeMaximumFitNumber);
+    settings.setValue("EditDataIndex",                  editDataIndex);
+    settings.setValue("EditImageTotal",                 editImageTotal);
+    settings.setValue("EllipseFitErrorMaximum",         mEyePropertiesParameters.ellipseFitErrorMaximum);
+    settings.setValue("FlashAOIHght",                   Parameters::flashAOIHght);
+    settings.setValue("FlashAOIWdth",                   Parameters::flashAOIWdth);
+    settings.setValue("FlashAOIXPos",                   Parameters::flashAOIXPos);
+    settings.setValue("FlashAOIYPos",                   Parameters::flashAOIYPos);
+    settings.setValue("FlashThreshold",                 flashThreshold);
+    settings.setValue("AspectRatioMin",                 mEyePropertiesParameters.pupilAspectRatioMin);
+    settings.setValue("GlintRadius",                    mEyePropertiesParameters.glintRadius);
+    settings.setValue("PupilOffset",                    mEyePropertiesParameters.pupilOffset);
+    settings.setValue("SaveEyeImage",                   SAVE_EYE_IMAGE);
+    settings.setValue("SubjectName",                    subjectIdentifier);
+    settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
+    settings.setValue("CircumferenceChangeThreshold",   mEyePropertiesParameters.circumferenceChangeThreshold);
+    settings.setValue("AspectRatioChangeThreshold",     mEyePropertiesParameters.aspectRatioChangeThreshold);
+    settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text()).toInt();
 }
 
 void MainWindow::startRecordingManual()
 {
-    if (!FLASH_STANDBY)
-    {
-        startTrialRecording();
-    }
+    if (!FLASH_STANDBY) { startTrialRecording(); }
 }
 
 void MainWindow::setRealTimeEyeTracking(int state)
 {
-    if (state)
-    {
-        SAVE_EYE_IMAGE = false;
-    }
-    else
-    {
-        SAVE_EYE_IMAGE = true;
-    }
+    if (state) { SAVE_EYE_IMAGE = false; }
+    else       { SAVE_EYE_IMAGE = true;  }
 }
 
 void MainWindow::setFlashStandby(bool flag)
@@ -204,16 +195,16 @@ void MainWindow::setPupilCircumference(double value)
     if (!Parameters::REALTIME_PROCESSING)
     {
         mEyePropertiesVariables.pupilCircumferencePrediction = value;
-        PupilCircfLabel->setText(QString::number(value, 'f', 1));
+        PupilCircumferenceLabel->setText(QString::number(value, 'f', 1));
     }
 }
 
-void MainWindow::setPupilFraction(double value)
+void MainWindow::setPupilAspectRatio(double value)
 {
     if (!Parameters::REALTIME_PROCESSING)
     {
         mEyePropertiesVariables.pupilAspectRatioPrediction = value;
-        PupilFractLabel->setText(QString::number(value, 'f', 2));
+        PupilAspectRatioLabel->setText(QString::number(value, 'f', 2));
     }
 }
 
@@ -248,11 +239,11 @@ void MainWindow::setPupilCircumferenceMax(double value)
     PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
 }
 
-void MainWindow::setPupilFractionMin(double value)
+void MainWindow::setPupilAspectRatioMin(double value)
 {
     mEyePropertiesParameters.pupilAspectRatioMin = value;
-    PupilFractSliderDouble->setDoubleMinimum(mEyePropertiesParameters.pupilAspectRatioMin);
-    PupilFractionMinLabel->setText(QString::number(value, 'f', 2));
+    PupilAspectRatioSliderDouble->setDoubleMinimum(mEyePropertiesParameters.pupilAspectRatioMin);
+    PupilAspectRatioMinLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setEdgeIntensityOffset(double value)
@@ -315,13 +306,13 @@ void MainWindow::setAlphaMomentum(double value)
 
 void MainWindow::setThresholdCircumference(double value)
 {
-    mEyePropertiesParameters.thresholdCircumferenceChangeMin = value;
+    mEyePropertiesParameters.circumferenceChangeThreshold = value;
     ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 1));
 }
 
 void MainWindow::setThresholdFraction(double value)
 {
-    mEyePropertiesParameters.thresholdAspectRatioChangeMin = value;
+    mEyePropertiesParameters.aspectRatioChangeThreshold = value;
     ThresholdFractionLabel->setText(QString::number(value, 'f', 2));
 }
 
@@ -396,26 +387,14 @@ void MainWindow::setCameraBlackLevelOffset(int value)
 
 void MainWindow::setCameraBlackLevelMode(int state)
 {
-    if (state)
-    {
-        mUEyeOpencvCam.setBlackLevelMode(true);
-    }
-    else
-    {
-        mUEyeOpencvCam.setBlackLevelMode(false);
-    }
+    if (state) { mUEyeOpencvCam.setBlackLevelMode(true);  }
+    else       { mUEyeOpencvCam.setBlackLevelMode(false); }
 }
 
 void MainWindow::setCameraGainBoost(int state)
 {
-    if (state)
-    {
-        mUEyeOpencvCam.setGainBoost(true);
-    }
-    else
-    {
-        mUEyeOpencvCam.setGainBoost(false);
-    }
+    if (state) { mUEyeOpencvCam.setGainBoost(true);  }
+    else       { mUEyeOpencvCam.setGainBoost(false); }
 }
 
 void MainWindow::setCameraAutoGain(int state)
@@ -460,7 +439,7 @@ void MainWindow::setCameraSubSampling(int state)
     cameraAOIWdthMax = cameraAOIWdthMax * subSamplingChange;
     cameraAOIHghtMax = cameraAOIHghtMax * subSamplingChange;
 
-    ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.thresholdCircumferenceChangeMin * subSamplingChange);
+    ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.circumferenceChangeThreshold * subSamplingChange);
 
     updateCamAOIx();
     updateCamAOIy();
@@ -482,8 +461,6 @@ void MainWindow::setCameraSubSampling(int state)
         getCameraParameters();
     }
 }
-
-//
 
 void MainWindow::cropAOI()
 {
@@ -715,36 +692,18 @@ void MainWindow::setAOIRghtEye()
 
 void MainWindow::setDrawHaar(int state)
 {
-    if (state)
-    {
-        Parameters::drawFlags.haar = true;
-    }
-    else
-    {
-        Parameters::drawFlags.haar = false;
-    }
+    if (state) { Parameters::drawFlags.haar = true;  }
+    else       { Parameters::drawFlags.haar = false; }
 }
 
 void MainWindow::setDrawEdge(int state)
 {
-    if (state)
-    {
-        Parameters::drawFlags.edge = true;
-    }
-    else
-    {
-        Parameters::drawFlags.edge = false;
-    }
+    if (state) { Parameters::drawFlags.edge = true;  }
+    else       { Parameters::drawFlags.edge = false; }
 }
 
 void MainWindow::setDrawElps(int state)
 {
-    if (state)
-    {
-        Parameters::drawFlags.elps = true;
-    }
-    else
-    {
-        Parameters::drawFlags.elps = false;
-    }
+    if (state) { Parameters::drawFlags.elps = true;  }
+    else       { Parameters::drawFlags.elps = false; }
 }

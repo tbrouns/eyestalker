@@ -1538,7 +1538,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     {
         mEyePropertiesNew.v.pupilAspectRatioPrediction = mEyeProperties.v.pupilAspectRatioPrediction + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.pupilAspectRatioAverage - mEyeProperties.v.pupilAspectRatioPrediction);
         mEyePropertiesNew.v.pupilAspectRatioAverage    = mEyeProperties.v.pupilAspectRatioAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioAverage);
-        mEyePropertiesNew.v.momentumFraction           = mEyeProperties.v.momentumFraction * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.momentumAspectRatio        = mEyeProperties.v.momentumAspectRatio * mEyeProperties.p.alphaMomentum;
 
         mEyePropertiesNew.v.pupilCircumferencePrediction = mEyeProperties.v.pupilCircumferencePrediction + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.pupilCircumferenceAverage - mEyeProperties.v.pupilCircumferencePrediction);
         mEyePropertiesNew.v.pupilCircumferenceAverage    = mEyeProperties.v.pupilCircumferenceAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
@@ -1558,7 +1558,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         mEyePropertiesNew.v.searchRadius                 = mEyeProperties.v.searchRadius                 * (2 - mEyeProperties.p.alphaMiscellaneous);
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyeProperties.v.thresholdCircumferenceChange * (2 - mEyeProperties.p.alphaMiscellaneous);
-        mEyePropertiesNew.v.thresholdAspectRatioChange      = mEyeProperties.v.thresholdAspectRatioChange      * (2 - mEyeProperties.p.alphaMiscellaneous);
+        mEyePropertiesNew.v.thresholdAspectRatioChange   = mEyeProperties.v.thresholdAspectRatioChange   * (2 - mEyeProperties.p.alphaMiscellaneous);
         mEyePropertiesNew.v.curvatureOffset              = mEyeProperties.v.curvatureOffset              * (2 - mEyeProperties.p.alphaMiscellaneous);
     }
     else // pupil detected
@@ -1566,9 +1566,9 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.v.xPosExact = mEllipseProperties.xPos + offsetPupilHaarXPos;
         mEyePropertiesNew.v.yPosExact = mEllipseProperties.yPos + offsetPupilHaarYPos;
 
-        mEyePropertiesNew.v.pupilAspectRatioPrediction =  mEyeProperties.v.pupilAspectRatioPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mEyeProperties.v.pupilAspectRatioPrediction) + mEyeProperties.v.momentumFraction;
+        mEyePropertiesNew.v.pupilAspectRatioPrediction =  mEyeProperties.v.pupilAspectRatioPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mEyeProperties.v.pupilAspectRatioPrediction) + mEyeProperties.v.momentumAspectRatio;
         mEyePropertiesNew.v.pupilAspectRatioAverage    =  mEyeProperties.v.pupilAspectRatioAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioAverage);
-        mEyePropertiesNew.v.momentumFraction           = (mEyeProperties.v.momentumFraction + (mEyePropertiesNew.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioPrediction)) * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.momentumAspectRatio           = (mEyeProperties.v.momentumAspectRatio + (mEyePropertiesNew.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioPrediction)) * mEyeProperties.p.alphaMomentum;
 
         mEyePropertiesNew.v.pupilCircumferencePrediction =  mEyeProperties.v.pupilCircumferencePrediction +  mEyeProperties.p.alphaPrediction * (mEllipseProperties.circumference - mEyeProperties.v.pupilCircumferencePrediction) + mEyeProperties.v.momentumCircumference;
         mEyePropertiesNew.v.pupilCircumferenceAverage    =  mEyeProperties.v.pupilCircumferenceAverage    +  mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
@@ -1627,18 +1627,18 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     {
         mEyePropertiesNew.v.thresholdCircumferenceChange = mEyePropertiesNew.p.pupilCircumferenceMax;
     }
-    else if (mEyePropertiesNew.v.thresholdCircumferenceChange < mEyePropertiesNew.p.thresholdCircumferenceChangeMin)
+    else if (mEyePropertiesNew.v.thresholdCircumferenceChange < mEyePropertiesNew.p.circumferenceChangeThreshold)
     {
-        mEyePropertiesNew.v.thresholdCircumferenceChange = mEyePropertiesNew.p.thresholdCircumferenceChangeMin;
+        mEyePropertiesNew.v.thresholdCircumferenceChange = mEyePropertiesNew.p.circumferenceChangeThreshold;
     }
 
     if (mEyePropertiesNew.v.thresholdAspectRatioChange > 1.0)
     {
         mEyePropertiesNew.v.thresholdAspectRatioChange = 1.0;
     }
-    else if (mEyePropertiesNew.v.thresholdAspectRatioChange < mEyePropertiesNew.p.thresholdAspectRatioChangeMin)
+    else if (mEyePropertiesNew.v.thresholdAspectRatioChange < mEyePropertiesNew.p.aspectRatioChangeThreshold)
     {
-        mEyePropertiesNew.v.thresholdAspectRatioChange = mEyePropertiesNew.p.thresholdAspectRatioChangeMin;
+        mEyePropertiesNew.v.thresholdAspectRatioChange = mEyePropertiesNew.p.aspectRatioChangeThreshold;
     }
 
     if (mEyePropertiesNew.v.curvatureOffset > 180)

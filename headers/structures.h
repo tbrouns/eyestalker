@@ -82,8 +82,8 @@ struct eyePropertiesParameters
     double pupilCircumferenceMin;
     double pupilAspectRatioMin;
     double pupilOffset;
-    double thresholdCircumferenceChangeMin;
-    double thresholdAspectRatioChangeMin;
+    double circumferenceChangeThreshold;
+    double aspectRatioChangeThreshold;
     int cannyBlurLevel;
     int cannyKernelSize;
     int cannyLowerLimit;
@@ -100,7 +100,7 @@ struct eyePropertiesVariables
     double edgeIntensityPrediction;
     double edgeIntensityAverage;
     double momentumCircumference;
-    double momentumFraction;
+    double momentumAspectRatio;
     double momentumRadius;
     double pupilCircumferencePrediction;
     double pupilCircumferenceAverage;
