@@ -25,7 +25,7 @@ UEyeOpencvCam::UEyeOpencvCam()
 
     DEVICE_INITIALIZED = false;
     EVENT_ENABLED = true;
-    EXPERIMENT_TRIAL_RECORDING = false;
+    TRIAL_RECORDING = false;
     THREAD_ACTIVE = false;
 }
 
@@ -278,7 +278,7 @@ void UEyeOpencvCam::threadFrameCapture()
                     cv::Mat img = cv::Mat(height, width, CV_8UC3);
                     memcpy(img.ptr(), pMem, width * height * 3);
 
-                    if (EXPERIMENT_TRIAL_RECORDING)
+                    if (TRIAL_RECORDING)
                     {
                         vImageInfo[frameIndex].image = img;
                         vImageInfo[frameIndex].time = timeStamp;
@@ -288,7 +288,7 @@ void UEyeOpencvCam::threadFrameCapture()
 
                         if (frameCount >= numberOfImageBuffers)
                         {
-                            while (frameCount >= numberOfImageBuffers && Parameters::REALTIME_PROCESSING && EXPERIMENT_TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait if image buffer is full
+                            while (frameCount >= numberOfImageBuffers && Parameters::REALTIME_PROCESSING && TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait if image buffer is full
                             frameCount = frameCount % numberOfImageBuffers;
                         }
                     }
@@ -330,11 +330,11 @@ imageInfo UEyeOpencvCam::getFrame()
     {
         std::unique_lock<std::mutex> lck(Parameters::frameCaptureMutex);
 
-        if (EXPERIMENT_TRIAL_RECORDING)
+        if (TRIAL_RECORDING)
         {
             if (frameCount <= 0)
             {
-                while (frameCount <= 0 && Parameters::REALTIME_PROCESSING && EXPERIMENT_TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait for new images to arrive
+                while (frameCount <= 0 && Parameters::REALTIME_PROCESSING && TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait for new images to arrive
             }
 
             int index = frameIndex - frameCount;
@@ -363,12 +363,12 @@ void UEyeOpencvCam::startRecording()
 {
     frameCount = 0;
     frameIndex = 0;
-    EXPERIMENT_TRIAL_RECORDING = true;
+    TRIAL_RECORDING = true;
 }
 
 void UEyeOpencvCam::stopRecording()
 {
-    EXPERIMENT_TRIAL_RECORDING = false;
+    TRIAL_RECORDING = false;
 }
 
 // Pixel clock

@@ -15,7 +15,6 @@
 
 
 #include "headers/mainwindow.h"
-#include "headers/startupwindow.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -34,8 +33,6 @@ int main(int argc, char *argv[])
     MainWindow mMainWindow;
     mMainWindow.setWindowTitle("EyeStalker");
 
-    StartUpWindow *mStartUpWindow = new StartUpWindow;
-
     QString styleSheetLocation = QString(":qdarkstyle/style.qss");
     QFile styleSheetFile(styleSheetLocation);
 
@@ -50,30 +47,6 @@ int main(int argc, char *argv[])
             styleSheetFile.open(QFile::ReadOnly | QFile::Text);
             mMainWindow.setStyleSheet(ts.readAll());
         }
-
-        {
-            QFile newStyleSheetFile(styleSheetLocation);
-            QTextStream ts(&newStyleSheetFile);
-            newStyleSheetFile.open(QFile::ReadOnly | QFile::Text);
-            mStartUpWindow->setStyleSheet(ts.readAll());
-        }
-    }
-
-    // First-time start-up window
-
-    if (!boost::filesystem::exists("config.ini")) // Check if global config.ini file is present in folder
-    {
-        mStartUpWindow->setWindowTitle("Start-up window");
-        mStartUpWindow->exec();
-
-        if(!mStartUpWindow->getStatus())
-        {
-            return 0;
-        }
-    }
-    else
-    {
-        delete mStartUpWindow;
     }
 
     mMainWindow.show();

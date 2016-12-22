@@ -110,7 +110,6 @@ SOURCES += main.cpp\
     source/parameters.cpp \
     source/qimageopencv.cpp \
     source/sliderdouble.cpp \
-    source/startupwindow.cpp \
     source/ueyeopencv.cpp \
     source/confirmationwindow.cpp \
 
@@ -123,7 +122,6 @@ HEADERS  += \
     headers/parameters.h \
     headers/qimageopencv.h \
     headers/sliderdouble.h \
-    headers/startupwindow.h \
     headers/structures.h \
     headers/ueyeopencv.h
 

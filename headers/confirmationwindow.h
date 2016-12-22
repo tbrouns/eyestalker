@@ -29,7 +29,7 @@ class ConfirmationWindow : public QDialog
 
 public:
 
-    explicit ConfirmationWindow(QString, QWidget *parent = 0);
+    explicit ConfirmationWindow(QString, bool = true, QWidget *parent = 0);
     bool getStatus();
 
 private:

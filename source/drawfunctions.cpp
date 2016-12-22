@@ -15,8 +15,6 @@
 
 #include "headers/drawfunctions.h"
 
-// draw functions
-
 void drawHaarDetector(cv::Mat& I, int x0, int y0, int haarWidth, cv::Vec3b col)
 {
     unsigned short int wdth = I.rows;
@@ -153,15 +151,12 @@ void drawEllipseCross(cv::Mat& I, double cx, double cy, int ellipseDrawCrossSize
 
 void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
 {
-    cv::Vec3b blue(255, 0, 0);
-    cv::Vec3b green(0, 255, 0);
-    cv::Vec3b red(0, 0, 255);
-
-    cv::Vec3b cyan(255, 255, 0);
-    cv::Vec3b yellow(0, 255, 255);
-
-    cv::Vec3b white(255, 255, 255);
-
+    cv::Vec3b blue  (255,   0,   0);
+    cv::Vec3b green (  0, 255,   0);
+    cv::Vec3b red   (  0,   0, 255);
+    cv::Vec3b cyan  (255, 255,   0);
+    cv::Vec3b yellow(  0, 255, 255);
+    cv::Vec3b white (255, 255, 255);
 
     if (Parameters::drawFlags.haar)
     {

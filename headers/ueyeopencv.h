@@ -87,7 +87,7 @@ private:
 
     bool DEVICE_INITIALIZED;
     bool EVENT_ENABLED;
-    bool EXPERIMENT_TRIAL_RECORDING;
+    bool TRIAL_RECORDING;
     bool THREAD_ACTIVE;
     char* ppcImgMem;
     HIDS hCam;

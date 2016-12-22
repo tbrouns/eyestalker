@@ -111,7 +111,7 @@ private:
     bool APP_RUNNING;
     bool GAIN_AUTO;
     bool GAIN_BOOST;
-    bool EXPERIMENT_TRIAL_RECORDING;
+    bool TRIAL_RECORDING;
     bool FLASH_STANDBY;
     bool PROCESSING_ALL_IMAGES;
     bool PROCESSING_ALL_TRIALS;
@@ -187,7 +187,7 @@ private:
     QLabel *CannyUpperLimitLabel;
     QLabel *CurvatureOffsetLabel;
     QLabel *DataAnalysisTitleTextBox;
-    QLabel* DataDirectoryTextBox;
+    QLabel *DataDirectoryTextBox;
     QLabel *EdgeIntensityLabel;
     QLabel *EdgeIntensityOffsetLabel;
     QLabel *EdgeMaximumFitNumberLabel;
@@ -370,7 +370,7 @@ private slots:
     void setReviewImageFrame(int);
     void setAOIRghtEye();
     void setThresholdCircumference(double);
-    void setThresholdFraction(double);
+    void setThresholdAspectRatio(double);
     void setTrialIndex(int);
     void startReviewSession();
     void startRecordingManual();

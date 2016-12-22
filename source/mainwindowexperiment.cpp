@@ -19,9 +19,17 @@ void MainWindow::startTrialRecording()
 {
     if (Parameters::CAMERA_RUNNING)
     {
+        if (!boost::filesystem::exists(dataDirectory))
+        {
+            QString text = "Data directory does not exist. Please choose a valid path.";
+            ConfirmationWindow mConfirmationWindow(text, false);
+            mConfirmationWindow.setWindowTitle("Warning");
+            mConfirmationWindow.exec();
+        }
+
         emit stopTimer();
 
-        EXPERIMENT_TRIAL_RECORDING = true;
+        TRIAL_RECORDING = true;
 
         mUEyeOpencvCam.startRecording();
 
@@ -39,38 +47,48 @@ void MainWindow::startTrialRecording()
         eyeXPositions.assign(trialFrameTotal, 0);
         eyeYPositions.assign(trialFrameTotal, 0);
         eyeDetectionFlags.assign(trialFrameTotal, 0);
+
+        if (SAVE_EYE_IMAGE)
+        {
+            std::stringstream directoryName;
+            directoryName << dataDirectory << "/" << currentDate;
+
+            if (!boost::filesystem::exists(directoryName.str()))
+            {
+                boost::filesystem::create_directory(directoryName.str().c_str());
+            }
+
+            if (!NameInputLineEdit->text().isEmpty())
+            {
+                directoryName << "-" << (NameInputLineEdit->text()).toStdString();
+            }
+
+            if (!boost::filesystem::exists(directoryName.str()))
+            {
+                boost::filesystem::create_directory(directoryName.str().c_str());
+            }
+
+            directoryName << "/trial_" << trialIndex;
+
+            if (!boost::filesystem::exists(directoryName.str()))
+            {
+                boost::filesystem::create_directory(directoryName.str().c_str());
+            }
+
+            directoryName << "/raw/";
+
+            if (!boost::filesystem::exists(directoryName.str()))
+            {
+                boost::filesystem::create_directory(directoryName.str().c_str());
+            }
+        }
     }
-
-    if (SAVE_EYE_IMAGE)
+    else
     {
-        std::stringstream directoryName;
-        directoryName << dataDirectory << "/" << currentDate;
-
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
-
-        directoryName << "/" << (NameInputLineEdit->text()).toStdString();
-
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
-
-        directoryName << "/trial_" << trialIndex;
-
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
-
-        directoryName << "/raw/";
-
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
+        QString text = "Camera not running";
+        ConfirmationWindow mConfirmationWindow(text, false);
+        mConfirmationWindow.setWindowTitle("Warning");
+        mConfirmationWindow.exec();
     }
 }
 
@@ -80,14 +98,8 @@ void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlag
 
     for (int i = 0, vSize = v.size(); i < vSize; i++) // write data
     {
-        if (vFlags[i]) // only detected pupil data
-        {
-            file << v[i] << delimiter;
-        }
-        else
-        {
-            paddingTotal++;
-        }
+        if (vFlags[i]) { file << v[i] << delimiter; }
+        else           { paddingTotal++; }
     }
 
     for (int i = 0; i < paddingTotal; i++) // write padding of zeroes
@@ -145,7 +157,6 @@ void MainWindow::saveTrialData()
         saveFileNameSS << "/info.ini";
 
         editDataIndex = trialIndex;
-
         editImageTotal = frameCount;
 
         saveSettings(QString::fromStdString(saveFileNameSS.str()));

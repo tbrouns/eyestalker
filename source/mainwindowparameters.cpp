@@ -25,6 +25,7 @@ void MainWindow::loadSettings(QString fileName)
     cameraAOIFractionYPos                                       = settings.value("CamAOIYPosFraction",              cameraAOIFractionYPos).toDouble();
     cameraFrameRateDesired                                      = settings.value("CameraFrameRateDesired",          cameraFrameRateDesired).toInt();
     cameraSubSamplingFactor                                     = settings.value("SubSamplingFactor",               1).toInt();
+    dataDirectory                                               = settings.value("DataDirectory",                   "").toString().toStdString();
     dataFilename                                                = settings.value("DataFilename",                    "experiment_data").toString().toStdString();
     editDataIndex                                               = settings.value("EditDataIndex",                   0).toInt();
     editImageTotal                                              = settings.value("EditImageTotal",                  0).toInt();
@@ -77,6 +78,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("AOIWdthFraction",                eyeAOIWdthFraction);
     settings.setValue("AOIXPosRelative",                Parameters::eyeAOIXPosFraction);
     settings.setValue("AOIYPosRelative",                Parameters::eyeAOIYPosFraction);
+    settings.setValue("DataDirectory",                  QString::fromStdString(dataDirectory));
     settings.setValue("GainAuto",                       GAIN_AUTO);
     settings.setValue("GainBoost",                      GAIN_BOOST);
     settings.setValue("CamAOIHghtFraction",             cameraAOIFractionHght);
@@ -110,7 +112,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
     settings.setValue("CircumferenceChangeThreshold",   mEyePropertiesParameters.circumferenceChangeThreshold);
     settings.setValue("AspectRatioChangeThreshold",     mEyePropertiesParameters.aspectRatioChangeThreshold);
-    settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text()).toInt();
+    settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text().toInt());
 }
 
 void MainWindow::startRecordingManual()
@@ -156,8 +158,6 @@ void MainWindow::onFlashStandbySlider(int val)
             if (boost::filesystem::exists(filename.str()))
             {
                 QString text = "You are about to write data to the end of an existing file. Do you wish to continue?";
-
-                // Create a new dialog
                 ConfirmationWindow mConfirmationWindow(text);
                 mConfirmationWindow.setWindowTitle("Please select option");
 
@@ -310,10 +310,10 @@ void MainWindow::setThresholdCircumference(double value)
     ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 1));
 }
 
-void MainWindow::setThresholdFraction(double value)
+void MainWindow::setThresholdAspectRatio(double value)
 {
     mEyePropertiesParameters.aspectRatioChangeThreshold = value;
-    ThresholdFractionLabel->setText(QString::number(value, 'f', 2));
+    ThresholdAspectRatioLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setPupilHaarOffset(double value)

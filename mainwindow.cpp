@@ -17,13 +17,6 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    // Load data directory name
-
-    {
-        QSettings settings("config.ini", QSettings::IniFormat);
-        dataDirectory = (settings.value("dataDirectory", "").toString()).toStdString();
-    }
-
     // Get current date
 
     time_t rawtime;
@@ -52,43 +45,43 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     cameraAOIFractionYPosDefaultLeft = 0.41;
     cameraAOIFractionYPosDefaultRght = 0.37;
     cameraAOIFractionYPos = cameraAOIFractionYPosDefaultLeft;
-    cameraAOIHghtMin = 4;
-    cameraAOIHghtStepSize = 2;
-    cameraAOIWdthMin = 32;
-    cameraAOIWdthStepSize = 4;
-    cameraFrameRateDesired = 250;
-    cameraPixelClock = 24;
+    cameraAOIHghtMin        = 4;
+    cameraAOIHghtStepSize   = 2;
+    cameraAOIWdthMin        = 32;
+    cameraAOIWdthStepSize   = 4;
+    cameraFrameRateDesired  = 250;
+    cameraPixelClock        = 24;
     cameraSubSamplingFactor = 2;
-    camImageHght = 200;
-    camImageWdth = 480; // size of image in widget
-    PROCESSING_ALL_IMAGES = false;
-    PROCESSING_ALL_TRIALS = false;
-    editImageIndex = 0;
-    editImageTotal = 0;
-    experimentIndex = 0;
-    EXPERIMENT_TRIAL_RECORDING = false;
-    eyeAOIHghtFraction = 0.50;
-    eyeAOIHghtMin = 75;
-    eyeAOIWdthFraction = 0.50;
-    eyeAOIWdthMin = 100;
-    eyeImageHght = 200;
-    eyeImageWdth = 320;
-    FLASH_STANDBY = false;
-    frameCount = 0;
-    GAIN_AUTO = true;
-    GAIN_BOOST = false;
-    guiUpdateFrequency = 30;
-    relativeTime = 0;
-    SAVE_EYE_IMAGE = true;
-    startTime = 0;
-    subjectIdentifier = "";
-    trialIndex = 0;
-    trialTimeLength = 1000;
+    camImageHght            = 200;
+    camImageWdth            = 480; // size of image in widget
+    PROCESSING_ALL_IMAGES   = false;
+    PROCESSING_ALL_TRIALS   = false;
+    editImageIndex          = 0;
+    editImageTotal          = 0;
+    experimentIndex         = 0;
+    TRIAL_RECORDING         = false;
+    eyeAOIHghtFraction      = 0.50;
+    eyeAOIHghtMin           = 75;
+    eyeAOIWdthFraction      = 0.50;
+    eyeAOIWdthMin           = 100;
+    eyeImageHght            = 200;
+    eyeImageWdth            = 320;
+    FLASH_STANDBY           = false;
+    frameCount              = 0;
+    GAIN_AUTO               = true;
+    GAIN_BOOST              = false;
+    guiUpdateFrequency      = 30;
+    relativeTime            = 0;
+    SAVE_EYE_IMAGE          = true;
+    startTime               = 0;
+    subjectIdentifier       = "";
+    trialIndex              = 0;
+    trialTimeLength         = 1500;
 
     Parameters::cameraXResolution = 1280;
     Parameters::cameraYResolution = 1024;
 
-    Parameters::CAMERA_RUNNING = false;
+    Parameters::CAMERA_RUNNING      = false;
     Parameters::REALTIME_PROCESSING = true;
 
     // Grab parameters from ini file
@@ -125,19 +118,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     updateCamAOIx();
     updateCamAOIy();
 
-    mEyePropertiesVariables.pupilCircumferenceAverage = 0.5 * (mEyePropertiesParameters.pupilCircumferenceMax + mEyePropertiesParameters.pupilCircumferenceMin);
+    mEyePropertiesVariables.pupilCircumferenceAverage    = 0.5 * (mEyePropertiesParameters.pupilCircumferenceMax + mEyePropertiesParameters.pupilCircumferenceMin);
     mEyePropertiesVariables.pupilCircumferencePrediction = mEyePropertiesVariables.pupilCircumferenceAverage;
-    mEyePropertiesVariables.pupilAspectRatioAverage = pupilAspectRatioIni;
-    mEyePropertiesVariables.pupilAspectRatioPrediction = pupilAspectRatioIni;
-    mEyePropertiesVariables.edgeIntensityAverage = edgeIntensityIni;
-    mEyePropertiesVariables.edgeIntensityPrediction = edgeIntensityIni;
+    mEyePropertiesVariables.pupilAspectRatioAverage      = pupilAspectRatioIni;
+    mEyePropertiesVariables.pupilAspectRatioPrediction   = pupilAspectRatioIni;
+    mEyePropertiesVariables.edgeIntensityAverage         = edgeIntensityIni;
+    mEyePropertiesVariables.edgeIntensityPrediction      = edgeIntensityIni;
 
     mEyePropertiesVariables.momentumCircumference = 0;
-    mEyePropertiesVariables.momentumAspectRatio = 0;
-    mEyePropertiesVariables.momentumRadius = 0;
+    mEyePropertiesVariables.momentumAspectRatio   = 0;
+    mEyePropertiesVariables.momentumRadius        = 0;
 
-    mEyePropertiesVariables.xPosAbsolute = 0;
-    mEyePropertiesVariables.yPosAbsolute = 0;
+    mEyePropertiesVariables.xPosAbsolute  = 0;
+    mEyePropertiesVariables.yPosAbsolute  = 0;
     mEyePropertiesVariables.xPosPredicted = 0.5 * Parameters::eyeAOIWdth;
     mEyePropertiesVariables.yPosPredicted = 0.5 * Parameters::eyeAOIHght;
 
@@ -486,18 +479,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QCheckBox *CameraSubSamplingCheckBox = new QCheckBox;
 
-    if (cameraSubSamplingFactor == 2)
-    {
-        CameraSubSamplingCheckBox->setChecked(true);
-    }
-    else
-    {
-        CameraSubSamplingCheckBox->setChecked(false);
-    }
+    if (cameraSubSamplingFactor == 2) { CameraSubSamplingCheckBox->setChecked(true);  }
+    else                              { CameraSubSamplingCheckBox->setChecked(false); }
 
     QObject::connect(CameraSubSamplingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setCameraSubSampling(int)));
-
-    //
 
     CameraParametersWidget = new QWidget;
     QGridLayout *CameraParametersLayout = new QGridLayout(CameraParametersWidget);
@@ -541,9 +526,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraHardwareGainOptionsLayout->addStretch();
 
     CameraParametersLayout->addLayout(CameraHardwareGainOptionsLayout, 7, 1);
-
-    //    CameraParametersLayout->addWidget(CameraSubSamplingTextBox, 7, 0);
-    //    CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 7, 1);
 
     // Parameter settings layout
 
@@ -723,20 +705,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     LearningRatesTextBox->setText("<b>Learning rates</b>");
     LearningRatesTextBox->setAlignment(Qt::AlignCenter);
 
-    QLabel *AlphaAverageTextBox = new QLabel;
-    QLabel *AlphaPredictionTextBox = new QLabel;
+    QLabel *AlphaAverageTextBox       = new QLabel;
+    QLabel *AlphaPredictionTextBox    = new QLabel;
     QLabel *AlphaMiscellaneousTextBox = new QLabel;
-    QLabel *AlphaMomentumTextBox = new QLabel;
+    QLabel *AlphaMomentumTextBox      = new QLabel;
 
     AlphaAverageTextBox->setText("<b>Average:</b>");
     AlphaPredictionTextBox->setText("<b>Prediction:</b>");
     AlphaMiscellaneousTextBox->setText("<b>Miscellaneous:</b>");
     AlphaMomentumTextBox->setText("<b>Momentum:</b>");
 
-    AlphaAverageSlider = new SliderDouble;
-    AlphaPredictionSlider = new SliderDouble;
+    AlphaAverageSlider       = new SliderDouble;
+    AlphaPredictionSlider    = new SliderDouble;
     AlphaMiscellaneousSlider = new SliderDouble;
-    AlphaMomentumSlider = new SliderDouble;
+    AlphaMomentumSlider      = new SliderDouble;
 
     AlphaAverageSlider->setPrecision(2);
     AlphaPredictionSlider->setPrecision(2);
@@ -763,10 +745,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(AlphaMiscellaneousSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMiscellaneous(double)));
     QObject::connect(AlphaMomentumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMomentum(double)));
 
-    AlphaAverageLabel = new QLabel;
-    AlphaPredictionLabel = new QLabel;
+    AlphaAverageLabel       = new QLabel;
+    AlphaPredictionLabel    = new QLabel;
     AlphaMiscellaneousLabel = new QLabel;
-    AlphaMomentumLabel = new QLabel;
+    AlphaMomentumLabel      = new QLabel;
 
     AlphaAverageLabel->setText(QString::number(mEyePropertiesParameters.alphaAverage, 'f', 2));
     AlphaPredictionLabel->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
@@ -782,8 +764,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QLabel *ThresholdCircumferenceTextBox = new QLabel;
     ThresholdCircumferenceTextBox->setText("<b>Pupil circumference:</b>");
 
-    QLabel *ThresholdFractionTextBox = new QLabel;
-    ThresholdFractionTextBox->setText("<b>Pupil fraction:</b>");
+    QLabel *ThresholdAspectRatioTextBox = new QLabel;
+    ThresholdAspectRatioTextBox->setText("<b>Pupil fraction:</b>");
 
     ThresholdCircumferenceSlider = new SliderDouble;
     ThresholdCircumferenceSlider->setPrecision(1);
@@ -792,18 +774,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
 
-    ThresholdFractionSlider = new SliderDouble;
-    ThresholdFractionSlider->setPrecision(2);
-    ThresholdFractionSlider->setDoubleRange(0, 1.0);
-    ThresholdFractionSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioChangeThreshold);
-    ThresholdFractionSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdFractionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdFraction(double)));
+    ThresholdAspectRatioSlider = new SliderDouble;
+    ThresholdAspectRatioSlider->setPrecision(2);
+    ThresholdAspectRatioSlider->setDoubleRange(0, 1.0);
+    ThresholdAspectRatioSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioChangeThreshold);
+    ThresholdAspectRatioSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(ThresholdAspectRatioSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatio(double)));
 
     ThresholdCircumferenceLabel = new QLabel;
     ThresholdCircumferenceLabel->setText(QString::number(mEyePropertiesParameters.circumferenceChangeThreshold, 'f', 1));
 
-    ThresholdFractionLabel = new QLabel;
-    ThresholdFractionLabel->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
+    ThresholdAspectRatioLabel = new QLabel;
+    ThresholdAspectRatioLabel->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
 
     // Miscellaneous parameters
 
@@ -1073,9 +1055,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ThresholdParametersLayout->addWidget(ThresholdCircumferenceTextBox, 0, 0);
     ThresholdParametersLayout->addWidget(ThresholdCircumferenceSlider, 0, 1);
     ThresholdParametersLayout->addWidget(ThresholdCircumferenceLabel, 0, 2);
-    ThresholdParametersLayout->addWidget(ThresholdFractionTextBox, 1, 0);
-    ThresholdParametersLayout->addWidget(ThresholdFractionSlider, 1, 1);
-    ThresholdParametersLayout->addWidget(ThresholdFractionLabel, 1, 2);
+    ThresholdParametersLayout->addWidget(ThresholdAspectRatioTextBox, 1, 0);
+    ThresholdParametersLayout->addWidget(ThresholdAspectRatioSlider, 1, 1);
+    ThresholdParametersLayout->addWidget(ThresholdAspectRatioLabel, 1, 2);
 
     QWidget *CannyEdgeWidget = new QWidget;
     QGridLayout *CannyEdgeLayout = new QGridLayout(CannyEdgeWidget);
@@ -1225,7 +1207,7 @@ void MainWindow::pupilTracking()
             eyeAOIWdthTemp = Parameters::eyeAOIWdth;
             eyeAOIHghtTemp = Parameters::eyeAOIHght;
 
-            if (!EXPERIMENT_TRIAL_RECORDING)
+            if (!TRIAL_RECORDING)
             {
                 flashAOIXPosTemp = Parameters::flashAOIXPos - Parameters::cameraAOIXPos;
                 flashAOIYPosTemp = Parameters::flashAOIYPos - Parameters::cameraAOIYPos;
@@ -1292,7 +1274,7 @@ void MainWindow::pupilTracking()
             continue;
         }
 
-        if (!EXPERIMENT_TRIAL_RECORDING)
+        if (!TRIAL_RECORDING)
         {
             double avgIntensity = 0;
 
@@ -1392,7 +1374,7 @@ void MainWindow::pupilTracking()
                 saveTrialData();
                 trialIndex++;
                 TrialIndexSpinBox->setValue(trialIndex);
-                EXPERIMENT_TRIAL_RECORDING = false;
+                TRIAL_RECORDING = false;
                 emit startTimer(round(1000 / guiUpdateFrequency));
             }
         }
@@ -1431,7 +1413,7 @@ void MainWindow::updateCameraImage()
 {
     if (Parameters::REALTIME_PROCESSING)
     {
-        if (!EXPERIMENT_TRIAL_RECORDING)
+        if (!TRIAL_RECORDING)
         {
             if (Parameters::CAMERA_RUNNING)
             {
@@ -1750,8 +1732,8 @@ void MainWindow::setParameterWidgets()
     ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.circumferenceChangeThreshold);
     ThresholdCircumferenceLabel->setText(QString::number(mEyePropertiesParameters.circumferenceChangeThreshold, 'f', 1));
 
-    ThresholdFractionSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioChangeThreshold);
-    ThresholdFractionLabel->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
+    ThresholdAspectRatioSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioChangeThreshold);
+    ThresholdAspectRatioLabel->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
 
     PupilHaarOffsetSlider->setDoubleValue(mEyePropertiesParameters.pupilOffset);
     PupilHaarOffsetLabel->setText(QString::number(mEyePropertiesParameters.pupilOffset, 'f', 2));

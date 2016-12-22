@@ -1140,7 +1140,10 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     std::vector<ellipseProperties> vEllipsePropertiesAll; // vector to record information for each accepted ellipse fit
     
     int numberOfFits = 0; // iterator over all accepted combinations
-    
+
+#ifdef __linux__
+        #pragma omp parallel for
+#endif
     for (int combiNumEdges = totalNumberOfEdges; combiNumEdges >= 1; combiNumEdges--) // loop through all possible edge set sizes
     {
         std::vector<bool> edgeCombination(totalNumberOfEdges);

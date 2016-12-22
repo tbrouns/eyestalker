@@ -513,6 +513,35 @@ void MainWindow::reviewSaveExperimentData()
 
         file.close();
     }
+
+    { // save pupil image
+
+        std::stringstream directoryName;
+        directoryName << editDataDirectory.toStdString() << "/pupil";
+
+        if (!boost::filesystem::exists(directoryName.str()))
+        {
+            boost::filesystem::create_directory(directoryName.str().c_str());
+        }
+
+        for (int i = 0; i < editImageTotal; i++)
+        {
+            if (vEyePropertiesVariables[i + 1].pupilDetected)
+            {
+                std::stringstream filename;
+                filename << editDataDirectory.toStdString()
+                         << "/pupil/"
+                         << i
+                         << ".png";
+
+                std::vector<int> compression_params;
+                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+                compression_params.push_back(0);
+
+                cv::imwrite(filename.str(), vEyePropertiesMiscellaneous[i].imagePupil, compression_params);
+            }
+        }
+    }
 }
 
 void MainWindow::reviewCombineExperimentData()

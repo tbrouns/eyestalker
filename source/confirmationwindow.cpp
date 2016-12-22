@@ -15,12 +15,17 @@
 
 #include "headers/confirmationwindow.h"
 
-ConfirmationWindow::ConfirmationWindow(QString text, QWidget *parent) : QDialog(parent)
+ConfirmationWindow::ConfirmationWindow(QString text, bool CANCEL_ON, QWidget *parent) : QDialog(parent)
 {
     RETURN_VALUE = false;
 
     QLabel *InfoTextBox = new QLabel;
     InfoTextBox->setText(text);
+
+    QHBoxLayout *TextLayout = new QHBoxLayout;
+    TextLayout->addStretch();
+    TextLayout->addWidget(InfoTextBox);
+    TextLayout->addStretch();
 
     QPushButton *ApproveButton = new QPushButton("&OK");
     QObject::connect(ApproveButton, SIGNAL(clicked()), this, SLOT(setApprove()));
@@ -32,11 +37,15 @@ ConfirmationWindow::ConfirmationWindow(QString text, QWidget *parent) : QDialog(
     ButtonLayout->addStretch();
     ButtonLayout->addWidget(ApproveButton);
     ButtonLayout->addStretch();
-    ButtonLayout->addWidget(DisapproveButton);
-    ButtonLayout->addStretch();
+
+    if (CANCEL_ON)
+    {
+        ButtonLayout->addWidget(DisapproveButton);
+        ButtonLayout->addStretch();
+    }
 
     QVBoxLayout *MainLayout = new QVBoxLayout;
-    MainLayout->addWidget(InfoTextBox);
+    MainLayout->addLayout(TextLayout);
     MainLayout->addLayout(ButtonLayout);
     setLayout(MainLayout);
 }
