@@ -148,8 +148,8 @@ haarProperties PupilHaarDetector(const std::vector<unsigned int>& I, int width, 
             int backRightX = topLeftX + (haarWidth - 1);
             int backRightY = topLeftY + (haarWidth - 1);
             
-            int topLeftIndex = width * topLeftY + topLeftX;
-            int topRghtIndex = topLeftIndex + (haarWidth - 1);
+            int topLeftIndex  = width * topLeftY + topLeftX;
+            int topRghtIndex  = topLeftIndex + (haarWidth - 1);
             int backLeftIndex = topLeftIndex + (haarWidth - 1) * width;
             int backRghtIndex = topRghtIndex + backLeftIndex - topLeftIndex;
             
@@ -184,9 +184,9 @@ haarProperties PupilHaarDetector(const std::vector<unsigned int>& I, int width, 
             
             if (glintWithinHaarDetector) // if yes, check how much it overlaps
             {
-                bool glintOverlapsLeftEdge = false;
-                bool glintOverlapsRightEdge = false;
-                bool glintOverlapsTopEdge = false;
+                bool glintOverlapsLeftEdge   = false;
+                bool glintOverlapsRightEdge  = false;
+                bool glintOverlapsTopEdge    = false;
                 bool glintOverlapsBottomEdge = false;
                 
                 if (glintX < topLeftX)
@@ -424,10 +424,7 @@ std::vector<int> findCannyIndices(const std::vector<char>& binaryImageVector)
 
     for (int i = 0; i < haarSize; i++)
     {
-        if (binaryImageVector[i] == 1)
-        {
-            cannyEdgeIndices.push_back(i);
-        }
+        if (binaryImageVector[i] == 1) { cannyEdgeIndices.push_back(i); }
     }
 
     return cannyEdgeIndices;
