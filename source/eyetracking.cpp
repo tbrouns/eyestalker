@@ -71,7 +71,7 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, int 
     return integralImage;
 }
 
-haarProperties GlintDetector(const cv::Mat& img, int imgWidth, int startX, int startY, int width, int height, int gradientWindowLength, int glintRadius)
+haarProperties detectGlint(const cv::Mat& img, int imgWidth, int startX, int startY, int width, int height, int gradientWindowLength, int glintRadius)
 {
     uchar *ptr = img.data;
     
@@ -125,7 +125,7 @@ haarProperties GlintDetector(const cv::Mat& img, int imgWidth, int startX, int s
     return glint;
 }
 
-haarProperties PupilHaarDetector(const std::vector<unsigned int>& I, int width, int height, int haarWidth, int glintX, int glintY, int glintRadius)
+haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, int height, int haarWidth, int glintX, int glintY, int glintRadius)
 {
     int glintDiameter = 2 * glintRadius;
     
@@ -334,7 +334,7 @@ std::vector<char> cannyConversion(const cv::Mat& img, int haarWidth)
     return binaryImageVectorRaw;
 }
 
-std::vector<char> MorphOpen(std::vector<char>& binaryImageVectorRaw, int haarWidth)
+std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haarWidth)
 {
     std::vector<char> binaryImageVector = binaryImageVectorRaw;
 
@@ -1345,7 +1345,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     int searchWdth = searchEndX - searchStartX + 1;
     int searchHght = searchEndY - searchStartY + 1;
     
-    int pupilHaarWdth = pupilHaarFraction * (round(mEyeProperties.v.pupilCircumferencePrediction / M_PI));
+    int pupilHaarWdth = round(mEyeProperties.v.pupilCircumferencePrediction / M_PI);
 
     int offsetPupilHaarXPos = 0;
     int offsetPupilHaarYPos = 0;
@@ -1362,19 +1362,19 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         std::vector<unsigned int> integralImage = calculateIntImg(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght);
 
-        haarProperties glintHaarProperties = GlintDetector(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght, 2 * mEyeProperties.p.glintRadius, mEyeProperties.p.glintRadius);
+        haarProperties glintHaarProperties = detectGlint(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght, 2 * mEyeProperties.p.glintRadius, mEyeProperties.p.glintRadius);
 
         int glintHaarXPos = searchStartX + glintHaarProperties.x_pos;
         int glintHaarYPos = searchStartY + glintHaarProperties.y_pos;
 
-        haarProperties pupilHaarProperties = PupilHaarDetector(integralImage, searchWdth, searchHght, pupilHaarWdth, glintHaarXPos, glintHaarYPos, mEyeProperties.p.glintRadius);
+        haarProperties pupilHaarProperties = detectPupilApprox(integralImage, searchWdth, searchHght, pupilHaarWdth, glintHaarXPos, glintHaarYPos, mEyeProperties.p.glintRadius);
 
         int pupilHaarXPos = searchStartX + pupilHaarProperties.x_pos;
         int pupilHaarYPos = searchStartY + pupilHaarProperties.y_pos;
 
-        offsetPupilHaarXPos = pupilHaarXPos - round(pupilHaarWdth * mEyeProperties.p.pupilOffset);
-        offsetPupilHaarYPos = pupilHaarYPos - round(pupilHaarWdth * mEyeProperties.p.pupilOffset);
-        offsetPupilHaarWdth = pupilHaarWdth + round(pupilHaarWdth * mEyeProperties.p.pupilOffset * 2);
+        offsetPupilHaarXPos = pupilHaarXPos -     mEyeProperties.p.pupilOffset;
+        offsetPupilHaarYPos = pupilHaarYPos -     mEyeProperties.p.pupilOffset;
+        offsetPupilHaarWdth = pupilHaarWdth + 2 * mEyeProperties.p.pupilOffset;
 
         // Check limits
 
@@ -1412,7 +1412,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         cv::Canny(imagePupilGrayBlurred, imageCannyEdges, mEyeProperties.p.cannyLowerLimit, mEyeProperties.p.cannyUpperLimit, mEyeProperties.p.cannyKernelSize);
 
         std::vector<char> cannyEdgesRaw    = cannyConversion(imageCannyEdges, offsetPupilHaarWdth);
-        std::vector<char> cannyEdges       = MorphOpen(cannyEdgesRaw, offsetPupilHaarWdth);
+        std::vector<char> cannyEdges       = sharpenEdges(cannyEdgesRaw, offsetPupilHaarWdth);
         std::vector<int>  cannyEdgeIndices = findCannyIndices(cannyEdges);
 
         // Edge thresholding
@@ -1568,11 +1568,11 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         mEyePropertiesNew.v.pupilAspectRatioPrediction =  mEyeProperties.v.pupilAspectRatioPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mEyeProperties.v.pupilAspectRatioPrediction) + mEyeProperties.v.momentumAspectRatio;
         mEyePropertiesNew.v.pupilAspectRatioAverage    =  mEyeProperties.v.pupilAspectRatioAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioAverage);
-        mEyePropertiesNew.v.momentumAspectRatio           = (mEyeProperties.v.momentumAspectRatio + (mEyePropertiesNew.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioPrediction)) * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.momentumAspectRatio        = (mEyeProperties.v.momentumAspectRatio        + mEyeProperties.p.alphaMomentum   * (mEyePropertiesNew.v.pupilAspectRatioPrediction - mEyeProperties.v.pupilAspectRatioPrediction));
 
-        mEyePropertiesNew.v.pupilCircumferencePrediction =  mEyeProperties.v.pupilCircumferencePrediction +  mEyeProperties.p.alphaPrediction * (mEllipseProperties.circumference - mEyeProperties.v.pupilCircumferencePrediction) + mEyeProperties.v.momentumCircumference;
-        mEyePropertiesNew.v.pupilCircumferenceAverage    =  mEyeProperties.v.pupilCircumferenceAverage    +  mEyeProperties.p.alphaAverage * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
-        mEyePropertiesNew.v.momentumCircumference        = (mEyeProperties.v.momentumCircumference        + (mEyePropertiesNew.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferencePrediction)) * mEyeProperties.p.alphaMomentum;
+        mEyePropertiesNew.v.pupilCircumferencePrediction =  mEyeProperties.v.pupilCircumferencePrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.circumference - mEyeProperties.v.pupilCircumferencePrediction) + mEyeProperties.v.momentumCircumference;
+        mEyePropertiesNew.v.pupilCircumferenceAverage    =  mEyeProperties.v.pupilCircumferenceAverage    + mEyeProperties.p.alphaAverage    * (mEyeProperties.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferenceAverage);
+        mEyePropertiesNew.v.momentumCircumference        = (mEyeProperties.v.momentumCircumference        + mEyeProperties.p.alphaMomentum   * (mEyePropertiesNew.v.pupilCircumferencePrediction - mEyeProperties.v.pupilCircumferencePrediction));
 
         mEyePropertiesNew.v.pupilRadiusPrediction =  mEyeProperties.v.pupilRadiusPrediction + mEyeProperties.p.alphaPrediction * (mEllipseProperties.radius - mEyeProperties.v.pupilRadiusPrediction) + mEyeProperties.v.momentumRadius;
         mEyePropertiesNew.v.momentumRadius        = (mEyeProperties.v.momentumRadius + (mEyePropertiesNew.v.pupilRadiusPrediction - mEyeProperties.v.pupilRadiusPrediction)) * mEyeProperties.p.alphaMomentum;

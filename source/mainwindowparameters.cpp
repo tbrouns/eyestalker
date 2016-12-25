@@ -51,7 +51,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.pupilCircumferenceMax              = settings.value("CircumferenceMax",                320).toDouble();
     mEyePropertiesParameters.pupilCircumferenceMin              = settings.value("CircumferenceMin",                80).toDouble();
     mEyePropertiesParameters.pupilAspectRatioMin                = settings.value("AspectRatioMin",                  0.4).toDouble();
-    mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     0.4).toDouble();
+    mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     20).toInt();
     mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    10.0).toDouble();
     mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
     Parameters::eyeAOIXPosFraction                              = settings.value("AOIXPosRelative",                 Parameters::eyeAOIXPosFraction).toDouble();
@@ -148,12 +148,11 @@ void MainWindow::onFlashStandbySlider(int val)
         }
         else
         {
+            dataFilename = (DataFilenameLineEdit->text()).toStdString();
+
             std::stringstream filename;
             filename << dataDirectory
-                     << "/experiment_data_"
-                     << currentDate
-                     << "_"
-                     << (NameInputLineEdit->text()).toStdString();
+                     << "/" << dataFilename;
 
             if (boost::filesystem::exists(filename.str()))
             {
@@ -242,7 +241,7 @@ void MainWindow::setPupilCircumferenceMax(double value)
 void MainWindow::setPupilAspectRatioMin(double value)
 {
     mEyePropertiesParameters.pupilAspectRatioMin = value;
-    PupilAspectRatioSliderDouble->setDoubleMinimum(mEyePropertiesParameters.pupilAspectRatioMin);
+    PupilAspectRatioSlider->setDoubleMinimum(mEyePropertiesParameters.pupilAspectRatioMin);
     PupilAspectRatioMinLabel->setText(QString::number(value, 'f', 2));
 }
 
@@ -316,10 +315,10 @@ void MainWindow::setThresholdAspectRatio(double value)
     ThresholdAspectRatioLabel->setText(QString::number(value, 'f', 2));
 }
 
-void MainWindow::setPupilHaarOffset(double value)
+void MainWindow::setPupilHaarOffset(int value)
 {
     mEyePropertiesParameters.pupilOffset = value;
-    PupilHaarOffsetLabel->setText(QString::number(value, 'f', 2));
+    PupilHaarOffsetLabel->setText(QString::number(value));
 }
 
 void MainWindow::setGlintRadius(int value)

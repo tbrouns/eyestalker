@@ -165,6 +165,7 @@ void MainWindow::updateReviewSession()
     if (editImageTotal > 0)
     {
         setParameterWidgets();
+        resetVariables();
 
         vEyePropertiesVariables.resize(editImageTotal + 1);
         vEyePropertiesVariables[0] = mEyePropertiesVariables;

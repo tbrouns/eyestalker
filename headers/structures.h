@@ -81,7 +81,6 @@ struct eyePropertiesParameters
     double pupilCircumferenceMax;
     double pupilCircumferenceMin;
     double pupilAspectRatioMin;
-    double pupilOffset;
     double circumferenceChangeThreshold;
     double aspectRatioChangeThreshold;
     int cannyBlurLevel;
@@ -90,6 +89,7 @@ struct eyePropertiesParameters
     int cannyUpperLimit;
     int edgeMaximumFitNumber;
     int glintRadius;
+    int pupilOffset;
 };
 
 struct eyePropertiesVariables
