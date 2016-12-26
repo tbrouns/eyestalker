@@ -67,7 +67,7 @@ void drawEdges(cv::Mat& I, const std::vector<char>& p, int x0, int y0, int haarW
     }
 }
 
-void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesAll, int x0, int y0, int haarWidth, const cv::Vec3b& primaryColour, const cv::Vec3b& secondaryColour)
+void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesAll, int x0, int y0, int haarWidth, const cv::Vec3b& primaryColour, const cv::Vec3b& secondaryColour, const cv::Vec3b&  tertiaryColour)
 {
     int numEdges = vEdgePropertiesAll.size();
 
@@ -77,8 +77,10 @@ void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesA
 
         cv::Vec3b colour;
 
-        if (vEdgePropertiesAll[iEdge].flag) { colour = primaryColour; }
-        else                                { colour = secondaryColour; }
+        if      (vEdgePropertiesAll[iEdge].flag == 2) { colour = primaryColour;   }
+        else if (vEdgePropertiesAll[iEdge].flag == 1) { colour = secondaryColour; }
+        else                                          { colour = tertiaryColour;  }
+
 
         for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
         {
@@ -168,7 +170,7 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
     if (Parameters::drawFlags.edge)
     {
         drawEdges(I, mEyeProperties.m.cannyEdges, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, red);
-        drawOutline(I, mEyeProperties.m.edgePropertiesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, green, yellow);
+        drawOutline(I, mEyeProperties.m.edgePropertiesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, cyan, green, yellow);
     }
 
     if (Parameters::drawFlags.elps)

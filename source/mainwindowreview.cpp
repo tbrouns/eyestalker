@@ -167,6 +167,7 @@ void MainWindow::updateReviewSession()
         setParameterWidgets();
         resetVariables();
 
+        vEyePropertiesMiscellaneous.resize(editImageTotal);
         vEyePropertiesVariables.resize(editImageTotal + 1);
         vEyePropertiesVariables[0] = mEyePropertiesVariables;
 

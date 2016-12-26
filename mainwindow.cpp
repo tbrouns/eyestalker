@@ -71,12 +71,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     GAIN_AUTO               = true;
     GAIN_BOOST              = false;
     guiUpdateFrequency      = 30;
+    pupilOffsetMin          =  5;
+    pupilOffsetIni          = 15;
     relativeTime            = 0;
     SAVE_EYE_IMAGE          = true;
     startTime               = 0;
     subjectIdentifier       = "";
     trialIndex              = 0;
     trialTimeLength         = 1500;
+
+
 
     Parameters::cameraXResolution = 1280;
     Parameters::cameraYResolution = 1024;
@@ -731,7 +735,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     PupilHaarOffsetLabel  = new QLabel;
     PupilHaarOffsetSlider = new QSlider;
-    PupilHaarOffsetSlider->setRange(0, 100);
+    PupilHaarOffsetSlider->setRange(pupilOffsetMin, 30);
     PupilHaarOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilHaarOffsetSlider, SIGNAL(valueChanged(int)), this, SLOT(setPupilHaarOffset(int)));   
 
@@ -1604,47 +1608,47 @@ void MainWindow::setParameterWidgets()
     EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);
 
     PupilCircumferenceMinSlider->setDoubleValue(mEyePropertiesParameters.pupilCircumferenceMin);
-    PupilCircumferenceMinLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMin, 'f', 1));
+    PupilCircumferenceMinLabel ->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMin, 'f', 1));
 
     PupilCircumferenceMaxSlider->setDoubleValue(mEyePropertiesParameters.pupilCircumferenceMax);
-    PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
+    PupilCircumferenceMaxLabel ->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
 
     PupilAspectRatioMinSlider->setDoubleValue(mEyePropertiesParameters.pupilAspectRatioMin);
-    PupilAspectRatioMinLabel->setText(QString::number(mEyePropertiesParameters.pupilAspectRatioMin, 'f', 2));
+    PupilAspectRatioMinLabel ->setText(QString::number(mEyePropertiesParameters.pupilAspectRatioMin, 'f', 2));
 
     EdgeIntensityOffsetSlider->setDoubleValue(mEyePropertiesParameters.edgeIntensityOffset);
-    EdgeIntensityOffsetLabel->setText(QString::number(mEyePropertiesParameters.edgeIntensityOffset, 'f', 1));
+    EdgeIntensityOffsetLabel ->setText(QString::number(mEyePropertiesParameters.edgeIntensityOffset, 'f', 1));
 
     CannyLowerLimitSlider->setValue(mEyePropertiesParameters.cannyLowerLimit);
-    CannyLowerLimitLabel->setText(QString::number(mEyePropertiesParameters.cannyLowerLimit));
+    CannyLowerLimitLabel ->setText(QString::number(mEyePropertiesParameters.cannyLowerLimit));
 
     CannyUpperLimitSlider->setValue(mEyePropertiesParameters.cannyUpperLimit);
-    CannyUpperLimitLabel->setText(QString::number(mEyePropertiesParameters.cannyUpperLimit));
+    CannyUpperLimitLabel ->setText(QString::number(mEyePropertiesParameters.cannyUpperLimit));
 
     CannyBlurLevelSlider->setValue(ceil(0.5 * mEyePropertiesParameters.cannyBlurLevel));
-    CannyBlurLevelLabel->setText(QString::number(ceil(0.5 * mEyePropertiesParameters.cannyBlurLevel)));
+    CannyBlurLevelLabel ->setText(QString::number(ceil(0.5 * mEyePropertiesParameters.cannyBlurLevel)));
 
     CannyKernelSizeSlider->setValue(ceil(0.5 * mEyePropertiesParameters.cannyKernelSize));
-    CannyKernelSizeLabel->setText(QString::number(mEyePropertiesParameters.cannyKernelSize));
+    CannyKernelSizeLabel ->setText(QString::number(mEyePropertiesParameters.cannyKernelSize));
 
-    AlphaAverageSlider->setDoubleValue(mEyePropertiesParameters.alphaAverage);
-    AlphaPredictionSlider->setDoubleValue(mEyePropertiesParameters.alphaPrediction);
+    AlphaAverageSlider      ->setDoubleValue(mEyePropertiesParameters.alphaAverage);
+    AlphaPredictionSlider   ->setDoubleValue(mEyePropertiesParameters.alphaPrediction);
     AlphaMiscellaneousSlider->setDoubleValue(mEyePropertiesParameters.alphaMiscellaneous);
-    AlphaMomentumSlider->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
+    AlphaMomentumSlider     ->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
 
-    AlphaAverageLabel->setText(QString::number(mEyePropertiesParameters.alphaAverage, 'f', 2));
-    AlphaPredictionLabel->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
+    AlphaAverageLabel      ->setText(QString::number(mEyePropertiesParameters.alphaAverage, 'f', 2));
+    AlphaPredictionLabel   ->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
     AlphaMiscellaneousLabel->setText(QString::number(mEyePropertiesParameters.alphaMiscellaneous, 'f', 2));
-    AlphaMomentumLabel->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
+    AlphaMomentumLabel     ->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
 
     ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.circumferenceChangeThreshold);
-    ThresholdCircumferenceLabel->setText(QString::number(mEyePropertiesParameters.circumferenceChangeThreshold, 'f', 1));
+    ThresholdCircumferenceLabel ->setText(QString::number(mEyePropertiesParameters.circumferenceChangeThreshold, 'f', 1));
 
     ThresholdAspectRatioSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioChangeThreshold);
-    ThresholdAspectRatioLabel->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
+    ThresholdAspectRatioLabel ->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
 
     PupilHaarOffsetSlider->setValue(mEyePropertiesParameters.pupilOffset);
-    PupilHaarOffsetLabel->setText(QString::number(mEyePropertiesParameters.pupilOffset));
+    PupilHaarOffsetLabel ->setText(QString::number(mEyePropertiesParameters.pupilOffset));
 
     GlintRadiusSlider->setValue(mEyePropertiesParameters.glintRadius);
     GlintRadiusLabel->setText(QString::number(mEyePropertiesParameters.glintRadius));
@@ -1684,15 +1688,14 @@ void MainWindow::resetVariables()
     mEyePropertiesVariables.momentumAspectRatio   = 0;
     mEyePropertiesVariables.momentumRadius        = 0;
 
-    mEyePropertiesVariables.xPosAbsolute  = 0;
-    mEyePropertiesVariables.yPosAbsolute  = 0;
-    mEyePropertiesVariables.xPosPredicted = 0.5 * Parameters::eyeAOIWdth;
-    mEyePropertiesVariables.yPosPredicted = 0.5 * Parameters::eyeAOIHght;
+    mEyePropertiesVariables.xPosExact     = 0.5 * Parameters::eyeAOIWdth;
+    mEyePropertiesVariables.yPosExact     = 0.5 * Parameters::eyeAOIHght;
+    mEyePropertiesVariables.xPosPredicted = mEyePropertiesVariables.xPosExact;
+    mEyePropertiesVariables.yPosPredicted = mEyePropertiesVariables.yPosExact;
+    mEyePropertiesVariables.xVelocity     = 0;
+    mEyePropertiesVariables.yVelocity     = 0;
 
     mEyePropertiesVariables.searchRadius = 0.5 * Parameters::eyeAOIWdth;
-
-    mEyePropertiesVariables.xVelocity = 0;
-    mEyePropertiesVariables.yVelocity = 0;
 
     setVariableWidgets(mEyePropertiesVariables);
 }

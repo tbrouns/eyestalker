@@ -51,7 +51,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.pupilCircumferenceMax              = settings.value("CircumferenceMax",                320).toDouble();
     mEyePropertiesParameters.pupilCircumferenceMin              = settings.value("CircumferenceMin",                80).toDouble();
     mEyePropertiesParameters.pupilAspectRatioMin                = settings.value("AspectRatioMin",                  0.4).toDouble();
-    mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     20).toInt();
+    mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     pupilOffsetIni).toInt();
     mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    10.0).toDouble();
     mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
     Parameters::eyeAOIXPosFraction                              = settings.value("AOIXPosRelative",                 Parameters::eyeAOIXPosFraction).toDouble();
@@ -64,6 +64,9 @@ void MainWindow::loadSettings(QString fileName)
     subjectIdentifier                                           = settings.value("SubjectIdentifier",               "").toString();
     trialIndex                                                  = settings.value("TrialIndex",                      trialIndex).toInt();
     trialTimeLength                                             = settings.value("TrialTimeLength",                 trialTimeLength).toInt();
+
+    if (mEyePropertiesParameters.pupilOffset < pupilOffsetMin) { mEyePropertiesParameters.pupilOffset = pupilOffsetIni; } // temporary solution
+
 }
 
 void MainWindow::saveSettings(QString fileName)

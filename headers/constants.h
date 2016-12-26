@@ -16,11 +16,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-// dimensions
-
-// window length for curvature
-
-const int    curvatureWindowLength = 10;
+const int    curvatureWindowLength = 10; // window length for curvature
 const double edgeCollectionFraction = 0.40;
 const double minimumFitFraction = 0.50;
 const double minimumRefinementFraction = 0.05;
@@ -33,8 +29,14 @@ const double edgeIntensityIni = 255;
 const double pupilCircumferenceUpperLimit = 500;
 const double pupilRadiusPredictionFactor = 0.75;
 
+const double pupilHaarReductionFactor = 0.75;
+
 const int cameraFrameRateUpperLimit = 500;
 
-const double pupilImageFactor = 1.1;
+const double pupilImageFactor = 1.25;
+
+// initial values for parameters
+
+
 
 #endif

@@ -165,6 +165,8 @@ private:
     int flashThreshold;
     int frameCount;
     int getCurrentTime();
+    int pupilOffsetMin;
+    int pupilOffsetIni;
     int trialFrameTotal;
     int trialIndex;
     int trialStartTime;
