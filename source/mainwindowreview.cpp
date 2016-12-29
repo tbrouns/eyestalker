@@ -490,6 +490,8 @@ void MainWindow::reviewSaveExperimentData()
         for (int i = 0; i < editImageTotal; i++) { file << timeMatrix[editDataIndex][i + 2]             << delimiter; }
         for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
         for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].xPosExact     << delimiter; }
+        for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].yPosExact     << delimiter; }
         for (int i = 0; i < editImageTotal; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
 
         // additional data
