@@ -48,6 +48,42 @@ void MainWindow::startReviewSession()
     updateReviewImages(0);
 }
 
+void MainWindow::countNumTrials()
+{
+    editDataTotal = 0;
+
+    while (true)
+    {
+        std::stringstream folderName;
+        folderName << editDataDirectory.toStdString() << "/../trial_" << editDataTotal;
+
+        if (!boost::filesystem::exists(folderName.str()))
+        {
+            break;
+        }
+
+        editDataTotal++;
+    }
+
+    ReviewTrialSlider ->setMaximum(editDataTotal);
+    ReviewTrialSpinBox->setMaximum(editDataTotal);
+}
+
+void MainWindow::countNumImages()
+{
+    editImageTotal = 0;
+
+    while (true)
+    {
+        std::stringstream filename;
+        filename << editDataDirectory.toStdString() << "/raw/" << editImageTotal << ".png";
+        if (!boost::filesystem::exists(filename.str())) { break; }
+        editImageTotal++;
+    }
+
+}
+
+
 void MainWindow::loadReviewSession()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Please select an info.ini file"), QString::fromStdString(dataDirectory), tr("Ini file (*.ini)"));
@@ -75,25 +111,7 @@ void MainWindow::loadReviewSession()
             boost::filesystem::create_directory(directoryName.str().c_str());
         }
 
-        // count number of trials
-
-        editDataTotal = 0;
-
-        while (true)
-        {
-            std::stringstream folderName;
-            folderName << editDataDirectory.toStdString() << "/../trial_" << editDataTotal;
-
-            if (!boost::filesystem::exists(folderName.str()))
-            {
-                break;
-            }
-
-            editDataTotal++;
-        }
-
-        ReviewTrialSlider->setMaximum(editDataTotal);
-        ReviewTrialSpinBox->setMaximum(editDataTotal);
+        countNumTrials();
 
         // get time stamps
 
@@ -133,18 +151,12 @@ void MainWindow::changeReviewSession(int index)
 {
     QString infoFilePath = editDataDirectory;
 
-    int numOfDigits;
+    int numDigits;
 
-    if (editDataIndex != 0)
-    {
-        numOfDigits = floor(log10(editDataIndex)) + 1;
-    }
-    else
-    {
-        numOfDigits = 1;
-    }
+    if (editDataIndex != 0) { numDigits = floor(log10(editDataIndex)) + 1; }
+    else                    { numDigits = 1; }
 
-    infoFilePath.replace(infoFilePath.size() - numOfDigits, numOfDigits, QString::number(index - 1)); // replace last character(s)
+    infoFilePath.replace(infoFilePath.size() - numDigits, numDigits, QString::number(index - 1)); // replace last character(s)
 
     QString infoFileDataDirectory = infoFilePath;
     infoFilePath.append("/info.ini");
@@ -162,6 +174,8 @@ void MainWindow::changeReviewSession(int index)
 
 void MainWindow::updateReviewSession()
 {
+    countNumImages();
+
     if (editImageTotal > 0)
     {
         setParameterWidgets();
@@ -363,7 +377,9 @@ void MainWindow::reviewPupilDetectionOneFrame()
 
     std::stringstream filename;
     filename << editDataDirectory.toStdString()
-             << "/processed/" << editImageIndex << ".png";
+             << "/processed/"
+             << editImageIndex
+             << ".png";
 
     cv::imwrite(filename.str(), imageEye);
 
@@ -562,7 +578,7 @@ void MainWindow::reviewCombineExperimentData()
         std::string line;
         while (dataFile)
         {
-            if (!std::getline(dataFile, line)) break;
+            if (!std::getline(dataFile, line)) { break; }
         }
 
         dataFilename = (DataFilenameLineEdit->text()).toStdString();

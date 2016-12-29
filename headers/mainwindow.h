@@ -274,6 +274,8 @@ private:
     UEyeOpencvCam mUEyeOpencvCam;
     unsigned long long absoluteTime; // in units of 0.1 microseconds
     unsigned long long startTime;
+    void countNumTrials();
+    void countNumImages();
     void findCamera();
     void getCameraParameters();
     void loadSettings(QString);

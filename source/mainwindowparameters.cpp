@@ -52,7 +52,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.pupilCircumferenceMin              = settings.value("CircumferenceMin",                80).toDouble();
     mEyePropertiesParameters.pupilAspectRatioMin                = settings.value("AspectRatioMin",                  0.4).toDouble();
     mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     pupilOffsetIni).toInt();
-    mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    10.0).toDouble();
+    mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
     mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
     Parameters::eyeAOIXPosFraction                              = settings.value("AOIXPosRelative",                 Parameters::eyeAOIXPosFraction).toDouble();
     Parameters::eyeAOIYPosFraction                              = settings.value("AOIYPosRelative",                 Parameters::eyeAOIYPosFraction).toDouble();
@@ -277,8 +277,7 @@ void MainWindow::setCannyKernelSize(int value)
 
 void MainWindow::setCannyBlurLevel(int value)
 {
-    int newValue = 2 * value - 1;
-    mEyePropertiesParameters.cannyBlurLevel = newValue;
+    mEyePropertiesParameters.cannyBlurLevel = value;
     CannyBlurLevelLabel->setText(QString::number(value));
 }
 

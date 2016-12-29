@@ -1625,8 +1625,8 @@ void MainWindow::setParameterWidgets()
     CannyUpperLimitSlider->setValue(mEyePropertiesParameters.cannyUpperLimit);
     CannyUpperLimitLabel ->setText(QString::number(mEyePropertiesParameters.cannyUpperLimit));
 
-    CannyBlurLevelSlider->setValue(ceil(0.5 * mEyePropertiesParameters.cannyBlurLevel));
-    CannyBlurLevelLabel ->setText(QString::number(ceil(0.5 * mEyePropertiesParameters.cannyBlurLevel)));
+    CannyBlurLevelSlider->setValue(mEyePropertiesParameters.cannyBlurLevel);
+    CannyBlurLevelLabel ->setText(QString::number(mEyePropertiesParameters.cannyBlurLevel));
 
     CannyKernelSizeSlider->setValue(ceil(0.5 * mEyePropertiesParameters.cannyKernelSize));
     CannyKernelSizeLabel ->setText(QString::number(mEyePropertiesParameters.cannyKernelSize));
