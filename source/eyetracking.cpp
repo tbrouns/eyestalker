@@ -23,14 +23,8 @@ double calculateMean(const std::vector<double>& v)
 
 double ceil2( double value )
 {
-    if (value < 0.0)
-    {
-        return floor(value);
-    }
-    else
-    {
-        return ceil(value);
-    }
+    if (value < 0.0) { return floor(value); }
+    else             { return  ceil(value); }
 }
 
 
@@ -48,23 +42,11 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, int 
             int j = imgWidth * (y + startY) + (x + startX); // image coordinates
             
             double val = ptr[j];
-            
-            if (x == 0 && y == 0) // first point
-            {
-                integralImage[i] = val;
-            }
-            else if (y == 0) // first row
-            {
-                integralImage[i] = val + integralImage[i - 1];
-            }
-            else if (x == 0) // first column
-            {
-                integralImage[i] = val + integralImage[i - width];
-            }
-            else
-            {
-                integralImage[i] = val + integralImage[i - 1] + integralImage[i - width] - integralImage[i - width - 1];
-            }
+
+            if (x == 0 && y == 0) { integralImage[i] = val; } // first point
+            else if (y == 0)      { integralImage[i] = val + integralImage[i - 1]; } // first row
+            else if (x == 0)      { integralImage[i] = val + integralImage[i - width]; } // first column
+            else                  { integralImage[i] = val + integralImage[i - 1] + integralImage[i - width] - integralImage[i - width - 1]; }
         }
     }
     
@@ -1375,7 +1357,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
     if (pupilHaarWdth > 0)
     {
-        // Needed for review mode when threshold is too low
+        // Needed for offline mode when threshold is too low
 
         if (mEyeProperties.v.thresholdCircumferenceChange > mEyeProperties.p.pupilCircumferenceMax)
         {

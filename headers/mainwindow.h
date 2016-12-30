@@ -118,7 +118,7 @@ private:
     bool SAVE_EYE_IMAGE;
     char currentDate[80];
     cv::Mat imageCamera;
-    cv::Mat reviewRawEyeImage;
+    cv::Mat offlineRawEyeImage;
     double cameraAOIFractionHghtDefaultLeft;
     double cameraAOIFractionWdthDefaultLeft;
     double cameraAOIFractionXPosDefaultLeft;
@@ -153,10 +153,10 @@ private:
     int camImageWdth;
     int cameraFrameRateDesired;
     int cameraPixelClock;
-    int editDataIndex;
-    int editDataTotal;
-    int editImageIndex;
-    int editImageTotal;
+    int trialIndexOffline;
+    int trialTotalOffline;
+    int imageIndexOffline;
+    int imageTotalOffline;
     int experimentIndex;
     int eyeAOIHghtMin;
     int eyeAOIWdthMin;
@@ -203,7 +203,7 @@ private:
     QLabel *PupilAspectRatioMinLabel;
     QLabel *PupilAspectRatioLabel;
     QLabel *PupilHaarOffsetLabel;
-    QLabel *ReviewImageFrameTextBox;
+    QLabel *OfflineImageFrameTextBox;
     QLabel *ThresholdCircumferenceLabel;
     QLabel *ThresholdAspectRatioLabel;
     QLineEdit *DataFilenameLineEdit;
@@ -222,19 +222,19 @@ private:
     QSlider *FlashStandbySlider;
     QSlider *GlintRadiusSlider;
     QSlider *PupilHaarOffsetSlider;
-    QSlider *ReviewImageSlider;
-    QSlider *ReviewTrialSlider;
+    QSlider *OfflineImageSlider;
+    QSlider *OfflineTrialSlider;
     QSpinBox *CameraFrameRateDesiredSpinBox;
-    QSpinBox *ReviewTrialSpinBox;
+    QSpinBox *OfflineTrialSpinBox;
     QSpinBox *TrialIndexSpinBox;
-    QString editDataDirectory;
+    QString dataDirectoryOffline;
     QString editSubjectName;
     QString subjectIdentifier;
     QString LastUsedSettingsFileName;
     QTabWidget *EyeTrackingParameterTabWidget;
     QTimer *UpdateCameraImageTimer;
     QWidget *CameraParametersWidget;
-    QWidget *EyeTrackingReviewWidget;
+    QWidget *EyeTrackingOfflineWidget;
     SliderDouble *AlphaMiscellaneousSlider;
     SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaAverageSlider;
@@ -261,7 +261,7 @@ private:
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
     std::mutex mtx;
-    std::mutex reviewMutex;
+    std::mutex offlineMutex;
     std::mutex saveMutex;
     std::string dataDirectory;
     std::string dataFilename;
@@ -282,8 +282,8 @@ private:
     void msWait(int ms);
     void pupilTracking();
     void resetVariables();
-    void reviewPupilDetectionAllFrames();
-    void reviewPupilDetectionOneFrame();
+    void offlinePupilDetectionAllFrames();
+    void offlinePupilDetectionOneFrame();
     void saveSettings(QString);
     void saveTrialData();
     void setFlashStandby(bool);
@@ -294,8 +294,8 @@ private:
     void updateCamAOIy();
     void updateEyeAOIx();
     void updateEyeAOIy();
-    void updateReviewImages(int);
-    void updateReviewSession();
+    void updateOfflineImages(int);
+    void updateOfflineSession();
     void writeToFile(std::ofstream& file, const std::vector<bool>&, const std::vector<double>&, std::string);
 
 protected:
@@ -311,20 +311,20 @@ public slots:
 
 private slots:
 
-    void changeReviewSession(int index);
+    void changeOfflineSession(int index);
     void cropAOI();
     void detectPupilAllFrames();
     void detectPupilAllTrials();
     void detectPupilOneFrame();
-    void loadReviewSession();
-    void nextReviewImage();
+    void loadOfflineSession();
+    void nextOfflineImage();
     void onQuitButtonClicked();
     void onFlashStandbySlider(int);
-    void prevReviewImage();
+    void prevOfflineImage();
     void selectDirectory();
     void resetFlashMinIntensity();
-    void reviewSaveExperimentData();
-    void reviewCombineExperimentData();
+    void offlineSaveExperimentData();
+    void offlineCombineExperimentData();
     void setAlphaMiscellaneous(double value);
     void setAlphaMomentum(double value);
     void setAlphaAverage(double value);
@@ -371,13 +371,13 @@ private slots:
     void setPupilHaarOffset(int value);
     void setPupilPosition(double xPos, double yPos);
     void setRealTimeEyeTracking(int state);
-    void setReviewMode(int state);
-    void setReviewImageFrame(int);
+    void setOfflineMode(int state);
+    void setOfflineImageFrame(int);
     void setAOIRghtEye();
     void setThresholdCircumference(double);
     void setThresholdAspectRatio(double);
     void setTrialIndex(int);
-    void startReviewSession();
+    void startOfflineSession();
     void startRecordingManual();
     void updateCameraImage();
     void updateRawImage();

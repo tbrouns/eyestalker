@@ -31,8 +31,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     mUEyeOpencvCam.setDeviceInfo(5129, 5445);
 
-    APP_EXIT = false;
+    APP_EXIT    = false;
     APP_RUNNING = true;
+    Parameters::cameraXResolution    = 1280;
+    Parameters::cameraYResolution    = 1024;
     cameraAOIFractionHghtDefaultLeft = 0.19;
     cameraAOIFractionHghtDefaultRght = 0.22;
     cameraAOIFractionHght = cameraAOIFractionHghtDefaultLeft;
@@ -56,8 +58,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     camImageWdth            = 480; // size of image in widget
     PROCESSING_ALL_IMAGES   = false;
     PROCESSING_ALL_TRIALS   = false;
-    editImageIndex          = 0;
-    editImageTotal          = 0;
+    imageIndexOffline       = 0;
+    imageTotalOffline       = 0;
     experimentIndex         = 0;
     TRIAL_RECORDING         = false;
     eyeAOIHghtFraction      = 0.50;
@@ -79,11 +81,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     subjectIdentifier       = "";
     trialIndex              = 0;
     trialTimeLength         = 1500;
-
-
-
-    Parameters::cameraXResolution = 1280;
-    Parameters::cameraYResolution = 1024;
 
     Parameters::CAMERA_RUNNING      = false;
     Parameters::REALTIME_PROCESSING = true;
@@ -174,8 +171,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeHghtROISlider->setOrientation(Qt::Vertical);
     QObject::connect(EyeHghtROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeROIHght(double)));
 
-    //
-
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(cropAOI()));
 
@@ -218,19 +213,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     RealTimeEyeTrackingCheckBox->setChecked(!SAVE_EYE_IMAGE);
     QObject::connect(RealTimeEyeTrackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setRealTimeEyeTracking(int)));
 
-    QLabel *ReviewModeTextBox = new QLabel;
-    ReviewModeTextBox->setText("<b>Review mode: </b>");
+    QLabel *OfflineModeTextBox = new QLabel;
+    OfflineModeTextBox->setText("<b>Offline mode: </b>");
 
-    QCheckBox *ReviewModeCheckBox = new QCheckBox;
-    ReviewModeCheckBox->setChecked(false);
-    QObject::connect(ReviewModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setReviewMode(int)));
+    QCheckBox *OfflineModeCheckBox = new QCheckBox;
+    OfflineModeCheckBox->setChecked(false);
+    QObject::connect(OfflineModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setOfflineMode(int)));
 
     QHBoxLayout *RealTimeEyeTrackingLayout = new QHBoxLayout;
     RealTimeEyeTrackingLayout->addStretch();
     RealTimeEyeTrackingLayout->addWidget(RealTimeEyeTrackingTextBox);
     RealTimeEyeTrackingLayout->addWidget(RealTimeEyeTrackingCheckBox);
-    RealTimeEyeTrackingLayout->addWidget(ReviewModeTextBox);
-    RealTimeEyeTrackingLayout->addWidget(ReviewModeCheckBox);
+    RealTimeEyeTrackingLayout->addWidget(OfflineModeTextBox);
+    RealTimeEyeTrackingLayout->addWidget(OfflineModeCheckBox);
     RealTimeEyeTrackingLayout->addStretch();
 
     QPushButton *AOILeftEyeButton = new QPushButton("&Left eye");
@@ -246,94 +241,94 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeDetectionsLayout->addWidget(AOICropButton);
     EyeDetectionsLayout->addStretch();
 
-    QPushButton *ReviewLoadSessionButton = new QPushButton("Load session");
-    QObject::connect(ReviewLoadSessionButton, SIGNAL(clicked(bool)), this, SLOT(loadReviewSession()));
+    QPushButton *OfflineLoadSessionButton = new QPushButton("Load session");
+    QObject::connect(OfflineLoadSessionButton, SIGNAL(clicked(bool)), this, SLOT(loadOfflineSession()));
 
-    ReviewImageSlider = new QSlider;
-    ReviewImageSlider->setRange(0, 0);
-    ReviewImageSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ReviewImageSlider, SIGNAL(valueChanged(int)), this, SLOT(setReviewImageFrame(int)));
+    OfflineImageSlider = new QSlider;
+    OfflineImageSlider->setRange(0, 0);
+    OfflineImageSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(OfflineImageSlider, SIGNAL(valueChanged(int)), this, SLOT(setOfflineImageFrame(int)));
 
-    ReviewImageFrameTextBox = new QLabel;
-    ReviewImageFrameTextBox->setText("<b>0 / 0</b>");
-    ReviewImageFrameTextBox->setAlignment(Qt::AlignCenter);
-    ReviewImageFrameTextBox->setMinimumWidth(70);
+    OfflineImageFrameTextBox = new QLabel;
+    OfflineImageFrameTextBox->setText("<b>0 / 0</b>");
+    OfflineImageFrameTextBox->setAlignment(Qt::AlignCenter);
+    OfflineImageFrameTextBox->setMinimumWidth(70);
 
-    QPushButton *ReviewPrevImageButton = new QPushButton("<");
-    QObject::connect(ReviewPrevImageButton, SIGNAL(clicked(bool)), this, SLOT(prevReviewImage()));
+    QPushButton *OfflinePrevImageButton = new QPushButton("<");
+    QObject::connect(OfflinePrevImageButton, SIGNAL(clicked(bool)), this, SLOT(prevOfflineImage()));
 
-    QPushButton *ReviewNextImageButton = new QPushButton(">");
-    QObject::connect(ReviewNextImageButton, SIGNAL(clicked(bool)), this, SLOT(nextReviewImage()));
+    QPushButton *OfflineNextImageButton = new QPushButton(">");
+    QObject::connect(OfflineNextImageButton, SIGNAL(clicked(bool)), this, SLOT(nextOfflineImage()));
 
-    QLabel *ReviewPupilDetectionTextBox = new QLabel;
-    ReviewPupilDetectionTextBox->setText("<b>Detect pupil: </b> ");
+    QLabel *OfflinePupilDetectionTextBox = new QLabel;
+    OfflinePupilDetectionTextBox->setText("<b>Detect pupil: </b> ");
 
-    QPushButton *ReviewPupilDetectionOneButton = new QPushButton("Current");
-    QObject::connect(ReviewPupilDetectionOneButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilOneFrame()));
+    QPushButton *OfflinePupilDetectionOneButton = new QPushButton("Current");
+    QObject::connect(OfflinePupilDetectionOneButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilOneFrame()));
 
-    QPushButton *ReviewPupilDetectionAllFramesButton = new QPushButton("All frames");
-    QObject::connect(ReviewPupilDetectionAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllFrames()));
+    QPushButton *OfflinePupilDetectionAllFramesButton = new QPushButton("All frames");
+    QObject::connect(OfflinePupilDetectionAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllFrames()));
 
-    QPushButton *ReviewPupilDetectionAllTrialsButton = new QPushButton("All trials");
-    QObject::connect(ReviewPupilDetectionAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllTrials()));
+    QPushButton *OfflinePupilDetectionAllTrialsButton = new QPushButton("All trials");
+    QObject::connect(OfflinePupilDetectionAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllTrials()));
 
     QPushButton *SavePupilDataButton = new QPushButton("Save");
-    QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(reviewSaveExperimentData()));
+    QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(offlineSaveExperimentData()));
 
     QPushButton *CombinePupilDataButton = new QPushButton("Combine");
-    QObject::connect(CombinePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(reviewCombineExperimentData()));
+    QObject::connect(CombinePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(offlineCombineExperimentData()));
 
-    EyeTrackingReviewWidget = new QWidget;
-    QHBoxLayout *EyeTrackingReviewLayout = new QHBoxLayout(EyeTrackingReviewWidget);
-    EyeTrackingReviewLayout->addStretch();
-    EyeTrackingReviewLayout->addWidget(ReviewLoadSessionButton);
-    EyeTrackingReviewLayout->addWidget(SavePupilDataButton);
-    EyeTrackingReviewLayout->addWidget(CombinePupilDataButton);
-    EyeTrackingReviewLayout->addWidget(ReviewPrevImageButton);
-    EyeTrackingReviewLayout->addWidget(ReviewImageSlider);
-    EyeTrackingReviewLayout->addWidget(ReviewNextImageButton);
-    EyeTrackingReviewLayout->addWidget(ReviewImageFrameTextBox);
-    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionTextBox);
-    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionOneButton);
-    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionAllFramesButton);
-    EyeTrackingReviewLayout->addWidget(ReviewPupilDetectionAllTrialsButton);
-    EyeTrackingReviewLayout->addStretch();
+    EyeTrackingOfflineWidget = new QWidget;
+    QHBoxLayout *EyeTrackingOfflineLayout = new QHBoxLayout(EyeTrackingOfflineWidget);
+    EyeTrackingOfflineLayout->addStretch();
+    EyeTrackingOfflineLayout->addWidget(OfflineLoadSessionButton);
+    EyeTrackingOfflineLayout->addWidget(SavePupilDataButton);
+    EyeTrackingOfflineLayout->addWidget(CombinePupilDataButton);
+    EyeTrackingOfflineLayout->addWidget(OfflinePrevImageButton);
+    EyeTrackingOfflineLayout->addWidget(OfflineImageSlider);
+    EyeTrackingOfflineLayout->addWidget(OfflineNextImageButton);
+    EyeTrackingOfflineLayout->addWidget(OfflineImageFrameTextBox);
+    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionTextBox);
+    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionOneButton);
+    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionAllFramesButton);
+    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionAllTrialsButton);
+    EyeTrackingOfflineLayout->addStretch();
 
-    EyeTrackingReviewWidget->setVisible(false);
+    EyeTrackingOfflineWidget->setVisible(false);
 
-    QLabel* ReviewTrialTitle = new QLabel;
-    ReviewTrialTitle->setText("<b>Review mode - Trial:</b>");
+    QLabel* OfflineTrialTitle = new QLabel;
+    OfflineTrialTitle->setText("<b>Offline mode - Trial:</b>");
 
-    ReviewTrialSpinBox = new QSpinBox;
-    ReviewTrialSpinBox->setValue(1);
-    ReviewTrialSpinBox->setMinimum(1);
-    ReviewTrialSpinBox->setAlignment(Qt::AlignRight);
+    OfflineTrialSpinBox = new QSpinBox;
+    OfflineTrialSpinBox->setValue(1);
+    OfflineTrialSpinBox->setMinimum(1);
+    OfflineTrialSpinBox->setAlignment(Qt::AlignRight);
 
-    ReviewTrialSlider = new QSlider;
-    ReviewTrialSlider->setValue(1);
-    ReviewTrialSlider->setMinimum(1);
-    ReviewTrialSlider->setOrientation(Qt::Horizontal);
+    OfflineTrialSlider = new QSlider;
+    OfflineTrialSlider->setValue(1);
+    OfflineTrialSlider->setMinimum(1);
+    OfflineTrialSlider->setOrientation(Qt::Horizontal);
 
-    QObject::connect(ReviewTrialSlider, SIGNAL(valueChanged(int)),this,SLOT(changeReviewSession(int)));
+    QObject::connect(OfflineTrialSlider, SIGNAL(valueChanged(int)),this,SLOT(changeOfflineSession(int)));
 
-    QObject::connect(ReviewTrialSlider, SIGNAL(valueChanged(int)),ReviewTrialSpinBox,SLOT(setValue(int)));
-    QObject::connect(ReviewTrialSpinBox, SIGNAL(valueChanged(int)),ReviewTrialSlider,SLOT(setValue(int)));
+    QObject::connect(OfflineTrialSlider, SIGNAL(valueChanged(int)),OfflineTrialSpinBox,SLOT(setValue(int)));
+    QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)),OfflineTrialSlider,SLOT(setValue(int)));
 
-    QGridLayout *ReviewSessionTitleLayout = new QGridLayout;
-    ReviewSessionTitleLayout->addWidget(ReviewTrialTitle, 0, 1);
-    ReviewSessionTitleLayout->addWidget(ReviewTrialSpinBox, 0, 2);
-    ReviewSessionTitleLayout->addWidget(ReviewTrialSlider, 0, 3);
-    ReviewSessionTitleLayout->setColumnStretch(0, 1);
-    ReviewSessionTitleLayout->setColumnStretch(1, 3);
-    ReviewSessionTitleLayout->setColumnStretch(2, 1);
-    ReviewSessionTitleLayout->setColumnStretch(3, 3);
-    ReviewSessionTitleLayout->setColumnStretch(4, 1);
+    QGridLayout *OfflineSessionTitleLayout = new QGridLayout;
+    OfflineSessionTitleLayout->addWidget(OfflineTrialTitle, 0, 1);
+    OfflineSessionTitleLayout->addWidget(OfflineTrialSpinBox, 0, 2);
+    OfflineSessionTitleLayout->addWidget(OfflineTrialSlider, 0, 3);
+    OfflineSessionTitleLayout->setColumnStretch(0, 1);
+    OfflineSessionTitleLayout->setColumnStretch(1, 3);
+    OfflineSessionTitleLayout->setColumnStretch(2, 1);
+    OfflineSessionTitleLayout->setColumnStretch(3, 3);
+    OfflineSessionTitleLayout->setColumnStretch(4, 1);
 
     QWidget *CameraSettings = new QWidget;
     QGridLayout* CameraOutputLayout = new QGridLayout(CameraSettings);
 
-    CameraOutputLayout->addLayout(ReviewSessionTitleLayout, 0, 2, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(EyeTrackingReviewWidget, 5, 1, 1, 4, Qt::AlignCenter);
+    CameraOutputLayout->addLayout(OfflineSessionTitleLayout, 0, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(EyeTrackingOfflineWidget, 5, 1, 1, 4, Qt::AlignCenter);
 
     CameraOutputLayout->addWidget(CamEyeAOIXPosSlider, 0, 2);
     CameraOutputLayout->addWidget(CamEyeAOIYPosSlider, 1, 1);
@@ -649,8 +644,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CannyKernelSizeSlider->setOrientation(Qt::Horizontal);
     CannyKernelSizeSlider->setSingleStep(1);
     QObject::connect(CannyKernelSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyKernelSize(int)));
-
-
 
     // Learning rate parameters
 
@@ -974,26 +967,26 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QWidget *ThresholdParametersWidget = new QWidget;
     QGridLayout *ThresholdParametersLayout = new QGridLayout(ThresholdParametersWidget);
     ThresholdParametersLayout->addWidget(ThresholdCircumferenceTextBox, 0, 0);
-    ThresholdParametersLayout->addWidget(ThresholdCircumferenceSlider, 0, 1);
-    ThresholdParametersLayout->addWidget(ThresholdCircumferenceLabel, 0, 2);
-    ThresholdParametersLayout->addWidget(ThresholdAspectRatioTextBox, 1, 0);
-    ThresholdParametersLayout->addWidget(ThresholdAspectRatioSlider, 1, 1);
-    ThresholdParametersLayout->addWidget(ThresholdAspectRatioLabel, 1, 2);
+    ThresholdParametersLayout->addWidget(ThresholdCircumferenceSlider,  0, 1);
+    ThresholdParametersLayout->addWidget(ThresholdCircumferenceLabel,   0, 2);
+    ThresholdParametersLayout->addWidget(ThresholdAspectRatioTextBox,   1, 0);
+    ThresholdParametersLayout->addWidget(ThresholdAspectRatioSlider,    1, 1);
+    ThresholdParametersLayout->addWidget(ThresholdAspectRatioLabel,     1, 2);
 
     QWidget *CannyEdgeWidget = new QWidget;
     QGridLayout *CannyEdgeLayout = new QGridLayout(CannyEdgeWidget);
     CannyEdgeLayout->addWidget(CannyUpperLimitTextBox, 0, 0);
-    CannyEdgeLayout->addWidget(CannyUpperLimitSlider, 0, 1);
-    CannyEdgeLayout->addWidget(CannyUpperLimitLabel, 0, 2);
+    CannyEdgeLayout->addWidget(CannyUpperLimitSlider,  0, 1);
+    CannyEdgeLayout->addWidget(CannyUpperLimitLabel,   0, 2);
     CannyEdgeLayout->addWidget(CannyLowerLimitTextBox, 1, 0);
-    CannyEdgeLayout->addWidget(CannyLowerLimitSlider, 1, 1);
-    CannyEdgeLayout->addWidget(CannyLowerLimitLabel, 1, 2);
+    CannyEdgeLayout->addWidget(CannyLowerLimitSlider,  1, 1);
+    CannyEdgeLayout->addWidget(CannyLowerLimitLabel,   1, 2);
     CannyEdgeLayout->addWidget(CannyKernelSizeTextBox, 2, 0);
-    CannyEdgeLayout->addWidget(CannyKernelSizeSlider, 2, 1);
-    CannyEdgeLayout->addWidget(CannyKernelSizeLabel, 2, 2);
-    CannyEdgeLayout->addWidget(CannyBlurLevelTextBox, 3, 0);
-    CannyEdgeLayout->addWidget(CannyBlurLevelSlider, 3, 1);
-    CannyEdgeLayout->addWidget(CannyBlurLevelLabel, 3, 2);
+    CannyEdgeLayout->addWidget(CannyKernelSizeSlider,  2, 1);
+    CannyEdgeLayout->addWidget(CannyKernelSizeLabel,   2, 2);
+    CannyEdgeLayout->addWidget(CannyBlurLevelTextBox,  3, 0);
+    CannyEdgeLayout->addWidget(CannyBlurLevelSlider,   3, 1);
+    CannyEdgeLayout->addWidget(CannyBlurLevelLabel,    3, 2);
 
     QWidget *MiscellaneousParametersWidget = new QWidget;
     QGridLayout *MiscellaneousParametersLayout = new QGridLayout(MiscellaneousParametersWidget);
@@ -1561,11 +1554,11 @@ void MainWindow::onQuitButtonClicked()
     qApp->quit();
 }
 
-void MainWindow::setReviewMode(int state)
+void MainWindow::setOfflineMode(int state)
 {
     if (!state)
     {
-        editImageIndex = 0;
+        imageIndexOffline = 0;
 
         EyeTrackingParameterTabWidget->setUpdatesEnabled(false);
         EyeTrackingParameterTabWidget->insertTab(0, CameraParametersWidget, tr("Camera"));
@@ -1576,7 +1569,7 @@ void MainWindow::setReviewMode(int state)
         CamEyeAOIXPosSlider->setVisible(true);
         CamEyeAOIYPosSlider->setVisible(true);
 
-        EyeTrackingReviewWidget->setVisible(false);
+        EyeTrackingOfflineWidget->setVisible(false);
 
         Parameters::REALTIME_PROCESSING = true;
         Parameters::CAMERA_RUNNING = true;
@@ -1598,7 +1591,7 @@ void MainWindow::setReviewMode(int state)
     }
     else
     {
-        startReviewSession();
+        startOfflineSession();
     }
 }
 

@@ -152,12 +152,12 @@ void MainWindow::saveTrialData()
                        << "/" << (NameInputLineEdit->text()).toStdString()
                        << "/trial_" << trialIndex;
 
-        editDataDirectory = QString::fromStdString(saveFileNameSS.str());
+        dataDirectoryOffline = QString::fromStdString(saveFileNameSS.str());
 
         saveFileNameSS << "/info.ini";
 
-        editDataIndex = trialIndex;
-        editImageTotal = frameCount;
+        trialIndexOffline = trialIndex;
+        imageTotalOffline = frameCount;
 
         saveSettings(QString::fromStdString(saveFileNameSS.str()));
 

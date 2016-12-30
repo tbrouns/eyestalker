@@ -296,7 +296,7 @@ void MainWindow::setOfflineImageFrame(int imageIndex)
     }
 }
 
-void MainWindow::offlinePupilDetectionOneFrame()
+void MainWindow::reviewPupilDetectionOneFrame()
 {
     // Grab raw images
 
@@ -365,7 +365,7 @@ void MainWindow::offlinePupilDetectionOneFrame()
 
 void MainWindow::detectPupilOneFrame()
 {
-    offlinePupilDetectionOneFrame();
+    reviewPupilDetectionOneFrame();
     updateOfflineImages(imageIndexOffline);
 }
 
@@ -375,7 +375,7 @@ void MainWindow::detectPupilAllFrames()
     {
         PROCESSING_ALL_IMAGES = true;
 
-        std::thread pupilDetectionThread(&MainWindow::offlinePupilDetectionAllFrames, this);
+        std::thread pupilDetectionThread(&MainWindow::reviewPupilDetectionAllFrames, this);
         pupilDetectionThread.detach();
 
         while (PROCESSING_ALL_IMAGES)
@@ -396,20 +396,20 @@ void MainWindow::detectPupilAllFrames()
     }
 }
 
-void MainWindow::offlinePupilDetectionAllFrames()
+void MainWindow::reviewPupilDetectionAllFrames()
 {
     int initialIndex = imageIndexOffline; // needed for progressbar
 
     for (imageIndexOffline = initialIndex; imageIndexOffline < imageTotalOffline && PROCESSING_ALL_IMAGES; imageIndexOffline++)
     {
         mEyePropertiesVariables = vEyePropertiesVariables[imageIndexOffline];
-        offlinePupilDetectionOneFrame();
+        reviewPupilDetectionOneFrame();
     }
 
     if (PROCESSING_ALL_IMAGES)
     {
         OfflineImageSlider->setValue(imageIndexOffline);
-        offlineSaveExperimentData();
+        reviewSaveExperimentData();
         PROCESSING_ALL_IMAGES = false;
     }
 }
@@ -431,7 +431,7 @@ void MainWindow::detectPupilAllTrials()
     PROCESSING_ALL_TRIALS = false;
 }
 
-void MainWindow::offlineSaveExperimentData()
+void MainWindow::reviewSaveExperimentData()
 {
     { // save pupil data
 
@@ -529,7 +529,7 @@ void MainWindow::offlineSaveExperimentData()
     }
 }
 
-void MainWindow::offlineCombineExperimentData()
+void MainWindow::reviewCombineExperimentData()
 {
     for (int iTrial = 0; iTrial < trialTotalOffline; iTrial++)
     {

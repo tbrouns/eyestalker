@@ -106,7 +106,7 @@ SOURCES += main.cpp\
     source/eyetracking.cpp \
     source/mainwindowexperiment.cpp \
     source/mainwindowparameters.cpp \
-    source/mainwindowreview.cpp \
+    source/mainwindowoffline.cpp \
     source/parameters.cpp \
     source/qimageopencv.cpp \
     source/sliderdouble.cpp \

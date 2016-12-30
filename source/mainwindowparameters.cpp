@@ -27,8 +27,8 @@ void MainWindow::loadSettings(QString fileName)
     cameraSubSamplingFactor                                     = settings.value("SubSamplingFactor",               1).toInt();
     dataDirectory                                               = settings.value("DataDirectory",                   "").toString().toStdString();
     dataFilename                                                = settings.value("DataFilename",                    "experiment_data").toString().toStdString();
-    editDataIndex                                               = settings.value("EditDataIndex",                   0).toInt();
-    editImageTotal                                              = settings.value("EditImageTotal",                  0).toInt();
+    trialIndexOffline                                               = settings.value("trialIndexOffline",                   0).toInt();
+    imageTotalOffline                                              = settings.value("imageTotalOffline",                  0).toInt();
     editSubjectName                                             = settings.value("SubjectName",                     "").toString();
     eyeAOIHghtFraction                                          = settings.value("AOIHghtFraction",                 eyeAOIHghtFraction).toDouble();
     eyeAOIWdthFraction                                          = settings.value("AOIWdthFraction",                 eyeAOIWdthFraction).toDouble();
@@ -99,8 +99,8 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
     settings.setValue("EdgeIntensityOffset",            mEyePropertiesParameters.edgeIntensityOffset);
     settings.setValue("EdgeMaximumFitNumber",           mEyePropertiesParameters.edgeMaximumFitNumber);
-    settings.setValue("EditDataIndex",                  editDataIndex);
-    settings.setValue("EditImageTotal",                 editImageTotal);
+    settings.setValue("trialIndexOffline",                  trialIndexOffline);
+    settings.setValue("imageTotalOffline",                 imageTotalOffline);
     settings.setValue("EllipseFitErrorMaximum",         mEyePropertiesParameters.ellipseFitErrorMaximum);
     settings.setValue("FlashAOIHght",                   Parameters::flashAOIHght);
     settings.setValue("FlashAOIWdth",                   Parameters::flashAOIWdth);
