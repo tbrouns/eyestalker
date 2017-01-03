@@ -73,8 +73,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     GAIN_AUTO               = true;
     GAIN_BOOST              = false;
     guiUpdateFrequency      = 30;
-    pupilOffsetMin          =  5;
-    pupilOffsetIni          = 15;
+    pupilOffsetMin          = 0;
+    pupilOffsetIni          = 25;
     relativeTime            = 0;
     SAVE_EYE_IMAGE          = true;
     startTime               = 0;
@@ -671,12 +671,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AlphaMiscellaneousSlider = new SliderDouble;
     AlphaMomentumSlider      = new SliderDouble;
 
-    AlphaAverageSlider      ->setPrecision(2);
+    AlphaAverageSlider      ->setPrecision(3);
     AlphaPredictionSlider   ->setPrecision(2);
     AlphaMiscellaneousSlider->setPrecision(2);
     AlphaMomentumSlider     ->setPrecision(2);
 
-    AlphaAverageSlider      ->setDoubleRange(0, 1.0);
+    AlphaAverageSlider      ->setDoubleRange(0, 0.1);
     AlphaPredictionSlider   ->setDoubleRange(0, 1.0);
     AlphaMiscellaneousSlider->setDoubleRange(0, 1.0);
     AlphaMomentumSlider     ->setDoubleRange(0, 1.0);
@@ -728,7 +728,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     PupilHaarOffsetLabel  = new QLabel;
     PupilHaarOffsetSlider = new QSlider;
-    PupilHaarOffsetSlider->setRange(pupilOffsetMin, 30);
+    PupilHaarOffsetSlider->setRange(pupilOffsetMin, 50);
     PupilHaarOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilHaarOffsetSlider, SIGNAL(valueChanged(int)), this, SLOT(setPupilHaarOffset(int)));   
 
@@ -1629,7 +1629,7 @@ void MainWindow::setParameterWidgets()
     AlphaMiscellaneousSlider->setDoubleValue(mEyePropertiesParameters.alphaMiscellaneous);
     AlphaMomentumSlider     ->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
 
-    AlphaAverageLabel      ->setText(QString::number(mEyePropertiesParameters.alphaAverage, 'f', 2));
+    AlphaAverageLabel      ->setText(QString::number(mEyePropertiesParameters.alphaAverage, 'f', 3));
     AlphaPredictionLabel   ->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
     AlphaMiscellaneousLabel->setText(QString::number(mEyePropertiesParameters.alphaMiscellaneous, 'f', 2));
     AlphaMomentumLabel     ->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));

@@ -149,9 +149,6 @@ void MainWindow::updateOfflineSession()
 
     if (imageTotalOffline > 0)
     {
-        updateEyeAOIx();
-        updateEyeAOIy();
-
         vEyePropertiesMiscellaneous.resize(imageTotalOffline);
         vEyePropertiesVariables.resize(imageTotalOffline + 1);
         vEyePropertiesVariables[0] = mEyePropertiesVariables;
@@ -197,6 +194,13 @@ void MainWindow::updateOfflineImages(int imgIndex)
         if (boost::filesystem::exists(fileNameRaw.str()))
         {
             cv::Mat rawEyeImage = cv::imread(fileNameRaw.str(), CV_LOAD_IMAGE_COLOR);
+            { // Mutex lock
+                std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+                int imageWdth = rawEyeImage.cols;
+                int imageHght = rawEyeImage.rows;
+                if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth > imageWdth) { Parameters::eyeAOIWdth = imageWdth - Parameters::eyeAOIXPos; }
+                if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght > imageHght) { Parameters::eyeAOIHght = imageHght - Parameters::eyeAOIYPos; }
+            }
             CamQImage->loadImage(rawEyeImage);
             CamQImage->setEyeAOI(Parameters::eyeAOIXPos, Parameters::eyeAOIYPos, Parameters::eyeAOIWdth, Parameters::eyeAOIHght);
             CamQImage->setImage();

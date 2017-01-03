@@ -35,9 +35,9 @@ void MainWindow::loadSettings(QString fileName)
     flashThreshold                                              = settings.value("FlashThreshold",                  230).toInt();
     GAIN_AUTO                                                   = settings.value("GainAuto",                        GAIN_AUTO).toBool();
     GAIN_BOOST                                                  = settings.value("GainBoost",                       GAIN_BOOST).toBool();
-    mEyePropertiesParameters.alphaAverage                       = settings.value("AlphaAverage",                    0.05).toDouble();
+    mEyePropertiesParameters.alphaAverage                       = settings.value("AlphaAverage",                    0.005).toDouble();
     mEyePropertiesParameters.alphaMiscellaneous                 = settings.value("AlphaMiscellaneous",              0.75).toDouble();
-    mEyePropertiesParameters.alphaMomentum                      = settings.value("AlphaMomentum",                   0.5).toDouble();
+    mEyePropertiesParameters.alphaMomentum                      = settings.value("AlphaMomentum",                   0.50).toDouble();
     mEyePropertiesParameters.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
     mEyePropertiesParameters.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  4).toInt();
     mEyePropertiesParameters.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
@@ -284,7 +284,7 @@ void MainWindow::setCannyBlurLevel(int value)
 void MainWindow::setAlphaAverage(double value)
 {
     mEyePropertiesParameters.alphaAverage = value;
-    AlphaAverageLabel->setText(QString::number(value, 'f', 2));
+    AlphaAverageLabel->setText(QString::number(value, 'f', 3));
 }
 
 void MainWindow::setAlphaPrediction(double value)
