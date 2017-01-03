@@ -62,9 +62,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     imageTotalOffline       = 0;
     experimentIndex         = 0;
     TRIAL_RECORDING         = false;
-    eyeAOIHghtFraction      = 0.50;
+    eyeAOIHghtFraction      = 1.0;
     eyeAOIHghtMin           = 75;
-    eyeAOIWdthFraction      = 0.50;
+    eyeAOIWdthFraction      = 1.0;
     eyeAOIWdthMin           = 100;
     eyeImageHght            = 200;
     eyeImageWdth            = 320;

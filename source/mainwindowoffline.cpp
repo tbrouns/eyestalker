@@ -149,6 +149,9 @@ void MainWindow::updateOfflineSession()
 
     if (imageTotalOffline > 0)
     {
+        updateEyeAOIx();
+        updateEyeAOIy();
+
         vEyePropertiesMiscellaneous.resize(imageTotalOffline);
         vEyePropertiesVariables.resize(imageTotalOffline + 1);
         vEyePropertiesVariables[0] = mEyePropertiesVariables;
@@ -423,6 +426,8 @@ void MainWindow::offlineSaveExperimentData()
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
+                 << "/trial_"
+                 << trialIndexOffline
                  << "/tracking_data.dat";
 
         std::ofstream file;
@@ -460,6 +465,8 @@ void MainWindow::offlineSaveExperimentData()
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
+                 << "/trial_"
+                 << trialIndexOffline
                  << "/edge_data.dat";
 
         std::ofstream file;
@@ -488,7 +495,10 @@ void MainWindow::offlineSaveExperimentData()
     { // save pupil image
 
         std::stringstream directoryName;
-        directoryName << dataDirectoryOffline.toStdString() << "/pupil";
+        directoryName << dataDirectoryOffline.toStdString()
+                      << "/trial_"
+                      << trialIndexOffline
+                      << "/pupil";
 
         if (!boost::filesystem::exists(directoryName.str()))
         {
@@ -525,6 +535,8 @@ void MainWindow::offlineCombineExperimentData()
 
         std::stringstream fileNameRead;
         fileNameRead << dataDirectoryOffline.toStdString()
+                     << "/trial_"
+                     << iTrial
                      << "/tracking_data.dat";
 
         std::ifstream dataFile;
@@ -539,8 +551,9 @@ void MainWindow::offlineCombineExperimentData()
         dataFilename = (DataFilenameLineEdit->text()).toStdString();
 
         std::stringstream fileNameWrite;
-        fileNameWrite << dataDirectory
-                      << "/" << dataFilename;
+        fileNameWrite << dataDirectoryOffline.toStdString()
+                      << "/"
+                      << dataFilename;
 
         std::ofstream file;
         if (!boost::filesystem::exists(fileNameWrite.str()))
