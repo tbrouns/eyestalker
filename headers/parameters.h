@@ -40,7 +40,7 @@ public:
 
     static bool CAMERA_READY;
     static bool CAMERA_RUNNING;
-    static bool REALTIME_PROCESSING;
+    static bool ONLINE_PROCESSING;
     static double ellipseDrawOutlineWidth;
     static double eyeAOIXPosFraction;
     static double eyeAOIYPosFraction;

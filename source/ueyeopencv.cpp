@@ -253,7 +253,7 @@ void UEyeOpencvCam::threadFrameCapture()
 
     is_EnableEvent(hCam, IS_SET_EVENT_FRAME);
 
-    while(Parameters::CAMERA_RUNNING && Parameters::REALTIME_PROCESSING)
+    while(Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
 
 #ifdef __linux__
@@ -288,7 +288,7 @@ void UEyeOpencvCam::threadFrameCapture()
 
                         if (frameCount >= numberOfImageBuffers)
                         {
-                            while (frameCount >= numberOfImageBuffers && Parameters::REALTIME_PROCESSING && TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait if image buffer is full
+                            while (frameCount >= numberOfImageBuffers && Parameters::ONLINE_PROCESSING && TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait if image buffer is full
                             frameCount = frameCount % numberOfImageBuffers;
                         }
                     }
@@ -326,7 +326,7 @@ imageInfo UEyeOpencvCam::getFrame()
 {
     imageInfo mImageInfoNew;
 
-    if (Parameters::REALTIME_PROCESSING && Parameters::CAMERA_RUNNING)
+    if (Parameters::ONLINE_PROCESSING && Parameters::CAMERA_RUNNING)
     {
         std::unique_lock<std::mutex> lck(Parameters::frameCaptureMutex);
 
@@ -334,7 +334,7 @@ imageInfo UEyeOpencvCam::getFrame()
         {
             if (frameCount <= 0)
             {
-                while (frameCount <= 0 && Parameters::REALTIME_PROCESSING && TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait for new images to arrive
+                while (frameCount <= 0 && Parameters::ONLINE_PROCESSING && TRIAL_RECORDING) Parameters::frameCaptureCV.wait(lck); // wait for new images to arrive
             }
 
             int index = frameIndex - frameCount;

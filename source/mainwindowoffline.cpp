@@ -18,8 +18,7 @@
 void MainWindow::startOfflineSession()
 {
     imageIndexOffline = 0;
-
-    Parameters::REALTIME_PROCESSING = false; // turn off pupil tracking
+    Parameters::ONLINE_PROCESSING = false; // turn off pupil tracking
 
     { // unlock frame grabbing threads
         std::unique_lock<std::mutex> frameCaptureMutexLock(Parameters::frameCaptureMutex);
@@ -151,10 +150,12 @@ void MainWindow::updateOfflineSession()
     {
         vEyePropertiesMiscellaneous.resize(imageTotalOffline);
         vEyePropertiesVariables.resize(imageTotalOffline + 1);
+
+        resetVariables();
         vEyePropertiesVariables[0] = mEyePropertiesVariables;
 
         imageIndexOffline = 0;
-        OfflineImageSlider->setValue(0);
+        OfflineImageSlider->setValue(imageIndexOffline);
         OfflineImageSlider->setMaximum(imageTotalOffline - 1);
 
         // Create folder
@@ -547,10 +548,7 @@ void MainWindow::offlineCombineExperimentData()
         dataFile.open(fileNameRead.str().c_str());
 
         std::string line;
-        while (dataFile)
-        {
-            if (!std::getline(dataFile, line)) { break; }
-        }
+        while (dataFile) { if (!std::getline(dataFile, line)) { break; }}
 
         dataFilename = (DataFilenameLineEdit->text()).toStdString();
 
@@ -582,7 +580,7 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
     {
-        int pupilHaarWdth = round(mEyePropertiesVariables.pupilCircumferencePrediction / M_PI);
+        int pupilHaarWdth       = round(mEyePropertiesVariables.pupilCircumferencePrediction / M_PI);
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);
 
         mEyePropertiesVariables.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);

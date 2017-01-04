@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     trialTimeLength         = 1500;
 
     Parameters::CAMERA_RUNNING      = false;
-    Parameters::REALTIME_PROCESSING = true;
+    Parameters::ONLINE_PROCESSING = true;
 
     // Grab parameters from ini file
 
@@ -1082,7 +1082,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::pupilTracking()
 {
-    while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::REALTIME_PROCESSING)
+    while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
         eyeProperties mEyePropertiesTemp;
 
@@ -1312,7 +1312,7 @@ void MainWindow::pupilTracking()
         APP_EXIT = true;
         cv.notify_all();
     }
-    else if (!Parameters::REALTIME_PROCESSING)
+    else if (!Parameters::ONLINE_PROCESSING)
     {
         std::unique_lock<std::mutex> mtxLock(mtx);
         Parameters::CAMERA_RUNNING = false;
@@ -1328,7 +1328,7 @@ void MainWindow::pupilTracking()
 
 void MainWindow::updateCameraImage()
 {
-    if (Parameters::REALTIME_PROCESSING)
+    if (Parameters::ONLINE_PROCESSING)
     {
         if (!TRIAL_RECORDING)
         {
@@ -1462,7 +1462,7 @@ void MainWindow::findCamera()
 {
     bool CAMERA_START = false;
 
-    while (APP_RUNNING && !Parameters::CAMERA_RUNNING && Parameters::REALTIME_PROCESSING)
+    while (APP_RUNNING && !Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
         if (mUEyeOpencvCam.findCamera())
         {
@@ -1571,7 +1571,7 @@ void MainWindow::setOfflineMode(int state)
 
         EyeTrackingOfflineWidget->setVisible(false);
 
-        Parameters::REALTIME_PROCESSING = true;
+        Parameters::ONLINE_PROCESSING = true;
         Parameters::CAMERA_RUNNING = true;
         Parameters::CAMERA_READY = true;
 

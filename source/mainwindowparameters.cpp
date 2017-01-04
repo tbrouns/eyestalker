@@ -194,7 +194,7 @@ void MainWindow::resetFlashMinIntensity()
 
 void MainWindow::setPupilCircumference(double value)
 {
-    if (!Parameters::REALTIME_PROCESSING)
+    if (!Parameters::ONLINE_PROCESSING)
     {
         mEyePropertiesVariables.pupilCircumferencePrediction = value;
         PupilCircumferenceLabel->setText(QString::number(value, 'f', 1));
@@ -203,7 +203,7 @@ void MainWindow::setPupilCircumference(double value)
 
 void MainWindow::setPupilAspectRatio(double value)
 {
-    if (!Parameters::REALTIME_PROCESSING)
+    if (!Parameters::ONLINE_PROCESSING)
     {
         mEyePropertiesVariables.pupilAspectRatioPrediction = value;
         PupilAspectRatioLabel->setText(QString::number(value, 'f', 2));
@@ -212,7 +212,7 @@ void MainWindow::setPupilAspectRatio(double value)
 
 void MainWindow::setEdgeIntensity(double value)
 {
-    if (!Parameters::REALTIME_PROCESSING)
+    if (!Parameters::ONLINE_PROCESSING)
     {
         mEyePropertiesVariables.edgeIntensityPrediction = value;
         EdgeIntensityLabel->setText(QString::number(value, 'f', 1));

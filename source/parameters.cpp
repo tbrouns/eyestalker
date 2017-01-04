@@ -17,7 +17,7 @@
 
 bool Parameters::CAMERA_READY = false;
 bool Parameters::CAMERA_RUNNING = false;
-bool Parameters::REALTIME_PROCESSING = true;
+bool Parameters::ONLINE_PROCESSING = true;
 double Parameters::ellipseDrawOutlineWidth = 0.032;
 double Parameters::eyeAOIXPosFraction = 0.25;
 double Parameters::eyeAOIYPosFraction = 0.25;
