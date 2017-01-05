@@ -1726,7 +1726,27 @@ void MainWindow::selectDirectory()
 
 void MainWindow::openDialogue()
 {
-    QString text = "Copyright 2016 Terence Brouns. \n \n This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; \n without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. \n See the GNU General Public License for more details.";
+    QString text = "Copyright 2016 Terence Brouns. <br> <br> "
+                   "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; <br> "
+                   "without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. <br><br>"
+                   "See the GNU General Public License for more details. <br><br>"
+                   "Included 3rd party libraries: <br><br>"
+                   "<b>OpenCV:</b> <br><br>"
+                   "Intel License Agreement <br>"
+                   "For Open Source Computer Vision Library <br>"
+                   "Copyright (C) 2000, Intel Corporation, all rights reserved. <br>"
+                   "Copyright (C) 2014, Itseez Inc., all rights reserved. <br>"
+                   "Third party copyrights are property of their respective owners. <br><br>"
+                   "<b>Eigen:</b> <br><br> http://eigen.tuxfamily.org/ <br><br>"
+                   "<b>Boost:</b> <br><br>"
+                   "Copyright Joe Coder 2004 - 2006. <br>"
+                   "Distributed under the Boost Software License, Version 1.0. <br>"
+                   "(See accompanying file LICENSE_1_0.txt or copy at <br>"
+                   "http://www.boost.org/LICENSE_1_0.txt) <br><br>"
+                   "<b>UEye:</b> <br><br> (c) 2016, IDS Imaging Development Systems GmbH <br><br>"
+                   "<b>libusb:</b> <br><br> libusb is released under version 2.1 of the GNU Lesser General Public License (LGPL).<br>"
+                   "http://libusb.info/ <br>";
+
     ConfirmationWindow mConfirmationWindow(text, false);
     mConfirmationWindow.setWindowTitle("About EyeStalker");
     mConfirmationWindow.exec();

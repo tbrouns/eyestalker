@@ -20,6 +20,8 @@ ConfirmationWindow::ConfirmationWindow(QString text, bool CANCEL_ON, QWidget *pa
     RETURN_VALUE = false;
 
     QLabel *InfoTextBox = new QLabel;
+    InfoTextBox->setTextFormat(Qt::RichText);
+    InfoTextBox->setWordWrap(true);
     InfoTextBox->setText(text);
 
     QHBoxLayout *TextLayout = new QHBoxLayout;
