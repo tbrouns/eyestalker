@@ -457,8 +457,8 @@ void MainWindow::offlineSaveExperimentData()
 
         // additional data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilCircumferenceExact << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilAspectRatioExact   << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact   << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected           << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction     << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction     << delimiter; }
@@ -580,7 +580,7 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
     {
-        int pupilHaarWdth       = round(mEyePropertiesVariables.pupilCircumferencePrediction / M_PI);
+        int pupilHaarWdth       = round(mEyePropertiesVariables.circumferencePrediction / M_PI);
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);
 
         mEyePropertiesVariables.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);

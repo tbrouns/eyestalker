@@ -520,7 +520,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilCircumferenceLabel  = new QLabel();
     PupilCircumferenceSlider = new SliderDouble();
     PupilCircumferenceSlider->setPrecision(1);
-    PupilCircumferenceSlider->setDoubleRange(mEyePropertiesParameters.pupilCircumferenceMin, mEyePropertiesParameters.pupilCircumferenceMax);
+    PupilCircumferenceSlider->setDoubleRange(mEyePropertiesParameters.circumferenceMin, mEyePropertiesParameters.circumferenceMax);
     PupilCircumferenceSlider->setOrientation(Qt::Horizontal);
 
     // Pupil aspect ratio
@@ -531,7 +531,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilAspectRatioLabel  = new QLabel();
     PupilAspectRatioSlider = new SliderDouble();
     PupilAspectRatioSlider->setPrecision(2);
-    PupilAspectRatioSlider->setDoubleRange(mEyePropertiesParameters.pupilAspectRatioMin, 1.0);
+    PupilAspectRatioSlider->setDoubleRange(mEyePropertiesParameters.aspectRatioMin, 1.0);
     PupilAspectRatioSlider->setOrientation(Qt::Horizontal);
 
     // Edge intensity
@@ -563,7 +563,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilCircumferenceMinLabel  = new QLabel;
     PupilCircumferenceMinSlider = new SliderDouble;
     PupilCircumferenceMinSlider->setPrecision(1);
-    PupilCircumferenceMinSlider->setDoubleRange(0, pupilCircumferenceUpperLimit);
+    PupilCircumferenceMinSlider->setDoubleRange(0, CircumferenceUpperLimit);
     PupilCircumferenceMinSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilCircumferenceMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumferenceMin(double)));   
 
@@ -573,7 +573,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilCircumferenceMaxLabel  = new QLabel;
     PupilCircumferenceMaxSlider = new SliderDouble;
     PupilCircumferenceMaxSlider->setPrecision(1);
-    PupilCircumferenceMaxSlider->setDoubleRange(0, pupilCircumferenceUpperLimit);
+    PupilCircumferenceMaxSlider->setDoubleRange(0, CircumferenceUpperLimit);
     PupilCircumferenceMaxSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilCircumferenceMaxSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumferenceMax(double)));
 
@@ -732,14 +732,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilHaarOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilHaarOffsetSlider, SIGNAL(valueChanged(int)), this, SLOT(setPupilHaarOffset(int)));   
 
-    QLabel *GlintRadiusTextBox = new QLabel;
-    GlintRadiusTextBox->setText("<b>Glint radius:</b>");
+    QLabel *GlintSizeTextBox = new QLabel;
+    GlintSizeTextBox->setText("<b>Glint size:</b>");
 
-    GlintRadiusLabel  = new QLabel;
-    GlintRadiusSlider = new QSlider;
-    GlintRadiusSlider->setRange(0, 10);
-    GlintRadiusSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(GlintRadiusSlider, SIGNAL(valueChanged(int)), this, SLOT(setGlintRadius(int)));   
+    GlintSizeLabel  = new QLabel;
+    GlintSizeSlider = new QSlider;
+    GlintSizeSlider->setRange(0, 20);
+    GlintSizeSlider->setSingleStep(2);
+    GlintSizeSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(GlintSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setGlintSize(int)));
 
     QLabel *CurvatureOffsetTextBox = new QLabel;
     CurvatureOffsetTextBox->setText("<b>Curvature offset:</b>");
@@ -993,9 +994,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     MiscellaneousParametersLayout->addWidget(PupilHaarOffsetTextBox, 0, 0);
     MiscellaneousParametersLayout->addWidget(PupilHaarOffsetSlider, 0, 1);
     MiscellaneousParametersLayout->addWidget(PupilHaarOffsetLabel, 0, 2);
-    MiscellaneousParametersLayout->addWidget(GlintRadiusTextBox, 1, 0);
-    MiscellaneousParametersLayout->addWidget(GlintRadiusSlider, 1, 1);
-    MiscellaneousParametersLayout->addWidget(GlintRadiusLabel, 1, 2);
+    MiscellaneousParametersLayout->addWidget(GlintSizeTextBox, 1, 0);
+    MiscellaneousParametersLayout->addWidget(GlintSizeSlider, 1, 1);
+    MiscellaneousParametersLayout->addWidget(GlintSizeLabel, 1, 2);
     MiscellaneousParametersLayout->addWidget(CurvatureOffsetTextBox, 2, 0);
     MiscellaneousParametersLayout->addWidget(CurvatureOffsetSlider, 2, 1);
     MiscellaneousParametersLayout->addWidget(CurvatureOffsetLabel, 2, 2);
@@ -1043,6 +1044,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ExternalLayout->addWidget(QuitButton, 0, 1);
     ExternalLayout->setColumnStretch(0, 1);
     ExternalLayout->setColumnStretch(1, 0);
+
+    // Menu bar
+
+    QAction *about = new QAction("&About EyeStalker...", this);
+
+    QMenu *file;
+    file = menuBar()->addMenu("&Help");
+    file->addAction(about);
+
+    QObject::connect(about, &QAction::triggered, this, &MainWindow::openDialogue);
 
     // Main layout
 
@@ -1205,13 +1216,13 @@ void MainWindow::pupilTracking()
             {
                 // reset variables
 
-                mEyePropertiesTemp.v.pupilAspectRatioPrediction = pupilAspectRatioIni;
-                mEyePropertiesTemp.v.pupilCircumferencePrediction = mEyePropertiesTemp.v.pupilCircumferenceAverage;
-                mEyePropertiesTemp.v.pupilRadiusPrediction = mEyePropertiesTemp.v.pupilCircumferencePrediction / (2 * M_PI);
+                mEyePropertiesTemp.v.aspectRatioPrediction = aspectRatioIni;
+                mEyePropertiesTemp.v.circumferencePrediction = mEyePropertiesTemp.v.circumferenceAverage;
+                mEyePropertiesTemp.v.radiusPrediction = mEyePropertiesTemp.v.circumferencePrediction / (2 * M_PI);
 
-                mEyePropertiesTemp.v.momentumAspectRatio = 0;
-                mEyePropertiesTemp.v.momentumCircumference = 0;
-                mEyePropertiesTemp.v.momentumRadius = 0;
+                mEyePropertiesTemp.v.aspectRatioMomentum = 0;
+                mEyePropertiesTemp.v.circumferenceMomentum = 0;
+                mEyePropertiesTemp.v.radiusMomentum = 0;
 
                 mEyePropertiesTemp.v.edgeIntensityAverage = edgeIntensityIni;
                 mEyePropertiesTemp.v.edgeIntensityPrediction = edgeIntensityIni;
@@ -1220,7 +1231,7 @@ void MainWindow::pupilTracking()
                 mEyePropertiesTemp.v.yVelocity = 0;
 
                 mEyePropertiesTemp.v.searchRadius = imgWdth;
-                mEyePropertiesTemp.v.thresholdCircumferenceChange = mEyePropertiesTemp.p.pupilCircumferenceMax;
+                mEyePropertiesTemp.v.thresholdCircumferenceChange = mEyePropertiesTemp.p.circumferenceMax;
                 mEyePropertiesTemp.v.thresholdAspectRatioChange = 1.0;
 
                 if (avgIntensity > flashThreshold)
@@ -1600,14 +1611,14 @@ void MainWindow::setParameterWidgets()
     EyeWdthROISlider->setDoubleValue(eyeAOIWdthFraction);
     EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);
 
-    PupilCircumferenceMinSlider->setDoubleValue(mEyePropertiesParameters.pupilCircumferenceMin);
-    PupilCircumferenceMinLabel ->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMin, 'f', 1));
+    PupilCircumferenceMinSlider->setDoubleValue(mEyePropertiesParameters.circumferenceMin);
+    PupilCircumferenceMinLabel ->setText(QString::number(mEyePropertiesParameters.circumferenceMin, 'f', 1));
 
-    PupilCircumferenceMaxSlider->setDoubleValue(mEyePropertiesParameters.pupilCircumferenceMax);
-    PupilCircumferenceMaxLabel ->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
+    PupilCircumferenceMaxSlider->setDoubleValue(mEyePropertiesParameters.circumferenceMax);
+    PupilCircumferenceMaxLabel ->setText(QString::number(mEyePropertiesParameters.circumferenceMax, 'f', 1));
 
-    PupilAspectRatioMinSlider->setDoubleValue(mEyePropertiesParameters.pupilAspectRatioMin);
-    PupilAspectRatioMinLabel ->setText(QString::number(mEyePropertiesParameters.pupilAspectRatioMin, 'f', 2));
+    PupilAspectRatioMinSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioMin);
+    PupilAspectRatioMinLabel ->setText(QString::number(mEyePropertiesParameters.aspectRatioMin, 'f', 2));
 
     EdgeIntensityOffsetSlider->setDoubleValue(mEyePropertiesParameters.edgeIntensityOffset);
     EdgeIntensityOffsetLabel ->setText(QString::number(mEyePropertiesParameters.edgeIntensityOffset, 'f', 1));
@@ -1643,8 +1654,8 @@ void MainWindow::setParameterWidgets()
     PupilHaarOffsetSlider->setValue(mEyePropertiesParameters.pupilOffset);
     PupilHaarOffsetLabel ->setText(QString::number(mEyePropertiesParameters.pupilOffset));
 
-    GlintRadiusSlider->setValue(mEyePropertiesParameters.glintRadius);
-    GlintRadiusLabel->setText(QString::number(mEyePropertiesParameters.glintRadius));
+    GlintSizeSlider->setValue(mEyePropertiesParameters.glintSize);
+    GlintSizeLabel->setText(QString::number(mEyePropertiesParameters.glintSize));
 
     CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
     CurvatureOffsetLabel->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
@@ -1658,11 +1669,11 @@ void MainWindow::setParameterWidgets()
 
 void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyePropertiesVariables)
 {
-    PupilCircumferenceSlider->setDoubleValue(mEyePropertiesVariables.pupilCircumferencePrediction);
-    PupilCircumferenceLabel->setText(QString::number(mEyePropertiesVariables.pupilCircumferencePrediction, 'f', 1));
+    PupilCircumferenceSlider->setDoubleValue(mEyePropertiesVariables.circumferencePrediction);
+    PupilCircumferenceLabel->setText(QString::number(mEyePropertiesVariables.circumferencePrediction, 'f', 1));
 
-    PupilAspectRatioSlider->setDoubleValue(mEyePropertiesVariables.pupilAspectRatioPrediction);
-    PupilAspectRatioLabel->setText(QString::number(mEyePropertiesVariables.pupilAspectRatioPrediction, 'f', 2));
+    PupilAspectRatioSlider->setDoubleValue(mEyePropertiesVariables.aspectRatioPrediction);
+    PupilAspectRatioLabel->setText(QString::number(mEyePropertiesVariables.aspectRatioPrediction, 'f', 2));
 
     EdgeIntensitySlider->setDoubleValue(mEyePropertiesVariables.edgeIntensityPrediction);
     EdgeIntensityLabel->setText(QString::number(mEyePropertiesVariables.edgeIntensityPrediction, 'f', 1));
@@ -1670,25 +1681,32 @@ void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyeProperties
 
 void MainWindow::resetVariables()
 {
-    mEyePropertiesVariables.pupilCircumferenceAverage    = 0.5 * (mEyePropertiesParameters.pupilCircumferenceMax + mEyePropertiesParameters.pupilCircumferenceMin);
-    mEyePropertiesVariables.pupilCircumferencePrediction = mEyePropertiesVariables.pupilCircumferenceAverage;
-    mEyePropertiesVariables.pupilAspectRatioAverage      = pupilAspectRatioIni;
-    mEyePropertiesVariables.pupilAspectRatioPrediction   = pupilAspectRatioIni;
-    mEyePropertiesVariables.edgeIntensityAverage         = edgeIntensityIni;
-    mEyePropertiesVariables.edgeIntensityPrediction      = edgeIntensityIni;
+    mEyePropertiesVariables.aspectRatioAverage    = aspectRatioIni;
+    mEyePropertiesVariables.aspectRatioMomentum   = 0;
+    mEyePropertiesVariables.aspectRatioPrediction = aspectRatioIni;
 
-    mEyePropertiesVariables.momentumCircumference = 0;
-    mEyePropertiesVariables.momentumAspectRatio   = 0;
-    mEyePropertiesVariables.momentumRadius        = 0;
+    mEyePropertiesVariables.circumferenceAverage  = 0.5 * (mEyePropertiesParameters.circumferenceMax + mEyePropertiesParameters.circumferenceMin);
+    mEyePropertiesVariables.circumferenceMomentum = 0;
+    mEyePropertiesVariables.circumferencePrediction = mEyePropertiesVariables.circumferenceAverage;
 
-    mEyePropertiesVariables.xPosExact     = 0.5 * Parameters::eyeAOIWdth;
-    mEyePropertiesVariables.yPosExact     = 0.5 * Parameters::eyeAOIHght;
-    mEyePropertiesVariables.xPosPredicted = mEyePropertiesVariables.xPosExact;
-    mEyePropertiesVariables.yPosPredicted = mEyePropertiesVariables.yPosExact;
-    mEyePropertiesVariables.xVelocity     = 0;
-    mEyePropertiesVariables.yVelocity     = 0;
+    mEyePropertiesVariables.edgeIntensityAverage    = edgeIntensityIni;
+    mEyePropertiesVariables.edgeIntensityPrediction = edgeIntensityIni;
+
+    mEyePropertiesVariables.heightPrediction = mEyePropertiesVariables.circumferencePrediction / M_PI;
+
+    mEyePropertiesVariables.radiusMomentum   = 0;
+    mEyePropertiesVariables.radiusPrediction = 0.5 * mEyePropertiesVariables.circumferencePrediction / M_PI;
 
     mEyePropertiesVariables.searchRadius = 0.5 * Parameters::eyeAOIWdth;
+
+    mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.circumferencePrediction / M_PI;
+
+    mEyePropertiesVariables.xPosExact     = 0.5 * Parameters::eyeAOIWdth;
+    mEyePropertiesVariables.xPosPredicted = mEyePropertiesVariables.xPosExact;
+    mEyePropertiesVariables.xVelocity     = 0;
+    mEyePropertiesVariables.yPosExact     = 0.5 * Parameters::eyeAOIHght;
+    mEyePropertiesVariables.yPosPredicted = mEyePropertiesVariables.yPosExact;
+    mEyePropertiesVariables.yVelocity     = 0;
 
     setVariableWidgets(mEyePropertiesVariables);
 }
@@ -1705,6 +1723,14 @@ void MainWindow::selectDirectory()
     QString directory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     DataDirectoryTextBox->setText(directory);
     dataDirectory = directory.toStdString();
+}
+
+void MainWindow::openDialogue()
+{
+    QString text = "Copyright 2016 Terence Brounce. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.";
+    ConfirmationWindow mConfirmationWindow(text, false);
+    mConfirmationWindow.setWindowTitle("About EyeStalker");
+    mConfirmationWindow.exec();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)

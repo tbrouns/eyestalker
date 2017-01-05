@@ -112,6 +112,7 @@ SOURCES += main.cpp\
     source/sliderdouble.cpp \
     source/ueyeopencv.cpp \
     source/confirmationwindow.cpp \
+    source/canny.cpp
 
 HEADERS  += \
     headers/confirmationwindow.h \
@@ -123,7 +124,8 @@ HEADERS  += \
     headers/qimageopencv.h \
     headers/sliderdouble.h \
     headers/structures.h \
-    headers/ueyeopencv.h
+    headers/ueyeopencv.h \
+    headers/canny.h
 
 RESOURCES += \
     resources/qdarkstyle/style.qrc

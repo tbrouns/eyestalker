@@ -22,12 +22,12 @@ const double minimumFitFraction = 0.50;
 const double minimumRefinementFraction = 0.05;
 const int    edgeIntensityPositionOffset = 2;
 
-const double pupilAspectRatioMinIni = 0.4;
-const double pupilAspectRatioIni    = 0.9;
+const double aspectRatioMinIni = 0.4;
+const double aspectRatioIni    = 0.9;
 
 const double edgeIntensityIni = 255;
-const double pupilCircumferenceUpperLimit = 500;
-const double pupilRadiusPredictionFactor = 0.75;
+const double CircumferenceUpperLimit = 500;
+const double radiusPredictionFactor = 0.75;
 
 const double pupilHaarReductionFactor = 0.75;
 

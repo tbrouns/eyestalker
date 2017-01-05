@@ -164,7 +164,7 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
     {
         drawHaarDetector(I, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, blue);
         drawHaarDetector(I, mEyeProperties.m.pupilHaarXPos, mEyeProperties.m.pupilHaarYPos, mEyeProperties.m.pupilHaarWdth, blue);
-        drawHaarDetector(I, mEyeProperties.m.glintHaarXPos, mEyeProperties.m.glintHaarYPos, mEyeProperties.m.glintHaarWdth, blue);
+        drawHaarDetector(I, mEyeProperties.m.glintXPos, mEyeProperties.m.glintYPos, mEyeProperties.m.glintSize, blue);
     }
 
     if (Parameters::drawFlags.edge)

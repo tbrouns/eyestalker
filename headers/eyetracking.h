@@ -22,6 +22,7 @@
 
 // Files
 
+#include "canny.h"
 #include "constants.h"
 #include "structures.h"
 

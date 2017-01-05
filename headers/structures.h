@@ -34,8 +34,8 @@
 
 struct haarProperties
 {
-    int x_pos;
-    int y_pos;
+    int xPos;
+    int yPos;
 };
 
 struct edgeProperties
@@ -78,9 +78,9 @@ struct eyePropertiesParameters
     double curvatureOffsetMin;
     double edgeIntensityOffset;
     double ellipseFitErrorMaximum;
-    double pupilCircumferenceMax;
-    double pupilCircumferenceMin;
-    double pupilAspectRatioMin;
+    double circumferenceMax;
+    double circumferenceMin;
+    double aspectRatioMin;
     double circumferenceChangeThreshold;
     double aspectRatioChangeThreshold;
     int cannyBlurLevel;
@@ -88,36 +88,42 @@ struct eyePropertiesParameters
     int cannyLowerLimit;
     int cannyUpperLimit;
     int edgeMaximumFitNumber;
-    int glintRadius;
+    int glintSize;
     int pupilOffset;
 };
 
 struct eyePropertiesVariables
 {
     bool pupilDetected;
+    double aspectRatioAverage;
+    double aspectRatioExact;
+    double aspectRatioMomentum;
+    double aspectRatioPrediction;
+    double circumferenceAverage;
+    double circumferenceExact;
+    double circumferenceMomentum;
+    double circumferencePrediction;
     double curvatureOffset;
     double edgeCurvaturePrediction;
-    double edgeIntensityPrediction;
     double edgeIntensityAverage;
-    double momentumCircumference;
-    double momentumAspectRatio;
-    double momentumRadius;
-    double pupilCircumferencePrediction;
-    double pupilCircumferenceAverage;
-    double pupilCircumferenceExact;
-    double pupilAspectRatioPrediction;
-    double pupilAspectRatioAverage;
-    double pupilAspectRatioExact;
-    double pupilRadiusPrediction;
+    double edgeIntensityPrediction;
+    double heightAverage;
+    double heightMomentum;
+    double heightPrediction;
+    double radiusMomentum;
+    double radiusPrediction;
     double searchRadius;
-    double thresholdCircumferenceChange;
     double thresholdAspectRatioChange;
-    double xPosExact;
+    double thresholdCircumferenceChange;
+    double widthAverage;
+    double widthMomentum;
+    double widthPrediction;
     double xPosAbsolute;
+    double xPosExact;
     double xPosPredicted;
     double xVelocity;
-    double yPosExact;
     double yPosAbsolute;
+    double yPosExact;
     double yPosPredicted;
     double yVelocity;
 };
@@ -127,9 +133,9 @@ struct eyePropertiesMiscellaneous
     bool errorDetected;
     cv::Mat image;
     cv::Mat imagePupil;
-    int glintHaarWdth;
-    int glintHaarXPos;
-    int glintHaarYPos;
+    int glintSize;
+    int glintXPos;
+    int glintYPos;
     int offsetPupilHaarWdth;
     int offsetPupilHaarXPos;
     int offsetPupilHaarYPos;

@@ -47,10 +47,10 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber               = settings.value("EdgeMaximumFitNumber",            3).toInt();
     mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          20).toDouble();
-    mEyePropertiesParameters.glintRadius                        = settings.value("GlintRadius",                     6).toInt();
-    mEyePropertiesParameters.pupilCircumferenceMax              = settings.value("CircumferenceMax",                320).toDouble();
-    mEyePropertiesParameters.pupilCircumferenceMin              = settings.value("CircumferenceMin",                80).toDouble();
-    mEyePropertiesParameters.pupilAspectRatioMin                = settings.value("AspectRatioMin",                  0.4).toDouble();
+    mEyePropertiesParameters.glintSize                          = settings.value("GlintSize",                       12).toInt();
+    mEyePropertiesParameters.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
+    mEyePropertiesParameters.circumferenceMin                   = settings.value("CircumferenceMin",                80).toDouble();
+    mEyePropertiesParameters.aspectRatioMin                     = settings.value("AspectRatioMin",                  0.4).toDouble();
     mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     pupilOffsetIni).toInt();
     mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
     mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
@@ -93,22 +93,22 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CannyKernelSize",                mEyePropertiesParameters.cannyKernelSize);
     settings.setValue("CannyLowerLimit",                mEyePropertiesParameters.cannyLowerLimit);
     settings.setValue("CannyUpperLimit",                mEyePropertiesParameters.cannyUpperLimit);
-    settings.setValue("CircumferenceMax",               mEyePropertiesParameters.pupilCircumferenceMax);
-    settings.setValue("CircumferenceMin",               mEyePropertiesParameters.pupilCircumferenceMin);
+    settings.setValue("CircumferenceMax",               mEyePropertiesParameters.circumferenceMax);
+    settings.setValue("CircumferenceMin",               mEyePropertiesParameters.circumferenceMin);
     settings.setValue("CurvatureOffset",                mEyePropertiesParameters.curvatureOffsetMin);
     settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
     settings.setValue("EdgeIntensityOffset",            mEyePropertiesParameters.edgeIntensityOffset);
     settings.setValue("EdgeMaximumFitNumber",           mEyePropertiesParameters.edgeMaximumFitNumber);
-    settings.setValue("trialIndexOffline",                  trialIndexOffline);
-    settings.setValue("imageTotalOffline",                 imageTotalOffline);
+    settings.setValue("trialIndexOffline",              trialIndexOffline);
+    settings.setValue("imageTotalOffline",              imageTotalOffline);
     settings.setValue("EllipseFitErrorMaximum",         mEyePropertiesParameters.ellipseFitErrorMaximum);
     settings.setValue("FlashAOIHght",                   Parameters::flashAOIHght);
     settings.setValue("FlashAOIWdth",                   Parameters::flashAOIWdth);
     settings.setValue("FlashAOIXPos",                   Parameters::flashAOIXPos);
     settings.setValue("FlashAOIYPos",                   Parameters::flashAOIYPos);
     settings.setValue("FlashThreshold",                 flashThreshold);
-    settings.setValue("AspectRatioMin",                 mEyePropertiesParameters.pupilAspectRatioMin);
-    settings.setValue("GlintRadius",                    mEyePropertiesParameters.glintRadius);
+    settings.setValue("AspectRatioMin",                 mEyePropertiesParameters.aspectRatioMin);
+    settings.setValue("GlintSize",                      mEyePropertiesParameters.glintSize);
     settings.setValue("PupilOffset",                    mEyePropertiesParameters.pupilOffset);
     settings.setValue("SaveEyeImage",                   SAVE_EYE_IMAGE);
     settings.setValue("SubjectName",                    subjectIdentifier);
@@ -196,7 +196,7 @@ void MainWindow::setPupilCircumference(double value)
 {
     if (!Parameters::ONLINE_PROCESSING)
     {
-        mEyePropertiesVariables.pupilCircumferencePrediction = value;
+        mEyePropertiesVariables.circumferencePrediction = value;
         PupilCircumferenceLabel->setText(QString::number(value, 'f', 1));
     }
 }
@@ -205,7 +205,7 @@ void MainWindow::setPupilAspectRatio(double value)
 {
     if (!Parameters::ONLINE_PROCESSING)
     {
-        mEyePropertiesVariables.pupilAspectRatioPrediction = value;
+        mEyePropertiesVariables.aspectRatioPrediction = value;
         PupilAspectRatioLabel->setText(QString::number(value, 'f', 2));
     }
 }
@@ -221,30 +221,30 @@ void MainWindow::setEdgeIntensity(double value)
 
 void MainWindow::setPupilCircumferenceMin(double value)
 {
-    if (mEyePropertiesParameters.pupilCircumferenceMax < value)
+    if (mEyePropertiesParameters.circumferenceMax < value)
     {
         PupilCircumferenceMaxSlider->setDoubleValue(value);
     }
 
-    mEyePropertiesParameters.pupilCircumferenceMin = value;
-    PupilCircumferenceMinLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMin, 'f', 1));
+    mEyePropertiesParameters.circumferenceMin = value;
+    PupilCircumferenceMinLabel->setText(QString::number(mEyePropertiesParameters.circumferenceMin, 'f', 1));
 }
 
 void MainWindow::setPupilCircumferenceMax(double value)
 {
-    if (mEyePropertiesParameters.pupilCircumferenceMin > value)
+    if (mEyePropertiesParameters.circumferenceMin > value)
     {
         PupilCircumferenceMinSlider->setDoubleValue(value);
     }
 
-    mEyePropertiesParameters.pupilCircumferenceMax = value;
-    PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.pupilCircumferenceMax, 'f', 1));
+    mEyePropertiesParameters.circumferenceMax = value;
+    PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.circumferenceMax, 'f', 1));
 }
 
 void MainWindow::setPupilAspectRatioMin(double value)
 {
-    mEyePropertiesParameters.pupilAspectRatioMin = value;
-    PupilAspectRatioSlider->setDoubleMinimum(mEyePropertiesParameters.pupilAspectRatioMin);
+    mEyePropertiesParameters.aspectRatioMin = value;
+    PupilAspectRatioSlider->setDoubleMinimum(mEyePropertiesParameters.aspectRatioMin);
     PupilAspectRatioMinLabel->setText(QString::number(value, 'f', 2));
 }
 
@@ -323,10 +323,10 @@ void MainWindow::setPupilHaarOffset(int value)
     PupilHaarOffsetLabel->setText(QString::number(value));
 }
 
-void MainWindow::setGlintRadius(int value)
+void MainWindow::setGlintSize(int value)
 {
-    mEyePropertiesParameters.glintRadius = value;
-    GlintRadiusLabel->setText(QString::number(value));
+    mEyePropertiesParameters.glintSize = value;
+    GlintSizeLabel->setText(QString::number(value));
 }
 
 void MainWindow::setCurvatureOffset(double value)

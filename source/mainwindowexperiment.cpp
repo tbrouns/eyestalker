@@ -36,7 +36,7 @@ void MainWindow::startTrialRecording()
         absoluteTime = startTime;
         relativeTime = 0;
 
-        trialStartTime = getCurrentTime();
+        trialStartTime  = getCurrentTime();
         trialFrameTotal = ceil((trialTimeLength * cameraFrameRate) / 1000);
 
         trialTimeLength = (TrialTimeLengthLineEdit->text()).toInt();
@@ -116,7 +116,8 @@ void MainWindow::saveTrialData()
 
         std::stringstream filename;
         filename << dataDirectory
-                 << "/" << dataFilename;
+                 << "/"
+                 << dataFilename;
 
         std::ofstream file;
 
@@ -136,7 +137,7 @@ void MainWindow::saveTrialData()
         file << std::fixed;
         file << std::setprecision(3);
 
-        writeToFile(file, eyeDetectionFlags, timeStamps, ";");
+        writeToFile(file, eyeDetectionFlags, timeStamps,    ";");
         writeToFile(file, eyeDetectionFlags, eyeXPositions, ";");
         writeToFile(file, eyeDetectionFlags, eyeYPositions, ";");
 
@@ -148,9 +149,12 @@ void MainWindow::saveTrialData()
 
         std::stringstream saveFileNameSS;
         saveFileNameSS << dataDirectory
-                       << "/" << currentDate
-                       << "/" << (NameInputLineEdit->text()).toStdString()
-                       << "/trial_" << trialIndex;
+                       << "/"
+                       << currentDate
+                       << "/"
+                       << (NameInputLineEdit->text()).toStdString()
+                       << "/trial_"
+                       << trialIndex;
 
         dataDirectoryOffline = QString::fromStdString(saveFileNameSS.str());
 
@@ -164,8 +168,10 @@ void MainWindow::saveTrialData()
         // save time stamps
 
         std::stringstream filename;
-        filename << dataDirectory << "/"
-                 << currentDate << "/"
+        filename << dataDirectory
+                 << "/"
+                 << currentDate
+                 << "/"
                  << "timestamps.dat";
 
         std::ofstream file;

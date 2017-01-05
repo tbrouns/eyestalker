@@ -64,6 +64,7 @@
 
 // QT
 
+#include <QAction>
 #include <QApplication>
 #include <QCheckBox>
 #include <QColor>
@@ -77,6 +78,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
@@ -196,7 +199,7 @@ private:
     QLabel *EllipseFitErrorMaximumLabel;
     QLabel *FlashStandbyLabel;
     QLabel *FlashThresholdLabel;
-    QLabel *GlintRadiusLabel;
+    QLabel *GlintSizeLabel;
     QLabel *PupilCircumferenceLabel;
     QLabel *PupilCircumferenceMinLabel;
     QLabel *PupilCircumferenceMaxLabel;
@@ -220,7 +223,7 @@ private:
     QSlider *ExperimentEyeVideoSlider;
     QSlider *FlashThresholdSlider;
     QSlider *FlashStandbySlider;
-    QSlider *GlintRadiusSlider;
+    QSlider *GlintSizeSlider;
     QSlider *PupilHaarOffsetSlider;
     QSlider *OfflineImageSlider;
     QSlider *OfflineTrialSlider;
@@ -318,6 +321,7 @@ private slots:
     void detectPupilOneFrame();
     void loadOfflineSession();
     void nextOfflineImage();
+    void openDialogue();
     void onQuitButtonClicked();
     void onFlashStandbySlider(int);
     void prevOfflineImage();
@@ -361,7 +365,7 @@ private slots:
     void setFlashAOIWdth(int);
     void setFlashAOIHght(int);
     void setFlashThreshold(int);
-    void setGlintRadius(int value);
+    void setGlintSize(int value);
     void setAOILeftEye();
     void setPupilCircumference(double);
     void setPupilCircumferenceMin(double value);
