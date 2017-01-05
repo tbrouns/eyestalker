@@ -737,8 +737,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     GlintSizeLabel  = new QLabel;
     GlintSizeSlider = new QSlider;
-    GlintSizeSlider->setRange(0, 20);
-    GlintSizeSlider->setSingleStep(2);
+    GlintSizeSlider->setRange(0, 10);
     GlintSizeSlider->setOrientation(Qt::Horizontal);
     QObject::connect(GlintSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setGlintSize(int)));
 
@@ -1727,7 +1726,7 @@ void MainWindow::selectDirectory()
 
 void MainWindow::openDialogue()
 {
-    QString text = "Copyright 2016 Terence Brounce. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.";
+    QString text = "Copyright 2016 Terence Brouns. \n \n This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; \n without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. \n See the GNU General Public License for more details.";
     ConfirmationWindow mConfirmationWindow(text, false);
     mConfirmationWindow.setWindowTitle("About EyeStalker");
     mConfirmationWindow.exec();

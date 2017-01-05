@@ -325,8 +325,9 @@ void MainWindow::setPupilHaarOffset(int value)
 
 void MainWindow::setGlintSize(int value)
 {
-    mEyePropertiesParameters.glintSize = value;
-    GlintSizeLabel->setText(QString::number(value));
+    int newValue = 2 * value;
+    mEyePropertiesParameters.glintSize = newValue;
+    GlintSizeLabel->setText(QString::number(newValue));
 }
 
 void MainWindow::setCurvatureOffset(double value)

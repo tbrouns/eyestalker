@@ -399,20 +399,6 @@ std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haar
     return binaryImageVector;
 }
 
-std::vector<char> removeGlintEdges(std::vector<char>& binaryImageVector, int haarWidth, int glintX, int glintY, int glintSize)
-{
-    for (int y = glintY; y < glintY + glintSize; y++)
-    {
-        for (int x = glintX; x < glintX + glintSize; x++)
-        {
-            int i = haarWidth * y + x;
-            binaryImageVector[i] = 0;
-        }
-    }
-
-    return binaryImageVector;
-}
-
 std::vector<int> getEdgeIndices(const std::vector<char>& binaryImageVector)
 {
     int haarSize = binaryImageVector.size();
@@ -1360,7 +1346,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         std::vector<unsigned int> integralImage = calculateIntImg(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght);
 
-        int glintSize = 2 * mEyeProperties.p.glintSize;
+        int glintSize = mEyeProperties.p.glintSize;
 
         haarProperties glintHaarProperties = detectGlint(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght, glintSize);
 
@@ -1403,11 +1389,12 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         } else                  { imagePupilGrayBlurred = imagePupilGray; }
 
         cv::Mat imageCannyEdges;
-        cv::Canny(imagePupilGrayBlurred, imageCannyEdges, mEyeProperties.p.cannyLowerLimit, mEyeProperties.p.cannyUpperLimit, mEyeProperties.p.cannyKernelSize);
+        imageCannyEdges = cannyEdgeDetection(imagePupilGrayBlurred, mEyeProperties.p.cannyLowerLimit, mEyeProperties.p.cannyUpperLimit, mEyeProperties.p.cannyKernelSize, false);
 
-        std::vector<char> cannyEdges = cannyConversion(imageCannyEdges, offsetPupilHaarWdth);
+        std::vector<char> cannyEdges;
+        cannyEdges = cannyConversion(imageCannyEdges, offsetPupilHaarWdth);
         cannyEdges = sharpenEdges(cannyEdges, offsetPupilHaarWdth);
-        cannyEdges = removeGlintEdges(cannyEdges, offsetPupilHaarWdth, glintXPos, glintYPos, glintSize);
+
         std::vector<int> cannyEdgeIndices = getEdgeIndices(cannyEdges);
 
         // Edge thresholding

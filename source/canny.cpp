@@ -42,11 +42,12 @@
 
 #include "headers/canny.h"
 
-void cannyEdgeDetection(cv::Mat src, cv::Mat dst, double low_thresh, double high_thresh, int aperture_size, bool L2gradient)
+cv::Mat cannyEdgeDetection(cv::Mat src, double low_thresh, double high_thresh, int aperture_size, bool L2gradient)
 {
     const int type = src.type(), depth = CV_MAT_DEPTH(type), cn = CV_MAT_CN(type);
     const cv::Size size = src.size();
 
+    cv::Mat dst;
     CV_Assert( depth == CV_8U );
     dst.create(size, CV_8U);
 
@@ -261,4 +262,6 @@ __ocv_canny_push:
         for (int j = 0; j < src.cols; j++)
             pdst[j] = (uchar)-(pmap[j] >> 1);
     }
+
+    return dst;
 }
