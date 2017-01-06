@@ -62,8 +62,8 @@ void MainWindow::countNumTrials()
         trialTotalOffline++;
     }
 
-    OfflineTrialSlider ->setMaximum(trialTotalOffline);
-    OfflineTrialSpinBox->setMaximum(trialTotalOffline);
+    OfflineTrialSlider ->setMaximum(trialTotalOffline - 1);
+    OfflineTrialSpinBox->setMaximum(trialTotalOffline - 1);
 }
 
 void MainWindow::countNumImages()
@@ -417,7 +417,7 @@ void MainWindow::detectPupilAllTrials()
 
         for (int i = trialIndexOffline; i < trialTotalOffline && PROCESSING_ALL_TRIALS; i++)
         {
-            OfflineTrialSlider->setValue(i + 1);
+            OfflineTrialSlider->setValue(i);
             detectPupilAllFrames();
         }
     }
@@ -449,7 +449,7 @@ void MainWindow::offlineSaveExperimentData()
 
         // write data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]             << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosExact     << delimiter; }
@@ -458,11 +458,11 @@ void MainWindow::offlineSaveExperimentData()
 
         // additional data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact   << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected           << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction     << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction     << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact  << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact    << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected       << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction << delimiter; }
 
         file.close();
     }
@@ -537,7 +537,7 @@ void MainWindow::offlineCombineExperimentData()
 {
     for (int iTrial = 0; iTrial < trialTotalOffline; iTrial++)
     {
-        OfflineTrialSlider->setValue(iTrial + 1);
+        OfflineTrialSlider->setValue(iTrial);
 
         std::stringstream fileNameRead;
         fileNameRead << dataDirectoryOffline.toStdString()

@@ -300,13 +300,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineTrialTitle->setText("<b>Offline mode - Trial:</b>");
 
     OfflineTrialSpinBox = new QSpinBox;
-    OfflineTrialSpinBox->setValue(1);
-    OfflineTrialSpinBox->setMinimum(1);
+    OfflineTrialSpinBox->setValue(0);
     OfflineTrialSpinBox->setAlignment(Qt::AlignRight);
 
     OfflineTrialSlider = new QSlider;
-    OfflineTrialSlider->setValue(1);
-    OfflineTrialSlider->setMinimum(1);
+    OfflineTrialSlider->setValue(0);
     OfflineTrialSlider->setOrientation(Qt::Horizontal);
 
     QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(changeOfflineSession(int)));
@@ -1586,10 +1584,8 @@ void MainWindow::setOfflineMode(int state)
         OfflineModeMainWidget  ->setVisible(false);
 
         Parameters::ONLINE_PROCESSING = true;
-        Parameters::CAMERA_RUNNING = true;
-        Parameters::CAMERA_READY = true;
-
-        emit startTimer(round(1000 / guiUpdateFrequency));
+        Parameters::CAMERA_RUNNING    = true;
+        Parameters::CAMERA_READY      = true;
 
         if (mUEyeOpencvCam.startVideoCapture())
         {
@@ -1603,6 +1599,8 @@ void MainWindow::setOfflineMode(int state)
             std::thread findCameraThread(&MainWindow::findCamera, this);
             findCameraThread.detach();
         }
+
+        emit startTimer(round(1000 / guiUpdateFrequency));
     }
     else
     {

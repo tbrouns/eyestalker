@@ -155,7 +155,8 @@ void MainWindow::onFlashStandbySlider(int val)
 
             std::stringstream filename;
             filename << dataDirectory
-                     << "/" << dataFilename;
+                     << "/"
+                     << dataFilename;
 
             if (boost::filesystem::exists(filename.str()))
             {
