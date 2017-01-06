@@ -42,14 +42,14 @@ LIBS += `pkg-config --cflags --libs opencv`
 INCLUDEPATH += "/usr/local/include/eigen3"
 
 # Boost
-LIBS += -L$$PWD/../../../../usr/local/lib/ -lboost_filesystem
+LIBS += -L$$PWD/../../../../usr/local/lib/ -lboost_filesystem -lboost_system
 INCLUDEPATH += $$PWD/../../../../usr/local/include
 DEPENDPATH += $$PWD/../../../../usr/local/include
 
 # Qwt
-LIBS += -L$$PWD/../../../../usr/local/qwt-6.1.2/lib/ -lqwt
-INCLUDEPATH += $$PWD/../../../../usr/local/qwt-6.1.2/include
-DEPENDPATH += $$PWD/../../../../usr/local/qwt-6.1.2/include
+LIBS += -L$$PWD/../../../../usr/local/qwt-6.1.3/lib/ -lqwt
+INCLUDEPATH += $$PWD/../../../../usr/local/qwt-6.1.3/include
+DEPENDPATH += $$PWD/../../../../usr/local/qwt-6.1.3/include
 
 # UEye
 LIBS += -L$$PWD/../../../../../usr/lib/ -lueye_api

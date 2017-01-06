@@ -278,8 +278,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton *CombinePupilDataButton = new QPushButton("Combine");
     QObject::connect(CombinePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(offlineCombineExperimentData()));
 
-    EyeTrackingOfflineWidget = new QWidget;
-    QHBoxLayout *EyeTrackingOfflineLayout = new QHBoxLayout(EyeTrackingOfflineWidget);
+    OfflineModeMainWidget = new QWidget;
+    QHBoxLayout *EyeTrackingOfflineLayout = new QHBoxLayout(OfflineModeMainWidget);
     EyeTrackingOfflineLayout->addStretch();
     EyeTrackingOfflineLayout->addWidget(OfflineLoadSessionButton);
     EyeTrackingOfflineLayout->addWidget(SavePupilDataButton);
@@ -294,7 +294,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionAllTrialsButton);
     EyeTrackingOfflineLayout->addStretch();
 
-    EyeTrackingOfflineWidget->setVisible(false);
+    OfflineModeMainWidget->setVisible(false);
 
     QLabel* OfflineTrialTitle = new QLabel;
     OfflineTrialTitle->setText("<b>Offline mode - Trial:</b>");
@@ -309,12 +309,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineTrialSlider->setMinimum(1);
     OfflineTrialSlider->setOrientation(Qt::Horizontal);
 
-    QObject::connect(OfflineTrialSlider, SIGNAL(valueChanged(int)),this,SLOT(changeOfflineSession(int)));
+    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(changeOfflineSession(int)));
 
-    QObject::connect(OfflineTrialSlider, SIGNAL(valueChanged(int)),OfflineTrialSpinBox,SLOT(setValue(int)));
-    QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)),OfflineTrialSlider,SLOT(setValue(int)));
+    QObject::connect( OfflineTrialSlider, SIGNAL(valueChanged(int)), OfflineTrialSpinBox, SLOT(setValue(int)));
+    QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)),  OfflineTrialSlider, SLOT(setValue(int)));
 
-    QGridLayout *OfflineSessionTitleLayout = new QGridLayout;
+    OfflineModeHeaderWidget = new QWidget;
+    QGridLayout *OfflineSessionTitleLayout = new QGridLayout(OfflineModeHeaderWidget);
     OfflineSessionTitleLayout->addWidget(OfflineTrialTitle, 0, 1);
     OfflineSessionTitleLayout->addWidget(OfflineTrialSpinBox, 0, 2);
     OfflineSessionTitleLayout->addWidget(OfflineTrialSlider, 0, 3);
@@ -324,11 +325,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineSessionTitleLayout->setColumnStretch(3, 3);
     OfflineSessionTitleLayout->setColumnStretch(4, 1);
 
+    OfflineModeHeaderWidget->setVisible(false);
+
     QWidget *CameraSettings = new QWidget;
     QGridLayout* CameraOutputLayout = new QGridLayout(CameraSettings);
 
-    CameraOutputLayout->addLayout(OfflineSessionTitleLayout, 0, 2, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(EyeTrackingOfflineWidget, 5, 1, 1, 4, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(OfflineModeHeaderWidget, 0, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(OfflineModeMainWidget, 5, 1, 1, 4, Qt::AlignCenter);
 
     CameraOutputLayout->addWidget(CamEyeAOIXPosSlider, 0, 2);
     CameraOutputLayout->addWidget(CamEyeAOIYPosSlider, 1, 1);
@@ -1579,11 +1582,14 @@ void MainWindow::setOfflineMode(int state)
         CamEyeAOIXPosSlider->setVisible(true);
         CamEyeAOIYPosSlider->setVisible(true);
 
-        EyeTrackingOfflineWidget->setVisible(false);
+        OfflineModeHeaderWidget->setVisible(false);
+        OfflineModeMainWidget  ->setVisible(false);
 
         Parameters::ONLINE_PROCESSING = true;
         Parameters::CAMERA_RUNNING = true;
         Parameters::CAMERA_READY = true;
+
+        emit startTimer(round(1000 / guiUpdateFrequency));
 
         if (mUEyeOpencvCam.startVideoCapture())
         {
@@ -1591,7 +1597,6 @@ void MainWindow::setOfflineMode(int state)
             pupilTrackingThread.detach();
 
             getCameraParameters();
-            emit startTimer(round(1000 / guiUpdateFrequency));
         }
         else
         {

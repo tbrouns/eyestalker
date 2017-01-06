@@ -36,7 +36,8 @@ void MainWindow::startOfflineSession()
     CamEyeAOIXPosSlider->setVisible(false);
     CamEyeAOIYPosSlider->setVisible(false);
 
-    EyeTrackingOfflineWidget->setVisible(true);
+    OfflineModeMainWidget  ->setVisible(true);
+    OfflineModeHeaderWidget->setVisible(true);
 
     CamQImage->clearImage();
     EyeQImage->clearImage();

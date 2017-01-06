@@ -237,7 +237,8 @@ private:
     QTabWidget *EyeTrackingParameterTabWidget;
     QTimer *UpdateCameraImageTimer;
     QWidget *CameraParametersWidget;
-    QWidget *EyeTrackingOfflineWidget;
+    QWidget *OfflineModeMainWidget;
+    QWidget *OfflineModeHeaderWidget;
     SliderDouble *AlphaMiscellaneousSlider;
     SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaAverageSlider;
