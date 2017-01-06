@@ -304,14 +304,8 @@ std::vector<char> cannyConversion(const cv::Mat& img, int haarWidth)
     
     for (int i = 0; i < haarSize; i++)
     {
-        if (ptr_img[i] == 255)
-        {
-            binaryImageVectorRaw[i] = 1;
-        }
-        else
-        {
-            binaryImageVectorRaw[i] = 0;
-        }
+        if (ptr_img[i] == 255) { binaryImageVectorRaw[i] = 1; }
+        else                   { binaryImageVectorRaw[i] = 0; }
     }
     
     return binaryImageVectorRaw;
