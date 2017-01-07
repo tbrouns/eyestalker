@@ -1307,8 +1307,8 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     int searchWdth = searchEndX - searchStartX + 1;
     int searchHght = searchEndY - searchStartY + 1;
     
-    int pupilHaarWdth = mEyeProperties.v.widthPrediction;
-    int pupilHaarHght = mEyeProperties.v.heightPrediction;
+    int pupilHaarWdth = round(pupilHaarReductionFactor * mEyeProperties.v.widthPrediction);
+    int pupilHaarHght = round(pupilHaarReductionFactor * mEyeProperties.v.heightPrediction);
 
     int offsetPupilHaarXPos = 0;
     int offsetPupilHaarYPos = 0;
@@ -1384,6 +1384,10 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         cv::Mat imageCannyEdges;
         imageCannyEdges = cannyEdgeDetection(imagePupilGrayBlurred, mEyeProperties.p.cannyLowerLimit, mEyeProperties.p.cannyUpperLimit, mEyeProperties.p.cannyKernelSize, false);
+
+        offsetPupilHaarXPos = offsetPupilHaarXPos + 2;
+        offsetPupilHaarYPos = offsetPupilHaarYPos + 2;
+        offsetPupilHaarWdth = offsetPupilHaarWdth - 4;
 
         std::vector<char> cannyEdges;
         cannyEdges = cannyConversion(imageCannyEdges, offsetPupilHaarWdth);

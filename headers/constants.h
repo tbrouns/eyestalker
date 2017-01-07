@@ -16,6 +16,13 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#ifdef __linux__
+#else
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#endif
+
 const int    curvatureWindowLength = 10; // window length for curvature
 const double edgeCollectionFraction = 0.40;
 const double minimumFitFraction = 0.50;

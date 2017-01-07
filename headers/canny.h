@@ -5,6 +5,11 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include "constants.h"
+
+#include <stdio.h>
+#include <iostream>
+
 cv::Mat cannyEdgeDetection(cv::Mat src, double low_thresh, double high_thresh, int aperture_size, bool L2gradient);
 
 #endif // CANNY

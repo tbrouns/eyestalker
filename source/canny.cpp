@@ -1,3 +1,133 @@
+//  Copyright (C) 2016  Terence Brouns
+
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+#include "headers/canny.h"
+
+void radialGradient(cv::Mat src, cv::Mat dstX, cv::Mat dstY, int aperture_size)
+{
+    int kernelPerimeter = 8; // perimeter length of kernel
+    double a = 12.0;
+    double b =  3.0;
+
+    std::vector<int> dX(kernelPerimeter);
+    dX[0] =  1;
+    dX[1] =  1;
+    dX[2] =  0;
+    dX[3] = -1;
+    dX[4] = -1;
+    dX[5] = -1;
+    dX[6] =  0;
+    dX[7] =  1;
+
+    std::vector<int> dY(kernelPerimeter);
+    dY[0] =  0;
+    dY[1] = -1;
+    dY[2] = -1;
+    dY[3] = -1;
+    dY[4] =  0;
+    dY[5] =  1;
+    dY[6] =  1;
+    dY[7] =  1;
+
+    std::vector<double> wX(kernelPerimeter);
+    wX[0] = 1.0;
+    wX[1] = 0.5;
+    wX[2] = 0.0;
+    wX[3] = 0.5;
+    wX[4] = 1.0;
+    wX[5] = 0.5;
+    wX[6] = 0.0;
+    wX[7] = 0.5;
+
+    std::vector<double> wY(kernelPerimeter);
+    wY[0] = 0.0;
+    wY[1] = 0.5;
+    wY[2] = 1.0;
+    wY[3] = 0.5;
+    wY[4] = 0.0;
+    wY[5] = 0.5;
+    wY[6] = 1.0;
+    wY[7] = 0.5;
+
+    uchar *ptr = src.data;
+    int width  = src.cols;
+    int height = src.rows;
+
+    int borderSize = (aperture_size - 1) / 2;
+
+    int xCentre = 0.5 * width;
+    int yCentre = 0.5 * height;
+
+    for (int y = borderSize; y < height - borderSize; y++)
+    {
+        for (int x = borderSize; x < width - borderSize; x++)
+        {
+            double dx = x - xCentre;
+            double dy = yCentre - y;
+
+            double norm = sqrt(pow(dx,2) + pow(dy,2));
+            dx = dx / norm;
+            dy = dy / norm;
+
+            double theta;
+            if (dx != 0 && dy != 0)
+            {
+                theta = std::abs(atan(dy/dx));
+                if      (dx > 0 && dy > 0) { theta = theta; }
+                else if (dx > 0 && dy < 0) { theta = 2 * M_PI - theta; }
+                else if (dx < 0 && dy > 0) { theta = M_PI - theta; }
+                else if (dx < 0 && dy < 0) { theta = M_PI + theta; }
+            }
+            else if (dx == 0 && dy != 0)
+            {
+                if (dy > 0) { theta = 0.5 * M_PI; }
+                else        { theta = 1.5 * M_PI; }
+            }
+            else if (dx != 0 && dy == 0)
+            {
+                if (dx > 0) { theta = 0;    }
+                else        { theta = M_PI; }
+            }
+            else { theta = 0.5 * M_PI; }   // arbitrary choice
+
+            double alpha = theta * kernelPerimeter / (2 * M_PI);
+            double valX = 0;
+            double valY = 0;
+
+            for (int i = 0; i < kernelPerimeter; i++)
+            {
+                double dpos = std::abs(i - alpha);
+                if (dpos >  kernelPerimeter * 0.5) { dpos = kernelPerimeter - dpos; }
+                double dneg = 0.5 * kernelPerimeter - dpos;
+
+                double kernelVal = a * (exp(- pow(dpos, 2) / b) - exp(- pow(dneg, 2) / b));
+
+                // Do convolution
+                int iPixel = width * (y + dY[i] * borderSize) + (x + dX[i] * borderSize);
+                double  pixelIntensity = ptr[iPixel];
+                valX += pixelIntensity * wX[i] * kernelVal;
+                valY += pixelIntensity * wY[i] * kernelVal;
+            }
+
+            dstX.at<short>(y, x) = round(valX);
+            dstY.at<short>(y, x) = round(valY);
+        }
+    }
+}
+
+
 /*M///////////////////////////////////////////////////////////////////////////////////////
 //
 //  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
@@ -40,16 +170,9 @@
 //
 //M*/
 
-#include "headers/canny.h"
-
 cv::Mat cannyEdgeDetection(cv::Mat src, double low_thresh, double high_thresh, int aperture_size, bool L2gradient)
 {
     const int type = src.type(), depth = CV_MAT_DEPTH(type), cn = CV_MAT_CN(type);
-    const cv::Size size = src.size();
-
-    cv::Mat dst;
-    CV_Assert( depth == CV_8U );
-    dst.create(size, CV_8U);
 
     if ((aperture_size & 1) == 0 || (aperture_size != -1 && (aperture_size < 3 || aperture_size > 7)))
         CV_Error(CV_StsBadFlag, "Aperture size should be odd");
@@ -57,15 +180,37 @@ cv::Mat cannyEdgeDetection(cv::Mat src, double low_thresh, double high_thresh, i
     if (low_thresh > high_thresh)
         std::swap(low_thresh, high_thresh);
 
+    int borderSize = (aperture_size - 1) / 2;
+
     cv::Mat dx(src.rows, src.cols, CV_16SC(cn));
     cv::Mat dy(src.rows, src.cols, CV_16SC(cn));
+    radialGradient(src, dx, dy, aperture_size);
 
-    cv::Sobel(src, dx, CV_16S, 1, 0, aperture_size, 1, 0, cv::BORDER_REPLICATE);
-    cv::Sobel(src, dy, CV_16S, 0, 1, aperture_size, 1, 0, cv::BORDER_REPLICATE);
+//    cv::Mat dx(src.rows, src.cols, CV_16SC(cn));
+//    cv::Mat dy(src.rows, src.cols, CV_16SC(cn));
+//    cv::Sobel(src, dx, CV_16S, 1, 0, aperture_size, 1, 0, cv::BORDER_REPLICATE);
+//    cv::Sobel(src, dy, CV_16S, 0, 1, aperture_size, 1, 0, cv::BORDER_REPLICATE);
+
+    cv::Rect  cropAOI(borderSize, borderSize, src.rows - 2 * borderSize, src.cols - 2 * borderSize);
+    dx  =  dx(cropAOI);
+    dy  =  dy(cropAOI);
+    src = src(cropAOI);
+
+    const cv::Size size = src.size();
+
+    cv::Mat dst;
+    CV_Assert( depth == CV_8U );
+    dst.create(size, CV_8U);
+
+    cv::imwrite( "G:/Media/Pictures/eyes/dx.jpg",  dx);
+    cv::imwrite( "G:/Media/Pictures/eyes/dy.jpg",  dy);
+//    cv::imwrite( "G:/Media/Pictures/eyes/dx2.jpg", dx2);
+//    cv::imwrite( "G:/Media/Pictures/eyes/dy2.jpg", dy2);
+    cv::imwrite( "G:/Media/Pictures/eyes/src.jpg", src);
 
     if (L2gradient)
     {
-         low_thresh = std::min(32767.0,  low_thresh);
+        low_thresh  = std::min(32767.0,  low_thresh);
         high_thresh = std::min(32767.0, high_thresh);
 
         if ( low_thresh > 0)  low_thresh *=  low_thresh;
@@ -104,8 +249,8 @@ cv::Mat cannyEdgeDetection(cv::Mat src, double low_thresh, double high_thresh, i
         3   2   1
     */
 
-    #define CANNY_PUSH(d)    *(d) = uchar(2), *stack_top++ = (d)
-    #define CANNY_POP(d)      (d) = *--stack_top
+#define CANNY_PUSH(d)    *(d) = uchar(2), *stack_top++ = (d)
+#define CANNY_POP(d)      (d) = *--stack_top
 
     // calculate magnitude and angle of gradient, perform non-maxima suppression.
     // fill the map with one of the following values:
@@ -177,7 +322,7 @@ cv::Mat cannyEdgeDetection(cv::Mat src, double low_thresh, double high_thresh, i
         int prev_flag = 0;
         for (int j = 0; j < src.cols; j++)
         {
-            #define CANNY_SHIFT 15
+#define CANNY_SHIFT 15
             const int TG22 = (int)(0.4142135623730950488016887242097*(1<<CANNY_SHIFT) + 0.5);
 
             int m = _mag[j];
