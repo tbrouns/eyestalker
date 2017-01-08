@@ -1790,11 +1790,14 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         // Grab pupil image
 
-        int radius = round(pupilImageFactor * mEllipseProperties.radius);
-        int xPos = mEyePropertiesNew.v.xPosExact - radius;
-        int yPos = mEyePropertiesNew.v.yPosExact - radius;
-        int wdth = 2 * radius;
-        int hght = wdth;
+        int wdth = mEllipseProperties.width;
+        int hght = mEllipseProperties.height;
+
+        int xoffset = round(0.5 * pupilImageFactor * wdth);
+        int yoffset = round(0.5 * pupilImageFactor * hght);
+
+        int xPos = mEyePropertiesNew.v.xPosExact - xoffset;
+        int yPos = mEyePropertiesNew.v.yPosExact - yoffset;
 
         if (xPos < 0) { xPos = 0; }
         if (yPos < 0) { yPos = 0; }

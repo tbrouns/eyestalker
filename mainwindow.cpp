@@ -609,21 +609,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CannyEdgeTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *CannyThresholdLowTextBox = new QLabel;
-    CannyThresholdLowTextBox->setText("<b>Lower limit:</b>");
+    CannyThresholdLowTextBox->setText("<b>Low threshold:</b>");
 
     CannyThresholdLowLabel  = new QLabel;
     CannyThresholdLowSlider = new QSlider;
-    CannyThresholdLowSlider->setRange(1, mEyePropertiesParameters.cannyThresholdHigh);
+    CannyThresholdLowSlider->setRange(0, 300);
     CannyThresholdLowSlider->setOrientation(Qt::Horizontal);
     CannyThresholdLowSlider->setSingleStep(1);
     QObject::connect(CannyThresholdLowSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdLow(int)));
 
     QLabel *CannyThresholdHighTextBox = new QLabel;
-    CannyThresholdHighTextBox->setText("<b>Upper limit:</b>");
+    CannyThresholdHighTextBox->setText("<b>High threshold:</b>");
 
     CannyThresholdHighLabel  = new QLabel;
     CannyThresholdHighSlider = new QSlider;
-    CannyThresholdHighSlider->setRange(mEyePropertiesParameters.cannyThresholdLow, 4 * mEyePropertiesParameters.cannyThresholdLow);
+    CannyThresholdHighSlider->setRange(0, 300);
     CannyThresholdHighSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CannyThresholdHighSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdHigh(int)));
 

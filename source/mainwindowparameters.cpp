@@ -42,15 +42,15 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
     mEyePropertiesParameters.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  4).toInt();
     mEyePropertiesParameters.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
-    mEyePropertiesParameters.cannyThresholdLow                    = settings.value("CannyThresholdLow",                 300).toInt();
-    mEyePropertiesParameters.cannyThresholdHigh                    = settings.value("CannyThresholdHigh",                 600).toInt();
+    mEyePropertiesParameters.cannyThresholdLow                  = settings.value("CannyThresholdLow",               75).toInt();
+    mEyePropertiesParameters.cannyThresholdHigh                 = settings.value("CannyThresholdHigh",              150).toInt();
     mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
     mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber               = settings.value("EdgeMaximumFitNumber",            3).toInt();
     mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          20).toDouble();
     mEyePropertiesParameters.glintSize                          = settings.value("GlintSize",                       12).toInt();
     mEyePropertiesParameters.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
-    mEyePropertiesParameters.circumferenceMin                   = settings.value("CircumferenceMin",                80).toDouble();
+    mEyePropertiesParameters.circumferenceMin                   = settings.value("CircumferenceMin",                60).toDouble();
     mEyePropertiesParameters.aspectRatioMin                     = settings.value("AspectRatioMin",                  0.4).toDouble();
     mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     pupilOffsetIni).toInt();
     mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
@@ -65,9 +65,6 @@ void MainWindow::loadSettings(QString fileName)
     subjectIdentifier                                           = settings.value("SubjectIdentifier",               "").toString();
     trialIndex                                                  = settings.value("TrialIndex",                      trialIndex).toInt();
     trialTimeLength                                             = settings.value("TrialTimeLength",                 trialTimeLength).toInt();
-
-    if (mEyePropertiesParameters.pupilOffset < pupilOffsetMin) { mEyePropertiesParameters.pupilOffset = pupilOffsetIni; } // temporary solution
-
 }
 
 void MainWindow::saveSettings(QString fileName)
@@ -259,16 +256,25 @@ void MainWindow::setEdgeIntensityOffset(double value)
 
 void MainWindow::setCannyThresholdLow(int value)
 {
+    if (value > mEyePropertiesParameters.cannyThresholdHigh)
+    {
+        CannyThresholdHighSlider->setValue(value);
+    }
+
     mEyePropertiesParameters.cannyThresholdLow = value;
     CannyThresholdLowLabel->setText(QString::number(value));
-    CannyThresholdHighSlider->setRange(value, 4 * value);
+
 }
 
 void MainWindow::setCannyThresholdHigh(int value)
 {
+    if (value < mEyePropertiesParameters.cannyThresholdLow)
+    {
+        CannyThresholdLowSlider->setValue(value);
+    }
+
     mEyePropertiesParameters.cannyThresholdHigh = value;
     CannyThresholdHighLabel->setText(QString::number(value));
-    CannyThresholdLowSlider->setMaximum(value);
 }
 
 void MainWindow::setCannyKernelSize(int value)

@@ -13,7 +13,6 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-
 #include "headers/mainwindow.h"
 
 #include <opencv2/core/core.hpp>
@@ -36,17 +35,12 @@ int main(int argc, char *argv[])
     QString styleSheetLocation = QString(":qdarkstyle/style.qss");
     QFile styleSheetFile(styleSheetLocation);
 
-    if (!styleSheetFile.exists())
-    {
-        printf("Unable to set stylesheet, file not found\n");
-    }
+    if (!styleSheetFile.exists()) { printf("Unable to set stylesheet, file not found\n"); }
     else
     {
-        {
-            QTextStream ts(&styleSheetFile);
-            styleSheetFile.open(QFile::ReadOnly | QFile::Text);
-            mMainWindow.setStyleSheet(ts.readAll());
-        }
+        QTextStream ts(&styleSheetFile);
+        styleSheetFile.open(QFile::ReadOnly | QFile::Text);
+        mMainWindow.setStyleSheet(ts.readAll());
     }
 
     mMainWindow.show();

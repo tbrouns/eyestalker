@@ -40,7 +40,7 @@ const double pupilHaarReductionFactor = 0.75;
 
 const int cameraFrameRateUpperLimit = 500;
 
-const double pupilImageFactor = 1.25;
+const double pupilImageFactor = 1.05;
 
 // initial values for parameters
 
