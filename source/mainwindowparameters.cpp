@@ -26,6 +26,7 @@ void MainWindow::loadSettings(QString fileName)
     cameraFrameRateDesired                                      = settings.value("CameraFrameRateDesired",          cameraFrameRateDesired).toInt();
     cameraSubSamplingFactor                                     = settings.value("SubSamplingFactor",               1).toInt();
     dataDirectory                                               = settings.value("DataDirectory",                   "").toString().toStdString();
+    dataDirectoryOffline                                        = settings.value("DataDirectoryOffline",            "").toString();
     dataFilename                                                = settings.value("DataFilename",                    "experiment_data").toString().toStdString();
     trialIndexOffline                                           = settings.value("trialIndexOffline",               0).toInt();
     imageTotalOffline                                           = settings.value("imageTotalOffline",               0).toInt();
@@ -41,13 +42,13 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
     mEyePropertiesParameters.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  4).toInt();
     mEyePropertiesParameters.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
-    mEyePropertiesParameters.cannyLowerLimit                    = settings.value("CannyLowerLimit",                 300).toInt();
-    mEyePropertiesParameters.cannyUpperLimit                    = settings.value("CannyUpperLimit",                 600).toInt();
+    mEyePropertiesParameters.cannyThresholdLow                    = settings.value("CannyThresholdLow",                 300).toInt();
+    mEyePropertiesParameters.cannyThresholdHigh                    = settings.value("CannyThresholdHigh",                 600).toInt();
     mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
     mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber               = settings.value("EdgeMaximumFitNumber",            3).toInt();
     mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          20).toDouble();
-    mEyePropertiesParameters.glintSize                          = settings.value("GlintSize",                       6).toInt();
+    mEyePropertiesParameters.glintSize                          = settings.value("GlintSize",                       12).toInt();
     mEyePropertiesParameters.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
     mEyePropertiesParameters.circumferenceMin                   = settings.value("CircumferenceMin",                80).toDouble();
     mEyePropertiesParameters.aspectRatioMin                     = settings.value("AspectRatioMin",                  0.4).toDouble();
@@ -82,6 +83,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("AOIXPosRelative",                Parameters::eyeAOIXPosFraction);
     settings.setValue("AOIYPosRelative",                Parameters::eyeAOIYPosFraction);
     settings.setValue("DataDirectory",                  QString::fromStdString(dataDirectory));
+    settings.setValue("DataDirectoryOffline",           dataDirectoryOffline);
     settings.setValue("GainAuto",                       GAIN_AUTO);
     settings.setValue("GainBoost",                      GAIN_BOOST);
     settings.setValue("CamAOIHghtFraction",             cameraAOIFractionHght);
@@ -91,8 +93,8 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CameraFrameRateDesired",         cameraFrameRateDesired);
     settings.setValue("CannyBlurLevel",                 mEyePropertiesParameters.cannyBlurLevel);
     settings.setValue("CannyKernelSize",                mEyePropertiesParameters.cannyKernelSize);
-    settings.setValue("CannyLowerLimit",                mEyePropertiesParameters.cannyLowerLimit);
-    settings.setValue("CannyUpperLimit",                mEyePropertiesParameters.cannyUpperLimit);
+    settings.setValue("CannyThresholdLow",              mEyePropertiesParameters.cannyThresholdLow);
+    settings.setValue("CannyThresholdHigh",             mEyePropertiesParameters.cannyThresholdHigh);
     settings.setValue("CircumferenceMax",               mEyePropertiesParameters.circumferenceMax);
     settings.setValue("CircumferenceMin",               mEyePropertiesParameters.circumferenceMin);
     settings.setValue("CurvatureOffset",                mEyePropertiesParameters.curvatureOffsetMin);
@@ -255,18 +257,18 @@ void MainWindow::setEdgeIntensityOffset(double value)
     EdgeIntensityOffsetLabel->setText(QString::number(value, 'f', 1));
 }
 
-void MainWindow::setCannyLowerLimit(int value)
+void MainWindow::setCannyThresholdLow(int value)
 {
-    mEyePropertiesParameters.cannyLowerLimit = value;
-    CannyLowerLimitLabel->setText(QString::number(value));
-    CannyUpperLimitSlider->setRange(value, 4 * value);
+    mEyePropertiesParameters.cannyThresholdLow = value;
+    CannyThresholdLowLabel->setText(QString::number(value));
+    CannyThresholdHighSlider->setRange(value, 4 * value);
 }
 
-void MainWindow::setCannyUpperLimit(int value)
+void MainWindow::setCannyThresholdHigh(int value)
 {
-    mEyePropertiesParameters.cannyUpperLimit = value;
-    CannyUpperLimitLabel->setText(QString::number(value));
-    CannyLowerLimitSlider->setMaximum(value);
+    mEyePropertiesParameters.cannyThresholdHigh = value;
+    CannyThresholdHighLabel->setText(QString::number(value));
+    CannyThresholdLowSlider->setMaximum(value);
 }
 
 void MainWindow::setCannyKernelSize(int value)

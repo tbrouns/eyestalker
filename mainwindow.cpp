@@ -608,24 +608,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CannyEdgeTextBox->setText("<b>Canny edge detection</b>");
     CannyEdgeTextBox->setAlignment(Qt::AlignCenter);
 
-    QLabel *CannyLowerLimitTextBox = new QLabel;
-    CannyLowerLimitTextBox->setText("<b>Lower limit:</b>");
+    QLabel *CannyThresholdLowTextBox = new QLabel;
+    CannyThresholdLowTextBox->setText("<b>Lower limit:</b>");
 
-    CannyLowerLimitLabel  = new QLabel;
-    CannyLowerLimitSlider = new QSlider;
-    CannyLowerLimitSlider->setRange(1, mEyePropertiesParameters.cannyUpperLimit);
-    CannyLowerLimitSlider->setOrientation(Qt::Horizontal);
-    CannyLowerLimitSlider->setSingleStep(1);
-    QObject::connect(CannyLowerLimitSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyLowerLimit(int)));
+    CannyThresholdLowLabel  = new QLabel;
+    CannyThresholdLowSlider = new QSlider;
+    CannyThresholdLowSlider->setRange(1, mEyePropertiesParameters.cannyThresholdHigh);
+    CannyThresholdLowSlider->setOrientation(Qt::Horizontal);
+    CannyThresholdLowSlider->setSingleStep(1);
+    QObject::connect(CannyThresholdLowSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdLow(int)));
 
-    QLabel *CannyUpperLimitTextBox = new QLabel;
-    CannyUpperLimitTextBox->setText("<b>Upper limit:</b>");
+    QLabel *CannyThresholdHighTextBox = new QLabel;
+    CannyThresholdHighTextBox->setText("<b>Upper limit:</b>");
 
-    CannyUpperLimitLabel  = new QLabel;
-    CannyUpperLimitSlider = new QSlider;
-    CannyUpperLimitSlider->setRange(mEyePropertiesParameters.cannyLowerLimit, 4 * mEyePropertiesParameters.cannyLowerLimit);
-    CannyUpperLimitSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CannyUpperLimitSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyUpperLimit(int)));
+    CannyThresholdHighLabel  = new QLabel;
+    CannyThresholdHighSlider = new QSlider;
+    CannyThresholdHighSlider->setRange(mEyePropertiesParameters.cannyThresholdLow, 4 * mEyePropertiesParameters.cannyThresholdLow);
+    CannyThresholdHighSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(CannyThresholdHighSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdHigh(int)));
 
     QLabel *CannyBlurLevelTextBox = new QLabel;
     CannyBlurLevelTextBox->setText("<b>Blur level:</b>");
@@ -976,12 +976,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QWidget *CannyEdgeWidget = new QWidget;
     QGridLayout *CannyEdgeLayout = new QGridLayout(CannyEdgeWidget);
-    CannyEdgeLayout->addWidget(CannyUpperLimitTextBox, 0, 0);
-    CannyEdgeLayout->addWidget(CannyUpperLimitSlider,  0, 1);
-    CannyEdgeLayout->addWidget(CannyUpperLimitLabel,   0, 2);
-    CannyEdgeLayout->addWidget(CannyLowerLimitTextBox, 1, 0);
-    CannyEdgeLayout->addWidget(CannyLowerLimitSlider,  1, 1);
-    CannyEdgeLayout->addWidget(CannyLowerLimitLabel,   1, 2);
+    CannyEdgeLayout->addWidget(CannyThresholdHighTextBox, 0, 0);
+    CannyEdgeLayout->addWidget(CannyThresholdHighSlider,  0, 1);
+    CannyEdgeLayout->addWidget(CannyThresholdHighLabel,   0, 2);
+    CannyEdgeLayout->addWidget(CannyThresholdLowTextBox, 1, 0);
+    CannyEdgeLayout->addWidget(CannyThresholdLowSlider,  1, 1);
+    CannyEdgeLayout->addWidget(CannyThresholdLowLabel,   1, 2);
     CannyEdgeLayout->addWidget(CannyKernelSizeTextBox, 2, 0);
     CannyEdgeLayout->addWidget(CannyKernelSizeSlider,  2, 1);
     CannyEdgeLayout->addWidget(CannyKernelSizeLabel,   2, 2);
@@ -1625,11 +1625,11 @@ void MainWindow::setParameterWidgets()
     EdgeIntensityOffsetSlider->setDoubleValue(mEyePropertiesParameters.edgeIntensityOffset);
     EdgeIntensityOffsetLabel ->setText(QString::number(mEyePropertiesParameters.edgeIntensityOffset, 'f', 1));
 
-    CannyLowerLimitSlider->setValue(mEyePropertiesParameters.cannyLowerLimit);
-    CannyLowerLimitLabel ->setText(QString::number(mEyePropertiesParameters.cannyLowerLimit));
+    CannyThresholdLowSlider->setValue(mEyePropertiesParameters.cannyThresholdLow);
+    CannyThresholdLowLabel ->setText(QString::number(mEyePropertiesParameters.cannyThresholdLow));
 
-    CannyUpperLimitSlider->setValue(mEyePropertiesParameters.cannyUpperLimit);
-    CannyUpperLimitLabel ->setText(QString::number(mEyePropertiesParameters.cannyUpperLimit));
+    CannyThresholdHighSlider->setValue(mEyePropertiesParameters.cannyThresholdHigh);
+    CannyThresholdHighLabel ->setText(QString::number(mEyePropertiesParameters.cannyThresholdHigh));
 
     CannyBlurLevelSlider->setValue(mEyePropertiesParameters.cannyBlurLevel);
     CannyBlurLevelLabel ->setText(QString::number(mEyePropertiesParameters.cannyBlurLevel));
@@ -1656,7 +1656,7 @@ void MainWindow::setParameterWidgets()
     PupilHaarOffsetSlider->setValue(mEyePropertiesParameters.pupilOffset);
     PupilHaarOffsetLabel ->setText(QString::number(mEyePropertiesParameters.pupilOffset));
 
-    GlintSizeSlider->setValue(mEyePropertiesParameters.glintSize);
+    GlintSizeSlider->setValue(round(0.5 * mEyePropertiesParameters.glintSize));
     GlintSizeLabel->setText(QString::number(mEyePropertiesParameters.glintSize));
 
     CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
@@ -1694,14 +1694,16 @@ void MainWindow::resetVariables()
     mEyePropertiesVariables.edgeIntensityAverage    = edgeIntensityIni;
     mEyePropertiesVariables.edgeIntensityPrediction = edgeIntensityIni;
 
-    mEyePropertiesVariables.heightPrediction = mEyePropertiesVariables.circumferencePrediction / M_PI;
+    mEyePropertiesVariables.heightAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
+    mEyePropertiesVariables.heightPrediction = mEyePropertiesVariables.heightAverage;
 
     mEyePropertiesVariables.radiusMomentum   = 0;
     mEyePropertiesVariables.radiusPrediction = 0.5 * mEyePropertiesVariables.circumferencePrediction / M_PI;
 
     mEyePropertiesVariables.searchRadius = 0.5 * Parameters::eyeAOIWdth;
 
-    mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.circumferencePrediction / M_PI;
+    mEyePropertiesVariables.widthAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
+    mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.widthAverage;
 
     mEyePropertiesVariables.xPosExact     = 0.5 * Parameters::eyeAOIWdth;
     mEyePropertiesVariables.xPosPredicted = mEyePropertiesVariables.xPosExact;

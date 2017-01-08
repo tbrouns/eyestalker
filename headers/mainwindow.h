@@ -188,8 +188,8 @@ private:
     QLabel *CameraPixelClockLabel;
     QLabel *CannyBlurLevelLabel;
     QLabel *CannyKernelSizeLabel;
-    QLabel *CannyLowerLimitLabel;
-    QLabel *CannyUpperLimitLabel;
+    QLabel *CannyThresholdLowLabel;
+    QLabel *CannyThresholdHighLabel;
     QLabel *CurvatureOffsetLabel;
     QLabel *DataAnalysisTitleTextBox;
     QLabel *DataDirectoryTextBox;
@@ -217,8 +217,8 @@ private:
     QSlider *CameraPixelClockSlider;
     QSlider *CannyBlurLevelSlider;
     QSlider *CannyKernelSizeSlider;
-    QSlider *CannyLowerLimitSlider;
-    QSlider *CannyUpperLimitSlider;
+    QSlider *CannyThresholdLowSlider;
+    QSlider *CannyThresholdHighSlider;
     QSlider *EdgeMaximumFitNumberSlider;
     QSlider *ExperimentEyeVideoSlider;
     QSlider *FlashThresholdSlider;
@@ -293,6 +293,7 @@ private:
     void setFlashStandby(bool);
     void setParameterWidgets();
     void setVariableWidgets(const eyePropertiesVariables &mEyePropertiesVariables);
+    void setupOfflineSession();
     void startTrialRecording();
     void updateCamAOIx();
     void updateCamAOIy();
@@ -349,8 +350,8 @@ private slots:
     void setCamEyeAOIYPos(double);
     void setCannyBlurLevel(int value);
     void setCannyKernelSize(int value);
-    void setCannyLowerLimit(int value);
-    void setCannyUpperLimit(int value);
+    void setCannyThresholdLow(int value);
+    void setCannyThresholdHigh(int value);
     void setCurvatureOffset(double value);
     void setDrawEdge(int state);
     void setDrawElps(int state);

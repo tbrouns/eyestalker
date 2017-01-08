@@ -43,7 +43,7 @@ void drawHaarDetector(cv::Mat& I, int x0, int y0, int haarWidth, cv::Vec3b col)
     }
 }
 
-void drawEdges(cv::Mat& I, const std::vector<char>& p, int x0, int y0, int haarWidth, const cv::Vec3b& col)
+void drawEdges(cv::Mat& I, const std::vector<int>& p, int x0, int y0, int haarWidth, const cv::Vec3b& col)
 {
     int p_size = p.size();
 

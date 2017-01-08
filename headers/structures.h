@@ -85,8 +85,8 @@ struct eyePropertiesParameters
     double aspectRatioChangeThreshold;
     int cannyBlurLevel;
     int cannyKernelSize;
-    int cannyLowerLimit;
-    int cannyUpperLimit;
+    int cannyThresholdLow;
+    int cannyThresholdHigh;
     int edgeMaximumFitNumber;
     int glintSize;
     int pupilOffset;
@@ -137,12 +137,13 @@ struct eyePropertiesMiscellaneous
     int glintXPos;
     int glintYPos;
     int offsetPupilHaarWdth;
+    int offsetPupilHaarHght;
     int offsetPupilHaarXPos;
     int offsetPupilHaarYPos;
     int pupilHaarWdth;
     int pupilHaarXPos;
     int pupilHaarYPos;
-    std::vector<char> cannyEdges;
+    std::vector<int> cannyEdges;
     std::vector<double> ellipseCoefficients;
     std::vector<edgeProperties> edgePropertiesAll;
 };

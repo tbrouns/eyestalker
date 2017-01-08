@@ -27,7 +27,6 @@ double ceil2( double value )
     else             { return  ceil(value); }
 }
 
-
 std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, int startX, int startY, int width, int height)
 {
     uchar *ptr = img.data;
@@ -110,16 +109,16 @@ haarProperties detectGlint(const cv::Mat& img, int imgWidth, int startX, int sta
     return glint;
 }
 
-haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, int height, int haarWidth, int glintX, int glintY, int glintSize)
+haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, int height, int haarWidth, int haarHeight, int glintX, int glintY, int glintSize)
 {
     int pupilX = 0;
     int pupilY = 0;
     
     double minPupilIntensity = pow(10, 10); // arbitrarily large value
     
-    int pupilArea = (haarWidth - 1) * (haarWidth - 1);
+    int pupilArea = (haarWidth - 1) * (haarHeight - 1);
     
-    for (int y = 0; y < height - haarWidth; y++)
+    for (int y = 0; y < height - haarHeight; y++)
     {
         for (int x = 0; x < width - haarWidth; x++)
         {
@@ -129,11 +128,11 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
             int topLeftY = y;
             
             int backRightX = topLeftX + (haarWidth - 1);
-            int backRightY = topLeftY + (haarWidth - 1);
+            int backRightY = topLeftY + (haarHeight - 1);
             
             int topLeftIndex  = width * topLeftY + topLeftX;
             int topRghtIndex  = topLeftIndex + (haarWidth - 1);
-            int backLeftIndex = topLeftIndex + (haarWidth - 1) * width;
+            int backLeftIndex = topLeftIndex + (haarHeight - 1) * width;
             int backRghtIndex = topRghtIndex + backLeftIndex - topLeftIndex;
             
             // calculate glint intensity
@@ -294,26 +293,230 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
     return pupil;
 }
 
-std::vector<char> cannyConversion(const cv::Mat& img, int haarWidth)
+std::vector<int> radialGradient(const cv::Mat& img, int kernelSize, double pupilXCentre, double pupilYCentre)
 {
-    int haarSize = haarWidth * haarWidth;
-    
-    uchar *ptr_img = img.data;
-    
-    std::vector<char> binaryImageVectorRaw(haarSize);
-    
-    for (int i = 0; i < haarSize; i++)
+    int kernelPerimeter = 8; // perimeter length of kernel
+    double fc =  6.0;
+    double sd =  1.0;
+
+    std::vector<int> dX(kernelPerimeter);
+    dX[0] =  1;
+    dX[1] =  1;
+    dX[2] =  0;
+    dX[3] = -1;
+    dX[4] = -1;
+    dX[5] = -1;
+    dX[6] =  0;
+    dX[7] =  1;
+
+    std::vector<int> dY(kernelPerimeter);
+    dY[0] =  0;
+    dY[1] = -1;
+    dY[2] = -1;
+    dY[3] = -1;
+    dY[4] =  0;
+    dY[5] =  1;
+    dY[6] =  1;
+    dY[7] =  1;
+
+    uchar *ptr = img.data;
+    int width  = img.cols;
+    int height = img.rows;
+
+    std::vector<int> gradientVector(width * height, 0);
+
+    int borderSize = (kernelSize - 1) / 2;
+
+    for (int y = borderSize; y < height - borderSize; y++)
     {
-        if (ptr_img[i] == 255) { binaryImageVectorRaw[i] = 1; }
-        else                   { binaryImageVectorRaw[i] = 0; }
+        for (int x = borderSize; x < width - borderSize; x++)
+        {
+            double dx = x - pupilXCentre;
+            double dy = pupilYCentre - y;
+
+            double theta;
+            if (dx != 0 && dy != 0)
+            {
+                theta = atan2(dy,dx);
+                if (theta < 0) { theta = theta + 2 * M_PI; }
+            }
+            else if (dx == 0 && dy != 0)
+            {
+                if (dy > 0) { theta = 0.5 * M_PI; }
+                if (dy < 0) { theta = 1.5 * M_PI; }
+            }
+            else if (dx != 0 && dy == 0)
+            {
+                if (dx > 0) { theta = 0; }
+                if (dx < 0) { theta = M_PI; }
+            }
+            else { theta = 0; } // arbitrary choice
+
+            double alpha = theta * kernelPerimeter / (2 * M_PI);
+            double val = 0;
+
+            for (int i = 0; i < kernelPerimeter; i++)
+            {
+                double dpos = std::abs(i - alpha);
+                if (dpos > kernelPerimeter / 2) { dpos = kernelPerimeter - dpos; }
+                double dneg = 0.5 * kernelPerimeter - dpos;
+
+                double kernelVal = fc * (exp(- pow(dpos, 2) / sd) - exp(- pow(dneg, 2) / sd));
+
+                // Do convolution
+                int iPixel = width * (y + dY[i] * borderSize) + (x + dX[i] * borderSize);
+                double pixelIntensity = ptr[iPixel];
+                val += pixelIntensity * kernelVal;
+            }
+
+            if (val < 0) { val = 0; }
+            int iPixel = width * y + x;
+            gradientVector[iPixel] = val;
+        }
     }
-    
-    return binaryImageVectorRaw;
+
+    return gradientVector;
 }
 
-std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haarWidth)
+std::vector<int> nonMaximumSuppresion(const std::vector<int>& gradient, int width, int height, double pupilXCentre, double pupilYCentre)
 {
-    std::vector<char> binaryImageVector = binaryImageVectorRaw;
+    std::vector<int> gradientSuppressed = gradient;
+
+    int kernelPerimeter = 8;
+
+    std::vector<int> dX(kernelPerimeter);
+    dX[0] =  1;
+    dX[1] =  1;
+    dX[2] =  0;
+    dX[3] = -1;
+    dX[4] = -1;
+    dX[5] = -1;
+    dX[6] =  0;
+    dX[7] =  1;
+
+    std::vector<int> dY(kernelPerimeter);
+    dY[0] =  0;
+    dY[1] = -1;
+    dY[2] = -1;
+    dY[3] = -1;
+    dY[4] =  0;
+    dY[5] =  1;
+    dY[6] =  1;
+    dY[7] =  1;
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int iPixel = y * width + x;
+            if (gradient[iPixel] == 0) { continue; }
+
+            double dx = x - pupilXCentre;
+            double dy = pupilYCentre - y;
+
+            double theta;
+            if (dx != 0 && dy != 0)
+            {
+                theta = atan2(dy,dx);
+                if (theta < 0) { theta = theta + 2 * M_PI; }
+            }
+            else { theta = 0; }   // arbitrary choice
+
+            int i = round(theta * kernelPerimeter / (2 * M_PI));
+            int j = (kernelPerimeter / 2) + i;
+
+            i = i % kernelPerimeter;
+            j = j % kernelPerimeter;
+
+            int iNeighbour = width * (y + dY[i]) + (x + dX[i]);
+            int jNeighbour = width * (y + dY[j]) + (x + dX[j]);
+
+            if (gradient[iPixel] < gradient[iNeighbour] || gradient[iPixel] < gradient[jNeighbour])
+            {
+                gradientSuppressed[iPixel] = 0;
+            }
+        }
+    }
+
+    return gradientSuppressed;
+}
+
+std::vector<int> hysteresisTracking(const std::vector<int>& gradientSuppressed, int width, int height, int thresholdHigh, int thresholdLow)
+{
+    std::vector<int> dX(8);
+    dX[0] = -1;
+    dX[1] = -1;
+    dX[2] =  0;
+    dX[3] =  1;
+    dX[4] =  1;
+    dX[5] =  1;
+    dX[6] =  0;
+    dX[7] = -1;
+
+    std::vector<int> dY(8);
+    dY[0] =  0;
+    dY[1] = -1;
+    dY[2] = -1;
+    dY[3] = -1;
+    dY[4] =  0;
+    dY[5] =  1;
+    dY[6] =  1;
+    dY[7] =  1;
+
+    int imgSize = width * height;
+    std::vector<int> edgePointVector(imgSize, 0);
+
+    for (int iPixel = 0; iPixel < imgSize; iPixel++)
+    {
+        if (gradientSuppressed[iPixel] >= thresholdHigh && edgePointVector[iPixel] == 0)
+        {
+            edgePointVector[iPixel] = 1;
+
+            std::vector<int> oldEdgeIndices(1);
+            oldEdgeIndices[0] = iPixel;
+
+            do
+            {
+                std::vector<int> newEdgeIndices;
+                int numIndices = oldEdgeIndices.size();
+
+                for (int iEdgePoint = 0; iEdgePoint < numIndices; iEdgePoint++)
+                {
+                    int centreIndex = oldEdgeIndices[iEdgePoint];
+                    int centreXPos  = centreIndex % width;
+                    int centreYPos  = (centreIndex - centreXPos) / width;
+
+                    for (int m = 0; m < 8; m++) // loop through 8-connected environment of the current edge point
+                    {
+                        int neighbourXPos = centreXPos + dX[m];
+                        int neighbourYPos = centreYPos + dY[m];
+
+                        if (neighbourXPos < 0 || neighbourXPos >= width ||
+                                neighbourYPos < 0 || neighbourYPos >= height)
+                        { continue; } // neighbour is out-of-bounds
+
+                        int neighbourIndex = width * neighbourYPos + neighbourXPos;
+
+                        if (gradientSuppressed[neighbourIndex] >= thresholdLow && edgePointVector[neighbourIndex] != 1)
+                        {
+                            edgePointVector[neighbourIndex] = 1;
+                            newEdgeIndices.push_back(neighbourIndex);
+                        }
+                    }
+                }
+
+                oldEdgeIndices = newEdgeIndices;
+
+            } while (oldEdgeIndices.size() > 0);
+        }
+    }
+
+    return edgePointVector;
+}
+
+std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, int haarWidth, int haarHeight)
+{
+    std::vector<int> binaryImageVector = binaryImageVectorRaw;
 
     std::vector<int> dX(8);
     dX[0] =  0;
@@ -335,7 +538,7 @@ std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haar
     dY[6] =  0;
     dY[7] =  1;
 
-    for (int yCentre = 0; yCentre < haarWidth; yCentre++)
+    for (int yCentre = 0; yCentre < haarHeight; yCentre++)
     {
         for (int xCentre = 0; xCentre < haarWidth; xCentre++)
         {
@@ -349,14 +552,14 @@ std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haar
 
                     // check combination of two neighbouring pixels in 4-connected environment
 
-                    for (char n = 0; n < 2; n++) // loop through two connected neighbouring pixels
+                    for (int n = 0; n < 2; n++) // loop through two connected neighbouring pixels
                     {
-                        char q = 2 * (m + n) % 8;
+                        int q = 2 * (m + n) % 8;
 
                         int xNeighbour = xCentre + dX[q];
                         int yNeighbour = yCentre + dY[q];
 
-                        if (xNeighbour < 0 || xNeighbour >= haarWidth ||yNeighbour < 0 || yNeighbour >= haarWidth)
+                        if (xNeighbour < 0 || xNeighbour >= haarWidth ||yNeighbour < 0 || yNeighbour >= haarHeight)
                         {
                             continue; // neighbour is out-of-bounds
                         }
@@ -377,9 +580,9 @@ std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haar
                         int yOpposite = yCentre + dY[q];
                         int iOpposite = haarWidth * yOpposite + xOpposite;
 
-                        if (xOpposite < 0 || xOpposite >= haarWidth || // ... and opposite pixel is out-of-bounds
-                                yOpposite < 0 || yOpposite >= haarWidth ||
-                                binaryImageVector[iOpposite] ==  0 || // ... or unfilled ...
+                        if (xOpposite < 0 || xOpposite >= haarWidth  || // ... and opposite pixel is out-of-bounds
+                                yOpposite < 0 || yOpposite >= haarHeight ||
+                                binaryImageVector[iOpposite] ==  0       || // ... or unfilled ...
                                 binaryImageVector[iOpposite] == -1)
                         {
                             binaryImageVector[iCentre] = -1; // ... then remove pixel from edge
@@ -393,7 +596,7 @@ std::vector<char> sharpenEdges(std::vector<char>& binaryImageVectorRaw, int haar
     return binaryImageVector;
 }
 
-std::vector<int> getEdgeIndices(const std::vector<char>& binaryImageVector)
+std::vector<int> getEdgeIndices(const std::vector<int>& binaryImageVector)
 {
     int haarSize = binaryImageVector.size();
     std::vector<int> cannyEdgeIndices;
@@ -402,11 +605,11 @@ std::vector<int> getEdgeIndices(const std::vector<char>& binaryImageVector)
     return cannyEdgeIndices;
 }
 
-std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p, int haarWidth, double curvatureLowerLimit, double curvatureUpperLimit)
+std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, int haarWidth, int haarHeight, double curvatureLowerLimit, double curvatureUpperLimit)
 {
     std::vector<edgeProperties> vEdgePropertiesAll; // new structure containing length and indices of all edges
     
-    int haarArea = haarWidth * haarWidth;
+    int haarArea = haarWidth * haarHeight;
     
     // scanned neighbours
     std::vector<int> dX(8);
@@ -455,10 +658,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p,
             }
         }
         
-        if (!newEdgeFound)
-        {
-            break; // no (more) edges found
-        }
+        if (!newEdgeFound) { break; } // no (more) edges found
         
         // find edge endpoint
         
@@ -491,7 +691,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p,
                         int neighbourXPos = centreXPos + dX[m];
                         int neighbourYPos = centreYPos + dY[m];
                         
-                        if (neighbourXPos < 0 || neighbourXPos >= haarWidth || neighbourYPos < 0 || neighbourYPos >= haarWidth)
+                        if (neighbourXPos < 0 || neighbourXPos >= haarWidth || neighbourYPos < 0 || neighbourYPos >= haarHeight)
                         {
                             continue; // neighbour is out-of-bounds
                         }
@@ -527,8 +727,8 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p,
 
         while (numberOfBranches > 0)
         {
-            std::vector<int> branchSizes; // record length of each branch
-            std::vector<std::vector<int>> branchIndicesVectors; // record indices of each branch
+            std::vector<int> branchSizes;                            // record length of each branch
+            std::vector<std::vector<int>> branchIndicesVectors;      // record indices of each branch
             std::vector<std::vector<int>> branchStartIndicesVectors; // record start index of each branch
 
             for (int iBranch = 0; iBranch < numberOfBranches; iBranch++) // stops when junction is encountered
@@ -554,7 +754,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p,
                         int neighbourXPos = centreXPos + dX[m];
                         int neighbourYPos = centreYPos + dY[m];
 
-                        if (neighbourXPos < 0 || neighbourXPos >= haarWidth || neighbourYPos < 0 || neighbourYPos >= haarWidth)
+                        if (neighbourXPos < 0 || neighbourXPos >= haarWidth || neighbourYPos < 0 || neighbourYPos >= haarHeight)
                         {
                             continue; // neighbour is out-of-bounds
                         }
@@ -801,7 +1001,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p,
                     int offsetXPos = edgePointXPos + edgeIntensityPositionOffset * ceil2(edgePointXNormals[iEdgePoint]);
                     int offsetYPos = edgePointYPos + edgeIntensityPositionOffset * ceil2(edgePointYNormals[iEdgePoint]);
 
-                    if (offsetXPos < 0 || offsetXPos > haarWidth || offsetYPos < 0 || offsetYPos > haarWidth)
+                    if (offsetXPos < 0 || offsetXPos > haarWidth || offsetYPos < 0 || offsetYPos > haarHeight)
                     {
                         partialEdgeIntensities[iEdgePoint] = ptr_img[edgePointXPos + edgePointYPos * haarWidth];
                     }
@@ -864,7 +1064,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<char>& p,
                     int neighbourXPos = centreXPos + dX[m];
                     int neighbourYPos = centreYPos + dY[m];
 
-                    if (neighbourXPos < 0 || neighbourXPos >= haarWidth || neighbourYPos < 0 || neighbourYPos >= haarWidth)
+                    if (neighbourXPos < 0 || neighbourXPos >= haarWidth || neighbourYPos < 0 || neighbourYPos >= haarHeight)
                     {
                         continue; // neighbour is out-of-bounds
                     }
@@ -1313,6 +1513,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
     int offsetPupilHaarXPos = 0;
     int offsetPupilHaarYPos = 0;
     int offsetPupilHaarWdth = 0;
+    int offsetPupilHaarHght = 0;
 
     if (pupilHaarWdth > searchWdth) { pupilHaarWdth = searchWdth; }
     if (pupilHaarHght > searchHght) { pupilHaarHght = searchHght; }
@@ -1347,7 +1548,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         int glintXPos = searchStartX + glintHaarProperties.xPos;
         int glintYPos = searchStartY + glintHaarProperties.yPos;
 
-        haarProperties pupilHaarProperties = detectPupilApprox(integralImage, searchWdth, searchHght, pupilHaarWdth, glintXPos, glintYPos, mEyeProperties.p.glintSize);
+        haarProperties pupilHaarProperties = detectPupilApprox(integralImage, searchWdth, searchHght, pupilHaarWdth, pupilHaarHght, glintXPos, glintYPos, mEyeProperties.p.glintSize);
 
         int pupilHaarXPos = searchStartX + pupilHaarProperties.xPos;
         int pupilHaarYPos = searchStartY + pupilHaarProperties.yPos;
@@ -1355,19 +1556,20 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         offsetPupilHaarXPos = pupilHaarXPos -     mEyeProperties.p.pupilOffset;
         offsetPupilHaarYPos = pupilHaarYPos -     mEyeProperties.p.pupilOffset;
         offsetPupilHaarWdth = pupilHaarWdth + 2 * mEyeProperties.p.pupilOffset;
+        offsetPupilHaarHght = pupilHaarHght + 2 * mEyeProperties.p.pupilOffset;
 
         // Check limits
 
-        if (offsetPupilHaarWdth >= imageHght) { offsetPupilHaarWdth = imageHght - 1; }
         if (offsetPupilHaarWdth >= imageWdth) { offsetPupilHaarWdth = imageWdth - 1; }
+        if (offsetPupilHaarHght >= imageHght) { offsetPupilHaarHght = imageHght - 1; }
         if (offsetPupilHaarXPos < 0) { offsetPupilHaarXPos = 0; }
         if (offsetPupilHaarYPos < 0) { offsetPupilHaarYPos = 0; }
         if (offsetPupilHaarXPos + offsetPupilHaarWdth >= imageWdth) { offsetPupilHaarWdth = imageWdth - offsetPupilHaarXPos - 1; }
-        if (offsetPupilHaarYPos + offsetPupilHaarWdth >= imageHght) { offsetPupilHaarWdth = imageHght - offsetPupilHaarYPos - 1; }
+        if (offsetPupilHaarYPos + offsetPupilHaarHght >= imageHght) { offsetPupilHaarHght = imageHght - offsetPupilHaarYPos - 1; }
 
         // Crop image to outer pupil Haar region
 
-        cv::Rect pupilROI(offsetPupilHaarXPos, offsetPupilHaarYPos, offsetPupilHaarWdth, offsetPupilHaarWdth);
+        cv::Rect pupilROI(offsetPupilHaarXPos, offsetPupilHaarYPos, offsetPupilHaarWdth, offsetPupilHaarHght);
         cv::Mat imagePupilBGR = imageOriginalBGR(pupilROI);
 
         // Convert back to grayscale
@@ -1382,18 +1584,14 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         if (cannyBlurLevel > 0) { cv::GaussianBlur(imagePupilGray, imagePupilGrayBlurred, cv::Size(cannyBlurLevel, cannyBlurLevel), 0, 0);
         } else                  { imagePupilGrayBlurred = imagePupilGray; }
 
-        cv::Mat imageCannyEdges;
-        imageCannyEdges = cannyEdgeDetection(imagePupilGrayBlurred, mEyeProperties.p.cannyLowerLimit, mEyeProperties.p.cannyUpperLimit, mEyeProperties.p.cannyKernelSize, false);
+        double xPosPredictedRelative = mEyeProperties.v.xPosPredicted - offsetPupilHaarXPos;
+        double yPosPredictedRelative = mEyeProperties.v.yPosPredicted - offsetPupilHaarYPos;
 
-        offsetPupilHaarXPos = offsetPupilHaarXPos + 2;
-        offsetPupilHaarYPos = offsetPupilHaarYPos + 2;
-        offsetPupilHaarWdth = offsetPupilHaarWdth - 4;
-
-        std::vector<char> cannyEdges;
-        cannyEdges = cannyConversion(imageCannyEdges, offsetPupilHaarWdth);
-        cannyEdges = sharpenEdges(cannyEdges, offsetPupilHaarWdth);
-
-        std::vector<int> cannyEdgeIndices = getEdgeIndices(cannyEdges);
+        std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mEyeProperties.p.cannyKernelSize, xPosPredictedRelative, yPosPredictedRelative);
+        std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative);
+        std::vector<int>  cannyEdges            = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow);
+        std::vector<int>  cannyEdgesSharpened   = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
+        std::vector<int>  cannyEdgesIndices     = getEdgeIndices(cannyEdgesSharpened);
 
         // Edge thresholding
 
@@ -1421,7 +1619,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             curvatureUpperLimit = A * exp(B * pow(mEyeProperties.v.circumferencePrediction, D) + C * pow(mEyeProperties.v.aspectRatioPrediction, E)) + mEyeProperties.v.curvatureOffset;
         }
 
-        std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdges, offsetPupilHaarWdth, curvatureLowerLimit, curvatureUpperLimit);
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, curvatureLowerLimit, curvatureUpperLimit);
 
         int numEdgesTotal = vEdgePropertiesAll.size();
 
@@ -1454,15 +1652,17 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             }
 
             mEyeProperties.v.edgeCurvaturePrediction = 0.5 * (curvatureUpperLimit + curvatureLowerLimit);
+
             std::vector<int> acceptedEdges = edgeThreshold(mEyeProperties, vEdgePropertiesAll);
-            for (int iEdge = 0; iEdge < mEyeProperties.p.edgeMaximumFitNumber; iEdge++)
+
+            for (int iEdge = 0; iEdge < mEyeProperties.p.edgeMaximumFitNumber; iEdge++) // grab accepted edges
             {
                 int jEdge = acceptedEdges[iEdge];
                 vEdgePropertiesAll[jEdge].flag = 1;
                 vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
             }
 
-            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mEyeProperties, cannyEdgeIndices); // ellipse fitting
+            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mEyeProperties, cannyEdgesIndices); // ellipse fitting
         }
 
         // Classify edges
@@ -1492,6 +1692,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.m.offsetPupilHaarXPos = offsetPupilHaarXPos;
         mEyePropertiesNew.m.offsetPupilHaarYPos = offsetPupilHaarYPos;
         mEyePropertiesNew.m.offsetPupilHaarWdth = offsetPupilHaarWdth;
+        mEyePropertiesNew.m.offsetPupilHaarHght = offsetPupilHaarHght;
 
         mEyePropertiesNew.m.pupilHaarXPos = pupilHaarXPos;
         mEyePropertiesNew.m.pupilHaarYPos = pupilHaarYPos;
@@ -1545,7 +1746,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.v.xPosPredicted = mEyeProperties.v.xPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.xPosPredicted) + mEyeProperties.v.xVelocity;
         mEyePropertiesNew.v.xVelocity     = mEyeProperties.v.xVelocity * mEyeProperties.p.alphaMomentum;
 
-        mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarWdth - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
+        mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarHght - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
         mEyePropertiesNew.v.yVelocity     = mEyeProperties.v.yVelocity * mEyeProperties.p.alphaMomentum;
     }
     else // pupil detected
@@ -1612,7 +1813,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
     if (mEyePropertiesNew.v.searchRadius > imageWdth)
     {   mEyePropertiesNew.v.searchRadius = imageWdth; }
-    else if (mEyePropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarWdth))
+    else if (mEyePropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarWdth)) // add height as well
     {        mEyePropertiesNew.v.searchRadius = ceil(0.5 * offsetPupilHaarWdth); }
 
     if (mEyePropertiesNew.v.thresholdCircumferenceChange > mEyePropertiesNew.p.circumferenceMax)

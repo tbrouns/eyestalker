@@ -46,6 +46,7 @@ void MainWindow::startOfflineSession()
     EyeTrackingParameterTabWidget->removeTab(0);
 
     updateOfflineImages(0);
+    setupOfflineSession();
 }
 
 void MainWindow::countNumTrials()
@@ -89,47 +90,54 @@ void MainWindow::countNumImages()
 void MainWindow::loadOfflineSession()
 {
     dataDirectoryOffline = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    setupOfflineSession();
+}
 
-    trialIndexOffline = 0; // start with first trial
-
-    countNumTrials();
-
-    if (trialTotalOffline > 0)
+void MainWindow::setupOfflineSession()
+{
+    if (!dataDirectoryOffline.isEmpty())
     {
-        updateOfflineSession();
-        updateOfflineImages(0);
+        trialIndexOffline = 0; // start with first trial
 
-        std::stringstream directoryName;
-        directoryName << dataDirectoryOffline.toStdString()
-                      << "/trial_"
-                      << trialIndexOffline
-                      << "/processed";
+        countNumTrials();
 
-        if (!boost::filesystem::exists(directoryName.str()))
+        if (trialTotalOffline > 0)
         {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
+            updateOfflineSession();
+            updateOfflineImages(0);
 
-        if (timeMatrix.empty()) // Grab time stamps
-        {
-            std::stringstream directory;
-            directory << dataDirectoryOffline.toStdString()
-                      << "/timestamps.dat";
+            std::stringstream directoryName;
+            directoryName << dataDirectoryOffline.toStdString()
+                          << "/trial_"
+                          << trialIndexOffline
+                          << "/processed";
 
-            std::ifstream data;
-            data.open(directory.str().c_str());
-
-            if (data.is_open())
+            if (!boost::filesystem::exists(directoryName.str()))
             {
-                std::string str;
+                boost::filesystem::create_directory(directoryName.str().c_str());
+            }
 
-                for (int i = 0; i < trialTotalOffline && std::getline(data, str); i++)
+            if (timeMatrix.empty()) // Grab time stamps
+            {
+                std::stringstream directory;
+                directory << dataDirectoryOffline.toStdString()
+                          << "/timestamps.dat";
+
+                std::ifstream data;
+                data.open(directory.str().c_str());
+
+                if (data.is_open())
                 {
-                    std::vector<double> times;
-                    std::istringstream sin(str);
-                    double time;
-                    while (sin >> time) { times.push_back(time); }
-                    timeMatrix.push_back(times);
+                    std::string str;
+
+                    for (int i = 0; i < trialTotalOffline && std::getline(data, str); i++)
+                    {
+                        std::vector<double> times;
+                        std::istringstream sin(str);
+                        double time;
+                        while (sin >> time) { times.push_back(time); }
+                        timeMatrix.push_back(times);
+                    }
                 }
             }
         }
