@@ -1186,6 +1186,19 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
     double a = sqrt((-4 * FF * AA * CC + CC * DD * DD + AA * EE * EE)/(4 * AA * CC * CC));
     double b = sqrt((-4 * FF * AA * CC + CC * DD * DD + AA * EE * EE)/(4 * AA * AA * CC));
     
+    double semiMajor;
+    double semiMinor;
+
+    if (a >= b) {
+        semiMajor = a;
+        semiMinor = b;
+    }
+    else
+    {
+        semiMajor = b;
+        semiMajor = a;
+    }
+
     // coordinates of centre point
     
     double x = -(DD / (2 * AA)) * cos(alpha) + (EE / (2 * CC)) * sin(alpha);
@@ -1193,13 +1206,13 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
 
     // width and height
 
-    double w = 2 * sqrt(pow(a * cos(alpha), 2) + pow(b * sin(alpha), 2));
-    double h = 2 * sqrt(pow(a * sin(alpha), 2) + pow(b * cos(alpha), 2));
+    double w = 2 * sqrt(pow(semiMajor * cos(alpha), 2) + pow(semiMinor * sin(alpha), 2));
+    double h = 2 * sqrt(pow(semiMajor * sin(alpha), 2) + pow(semiMinor * cos(alpha), 2));
 
     std::vector<double> v(6);
     
-    v[0] = a;
-    v[1] = b;
+    v[0] = semiMajor;
+    v[1] = semiMinor;
     v[2] = x;
     v[3] = y;
     v[4] = w;
@@ -1241,7 +1254,6 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
         DesignMatrix(iEdgePoint, 5) = 1;
     }
 
-
     Eigen::MatrixXd ScatterMatrix(6, 6); // scatter matrix
     ScatterMatrix = DesignMatrix.transpose() * DesignMatrix;
 
@@ -1279,30 +1291,16 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
 
     std::vector<double> ellipseParameters = EllipseRotationTransformation(ellipseFitCoefficients);
 
-    double semiAxisA = ellipseParameters[0];
-    double semiAxisB = ellipseParameters[1];
+    double semiMajor = ellipseParameters[0];
+    double semiMinor = ellipseParameters[1];
 
-    double majorAxis = 0;
-    double minorAxis = 0;
-
-    if (semiAxisA >= semiAxisB)
-    {
-        majorAxis = semiAxisA;
-        minorAxis = semiAxisB;
-    }
-    else
-    {
-        majorAxis = semiAxisB;
-        minorAxis = semiAxisA;
-    }
-
-    if (!std::isnormal(majorAxis) || !std::isnormal(minorAxis)) // only take square root of positive values
+    if (!std::isnormal(semiMajor) || !std::isnormal(semiMinor)) // only take square root of positive values
     { mEllipseProperties.pupilDetected = false; }
 
-    double h = pow((majorAxis - minorAxis), 2) / pow((majorAxis + minorAxis), 2);
-    mEllipseProperties.circumference = M_PI * (majorAxis + minorAxis) * (1 + (3 * h) / (10 + sqrt(4 - 3 * h))); // ramanujans 2nd approximation
-    mEllipseProperties.aspectRatio   = minorAxis / majorAxis;
-    mEllipseProperties.radius        = 0.5 * (minorAxis + majorAxis);
+    double h = pow((semiMajor - semiMinor), 2) / pow((semiMajor + semiMinor), 2);
+    mEllipseProperties.circumference = M_PI * (semiMajor + semiMinor) * (1 + (3 * h) / (10 + sqrt(4 - 3 * h))); // ramanujans 2nd approximation
+    mEllipseProperties.aspectRatio   = semiMinor / semiMajor;
+    mEllipseProperties.radius        = 0.5 * (semiMinor + semiMajor);
     mEllipseProperties.xPos          = ellipseParameters[2];
     mEllipseProperties.yPos          = ellipseParameters[3];
     mEllipseProperties.width         = ellipseParameters[4];
@@ -1790,19 +1788,37 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         // Grab pupil image
 
-        int wdth = mEllipseProperties.width;
-        int hght = mEllipseProperties.height;
+        int wdth = mEllipseProperties.width  * pupilImageFactor;
+        int hght = mEllipseProperties.height * pupilImageFactor;
 
-        int xoffset = round(0.5 * pupilImageFactor * wdth);
-        int yoffset = round(0.5 * pupilImageFactor * hght);
+        int xPos = round(mEyePropertiesNew.v.xPosExact - 0.5 * wdth);
+        int yPos = round(mEyePropertiesNew.v.yPosExact - 0.5 * hght);
 
-        int xPos = mEyePropertiesNew.v.xPosExact - xoffset;
-        int yPos = mEyePropertiesNew.v.yPosExact - yoffset;
+        if (xPos < 0)
+        {
+            imageWdth = imageWdth + xPos;
+            xPos = 0;
+        }
 
-        if (xPos < 0) { xPos = 0; }
-        if (yPos < 0) { yPos = 0; }
-        if (xPos + wdth >= imageWdth) { wdth = imageWdth - xPos - 1; }
-        if (yPos + hght >= imageHght) { hght = imageHght - yPos - 1; }
+        if (yPos < 0)
+        {
+            imageHght = imageHght + yPos;
+            yPos = 0;
+        }
+
+        if (xPos + wdth >= imageWdth)
+        {
+            int dx = xPos + wdth - (imageWdth - 1);
+            xPos = xPos + dx;
+            wdth = wdth - 2 * dx;
+        }
+
+        if (yPos + hght >= imageHght)
+        {
+            int dy = yPos + hght - (imageHght - 1);
+            yPos = yPos + dy;
+            hght = hght - 2 * dy;
+        }
 
         cv::Rect pupilROI(xPos, yPos, wdth, hght);
         cv::Mat imagePupilBGR = imageOriginalBGR(pupilROI);
