@@ -1186,8 +1186,8 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
     double a = sqrt((-4 * FF * AA * CC + CC * DD * DD + AA * EE * EE)/(4 * AA * CC * CC));
     double b = sqrt((-4 * FF * AA * CC + CC * DD * DD + AA * EE * EE)/(4 * AA * AA * CC));
     
-    double semiMajor;
-    double semiMinor;
+    double semiMajor = 0;
+    double semiMinor = 0;
 
     if (a >= b) {
         semiMajor = a;
@@ -1196,7 +1196,7 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
     else
     {
         semiMajor = b;
-        semiMajor = a;
+        semiMinor = a;
     }
 
     // coordinates of centre point
@@ -1264,7 +1264,7 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
 
     Eigen::EigenSolver<Eigen::MatrixXd> EigenSolver(EigenSystem);
 
-    Eigen::VectorXd EigenValues = EigenSolver.eigenvalues().real();
+    Eigen::VectorXd EigenValues  = EigenSolver.eigenvalues().real();
     Eigen::MatrixXd EigenVectors = EigenSolver.eigenvectors().real();
 
     double minEigenValue   = pow(10, 50); // arbitrarily large number
@@ -1293,9 +1293,6 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
 
     double semiMajor = ellipseParameters[0];
     double semiMinor = ellipseParameters[1];
-
-    if (!std::isnormal(semiMajor) || !std::isnormal(semiMinor)) // only take square root of positive values
-    { mEllipseProperties.pupilDetected = false; }
 
     double h = pow((semiMajor - semiMinor), 2) / pow((semiMajor + semiMinor), 2);
     mEllipseProperties.circumference = M_PI * (semiMajor + semiMinor) * (1 + (3 * h) / (10 + sqrt(4 - 3 * h))); // ramanujans 2nd approximation
@@ -1333,9 +1330,9 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
         do // loop through all possible edge combinations for the current set size
         {
             std::vector<double> combiEdgeIntensities(combiNumEdges);
-            std::vector<int>    combiEdgeIndices(combiNumEdges);
-            std::vector<int>    combiEdgeLengths(combiNumEdges);
-            std::vector<int>    combiEdgeSizes(combiNumEdges);
+            std::vector<int>    combiEdgeIndices    (combiNumEdges);
+            std::vector<int>    combiEdgeLengths    (combiNumEdges);
+            std::vector<int>    combiEdgeSizes      (combiNumEdges);
             std::vector<std::vector<int>> combiEdgePointIndices(combiNumEdges);
             
             for (int iEdge = 0, jEdge = 0; iEdge < totalNumberOfEdges; ++iEdge)
@@ -1391,48 +1388,49 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             // calculate error between fit and every edge point
 
-            std::vector<int> fittedEdgePoints;
-            int fitSetLength;
+            std::vector<int> newEdgePoints;
+            int newSetLength;
 
+            double A = mEllipsePropertiesNew.coefficients[0];
+            double B = mEllipsePropertiesNew.coefficients[1];
+            double C = mEllipsePropertiesNew.coefficients[2];
+            double D = mEllipsePropertiesNew.coefficients[3];
+            double E = mEllipsePropertiesNew.coefficients[4];
+            double F = mEllipsePropertiesNew.coefficients[5];
+
+            // iterate over all edge points of all raw canny edges
+
+            for (int iEdgePoint = 0; iEdgePoint < totalNumberOfEdgePoints; iEdgePoint++)
             {
-                double A = mEllipsePropertiesNew.coefficients[0];
-                double B = mEllipsePropertiesNew.coefficients[1];
-                double C = mEllipsePropertiesNew.coefficients[2];
-                double D = mEllipsePropertiesNew.coefficients[3];
-                double E = mEllipsePropertiesNew.coefficients[4];
-                double F = mEllipsePropertiesNew.coefficients[5];
+                int edgePointIndex = cannyEdgePointIndices[iEdgePoint];
 
-                // iterate over all edge points of all raw canny edges
+                double x = edgePointIndex % haarWidth;
+                double y = (edgePointIndex - x) / haarWidth;
 
-                for (int iEdgePoint = 0; iEdgePoint < totalNumberOfEdgePoints; iEdgePoint++)
-                {
-                    int edgePointIndex = cannyEdgePointIndices[iEdgePoint];
+                double fitError = std::abs(A * x * x + B * x * y + C * y * y + D * x + E * y + F);
 
-                    double x = edgePointIndex % haarWidth;
-                    double y = (edgePointIndex - x) / haarWidth;
-
-                    double fitError = std::abs(A * x * x + B * x * y + C * y * y + D * x + E * y + F);
-
-                    if (fitError < mEyeProperties.p.ellipseFitErrorMaximum)
-                    { fittedEdgePoints.push_back(edgePointIndex); }
-                }
-
-                fitSetLength = fittedEdgePoints.size();
-
-                if (fitSetLength < mEyeProperties.v.circumferencePrediction * minimumFitFraction)
-                { continue; }// Threshold: ignore edge collections that are too short
+                if (fitError < mEyeProperties.p.ellipseFitErrorMaximum)
+                { newEdgePoints.push_back(edgePointIndex); }
             }
+
+            newSetLength = newEdgePoints.size();
+
+            if (newSetLength < mEyeProperties.v.circumferencePrediction * minimumFitFraction)
+            { continue; }// Threshold: ignore edge collections that are too short
 
             // do refinement if ellipse fit overlaps with many new edge points
 
-            if ((fitSetLength - edgeSetLength) > mEyeProperties.v.circumferencePrediction * minimumRefinementFraction)
-            { mEllipsePropertiesNew = fitEllipse(fittedEdgePoints, fitSetLength, haarWidth); }
+            if ((newSetLength - edgeSetLength) > mEyeProperties.v.circumferencePrediction * minimumRefinementFraction)
+            {
+                mEllipsePropertiesNew = fitEllipse(newEdgePoints, newSetLength, haarWidth);
+                edgeSetSize = newSetLength;
+            }
 
             // save parameters of accepted fit
 
             mEllipsePropertiesNew.edgeIndices = combiEdgeIndices;
             mEllipsePropertiesNew.intensity   = calculateMean(combiEdgeIntensities);
-            mEllipsePropertiesNew.edgeLength  = fitSetLength;
+            mEllipsePropertiesNew.edgeLength  = edgeSetSize;
             vEllipsePropertiesAll.push_back(mEllipsePropertiesNew);
             
             numberOfFits++;
