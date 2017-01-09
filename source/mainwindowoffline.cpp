@@ -468,7 +468,6 @@ void MainWindow::offlineSaveExperimentData()
 
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact  << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact    << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected       << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction << delimiter; }
 
