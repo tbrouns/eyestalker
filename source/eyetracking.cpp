@@ -1307,13 +1307,12 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
     return mEllipseProperties;
 }
 
-ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePropertiesAll, int haarWidth, eyeProperties mEyeProperties, std::vector<int> cannyEdgePointIndices)
+ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePropertiesAll, int haarWidth, eyeProperties mEyeProperties)
 {
     ellipseProperties mEllipseProperties;
     mEllipseProperties.pupilDetected = false;
     
     int totalNumberOfEdges = vEdgePropertiesAll.size(); // total number of edges
-    int totalNumberOfEdgePoints = cannyEdgePointIndices.size();
 
     std::vector<ellipseProperties> vEllipsePropertiesAll; // vector to record information for each accepted ellipse fit
     
@@ -1388,9 +1387,6 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             // calculate error between fit and every edge point
 
-            std::vector<int> newEdgePoints;
-            int newSetLength;
-
             double A = mEllipsePropertiesNew.coefficients[0];
             double B = mEllipsePropertiesNew.coefficients[1];
             double C = mEllipsePropertiesNew.coefficients[2];
@@ -1400,31 +1396,25 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             // iterate over all edge points of all raw canny edges
 
-            for (int iEdgePoint = 0; iEdgePoint < totalNumberOfEdgePoints; iEdgePoint++)
+            double fitErrorSum = 0;
+
+            for (int iEdgePoint = 0; iEdgePoint < edgeSetLength; iEdgePoint++)
             {
-                int edgePointIndex = cannyEdgePointIndices[iEdgePoint];
+                int edgePointIndex = edgeIndices[iEdgePoint];
 
                 double x = edgePointIndex % haarWidth;
                 double y = (edgePointIndex - x) / haarWidth;
 
                 double fitError = std::abs(A * x * x + B * x * y + C * y * y + D * x + E * y + F);
 
-                if (fitError < mEyeProperties.p.ellipseFitErrorMaximum)
-                { newEdgePoints.push_back(edgePointIndex); }
+                fitErrorSum += fitError;
             }
 
-            newSetLength = newEdgePoints.size();
+            mEllipsePropertiesNew.fitError = fitErrorSum / edgeSetLength;
 
-            if (newSetLength < mEyeProperties.v.circumferencePrediction * minimumFitFraction)
-            { continue; }// Threshold: ignore edge collections that are too short
+            if (mEllipsePropertiesNew.fitError > mEyeProperties.p.ellipseFitErrorMaximum) // no large fit errors
+            { continue; }
 
-            // do refinement if ellipse fit overlaps with many new edge points
-
-            if ((newSetLength - edgeSetLength) > mEyeProperties.v.circumferencePrediction * minimumRefinementFraction)
-            {
-                mEllipsePropertiesNew = fitEllipse(newEdgePoints, newSetLength, haarWidth);
-                edgeSetSize = newSetLength;
-            }
 
             // save parameters of accepted fit
 
@@ -1447,19 +1437,14 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
         for (int iFit = 0; iFit < numberOfFits; iFit++)
         {
             double circumferenceChange = (std::abs(vEllipsePropertiesAll[iFit].circumference - mEyeProperties.v.circumferencePrediction));
+            double aspectRatioChange   = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio - mEyeProperties.v.aspectRatioPrediction));
+            double fitError            = vEllipsePropertiesAll[iFit].fitError;
 
-            if (circumferenceChange < 0.5 * mEyeProperties.v.thresholdCircumferenceChange)
-            {   circumferenceChange = 0.5 * mEyeProperties.v.thresholdCircumferenceChange; }
+            double scoreCircumference = circumferenceChange / mEyeProperties.p.aspectRatioChangeThreshold;
+            double scoreAspectRatio   = aspectRatioChange   / mEyeProperties.p.circumferenceChangeThreshold;
+            double scoreFitError      = 2 * fitError        / mEyeProperties.p.ellipseFitErrorMaximum;
 
-            double aspectRatioChange = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio - mEyeProperties.v.aspectRatioPrediction));
-
-            if (aspectRatioChange < 0.5 * mEyeProperties.v.thresholdAspectRatioChange)
-            {   aspectRatioChange = 0.5 * mEyeProperties.v.thresholdAspectRatioChange; }
-
-            double normalizationConstant = mEyeProperties.v.thresholdCircumferenceChange / mEyeProperties.v.thresholdAspectRatioChange;
-            aspectRatioChange = normalizationConstant * aspectRatioChange;
-
-            featureChange[iFit] = (circumferenceChange + aspectRatioChange) / sqrt((double) vEllipsePropertiesAll[iFit].edgeLength);
+            featureChange[iFit] = scoreCircumference + scoreAspectRatio + scoreFitError;
         }
 
         int acceptedFitIndex = std::distance(featureChange.begin(), std::min_element(featureChange.begin(), featureChange.end()));
@@ -1658,7 +1643,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
                 vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
             }
 
-            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mEyeProperties, cannyEdgesIndices); // ellipse fitting
+            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mEyeProperties); // ellipse fitting
         }
 
         // Classify edges
@@ -1693,6 +1678,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.m.pupilHaarXPos = pupilHaarXPos;
         mEyePropertiesNew.m.pupilHaarYPos = pupilHaarYPos;
         mEyePropertiesNew.m.pupilHaarWdth = pupilHaarWdth;
+        mEyePropertiesNew.m.pupilHaarHght = pupilHaarHght;
 
         mEyePropertiesNew.m.glintXPos = glintXPos;
         mEyePropertiesNew.m.glintYPos = glintYPos;

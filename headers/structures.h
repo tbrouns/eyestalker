@@ -55,6 +55,7 @@ struct edgeProperties
 struct ellipseProperties
 {
     bool pupilDetected;
+    double fitError;
     double circumference;
     double aspectRatio;
     double intensity;
@@ -140,6 +141,7 @@ struct eyePropertiesMiscellaneous
     int offsetPupilHaarHght;
     int offsetPupilHaarXPos;
     int offsetPupilHaarYPos;
+    int pupilHaarHght;
     int pupilHaarWdth;
     int pupilHaarXPos;
     int pupilHaarYPos;
