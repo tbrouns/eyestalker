@@ -748,7 +748,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CurvatureOffsetLabel  = new QLabel;
     CurvatureOffsetSlider = new SliderDouble;
     CurvatureOffsetSlider->setPrecision(1);
-    CurvatureOffsetSlider->setDoubleRange(0, 30);
+    CurvatureOffsetSlider->setDoubleRange(0, 180);
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));  
 
@@ -1701,6 +1701,9 @@ void MainWindow::resetVariables()
     mEyePropertiesVariables.radiusPrediction = 0.5 * mEyePropertiesVariables.circumferencePrediction / M_PI;
 
     mEyePropertiesVariables.searchRadius = 0.5 * Parameters::eyeAOIWdth;
+
+    mEyePropertiesVariables.thresholdCircumferenceChange = mEyePropertiesParameters.circumferenceMax;
+    mEyePropertiesVariables.thresholdAspectRatioChange   = 1.0;
 
     mEyePropertiesVariables.widthAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
     mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.widthAverage;

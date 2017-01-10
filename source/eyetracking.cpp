@@ -1173,7 +1173,7 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
     double E = c[4];
     double F = c[5];
     
-    double alpha = 0.5 * (atan(B / (A - C))); // rotation angle
+    double alpha = 0.5 * (atan2(B, (A - C))); // rotation angle
     
     double AA =  A * cos(alpha) * cos(alpha) + B * cos(alpha) * sin(alpha) + C * sin(alpha) * sin(alpha);
     double CC =  A * sin(alpha) * sin(alpha) - B * cos(alpha) * sin(alpha) + C * cos(alpha) * cos(alpha);
@@ -1456,6 +1456,27 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     return mEllipseProperties;
 }
 
+std::vector<int> cannyConversion(const cv::Mat& img, int haarWidth, int haarHeight)
+{
+    int haarSize = haarWidth * haarHeight;
+    uchar *ptr_img = img.data;
+    std::vector<int> binaryImageVectorRaw(haarSize);
+
+    for (int i = 0; i < haarSize; i++)
+    {
+        if (ptr_img[i] == 255)
+        {
+            binaryImageVectorRaw[i] = 1;
+        }
+        else
+        {
+            binaryImageVectorRaw[i] = 0;
+        }
+    }
+
+    return binaryImageVectorRaw;
+}
+
 eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEyeProperties)
 {
     // Define some variables
@@ -1568,9 +1589,15 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         double xPosPredictedRelative = mEyeProperties.v.xPosPredicted - offsetPupilHaarXPos;
         double yPosPredictedRelative = mEyeProperties.v.yPosPredicted - offsetPupilHaarYPos;
 
-        std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mEyeProperties.p.cannyKernelSize, xPosPredictedRelative, yPosPredictedRelative);
-        std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative);
-        std::vector<int>  cannyEdges            = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow);
+        //        std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mEyeProperties.p.cannyKernelSize, xPosPredictedRelative, yPosPredictedRelative);
+        //        std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative);
+        //        std::vector<int>  cannyEdges            = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow);
+        //        std::vector<int>  cannyEdgesSharpened   = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
+        //        std::vector<int>  cannyEdgesIndices     = getEdgeIndices(cannyEdgesSharpened);
+
+        cv::Mat imageCannyEdges;
+        cv::Canny(imagePupilGrayBlurred, imageCannyEdges, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow, mEyeProperties.p.cannyKernelSize);
+        std::vector<int>  cannyEdges            = cannyConversion(imageCannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
         std::vector<int>  cannyEdgesSharpened   = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
         std::vector<int>  cannyEdgesIndices     = getEdgeIndices(cannyEdgesSharpened);
 
@@ -1816,8 +1843,13 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
     if (mEyePropertiesNew.v.searchRadius > imageWdth)
     {   mEyePropertiesNew.v.searchRadius = imageWdth; }
-    else if (mEyePropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarWdth)) // add height as well
+    else if (mEyePropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarWdth))
     {        mEyePropertiesNew.v.searchRadius = ceil(0.5 * offsetPupilHaarWdth); }
+
+    if (mEyePropertiesNew.v.searchRadius > imageHght)
+    {   mEyePropertiesNew.v.searchRadius = imageHght; }
+    else if (mEyePropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarHght))
+    {        mEyePropertiesNew.v.searchRadius = ceil(0.5 * offsetPupilHaarHght); }
 
     if (mEyePropertiesNew.v.thresholdCircumferenceChange > mEyePropertiesNew.p.circumferenceMax)
     {   mEyePropertiesNew.v.thresholdCircumferenceChange = mEyePropertiesNew.p.circumferenceMax; }

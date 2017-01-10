@@ -441,6 +441,8 @@ void MainWindow::detectPupilAllTrials()
 
 void MainWindow::offlineSaveExperimentData()
 {
+    std::string delimiter = ";";
+
     { // save pupil data
 
         std::stringstream filename;
@@ -452,22 +454,23 @@ void MainWindow::offlineSaveExperimentData()
         std::ofstream file;
         file.open(filename.str());
 
-        file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";"; // print with leading zeros
-        file << (int) timeMatrix[trialIndexOffline][1] << ";"; // time of day in milliseconds
+        if (timeMatrix.size() > 0)
+        {
+            file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";"; // print with leading zeros
+            file << (int) timeMatrix[trialIndexOffline][1] << ";"; // time of day in milliseconds
 
-        file << std::fixed;
-        file << std::setprecision(3);
+            file << std::fixed;
+            file << std::setprecision(3);
 
-        std::string delimiter = ";";
+            // write data
 
-        // write data
-
-        for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosExact     << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosExact     << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosExact     << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosExact     << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
+        }
 
         // additional data
 
@@ -494,8 +497,6 @@ void MainWindow::offlineSaveExperimentData()
         for (int i = 0; i < imageTotalOffline; i++)
         {
             int numEdges = vEyePropertiesMiscellaneous[i].edgePropertiesAll.size();
-
-            std::string delimiter = ";";
 
             for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].flag         << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMax << delimiter; }
