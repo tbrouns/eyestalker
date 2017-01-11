@@ -44,6 +44,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
     mEyePropertiesParameters.cannyThresholdLow                  = settings.value("CannyThresholdLow",               75).toInt();
     mEyePropertiesParameters.cannyThresholdHigh                 = settings.value("CannyThresholdHigh",              150).toInt();
+    mEyePropertiesParameters.curvatureFactor                    = settings.value("CurvatureFactor",                 1.05).toDouble();
     mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
     mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber               = settings.value("EdgeMaximumFitNumber",            3).toInt();
@@ -94,6 +95,7 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CannyThresholdHigh",             mEyePropertiesParameters.cannyThresholdHigh);
     settings.setValue("CircumferenceMax",               mEyePropertiesParameters.circumferenceMax);
     settings.setValue("CircumferenceMin",               mEyePropertiesParameters.circumferenceMin);
+    settings.setValue("CurvatureFactor",                mEyePropertiesParameters.curvatureFactor);
     settings.setValue("CurvatureOffset",                mEyePropertiesParameters.curvatureOffsetMin);
     settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
     settings.setValue("EdgeIntensityOffset",            mEyePropertiesParameters.edgeIntensityOffset);
@@ -337,6 +339,12 @@ void MainWindow::setGlintSize(int value)
     int newValue = 2 * value;
     mEyePropertiesParameters.glintSize = newValue;
     GlintSizeLabel->setText(QString::number(newValue));
+}
+
+void MainWindow::setCurvatureFactor(double value)
+{
+    mEyePropertiesParameters.curvatureFactor = value;
+    CurvatureFactorLabel->setText(QString::number(value, 'f', 2));
 }
 
 void MainWindow::setCurvatureOffset(double value)

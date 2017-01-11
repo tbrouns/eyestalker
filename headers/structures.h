@@ -76,6 +76,7 @@ struct eyePropertiesParameters
     double alphaMomentum;
     double alphaAverage;
     double alphaPrediction;
+    double curvatureFactor;
     double curvatureOffsetMin;
     double edgeIntensityOffset;
     double ellipseFitErrorMaximum;

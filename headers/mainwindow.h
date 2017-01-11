@@ -190,6 +190,7 @@ private:
     QLabel *CannyKernelSizeLabel;
     QLabel *CannyThresholdLowLabel;
     QLabel *CannyThresholdHighLabel;
+    QLabel *CurvatureFactorLabel;
     QLabel *CurvatureOffsetLabel;
     QLabel *DataAnalysisTitleTextBox;
     QLabel *DataDirectoryTextBox;
@@ -249,6 +250,7 @@ private:
     SliderDouble *CamEyeAOIWdthSlider;
     SliderDouble *CamEyeAOIXPosSlider;
     SliderDouble *CamEyeAOIYPosSlider;
+    SliderDouble *CurvatureFactorSlider;
     SliderDouble *CurvatureOffsetSlider;
     SliderDouble *EdgeIntensityOffsetSlider;
     SliderDouble *EdgeIntensitySlider;
@@ -352,6 +354,7 @@ private slots:
     void setCannyKernelSize(int value);
     void setCannyThresholdLow(int value);
     void setCannyThresholdHigh(int value);
+    void setCurvatureFactor(double value);
     void setCurvatureOffset(double value);
     void setDrawEdge(int state);
     void setDrawElps(int state);

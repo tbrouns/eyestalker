@@ -742,6 +742,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     GlintSizeSlider->setOrientation(Qt::Horizontal);
     QObject::connect(GlintSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setGlintSize(int)));
 
+    QLabel *CurvatureFactorTextBox = new QLabel;
+    CurvatureFactorTextBox->setText("<b>Curvature factor:</b>");
+
+    CurvatureFactorLabel  = new QLabel;
+    CurvatureFactorSlider = new SliderDouble;
+    CurvatureFactorSlider->setPrecision(2);
+    CurvatureFactorSlider->setDoubleRange(1.0, 1.2);
+    CurvatureFactorSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(CurvatureFactorSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureFactor(double)));
+
     QLabel *CurvatureOffsetTextBox = new QLabel;
     CurvatureOffsetTextBox->setText("<b>Curvature offset:</b>");
 
@@ -997,15 +1007,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     MiscellaneousParametersLayout->addWidget(GlintSizeTextBox, 1, 0);
     MiscellaneousParametersLayout->addWidget(GlintSizeSlider, 1, 1);
     MiscellaneousParametersLayout->addWidget(GlintSizeLabel, 1, 2);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetTextBox, 2, 0);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetSlider, 2, 1);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetLabel, 2, 2);
-    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberTextBox, 3, 0);
-    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberSlider, 3, 1);
-    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberLabel, 3, 2);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumTextBox, 4, 0);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumSlider, 4, 1);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumLabel, 4, 2);
+    MiscellaneousParametersLayout->addWidget(CurvatureFactorTextBox, 2, 0);
+    MiscellaneousParametersLayout->addWidget(CurvatureFactorSlider, 2, 1);
+    MiscellaneousParametersLayout->addWidget(CurvatureFactorLabel, 2, 2);
+    MiscellaneousParametersLayout->addWidget(CurvatureOffsetTextBox, 3, 0);
+    MiscellaneousParametersLayout->addWidget(CurvatureOffsetSlider, 3, 1);
+    MiscellaneousParametersLayout->addWidget(CurvatureOffsetLabel, 3, 2);
+    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberTextBox, 4, 0);
+    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberSlider, 4, 1);
+    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberLabel, 4, 2);
+    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumTextBox, 5, 0);
+    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumSlider, 5, 1);
+    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumLabel, 5, 2);
 
     EyeTrackingParameterTabWidget = new QTabWidget;
     EyeTrackingParameterTabWidget->addTab(CameraParametersWidget,        tr("Camera"));
@@ -1659,14 +1672,17 @@ void MainWindow::setParameterWidgets()
     GlintSizeSlider->setValue(round(0.5 * mEyePropertiesParameters.glintSize));
     GlintSizeLabel->setText(QString::number(mEyePropertiesParameters.glintSize));
 
+    CurvatureFactorSlider->setDoubleValue(mEyePropertiesParameters.curvatureFactor);
+    CurvatureFactorLabel ->setText(QString::number(mEyePropertiesParameters.curvatureFactor, 'f', 2));
+
     CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
-    CurvatureOffsetLabel->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
+    CurvatureOffsetLabel ->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
 
     EdgeMaximumFitNumberSlider->setValue(mEyePropertiesParameters.edgeMaximumFitNumber);
-    EdgeMaximumFitNumberLabel->setText(QString::number(mEyePropertiesParameters.edgeMaximumFitNumber));
+    EdgeMaximumFitNumberLabel ->setText(QString::number(mEyePropertiesParameters.edgeMaximumFitNumber));
 
     EllipseFitErrorMaximumSlider->setDoubleValue(mEyePropertiesParameters.ellipseFitErrorMaximum);
-    EllipseFitErrorMaximumLabel->setText(QString::number(mEyePropertiesParameters.ellipseFitErrorMaximum, 'f', 1));
+    EllipseFitErrorMaximumLabel ->setText(QString::number(mEyePropertiesParameters.ellipseFitErrorMaximum, 'f', 1));
 }
 
 void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyePropertiesVariables)

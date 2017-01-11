@@ -1589,42 +1589,90 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         double xPosPredictedRelative = mEyeProperties.v.xPosPredicted - offsetPupilHaarXPos;
         double yPosPredictedRelative = mEyeProperties.v.yPosPredicted - offsetPupilHaarYPos;
 
-        //        std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mEyeProperties.p.cannyKernelSize, xPosPredictedRelative, yPosPredictedRelative);
-        //        std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative);
-        //        std::vector<int>  cannyEdges            = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow);
-        //        std::vector<int>  cannyEdgesSharpened   = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
-        //        std::vector<int>  cannyEdgesIndices     = getEdgeIndices(cannyEdgesSharpened);
-
-        cv::Mat imageCannyEdges;
-        cv::Canny(imagePupilGrayBlurred, imageCannyEdges, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow, mEyeProperties.p.cannyKernelSize);
-        std::vector<int>  cannyEdges            = cannyConversion(imageCannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
+        std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mEyeProperties.p.cannyKernelSize, xPosPredictedRelative, yPosPredictedRelative);
+        std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative);
+        std::vector<int>  cannyEdges            = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow);
         std::vector<int>  cannyEdgesSharpened   = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
         std::vector<int>  cannyEdgesIndices     = getEdgeIndices(cannyEdgesSharpened);
 
+        //        cv::Mat imageCannyEdges;
+        //        cv::Canny(imagePupilGrayBlurred, imageCannyEdges, mEyeProperties.p.cannyThresholdHigh, mEyeProperties.p.cannyThresholdLow, mEyeProperties.p.cannyKernelSize);
+        //        std::vector<int>  cannyEdges            = cannyConversion(imageCannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
+        //        std::vector<int>  cannyEdgesSharpened   = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
+        //        std::vector<int>  cannyEdgesIndices     = getEdgeIndices(cannyEdgesSharpened);
+
         // Edge thresholding
-
-        double curvatureLowerLimit;
-
-        {
-            double A =  5796;
-            double B = -0.7855;
-            double C = -0.7259;
-            double D =  0.3801;
-            double E = -1.408;
-
-            curvatureLowerLimit = A * exp(B * pow(mEyeProperties.v.circumferencePrediction, D) + C * pow(mEyeProperties.v.aspectRatioPrediction, E)) - mEyeProperties.v.curvatureOffset;
-        }
 
         double curvatureUpperLimit;
 
         {
-            double A =  98.31;
-            double B =  9.95;
-            double C = -2.106;
-            double D = -0.412;
-            double E =  0.4122;
+            double x = mEyeProperties.v.circumferencePrediction;
+            double y = mEyeProperties.v.aspectRatioPrediction;
 
-            curvatureUpperLimit = A * exp(B * pow(mEyeProperties.v.circumferencePrediction, D) + C * pow(mEyeProperties.v.aspectRatioPrediction, E)) + mEyeProperties.v.curvatureOffset;
+            double p00 =       223.4;
+            double p10 =      0.8889;
+            double p01 =       93.66;
+            double p20 =      0.0014;
+            double p11 =      -12.66;
+            double p02 =      -129.8;
+            double p30 =   -5.23e-05;
+            double p21 =     0.05832;
+            double p12 =       11.94;
+            double p03 =       107.3;
+            double p40 =   1.981e-07;
+            double p31 =  -0.0001222;
+            double p22 =     -0.0296;
+            double p13 =      -5.114;
+            double p04 =      -134.4;
+            double p50 =  -2.322e-10;
+            double p41 =   1.042e-07;
+            double p32 =   2.461e-05;
+            double p23 =    0.005287;
+            double p14 =      0.8476;
+            double p05 =       70.94;
+
+            curvatureUpperLimit =
+                    p00           + p10*x         + p01*y         + p20*x*x       + p11*x*y       + p02*y*y       + p30*x*x*x
+                    + p21*x*x*y   + p12*x*y*y     + p03*y*y*y     + p40*x*x*x*x   + p31*x*x*x*y   + p22*x*x*y*y   + p13*x*y*y*y
+                    + p04*y*y*y*y + p50*x*x*x*x*x + p41*x*x*x*x*y + p32*x*x*x*y*y + p23*x*x*y*y*y + p14*x*y*y*y*y + p05*y*y*y*y*y;
+
+            curvatureUpperLimit = mEyeProperties.p.curvatureFactor * curvatureUpperLimit + mEyeProperties.v.curvatureOffset;
+        }
+
+        double curvatureLowerLimit;
+
+        {
+            double x = mEyeProperties.v.circumferencePrediction;
+            double y = mEyeProperties.v.aspectRatioPrediction;
+
+            double p00 =       35.26;
+            double p10 =      -1.282;
+            double p01 =       89.44;
+            double p20 =     0.01675;
+            double p11 =      -3.123;
+            double p02 =       373.6;
+            double p30 =  -0.0001031;
+            double p21 =     0.02731;
+            double p12 =      -1.822;
+            double p03 =      -537.1;
+            double p40 =    2.98e-07;
+            double p31 =  -0.0001016;
+            double p22 =     0.01206;
+            double p13 =      -1.537;
+            double p04 =       706.4;
+            double p50 =  -3.192e-10;
+            double p41 =    1.13e-07;
+            double p32 =   7.157e-07;
+            double p23 =   -0.007374;
+            double p14 =       2.088;
+            double p05 =      -394.1;
+
+            curvatureLowerLimit =
+                    p00           + p10*x         + p01*y         + p20*x*x       + p11*x*y       + p02*y*y       + p30*x*x*x
+                    + p21*x*x*y   + p12*x*y*y     + p03*y*y*y     + p40*x*x*x*x   + p31*x*x*x*y   + p22*x*x*y*y   + p13*x*y*y*y
+                    + p04*y*y*y*y + p50*x*x*x*x*x + p41*x*x*x*x*y + p32*x*x*x*y*y + p23*x*x*y*y*y + p14*x*y*y*y*y + p05*y*y*y*y*y;
+
+            curvatureLowerLimit = (2 - mEyeProperties.p.curvatureFactor) * curvatureLowerLimit  - mEyeProperties.v.curvatureOffset;
         }
 
         std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, curvatureLowerLimit, curvatureUpperLimit);
