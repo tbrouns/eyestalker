@@ -53,7 +53,7 @@ void MainWindow::countNumTrials()
 {
     trialTotalOffline = 0;
 
-    while (true)
+    while (1)
     {
         std::stringstream folderName;
         folderName << dataDirectoryOffline.toStdString()
@@ -71,7 +71,7 @@ void MainWindow::countNumImages()
 {
     imageTotalOffline = 0;
 
-    while (true)
+    while (1)
     {
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()

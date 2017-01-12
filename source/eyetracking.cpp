@@ -42,8 +42,8 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, int 
             
             double val = ptr[j];
 
-            if (x == 0 && y == 0) { integralImage[i] = val; } // first point
-            else if (y == 0)      { integralImage[i] = val + integralImage[i - 1]; } // first row
+            if (x == 0 && y == 0) { integralImage[i] = val; }                            // first point
+            else if (y == 0)      { integralImage[i] = val + integralImage[i - 1]; }     // first row
             else if (x == 0)      { integralImage[i] = val + integralImage[i - width]; } // first column
             else                  { integralImage[i] = val + integralImage[i - 1] + integralImage[i - width] - integralImage[i - width - 1]; }
         }
@@ -78,21 +78,12 @@ haarProperties detectGlint(const cv::Mat& img, int imgWidth, int startX, int sta
             int i = width * y + x; // gradient coordinates
             int j = imgWidth * (y + startY) + (x + startX); // image coordinates
             
-            double centre = ptr[j];
+            double centreSum = ptr[j];
+            for (int m = 0; m < 8; m++) { centreSum += ptr[j + dZ[m]]; }
             
-            for (int m = 0; m < 8; m++)
-            {
-                centre += ptr[j + dZ[m]];
-            }
-            
-            double surround = 0;
-            
-            for (int m = 0; m < 8; m++)
-            {
-                surround += ptr[j + gradientWindowLength * dZ[m]];
-            }
-            
-            imageGradient[i] = centre / surround;
+            double surroundSum = 0;
+            for (int m = 0; m < 8; m++) { surroundSum += ptr[j + gradientWindowLength * dZ[m]]; }
+            imageGradient[i] = centreSum / surroundSum;
         }
     }
     
@@ -127,11 +118,11 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
             int topLeftX = x;
             int topLeftY = y;
             
-            int backRightX = topLeftX + (haarWidth - 1);
+            int backRightX = topLeftX + (haarWidth  - 1);
             int backRightY = topLeftY + (haarHeight - 1);
             
             int topLeftIndex  = width * topLeftY + topLeftX;
-            int topRghtIndex  = topLeftIndex + (haarWidth - 1);
+            int topRghtIndex  = topLeftIndex + (haarWidth  - 1);
             int backLeftIndex = topLeftIndex + (haarHeight - 1) * width;
             int backRghtIndex = topRghtIndex + backLeftIndex - topLeftIndex;
             
@@ -580,12 +571,13 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, int haarWi
                         int yOpposite = yCentre + dY[q];
                         int iOpposite = haarWidth * yOpposite + xOpposite;
 
-                        if (xOpposite < 0 || xOpposite >= haarWidth  || // ... and opposite pixel is out-of-bounds
-                                yOpposite < 0 || yOpposite >= haarHeight ||
-                                binaryImageVector[iOpposite] ==  0       || // ... or unfilled ...
-                                binaryImageVector[iOpposite] == -1)
+                        if
+                                (xOpposite < 0 || xOpposite >= haarWidth  || // ... AND opposite pixel is out-of-bounds
+                                 yOpposite < 0 || yOpposite >= haarHeight ||
+                                 binaryImageVector[iOpposite] ==  0       || // ... OR unfilled ...
+                                 binaryImageVector[iOpposite] == -1)
                         {
-                            binaryImageVector[iCentre] = -1; // ... then remove pixel from edge
+                            binaryImageVector[iCentre] = -1; // ... THEN remove pixel from edge
                         }
                     }
                 }
@@ -605,12 +597,10 @@ std::vector<int> getEdgeIndices(const std::vector<int>& binaryImageVector)
     return cannyEdgeIndices;
 }
 
-std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, int haarWidth, int haarHeight, double curvatureLowerLimit, double curvatureUpperLimit)
+std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, int haarWidth, int haarHeight, double pupilXCentre, double pupilYCentre, double curvatureLowerLimit, double curvatureUpperLimit)
 {
     std::vector<edgeProperties> vEdgePropertiesAll; // new structure containing length and indices of all edges
-    
-    int haarArea = haarWidth * haarHeight;
-    
+
     // scanned neighbours
     std::vector<int> dX(8);
     dX[0] = -1;
@@ -641,35 +631,53 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
     dZ[5] =  haarWidth + 1;
     dZ[6] =  haarWidth;
     dZ[7] =  haarWidth - 1;
-
-    int startEdgeSearchIndex = 0;
     
-    while (true)
+    while (1)
     {
-        bool newEdgeFound = false;
-        
-        for (int i = startEdgeSearchIndex; i < haarArea; i++) // find a point belonging to an edge
+        int startEdgeIndex;
+        bool NEW_EDGE_FOUND = false;
+
+        for (int m = 0; m < 8 && !NEW_EDGE_FOUND; m++) // starburst
         {
-            if (p[i] == 1)
+            bool STOP_SEARCH = false;
+
+            int x = round(pupilXCentre);
+            int y = round(pupilYCentre);
+
+            while (!STOP_SEARCH)
             {
-                startEdgeSearchIndex = i;
-                newEdgeFound = true;
-                break;
+                for (int n = 0; n < 2 && !STOP_SEARCH; n++)
+                {
+                    x = x + dX[m] * (1 - n);
+                    y = y + dY[m] * (n);
+
+                    if (x < 0 || x >= haarWidth || y < 0 || y >= haarHeight) { STOP_SEARCH = true; break; }
+
+                    int i = y * haarWidth + x;
+
+                    if (p[i] == 1)
+                    {
+                        startEdgeIndex = i;
+                        NEW_EDGE_FOUND = true;
+                        STOP_SEARCH    = true;
+                    }
+                    else if (p[i] > 1) { STOP_SEARCH = true; }
+                }
             }
         }
         
-        if (!newEdgeFound) { break; } // no (more) edges found
-        
+        if (!NEW_EDGE_FOUND) { break; } // no (more) edges found
+
         // find edge endpoint
         
         std::vector<int> allEdgeIndicesRaw(1); // all indices belonging to the edge, out-of-order
-        allEdgeIndicesRaw[0] = startEdgeSearchIndex;
+        allEdgeIndicesRaw[0] = startEdgeIndex;
         
-        p[startEdgeSearchIndex] = 2; // tag pixel
+        p[startEdgeIndex] = 2; // tag pixel
         
         {
             std::vector<int> rawEdgeIndices(1);
-            rawEdgeIndices[0] = startEdgeSearchIndex;
+            rawEdgeIndices[0] = startEdgeIndex;
             
             bool edgePointFound = true;
             
@@ -723,15 +731,15 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
         std::vector<int> branchStartIndices(1);
         branchStartIndices[0] = edgeStartIndex;
         
-        int numberOfBranches = 1; // start off with one branch
+        int numbranches = 1; // start off with one branch
 
-        while (numberOfBranches > 0)
+        while (numbranches > 0)
         {
             std::vector<int> branchSizes;                            // record length of each branch
             std::vector<std::vector<int>> branchIndicesVectors;      // record indices of each branch
             std::vector<std::vector<int>> branchStartIndicesVectors; // record start index of each branch
 
-            for (int iBranch = 0; iBranch < numberOfBranches; iBranch++) // stops when junction is encountered
+            for (int iBranch = 0; iBranch < numbranches; iBranch++) // stops when junction is encountered
             {
                 int branchStartIndex = branchStartIndices[iBranch];
                 int currentIndex = branchStartIndex;
@@ -796,7 +804,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
             allEdgeIndices.insert(std::end(allEdgeIndices), std::begin(branchIndicesVectors[maxIndex]), std::end(branchIndicesVectors[maxIndex])); // only add longest branch
 
             branchStartIndices = branchStartIndicesVectors[maxIndex];
-            numberOfBranches = branchStartIndices.size();
+            numbranches = branchStartIndices.size();
         }
 
         // give pixels that have been added to new outline a new tag
@@ -817,10 +825,21 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
                 p[edgePointIndex] = 1;
             }
         }
-        
-        // calculate curvature
-        
+
         int edgeLength = allEdgeIndices.size();
+
+        if (edgeLength < curvatureWindowLength) // ignore short edges
+        {
+            for (int iEdgePoint = 0; iEdgePoint < edgeLength; iEdgePoint++)
+            {
+                int edgePointIndex = allEdgeIndices[iEdgePoint];
+                p[edgePointIndex]  = -1; // make them transparent to starburst
+            }
+
+            continue;
+        }
+
+        // calculate curvature
 
         // calculate directions of edge points
         
@@ -829,25 +848,18 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
         
         xOrientation[0] = -1.0;
         yOrientation[0] =  0.0;
-        
         xOrientation[1] = -sqrt(0.5);
         yOrientation[1] = -sqrt(0.5);
-        
         xOrientation[2] =  0.0;
         yOrientation[2] = -1.0;
-        
         xOrientation[3] =  sqrt(0.5);
         yOrientation[3] = -sqrt(0.5);
-        
         xOrientation[4] = 1.0;
         yOrientation[4] = 0.0;
-        
         xOrientation[5] = sqrt(0.5);
         yOrientation[5] = sqrt(0.5);
-        
         xOrientation[6] = 0.0;
         yOrientation[6] = 1.0;
-        
         xOrientation[7] = -sqrt(0.5);
         yOrientation[7] =  sqrt(0.5);
         
@@ -867,7 +879,6 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
                 {
                     edgeXOrientations[iEdgePoint] = xOrientation[m];
                     edgeYOrientations[iEdgePoint] = yOrientation[m];
-
                     break;
                 }
             }
@@ -881,7 +892,6 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
         // calculate curvature and normal lines to curve
 
         std::vector<double> edgePointCurvatures(edgeLength, 360.0);
-
         std::vector<double> edgePointXNormals(edgeLength, 0.0);
         std::vector<double> edgePointYNormals(edgeLength, 0.0);
 
@@ -903,21 +913,15 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
 
             double vectorAngle = atan2(secndYTangent, secndXTangent) - atan2(firstYTangent, firstXTangent);
 
-            if (vectorAngle > M_PI)
-            {
-                vectorAngle = vectorAngle - 2 * M_PI;
-            }
-            else if (vectorAngle < -M_PI)
-            {
-                vectorAngle = vectorAngle + 2 * M_PI;
-            }
+            if      (vectorAngle >  M_PI) { vectorAngle = vectorAngle - 2 * M_PI; }
+            else if (vectorAngle < -M_PI) { vectorAngle = vectorAngle + 2 * M_PI; }
 
             edgePointCurvatures[iEdgePoint] = 180 * vectorAngle / M_PI; // in degrees
 
             edgePointXNormals[iEdgePoint] = -firstXTangent + secndXTangent;
             edgePointYNormals[iEdgePoint] = -firstYTangent + secndYTangent;
         }
-        
+
         // find majority sign of curvature
         
         int edgeCurvatureSign = 1;
@@ -928,28 +932,15 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
             
             for (int iEdgePoint = curvatureWindowLength; iEdgePoint < edgeLength - curvatureWindowLength; iEdgePoint++)
             {
-                double edgePointCurvature = edgePointCurvatures[iEdgePoint];
-                
-                if (edgePointCurvature > 0)
-                {
-                    numberOfPositiveCurvatures++;
-                }
-                else if (edgePointCurvature < 0)
-                {
-                    numberOfNegativeCurvatures++;
-                }
+                double   edgePointCurvature = edgePointCurvatures[iEdgePoint];
+                if      (edgePointCurvature > 0) { numberOfPositiveCurvatures++; }
+                else if (edgePointCurvature < 0) { numberOfNegativeCurvatures++; }
             }
             
-            if (numberOfPositiveCurvatures >= numberOfNegativeCurvatures)
-            {
-                edgeCurvatureSign =  1;
-            }
-            else
-            {
-                edgeCurvatureSign = -1;
-            }
+            if (numberOfPositiveCurvatures >= numberOfNegativeCurvatures) { edgeCurvatureSign =  1; }
+            else                                                          { edgeCurvatureSign = -1; }
         }
-        
+
         // find breakpoints
         
         std::vector<int> breakPointIndices; // position of breakpoints
@@ -964,7 +955,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
                 breakPointIndices.push_back(iEdgePoint);
             }
         }
-        
+
         breakPointIndices.push_back(edgeLength - 1); // add last point
         
         // evaluate each partial edge
@@ -979,10 +970,9 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
             int iEndBreakPoint    = breakPointIndices[iBreakPoint + 1];
             int partialEdgeLength = iEndBreakPoint - iStartBreakPoint;
 
-            if (partialEdgeLength < curvatureWindowLength) { continue; } // ignore short edges
-
             // grab indices of edge points
 
+            if (partialEdgeLength < curvatureWindowLength) { continue; } // ignore short edges
             std::vector<int> partialEdgeIndices(allEdgeIndices.begin() + iStartBreakPoint, allEdgeIndices.begin() + iEndBreakPoint);
 
             // calculate pixel intensities within inner curve of edge points
@@ -1002,13 +992,8 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
                     int offsetYPos = edgePointYPos + edgeIntensityPositionOffset * ceil2(edgePointYNormals[iEdgePoint]);
 
                     if (offsetXPos < 0 || offsetXPos > haarWidth || offsetYPos < 0 || offsetYPos > haarHeight)
-                    {
-                        partialEdgeIntensities[iEdgePoint] = ptr_img[edgePointXPos + edgePointYPos * haarWidth];
-                    }
-                    else
-                    {
-                        partialEdgeIntensities[iEdgePoint] = ptr_img[offsetXPos + offsetYPos * haarWidth];
-                    }
+                    {       partialEdgeIntensities[iEdgePoint] = ptr_img[edgePointXPos + edgePointYPos * haarWidth]; }
+                    else {  partialEdgeIntensities[iEdgePoint] = ptr_img[   offsetXPos +    offsetYPos * haarWidth]; }
                 }
             }
 
@@ -1086,8 +1071,8 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
             mEdgeProperties.curvatureMax = maxCurvature;
             mEdgeProperties.curvatureMin = minCurvature;
             mEdgeProperties.intensity    = avgIntensity;
-            mEdgeProperties.length       = partialEdgeLength;  // add edge length to structure
-            mEdgeProperties.size         = numEdgePoints;      // add total number of edge points of edge to structure
+            mEdgeProperties.length       = partialEdgeLength;
+            mEdgeProperties.size         = numEdgePoints;
             mEdgeProperties.pointIndices = partialEdgeIndices;
 
             vEdgePropertiesAll.push_back(mEdgeProperties);
@@ -1103,6 +1088,7 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const std::vector<e
 
     int numEdgesMax = mEyeProperties.p.edgeMaximumFitNumber;
     int numEdges    = vEdgePropertiesAll.size();
+    if (numEdgesMax > numEdges) { numEdgesMax = numEdges; }
 
     std::vector<int> acceptedEdges(numEdgesMax);
 
@@ -1124,13 +1110,9 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const std::vector<e
         double length = vEdgePropertiesAll[iEdge].length;
         double lengthScore;
         if (length <= mEyeProperties.v.circumferencePrediction)
-        {
-            lengthScore = 12 * (1 - exp(-0.0002 * mEyeProperties.v.circumferencePrediction * length)); // longer = better
-        }
+        { lengthScore = 12 * (1 - exp(-0.0002 * mEyeProperties.v.circumferencePrediction * length)); } // longer = better
         else
-        {
-            lengthScore = 12 / (1 + 0.01 * pow(0.85, -length + mEyeProperties.v.circumferencePrediction)); // closer to prediction = better
-        }
+        { lengthScore = 12 / (1 + 0.01 * pow(0.85, -length + mEyeProperties.v.circumferencePrediction)); } // closer to prediction = better
         if (lengthScore < 0) { lengthScore = 0; }
 
         // curvature score
@@ -1154,7 +1136,7 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const std::vector<e
             if (totalScoresSorted[iEdge] == totalScoresUnsorted[jEdge])
             {
                 acceptedEdges[iEdge] = jEdge;
-
+                totalScoresUnsorted[jEdge] = -1;
                 break;
             }
         }
@@ -1368,22 +1350,15 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             ellipseProperties mEllipsePropertiesNew = fitEllipse(edgeIndices, edgeSetSize, haarWidth);
 
-            if (!mEllipsePropertiesNew.pupilDetected) // error
-            { continue; }
+            if (!mEllipsePropertiesNew.pupilDetected) { continue; } // error
 
             // Size and shape filters
             
-            if (mEllipsePropertiesNew.circumference > mEyeProperties.p.circumferenceMax || mEllipsePropertiesNew.circumference < mEyeProperties.p.circumferenceMin) // no large or small pupils
-            { continue; }
-
-            if (mEllipsePropertiesNew.aspectRatio < mEyeProperties.p.aspectRatioMin) // no extreme deviations from circular shape
-            { continue; }
-
-            if (std::abs(mEllipsePropertiesNew.circumference - mEyeProperties.v.circumferencePrediction) > mEyeProperties.v.thresholdCircumferenceChange) // no large pupil size changes
-            { continue; }
-
-            if (std::abs(mEllipsePropertiesNew.aspectRatio - mEyeProperties.v.aspectRatioPrediction) > mEyeProperties.v.thresholdAspectRatioChange) // no large pupil size changes
-            { continue; }
+            if (mEllipsePropertiesNew.circumference > mEyeProperties.p.circumferenceMax) { continue; } // no large pupils
+            if (mEllipsePropertiesNew.circumference < mEyeProperties.p.circumferenceMin) { continue; } // no small pupils
+            if (mEllipsePropertiesNew.aspectRatio   < mEyeProperties.p.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
+            if (std::abs(mEllipsePropertiesNew.circumference - mEyeProperties.v.circumferencePrediction) > mEyeProperties.v.thresholdCircumferenceChange) { continue; } // no large pupil size changes
+            if (std::abs(mEllipsePropertiesNew.aspectRatio   - mEyeProperties.v.aspectRatioPrediction  ) > mEyeProperties.v.thresholdAspectRatioChange  ) { continue; } // no large pupil shape changes
 
             // calculate error between fit and every edge point
 
@@ -1394,11 +1369,11 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
             double E = mEllipsePropertiesNew.coefficients[4];
             double F = mEllipsePropertiesNew.coefficients[5];
 
-            // iterate over all edge points of all raw canny edges
+            // calculate error
 
             double fitErrorSum = 0;
 
-            for (int iEdgePoint = 0; iEdgePoint < edgeSetLength; iEdgePoint++)
+            for (int iEdgePoint = 0; iEdgePoint < edgeSetSize; iEdgePoint++)
             {
                 int edgePointIndex = edgeIndices[iEdgePoint];
 
@@ -1410,17 +1385,15 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
                 fitErrorSum += fitError;
             }
 
-            mEllipsePropertiesNew.fitError = fitErrorSum / edgeSetLength;
+            mEllipsePropertiesNew.fitError = fitErrorSum / edgeSetSize;
 
-            if (mEllipsePropertiesNew.fitError > mEyeProperties.p.ellipseFitErrorMaximum) // no large fit errors
-            { continue; }
-
+            if (mEllipsePropertiesNew.fitError > mEyeProperties.p.ellipseFitErrorMaximum) { continue; } // no large fit errors
 
             // save parameters of accepted fit
 
             mEllipsePropertiesNew.edgeIndices = combiEdgeIndices;
             mEllipsePropertiesNew.intensity   = calculateMean(combiEdgeIntensities);
-            mEllipsePropertiesNew.edgeLength  = edgeSetSize;
+            mEllipsePropertiesNew.edgeLength  = edgeSetLength;
             vEllipsePropertiesAll.push_back(mEllipsePropertiesNew);
             
             numberOfFits++;
@@ -1434,20 +1407,32 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     {
         std::vector<double> featureChange(numberOfFits); // new type of fit error
 
+        double maxScoreFitError         = 10;
+        double maxScoreCircumference    = 5;
+        double maxScoreAspectRatio      = 5;
+        double maxScoreLength           = 25;
+
         for (int iFit = 0; iFit < numberOfFits; iFit++)
         {
             double circumferenceChange = (std::abs(vEllipsePropertiesAll[iFit].circumference - mEyeProperties.v.circumferencePrediction));
             double aspectRatioChange   = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio - mEyeProperties.v.aspectRatioPrediction));
             double fitError            = vEllipsePropertiesAll[iFit].fitError;
+            double lengthDifference    = (std::abs(vEllipsePropertiesAll[iFit].edgeLength - mEyeProperties.v.circumferencePrediction));
 
-            double scoreCircumference = circumferenceChange / mEyeProperties.p.aspectRatioChangeThreshold;
-            double scoreAspectRatio   = aspectRatioChange   / mEyeProperties.p.circumferenceChangeThreshold;
-            double scoreFitError      = 2 * fitError        / mEyeProperties.p.ellipseFitErrorMaximum;
+            double scoreCircumference  = (-maxScoreCircumference / mEyeProperties.p.circumferenceChangeThreshold) * circumferenceChange + maxScoreCircumference;
+            double scoreAspectRatio    = (-maxScoreAspectRatio   / mEyeProperties.p.aspectRatioChangeThreshold)   * aspectRatioChange   + maxScoreAspectRatio;
+            double scoreFitError       = (-maxScoreFitError      / mEyeProperties.p.ellipseFitErrorMaximum)       * fitError            + maxScoreFitError;
+            double scoreLength         = (-maxScoreLength * 2    / mEyeProperties.v.circumferencePrediction)      * lengthDifference    + maxScoreLength;
 
-            featureChange[iFit] = scoreCircumference + scoreAspectRatio + scoreFitError;
+            if (scoreCircumference  < 0) { scoreCircumference   = 0; }
+            if (scoreAspectRatio    < 0) { scoreAspectRatio     = 0; }
+            if (scoreFitError       < 0) { scoreFitError        = 0; }
+            if (scoreLength         < 0) { scoreLength          = 0; }
+
+            featureChange[iFit] = scoreCircumference + scoreAspectRatio + scoreFitError + scoreLength;
         }
 
-        int acceptedFitIndex = std::distance(featureChange.begin(), std::min_element(featureChange.begin(), featureChange.end()));
+        int acceptedFitIndex = std::distance(featureChange.begin(), std::max_element(featureChange.begin(), featureChange.end()));
 
         mEllipseProperties = vEllipsePropertiesAll[acceptedFitIndex];
         mEllipseProperties.pupilDetected = true;
@@ -1533,6 +1518,11 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         {   mEyeProperties.v.thresholdAspectRatioChange = 1.0; }
         else if (mEyeProperties.v.thresholdAspectRatioChange < mEyeProperties.p.aspectRatioChangeThreshold)
         {        mEyeProperties.v.thresholdAspectRatioChange = mEyeProperties.p.aspectRatioChangeThreshold; }
+
+        if (mEyePropertiesNew.v.curvatureOffset > 180)
+        {   mEyePropertiesNew.v.curvatureOffset = 180; }
+        else if (mEyePropertiesNew.v.curvatureOffset < mEyePropertiesNew.p.curvatureOffsetMin)
+        {        mEyePropertiesNew.v.curvatureOffset = mEyePropertiesNew.p.curvatureOffsetMin; }
 
         // Convert to grayscale
 
@@ -1675,7 +1665,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             curvatureLowerLimit = (2 - mEyeProperties.p.curvatureFactor) * curvatureLowerLimit  - mEyeProperties.v.curvatureOffset;
         }
 
-        std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, curvatureLowerLimit, curvatureUpperLimit);
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative, curvatureLowerLimit, curvatureUpperLimit);
 
         int numEdgesTotal = vEdgePropertiesAll.size();
 
@@ -1710,11 +1700,12 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             mEyeProperties.v.edgeCurvaturePrediction = 0.5 * (curvatureUpperLimit + curvatureLowerLimit);
 
             std::vector<int> acceptedEdges = edgeThreshold(mEyeProperties, vEdgePropertiesAll);
+            int numEdges = acceptedEdges.size();
 
-            for (int iEdge = 0; iEdge < mEyeProperties.p.edgeMaximumFitNumber; iEdge++) // grab accepted edges
+            for (int iEdge = 0; iEdge < numEdges; iEdge++) // grab accepted edges
             {
                 int jEdge = acceptedEdges[iEdge];
-                vEdgePropertiesAll[jEdge].flag = 1;
+                vEdgePropertiesAll[jEdge].flag = 1; // tag it
                 vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
             }
 

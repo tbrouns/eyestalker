@@ -58,7 +58,7 @@ void drawEdges(cv::Mat& I, const std::vector<int>& p, int x0, int y0, int haarWi
                 int X = x + x0;
                 int Y = y + y0;
 
-                if (p[i] == 1)
+                if (p[i] == 1 || p[i] == -1)
                 {
                     I.at<cv::Vec3b>(Y, X) = col;
                 }
