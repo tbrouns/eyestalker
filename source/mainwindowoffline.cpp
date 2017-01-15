@@ -456,27 +456,26 @@ void MainWindow::offlineSaveExperimentData()
 
         if (timeMatrix.size() > 0)
         {
-            file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";"; // print with leading zeros
-            file << (int) timeMatrix[trialIndexOffline][1] << ";"; // time of day in milliseconds
+            file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";";   // trial index
+            file << (int) timeMatrix[trialIndexOffline][1] << ";";                                  // system clock time
+            file << imageTotalOffline << ";" ;                                                      // data samples
 
             file << std::fixed;
             file << std::setprecision(3);
 
             // write data
 
-            for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosExact     << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosExact     << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
         }
 
-        // additional data
+
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
 
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact  << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact    << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected       << delimiter; }
+
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction << delimiter; }
 
