@@ -118,6 +118,9 @@ private:
     bool FLASH_STANDBY;
     bool PROCESSING_ALL_IMAGES;
     bool PROCESSING_ALL_TRIALS;
+    bool SAVE_ASPECT_RATIO;
+    bool SAVE_CIRCUMFERENCE;
+    bool SAVE_POSITION;
     bool SAVE_EYE_IMAGE;
     char currentDate[80];
     cv::Mat imageCamera;
@@ -379,6 +382,9 @@ private slots:
     void setPupilAspectRatioMin(double);
     void setPupilHaarOffset(int value);
     void setPupilPosition(double xPos, double yPos);
+    void setSaveDataAspectRatio(int);
+    void setSaveDataCircumference(int);
+    void setSaveDataPosition(int);
     void setRealTimeEyeTracking(int state);
     void setOfflineMode(int state);
     void setOfflineImageFrame(int);

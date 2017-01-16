@@ -62,6 +62,9 @@ void MainWindow::loadSettings(QString fileName)
     Parameters::flashAOIWdth                                    = settings.value("FlashAOIWdth",                    60).toInt();
     Parameters::flashAOIXPos                                    = settings.value("FlashAOIXPos",                    227).toInt();
     Parameters::flashAOIYPos                                    = settings.value("FlashAOIYPos",                    500).toInt();
+    SAVE_ASPECT_RATIO                                           = settings.value("SaveAspectRatio",                 false).toBool();
+    SAVE_CIRCUMFERENCE                                          = settings.value("SaveCircumference",               false).toBool();
+    SAVE_POSITION                                               = settings.value("SavePosition",                    true).toBool();
     SAVE_EYE_IMAGE                                              = settings.value("SaveEyeImage",                    true).toBool();
     subjectIdentifier                                           = settings.value("SubjectIdentifier",               "").toString();
     trialIndex                                                  = settings.value("TrialIndex",                      trialIndex).toInt();
@@ -111,6 +114,9 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("AspectRatioMin",                 mEyePropertiesParameters.aspectRatioMin);
     settings.setValue("GlintSize",                      mEyePropertiesParameters.glintSize);
     settings.setValue("PupilOffset",                    mEyePropertiesParameters.pupilOffset);
+    settings.setValue("SaveAspectRatio",                SAVE_ASPECT_RATIO);
+    settings.setValue("SaveCircumference",              SAVE_CIRCUMFERENCE);
+    settings.setValue("SavePosition",                   SAVE_POSITION);
     settings.setValue("SaveEyeImage",                   SAVE_EYE_IMAGE);
     settings.setValue("SubjectName",                    subjectIdentifier);
     settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
@@ -691,6 +697,42 @@ void MainWindow::setFlashThreshold(int val)
 void MainWindow::setTrialIndex(int val)
 {
     trialIndex = val;
+}
+
+void MainWindow::setSaveDataAspectRatio(int state)
+{
+    if (state)
+    {
+        SAVE_ASPECT_RATIO = true;
+    }
+    else
+    {
+        SAVE_ASPECT_RATIO = false;
+    }
+}
+
+void MainWindow::setSaveDataCircumference(int state)
+{
+    if (state)
+    {
+        SAVE_CIRCUMFERENCE = true;
+    }
+    else
+    {
+        SAVE_CIRCUMFERENCE = false;
+    }
+}
+
+void MainWindow::setSaveDataPosition(int state)
+{
+    if (state)
+    {
+        SAVE_POSITION = true;
+    }
+    else
+    {
+        SAVE_POSITION = false;
+    }
 }
 
 void MainWindow::setAOILeftEye()

@@ -454,11 +454,14 @@ void MainWindow::offlineSaveExperimentData()
         std::ofstream file;
         file.open(filename.str());
 
+        int numChannels = 2 * (int) SAVE_POSITION + (int) SAVE_CIRCUMFERENCE + (int) SAVE_ASPECT_RATIO;
+
         if (timeMatrix.size() > 0)
         {
             file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";";   // trial index
+            file << imageTotalOffline << ";";                                                       // data samples
+            file << numChannels << ";";
             file << (int) timeMatrix[trialIndexOffline][1] << ";";                                  // system clock time
-            file << imageTotalOffline << ";" ;                                                      // data samples
 
             file << std::fixed;
             file << std::setprecision(3);
@@ -469,81 +472,90 @@ void MainWindow::offlineSaveExperimentData()
             for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
         }
 
+        if (SAVE_POSITION)
+        {
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
+        }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
+        if (SAVE_CIRCUMFERENCE)
+        {
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact  << delimiter; }
+        }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact  << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact    << delimiter; }
+        if (SAVE_ASPECT_RATIO)
+        {
+            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact    << delimiter; }
+        }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction << delimiter; }
+//        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction << delimiter; }
+//        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction << delimiter; }
 
         file.close();
     }
 
-    { // save edge data
+//    { // save edge data
 
-        std::stringstream filename;
-        filename << dataDirectoryOffline.toStdString()
-                 << "/trial_"
-                 << trialIndexOffline
-                 << "/edge_data.dat";
+//        std::stringstream filename;
+//        filename << dataDirectoryOffline.toStdString()
+//                 << "/trial_"
+//                 << trialIndexOffline
+//                 << "/edge_data.dat";
 
-        std::ofstream file;
-        file.open(filename.str());
+//        std::ofstream file;
+//        file.open(filename.str());
 
-        for (int i = 0; i < imageTotalOffline; i++)
-        {
-            int numEdges = vEyePropertiesMiscellaneous[i].edgePropertiesAll.size();
+//        for (int i = 0; i < imageTotalOffline; i++)
+//        {
+//            int numEdges = vEyePropertiesMiscellaneous[i].edgePropertiesAll.size();
 
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].flag         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMax << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMin << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].length       << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].size         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].distance     << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].intensity    << delimiter; }
-            file << "\n";
-        }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].flag         << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMax << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMin << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].length       << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].size         << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].distance     << delimiter; }
+//            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].intensity    << delimiter; }
+//            file << "\n";
+//        }
 
-        file.close();
-    }
+//        file.close();
+//    }
 
-    { // save pupil image
+//    { // save pupil image
 
-        std::stringstream directoryName;
-        directoryName << dataDirectoryOffline.toStdString()
-                      << "/trial_"
-                      << trialIndexOffline
-                      << "/pupil";
+//        std::stringstream directoryName;
+//        directoryName << dataDirectoryOffline.toStdString()
+//                      << "/trial_"
+//                      << trialIndexOffline
+//                      << "/pupil";
 
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
+//        if (!boost::filesystem::exists(directoryName.str()))
+//        {
+//            boost::filesystem::create_directory(directoryName.str().c_str());
+//        }
 
-        for (int i = 0; i < imageTotalOffline; i++)
-        {
-            if (vEyePropertiesVariables[i + 1].pupilDetected)
-            {
-                std::stringstream filename;
-                filename << dataDirectoryOffline.toStdString()
-                         << "/trial_"
-                         << trialIndexOffline
-                         << "/pupil/"
-                         << i
-                         << ".png";
+//        for (int i = 0; i < imageTotalOffline; i++)
+//        {
+//            if (vEyePropertiesVariables[i + 1].pupilDetected)
+//            {
+//                std::stringstream filename;
+//                filename << dataDirectoryOffline.toStdString()
+//                         << "/trial_"
+//                         << trialIndexOffline
+//                         << "/pupil/"
+//                         << i
+//                         << ".png";
 
-                std::vector<int> compression_params;
-                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-                compression_params.push_back(0);
+//                std::vector<int> compression_params;
+//                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+//                compression_params.push_back(0);
 
-                cv::imwrite(filename.str(), vEyePropertiesMiscellaneous[i].imagePupil, compression_params);
-            }
-        }
-    }
+//                cv::imwrite(filename.str(), vEyePropertiesMiscellaneous[i].imagePupil, compression_params);
+//            }
+//        }
+//    }
 }
 
 void MainWindow::offlineCombineExperimentData()

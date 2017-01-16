@@ -834,8 +834,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QObject::connect(FlashThresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(setFlashThreshold(int)));
 
-    QPushButton* FlashMinIntensityResetButton = new QPushButton("Reset");
-    QObject::connect(FlashMinIntensityResetButton, SIGNAL(clicked()), this, SLOT(resetFlashMinIntensity()));
+    QPushButton* FlashThresholdResetButton = new QPushButton("Reset");
+    QObject::connect(FlashThresholdResetButton, SIGNAL(clicked()), this, SLOT(resetFlashMinIntensity()));
 
     QLabel* FlashThresholdTextBox = new QLabel;
     FlashThresholdTextBox->setText("<b>Flash threshold:</b>");
@@ -902,34 +902,78 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton* StartRecordingButton = new QPushButton("Start");
     QObject::connect(StartRecordingButton, SIGNAL(clicked()), this, SLOT(startRecordingManual()));
 
-    QWidget* ExperimentTabWidget = new QWidget;
-    QGridLayout *ExperimentTabLayout = new QGridLayout(ExperimentTabWidget);
-    ExperimentTabLayout->addWidget(NameInputTextBox, 0, 0);
-    ExperimentTabLayout->addWidget(NameInputLineEdit, 0, 1);
-    ExperimentTabLayout->addWidget(DataDirectoryTitleTextBox, 1, 0);
-    ExperimentTabLayout->addWidget(DataDirectoryTextBox, 1, 1);
-    ExperimentTabLayout->addWidget(DataDirectoryButton, 1, 2);
-    ExperimentTabLayout->addWidget(DataFilenameTextBox, 2, 0);
-    ExperimentTabLayout->addWidget(DataFilenameLineEdit, 2, 1);
-    ExperimentTabLayout->addWidget(TrialIndexTextBox, 3, 0);
-    ExperimentTabLayout->addLayout(TrialIndexSpinBoxLayout, 3, 1);
-    ExperimentTabLayout->addWidget(TrialTimeLengthTextBox, 4, 0);
-    ExperimentTabLayout->addWidget(TrialTimeLengthLineEdit, 4, 1);
-    ExperimentTabLayout->addWidget(StartRecordingButton, 4, 2);
-    ExperimentTabLayout->addWidget(FlashStandbyTextBox, 5, 0);
-    ExperimentTabLayout->addWidget(FlashStandbySlider, 5, 1);
-    ExperimentTabLayout->addWidget(FlashStandbyLabel, 5, 2);
-    ExperimentTabLayout->addWidget(FlashThresholdTextBox, 6, 0);
-    ExperimentTabLayout->addWidget(FlashThresholdSlider, 6, 1);
-    ExperimentTabLayout->addWidget(FlashThresholdLabel, 6, 2);
-    ExperimentTabLayout->addWidget(FlashMinIntensityResetButton, 6, 3, Qt::AlignLeft);
-    ExperimentTabLayout->addLayout(FlashCoordinatesLayout, 8, 0, 1, 3);
+    QLabel* SaveDataTextBox = new QLabel;
+    SaveDataTextBox->setText("<b>Data to be saved:</b>");
 
-    ExperimentTabLayout->setColumnStretch(0, 1);
-    ExperimentTabLayout->setColumnStretch(1, 2);
-    ExperimentTabLayout->setColumnStretch(2, 1);
-    ExperimentTabLayout->setColumnStretch(3, 1);
-    ExperimentTabLayout->setColumnStretch(4, 5);
+    QLabel* SaveDataAspectRatioTextBox = new QLabel;
+    SaveDataAspectRatioTextBox->setText("Aspect ratio:");
+
+    QLabel* SaveDataCircumferenceTextBox = new QLabel;
+    SaveDataCircumferenceTextBox->setText("Circumference:");
+
+    QLabel* SaveDataPositionTextBox = new QLabel;
+    SaveDataPositionTextBox->setText("Position:");
+
+    QCheckBox* SaveDataAspectRatioCheckBox   = new QCheckBox;
+    QCheckBox* SaveDataCircumferenceCheckBox = new QCheckBox;
+    QCheckBox* SaveDataPositionCheckBox      = new QCheckBox;
+
+    SaveDataAspectRatioCheckBox  ->setChecked(SAVE_ASPECT_RATIO);
+    SaveDataCircumferenceCheckBox->setChecked(SAVE_CIRCUMFERENCE);
+    SaveDataPositionCheckBox     ->setChecked(SAVE_POSITION);
+
+    QObject::connect(SaveDataAspectRatioCheckBox,   SIGNAL(stateChanged(int)), this, SLOT(setSaveDataAspectRatio(int)));
+    QObject::connect(SaveDataCircumferenceCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setSaveDataCircumference(int)));
+    QObject::connect(SaveDataPositionCheckBox,      SIGNAL(stateChanged(int)), this, SLOT(setSaveDataPosition(int)));
+
+    QWidget* ExperimentTabWidget = new QWidget;
+    QHBoxLayout *ExperimentTabLayout = new QHBoxLayout(ExperimentTabWidget);
+
+    QGridLayout *ExperimentTabLeftLayout = new QGridLayout;
+    QGridLayout *ExperimentTabRghtLayout = new QGridLayout;
+
+    ExperimentTabLeftLayout->addWidget(NameInputTextBox,            0, 0);
+    ExperimentTabLeftLayout->addWidget(NameInputLineEdit,           0, 1);
+    ExperimentTabLeftLayout->addWidget(DataDirectoryTitleTextBox,   1, 0);
+    ExperimentTabLeftLayout->addWidget(DataDirectoryTextBox,        1, 1);
+    ExperimentTabLeftLayout->addWidget(DataDirectoryButton,         1, 2);
+    ExperimentTabLeftLayout->addWidget(DataFilenameTextBox,         2, 0);
+    ExperimentTabLeftLayout->addWidget(DataFilenameLineEdit,        2, 1);
+    ExperimentTabLeftLayout->addWidget(TrialIndexTextBox,           3, 0);
+    ExperimentTabLeftLayout->addLayout(TrialIndexSpinBoxLayout,     3, 1);
+    ExperimentTabLeftLayout->addWidget(TrialTimeLengthTextBox,      4, 0);
+    ExperimentTabLeftLayout->addWidget(TrialTimeLengthLineEdit,     4, 1);
+    ExperimentTabLeftLayout->addWidget(StartRecordingButton,        4, 2);
+    ExperimentTabLeftLayout->addWidget(FlashStandbyTextBox,         5, 0);
+    ExperimentTabLeftLayout->addWidget(FlashStandbySlider,          5, 1);
+    ExperimentTabLeftLayout->addWidget(FlashStandbyLabel,           5, 2);
+    ExperimentTabLeftLayout->addWidget(FlashThresholdTextBox,       6, 0);
+    ExperimentTabLeftLayout->addWidget(FlashThresholdSlider,        6, 1);
+    ExperimentTabLeftLayout->addWidget(FlashThresholdLabel,         6, 2);
+    ExperimentTabLeftLayout->addWidget(FlashThresholdResetButton,   6, 3, Qt::AlignLeft);
+    ExperimentTabLeftLayout->addLayout(FlashCoordinatesLayout,      8, 0, 1, 3);
+
+    ExperimentTabLeftLayout->setColumnStretch(0, 1);
+    ExperimentTabLeftLayout->setColumnStretch(1, 2);
+    ExperimentTabLeftLayout->setColumnStretch(2, 1);
+    ExperimentTabLeftLayout->setColumnStretch(3, 1);
+    ExperimentTabLeftLayout->setColumnStretch(4, 5);
+
+    ExperimentTabRghtLayout->addWidget(SaveDataTextBox,               0, 0);
+    ExperimentTabRghtLayout->addWidget(SaveDataPositionTextBox,       1, 0);
+    ExperimentTabRghtLayout->addWidget(SaveDataPositionCheckBox,      1, 1);
+    ExperimentTabRghtLayout->addWidget(SaveDataCircumferenceTextBox,  2, 0);
+    ExperimentTabRghtLayout->addWidget(SaveDataCircumferenceCheckBox, 2, 1);
+    ExperimentTabRghtLayout->addWidget(SaveDataAspectRatioTextBox,    3, 0);
+    ExperimentTabRghtLayout->addWidget(SaveDataAspectRatioCheckBox,   3, 1);
+
+    ExperimentTabRghtLayout->setColumnStretch(0, 2);
+    ExperimentTabRghtLayout->setColumnStretch(1, 1);
+    ExperimentTabRghtLayout->setColumnStretch(2, 3);
+    ExperimentTabRghtLayout->setRowStretch(4, 3);
+
+    ExperimentTabLayout->addLayout(ExperimentTabLeftLayout);
+    ExperimentTabLayout->addLayout(ExperimentTabRghtLayout);
 
     // Set-up parameter settings layout
 
