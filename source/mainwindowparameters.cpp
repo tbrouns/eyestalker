@@ -163,11 +163,12 @@ void MainWindow::onFlashStandbySlider(int val)
             std::stringstream filename;
             filename << dataDirectory
                      << "/"
-                     << dataFilename;
+                     << dataFilename
+                     << ".dat";
 
             if (boost::filesystem::exists(filename.str()))
             {
-                QString text = "You are about to write data to the end of an existing file. Do you wish to continue?";
+                QString text = "The file <b>" + QString::fromStdString(dataFilename) + ".dat</b> already exists in <b>" + QString::fromStdString(dataDirectory) + "/</b>. Do you wish to add data to the end of this file?";
                 ConfirmationWindow mConfirmationWindow(text);
                 mConfirmationWindow.setWindowTitle("Please select option");
 

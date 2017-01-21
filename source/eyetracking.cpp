@@ -1730,8 +1730,6 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         mEyePropertiesNew.v.edgeCurvaturePrediction = mEyeProperties.v.edgeCurvaturePrediction;
 
-        mEyePropertiesNew.v.aspectRatioExact   = mEllipseProperties.aspectRatio;
-        mEyePropertiesNew.v.circumferenceExact = mEllipseProperties.circumference;
         mEyePropertiesNew.v.pupilDetected      = mEllipseProperties.pupilDetected;
 
         // For draw functions
@@ -1796,6 +1794,9 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
 
         mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarHght - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
         mEyePropertiesNew.v.yVelocity     = mEyeProperties.v.yVelocity * mEyeProperties.p.alphaMomentum;
+
+        mEyePropertiesNew.v.aspectRatioExact   = mEyeProperties.v.aspectRatioExact;
+        mEyePropertiesNew.v.circumferenceExact = mEyeProperties.v.circumferenceExact;
     }
     else // pupil detected
     {
@@ -1835,6 +1836,9 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.v.yPosExact = mEllipseProperties.yPos + offsetPupilHaarYPos;
         mEyePropertiesNew.v.yPosPredicted = mEyeProperties.v.yPosPredicted + mEyeProperties.p.alphaPrediction * (mEyePropertiesNew.v.yPosExact - mEyeProperties.v.yPosPredicted) + mEyeProperties.v.yVelocity;
         mEyePropertiesNew.v.yVelocity = (mEyeProperties.v.yVelocity + (mEyePropertiesNew.v.yPosPredicted - mEyeProperties.v.yPosPredicted)) * mEyeProperties.p.alphaMomentum;
+
+        mEyePropertiesNew.v.aspectRatioExact   = mEllipseProperties.aspectRatio;
+        mEyePropertiesNew.v.circumferenceExact = mEllipseProperties.circumference;
 
         // Grab pupil image
 

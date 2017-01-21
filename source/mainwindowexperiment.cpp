@@ -43,10 +43,8 @@ void MainWindow::startTrialRecording()
 
         frameCount = 0;
 
+        vEyePropertiesVariables.resize(trialFrameTotal);
         timeStamps.assign(trialFrameTotal, 0);
-        eyeXPositions.assign(trialFrameTotal, 0);
-        eyeYPositions.assign(trialFrameTotal, 0);
-        eyeDetectionFlags.assign(trialFrameTotal, 0);
 
         if (SAVE_EYE_IMAGE)
         {
@@ -131,15 +129,33 @@ void MainWindow::saveTrialData()
             file << "\n";
         }
 
-        file << std::setw(3) << std::setfill('0') << trialIndex << ";"; // print with leading zeros
-        file << trialStartTime << ";"; // time of day in milliseconds
+        std::string delimiter = ";";
+
+        file << std::setw(3) << std::setfill('0') << trialIndex << delimiter; // print with leading zeros
+        file << frameCount << delimiter;                                      // data samples
+        file << trialStartTime << delimiter;                                  // system clock time
 
         file << std::fixed;
         file << std::setprecision(3);
 
-        writeToFile(file, eyeDetectionFlags, timeStamps,    ";");
-        writeToFile(file, eyeDetectionFlags, eyeXPositions, ";");
-        writeToFile(file, eyeDetectionFlags, eyeYPositions, ";");
+        for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].pupilDetected << delimiter; }
+        for (int i = 0; i < frameCount; i++) { file << timeStamps[i] << delimiter; } // saving ALL timestamps allows for accurate frame-rate calculation during data processing
+
+        if (SAVE_POSITION)
+        {
+            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].xPosAbsolute  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].yPosAbsolute  << delimiter; }
+        }
+
+        if (SAVE_CIRCUMFERENCE)
+        {
+            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].circumferenceExact << delimiter; }
+        }
+
+        if (SAVE_ASPECT_RATIO)
+        {
+            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].aspectRatioExact << delimiter; }
+        }
 
         file.close();
     }
@@ -186,14 +202,16 @@ void MainWindow::saveTrialData()
             file << "\n";
         }
 
-        file << std::setw(3) << std::setfill('0') << trialIndex << " "; // print with leading zeros
-        file << trialStartTime << " "; // time of day in milliseconds
+        std::string delimiter = " "; // space delimiter allows for easier reading when combining data
+
+        file << std::setw(3) << std::setfill('0') << trialIndex << delimiter; // print with leading zeros
+        file << trialStartTime << delimiter; // system clock time
 
         file << std::fixed;
         file << std::setprecision(3);
 
-        writeToFile(file, eyeDetectionFlags, timeStamps, " ");
-
+        for (int i = 0; i < frameCount; i++) { file << timeStamps[i] << delimiter; }
+        
         file.close();
     }
 }

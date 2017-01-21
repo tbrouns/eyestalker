@@ -25,9 +25,7 @@ ConfirmationWindow::ConfirmationWindow(QString text, bool CANCEL_ON, QWidget *pa
     InfoTextBox->setText(text);
 
     QHBoxLayout *TextLayout = new QHBoxLayout;
-    TextLayout->addStretch();
     TextLayout->addWidget(InfoTextBox);
-    TextLayout->addStretch();
 
     QPushButton *ApproveButton = new QPushButton("&OK");
     QObject::connect(ApproveButton, SIGNAL(clicked()), this, SLOT(setApprove()));

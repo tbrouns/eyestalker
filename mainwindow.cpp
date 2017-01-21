@@ -1316,22 +1316,18 @@ void MainWindow::pupilTracking()
                 cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
                 mEyePropertiesTemp = pupilDetection(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
 
-                timeStamps[frameCount] = relativeTime; // save time stamps
-
                 mEyePropertiesTemp.v.xPosAbsolute = mEyePropertiesTemp.v.xPosExact + eyeAOIXPosTemp;
                 mEyePropertiesTemp.v.yPosAbsolute = mEyePropertiesTemp.v.yPosExact + eyeAOIYPosTemp;
 
-                eyeXPositions[frameCount] = mEyePropertiesTemp.v.xPosAbsolute;
-                eyeYPositions[frameCount] = mEyePropertiesTemp.v.yPosAbsolute;
+                vEyePropertiesVariables[frameCount] = mEyePropertiesTemp.v;
 
-                eyeDetectionFlags[frameCount] = mEyePropertiesTemp.v.pupilDetected;
+                timeStamps[frameCount] = relativeTime; // save time stamps
 
                 frameCount++;
             }
             else
             {
                 timeStamps[frameCount] = relativeTime; // save time stamps
-                eyeDetectionFlags[frameCount] = true;
 
                 // Saving screens
                 std::stringstream filename;
@@ -1744,11 +1740,13 @@ void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyeProperties
 void MainWindow::resetVariables()
 {
     mEyePropertiesVariables.aspectRatioAverage    = aspectRatioIni;
+    mEyePropertiesVariables.aspectRatioExact      = 0;
     mEyePropertiesVariables.aspectRatioMomentum   = 0;
     mEyePropertiesVariables.aspectRatioPrediction = aspectRatioIni;
 
-    mEyePropertiesVariables.circumferenceAverage  = 0.5 * (mEyePropertiesParameters.circumferenceMax + mEyePropertiesParameters.circumferenceMin);
-    mEyePropertiesVariables.circumferenceMomentum = 0;
+    mEyePropertiesVariables.circumferenceAverage    = 0.5 * (mEyePropertiesParameters.circumferenceMax + mEyePropertiesParameters.circumferenceMin);
+    mEyePropertiesVariables.circumferenceExact      = 0;
+    mEyePropertiesVariables.circumferenceMomentum   = 0;
     mEyePropertiesVariables.circumferencePrediction = mEyePropertiesVariables.circumferenceAverage;
 
     mEyePropertiesVariables.edgeIntensityAverage    = edgeIntensityIni;
@@ -1768,11 +1766,14 @@ void MainWindow::resetVariables()
     mEyePropertiesVariables.widthAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
     mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.widthAverage;
 
-    mEyePropertiesVariables.xPosExact     = 0.5 * Parameters::eyeAOIWdth;
-    mEyePropertiesVariables.xPosPredicted = mEyePropertiesVariables.xPosExact;
+    mEyePropertiesVariables.xPosAbsolute  = 0;
+    mEyePropertiesVariables.xPosExact     = 0;
+    mEyePropertiesVariables.xPosPredicted = 0.5 * Parameters::eyeAOIWdth;
     mEyePropertiesVariables.xVelocity     = 0;
-    mEyePropertiesVariables.yPosExact     = 0.5 * Parameters::eyeAOIHght;
-    mEyePropertiesVariables.yPosPredicted = mEyePropertiesVariables.yPosExact;
+
+    mEyePropertiesVariables.yPosAbsolute  = 0;
+    mEyePropertiesVariables.yPosExact     = 0;
+    mEyePropertiesVariables.yPosPredicted = 0.5 * Parameters::eyeAOIHght;
     mEyePropertiesVariables.yVelocity     = 0;
 
     setVariableWidgets(mEyePropertiesVariables);

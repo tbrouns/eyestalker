@@ -16,6 +16,7 @@
 #ifndef CONFIRMATIONWINDOW_H
 #define CONFIRMATIONWINDOW_H
 
+#include <QDesktopWidget>
 #include <QDialog>
 #include <QHBoxLayout>
 #include <QLabel>

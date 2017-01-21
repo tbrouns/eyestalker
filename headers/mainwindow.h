@@ -274,9 +274,6 @@ private:
     std::mutex saveMutex;
     std::string dataDirectory;
     std::string dataFilename;
-    std::vector<bool> eyeDetectionFlags;
-    std::vector<double> eyeXPositions;
-    std::vector<double> eyeYPositions;
     std::vector<double> timeStamps;
     std::vector<eyePropertiesMiscellaneous> vEyePropertiesMiscellaneous;
     std::vector<eyePropertiesVariables> vEyePropertiesVariables;
