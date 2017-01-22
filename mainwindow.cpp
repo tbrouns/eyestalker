@@ -1329,7 +1329,8 @@ void MainWindow::pupilTracking()
             {
                 timeStamps[frameCount] = relativeTime; // save time stamps
 
-                // Saving screens
+                // Saving camera frame
+
                 std::stringstream filename;
                 filename << dataDirectory << "/"
                          << currentDate   << "/"

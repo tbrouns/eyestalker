@@ -161,46 +161,19 @@ void MainWindow::saveTrialData()
     }
     else
     {
-        // save info in .ini file
-
-        std::stringstream saveFileNameSS;
-        saveFileNameSS << dataDirectory
-                       << "/"
-                       << currentDate
-                       << "/"
-                       << (NameInputLineEdit->text()).toStdString()
-                       << "/trial_"
-                       << trialIndex;
-
-        dataDirectoryOffline = QString::fromStdString(saveFileNameSS.str());
-
-        saveFileNameSS << "/info.ini";
-
-        trialIndexOffline = trialIndex;
-        imageTotalOffline = frameCount;
-
-        saveSettings(QString::fromStdString(saveFileNameSS.str()));
-
         // save time stamps
 
         std::stringstream filename;
-        filename << dataDirectory
-                 << "/"
-                 << currentDate
+        filename << dataDirectory << "/"
+                 << currentDate   << "/"
+                 << (NameInputLineEdit->text()).toStdString()
+                 << "/trial_"     << trialIndex
                  << "/"
                  << "timestamps.dat";
 
         std::ofstream file;
 
-        if (!boost::filesystem::exists(filename.str()))
-        {
-            file.open(filename.str(), std::ios::out | std::ios::ate);
-        }
-        else
-        {
-            file.open(filename.str(), std::ios_base::app);
-            file << "\n";
-        }
+        file.open(filename.str(), std::ios::out | std::ios::trunc); // open file and remove any existing data
 
         std::string delimiter = " "; // space delimiter allows for easier reading when combining data
 

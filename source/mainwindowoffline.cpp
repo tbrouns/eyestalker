@@ -453,7 +453,7 @@ void MainWindow::offlineSaveExperimentData()
                  << "/tracking_data.dat";
 
         std::ofstream file;
-        file.open(filename.str());
+        file.open(filename.str(), std::ios::trunc); // open file and remove any existing data
 
         if (timeMatrix.size() > 0)
         {
