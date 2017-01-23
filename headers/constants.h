@@ -23,26 +23,46 @@
 #endif
 #endif
 
-const int    curvatureWindowLength = 10; // window length for curvature
-const double edgeCollectionFraction = 0.40;
-const double minimumFitFraction = 0.50;
-const double minimumRefinementFraction = 0.05;
-const int    edgeIntensityPositionOffset = 2;
+
+// Parameter initial values
 
 const double aspectRatioMinIni = 0.4;
 const double aspectRatioIni    = 0.9;
 
 const double edgeIntensityIni = 255;
-const double CircumferenceUpperLimit = 500;
+const double circumferenceUpperLimit = 500;
 const double radiusPredictionFactor = 0.75;
 
-const double pupilHaarReductionFactor = 0.75;
+const double fitErrorFraction = 0.05;
+
+// Parameter limits
+
+const double certaintyLowerLimit = 1.0;
+const double certaintyUpperLimit = 4.0;
+//const double certaintyThreshold  = 2.5;
+const double certaintyThreshold  = 4.5;
 
 const int cameraFrameRateUpperLimit = 500;
 
+// Other
+
+const bool SAVE_PUPIL_IMAGE = false;
+
+const double pupilHaarReductionFactor = 0.75;
+
 const double pupilImageFactor = 1.15;
 
-// initial values for parameters
+// Edge processing
+
+const int    curvatureWindowLength = 5; // window length for curvature
+const int    edgeIntensityPositionOffset = 2;
+
+// Ellipse fitting
+
+const double edgeCollectionFraction = 0.60;
+
+
+
 
 
 

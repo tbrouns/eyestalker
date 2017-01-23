@@ -564,7 +564,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilCircumferenceMinLabel  = new QLabel;
     PupilCircumferenceMinSlider = new SliderDouble;
     PupilCircumferenceMinSlider->setPrecision(1);
-    PupilCircumferenceMinSlider->setDoubleRange(0, CircumferenceUpperLimit);
+    PupilCircumferenceMinSlider->setDoubleRange(0, circumferenceUpperLimit);
     PupilCircumferenceMinSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilCircumferenceMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumferenceMin(double)));   
 
@@ -574,7 +574,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilCircumferenceMaxLabel  = new QLabel;
     PupilCircumferenceMaxSlider = new SliderDouble;
     PupilCircumferenceMaxSlider->setPrecision(1);
-    PupilCircumferenceMaxSlider->setDoubleRange(0, CircumferenceUpperLimit);
+    PupilCircumferenceMaxSlider->setDoubleRange(0, circumferenceUpperLimit);
     PupilCircumferenceMaxSlider->setOrientation(Qt::Horizontal);
     QObject::connect(PupilCircumferenceMaxSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumferenceMax(double)));
 
@@ -1271,25 +1271,7 @@ void MainWindow::pupilTracking()
 
             if (FLASH_STANDBY)
             {
-                // reset variables
-
-                mEyePropertiesTemp.v.aspectRatioPrediction = aspectRatioIni;
-                mEyePropertiesTemp.v.circumferencePrediction = mEyePropertiesTemp.v.circumferenceAverage;
-                mEyePropertiesTemp.v.radiusPrediction = mEyePropertiesTemp.v.circumferencePrediction / (2 * M_PI);
-
-                mEyePropertiesTemp.v.aspectRatioMomentum = 0;
-                mEyePropertiesTemp.v.circumferenceMomentum = 0;
-                mEyePropertiesTemp.v.radiusMomentum = 0;
-
-                mEyePropertiesTemp.v.edgeIntensityAverage = edgeIntensityIni;
-                mEyePropertiesTemp.v.edgeIntensityPrediction = edgeIntensityIni;
-
-                mEyePropertiesTemp.v.xVelocity = 0;
-                mEyePropertiesTemp.v.yVelocity = 0;
-
-                mEyePropertiesTemp.v.searchRadius = imgWdth;
-                mEyePropertiesTemp.v.thresholdCircumferenceChange = mEyePropertiesTemp.p.circumferenceMax;
-                mEyePropertiesTemp.v.thresholdAspectRatioChange = 1.0;
+                resetVariables();
 
                 if (avgIntensity > flashThreshold)
                 {
@@ -1755,6 +1737,7 @@ void MainWindow::resetVariables()
 
     mEyePropertiesVariables.heightAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
     mEyePropertiesVariables.heightPrediction = mEyePropertiesVariables.heightAverage;
+    mEyePropertiesVariables.heightMomentum   = 0;
 
     mEyePropertiesVariables.radiusMomentum   = 0;
     mEyePropertiesVariables.radiusPrediction = 0.5 * mEyePropertiesVariables.circumferencePrediction / M_PI;
@@ -1766,6 +1749,7 @@ void MainWindow::resetVariables()
 
     mEyePropertiesVariables.widthAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
     mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.widthAverage;
+    mEyePropertiesVariables.widthMomentum   = 0;
 
     mEyePropertiesVariables.xPosAbsolute  = 0;
     mEyePropertiesVariables.xPosExact     = 0;
@@ -1776,6 +1760,8 @@ void MainWindow::resetVariables()
     mEyePropertiesVariables.yPosExact     = 0;
     mEyePropertiesVariables.yPosPredicted = 0.5 * Parameters::eyeAOIHght;
     mEyePropertiesVariables.yVelocity     = 0;
+
+    mEyePropertiesVariables.priorCertainty = certaintyLowerLimit;
 
     setVariableWidgets(mEyePropertiesVariables);
 }

@@ -117,6 +117,7 @@ struct eyePropertiesVariables
     double searchRadius;
     double thresholdAspectRatioChange;
     double thresholdCircumferenceChange;
+    double priorCertainty;
     double widthAverage;
     double widthMomentum;
     double widthPrediction;

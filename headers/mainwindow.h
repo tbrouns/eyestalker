@@ -116,6 +116,7 @@ private:
     bool GAIN_BOOST;
     bool TRIAL_RECORDING;
     bool FLASH_STANDBY;
+    bool OFFLINE_SAVE_DATA;
     bool PROCESSING_ALL_IMAGES;
     bool PROCESSING_ALL_TRIALS;
     bool SAVE_ASPECT_RATIO;
@@ -269,8 +270,9 @@ private:
     SliderDouble *ThresholdAspectRatioSlider;
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
+    std::condition_variable cvOffline;
     std::mutex mtx;
-    std::mutex offlineMutex;
+    std::mutex mtxOffline;
     std::mutex saveMutex;
     std::string dataDirectory;
     std::string dataFilename;

@@ -48,7 +48,7 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
     mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
     mEyePropertiesParameters.edgeMaximumFitNumber               = settings.value("EdgeMaximumFitNumber",            3).toInt();
-    mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          20).toDouble();
+    mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          80).toDouble();
     mEyePropertiesParameters.glintSize                          = settings.value("GlintSize",                       12).toInt();
     mEyePropertiesParameters.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
     mEyePropertiesParameters.circumferenceMin                   = settings.value("CircumferenceMin",                60).toDouble();

@@ -382,27 +382,29 @@ void MainWindow::detectPupilAllFrames()
 {
     if (!PROCESSING_ALL_IMAGES)
     {
-        PROCESSING_ALL_IMAGES = true;
+        PROCESSING_ALL_IMAGES   = true;
+        OFFLINE_SAVE_DATA       = false;
 
         std::thread pupilDetectionThread(&MainWindow::offlinePupilDetectionAllFrames, this);
         pupilDetectionThread.detach();
 
-        while (PROCESSING_ALL_IMAGES)
+        while (!OFFLINE_SAVE_DATA && PROCESSING_ALL_IMAGES)
         {
-            OfflineImageSlider->setValue(imageIndexOffline);
-
             std::stringstream ss;
             ss << "<b>" << imageIndexOffline + 1 << " / " << imageTotalOffline << "</b>";
             QString title = QString::fromStdString(ss.str());
             OfflineImageFrameTextBox->setText(title);
 
+            OfflineImageSlider->setValue(imageIndexOffline); // Show progress
+            updateOfflineImages(imageIndexOffline - 1);
+
             msWait(1000 / guiUpdateFrequency);
         }
     }
-    else
-    {
-        PROCESSING_ALL_IMAGES = false;
-    }
+
+    std::unique_lock<std::mutex> mtxLock(mtxOffline);
+    PROCESSING_ALL_IMAGES = false;
+    cvOffline.notify_one(); // notify thread to start saving data
 }
 
 void MainWindow::offlinePupilDetectionAllFrames()
@@ -415,11 +417,18 @@ void MainWindow::offlinePupilDetectionAllFrames()
         offlinePupilDetectionOneFrame();
     }
 
+    imageIndexOffline--; // for-loop overshoots value
+
+    OFFLINE_SAVE_DATA = true;
+
     if (PROCESSING_ALL_IMAGES)
     {
-        OfflineImageSlider->setValue(imageIndexOffline);
+        std::unique_lock<std::mutex> lck(mtxOffline);
+        while (PROCESSING_ALL_IMAGES) cvOffline.wait(lck); // wait for main thread
+
         offlineSaveExperimentData();
-        PROCESSING_ALL_IMAGES = false;
+
+        OfflineImageSlider->setValue(imageIndexOffline);
     }
 }
 
@@ -458,16 +467,25 @@ void MainWindow::offlineSaveExperimentData()
         if (timeMatrix.size() > 0)
         {
             file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";";   // trial index
-            file << imageTotalOffline << ";";                                                       // data samples
+        }
+
+        file << imageTotalOffline << ";";                                                           // data samples
+
+        if (timeMatrix.size() > 0)
+        {
             file << (int) timeMatrix[trialIndexOffline][1] << ";";                                  // system clock time
+        }
 
-            file << std::fixed;
-            file << std::setprecision(3);
+        file << std::fixed;
+        file << std::setprecision(3);
 
-            // write data
+        // write data
 
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2]         << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
+
+        if (timeMatrix.size() > 0)
+        {
+            for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2] << delimiter; }
         }
 
         if (SAVE_POSITION)
@@ -521,8 +539,8 @@ void MainWindow::offlineSaveExperimentData()
         file.close();
     }
 
-    { // save pupil image
-
+    if (SAVE_PUPIL_IMAGE)
+    {
         std::stringstream directoryName;
         directoryName << dataDirectoryOffline.toStdString()
                       << "/trial_"
