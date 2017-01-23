@@ -405,11 +405,11 @@ void MainWindow::detectPupilAllFrames()
     {
         std::unique_lock<std::mutex> lck(mtxOffline);
         PROCESSING_ALL_IMAGES = false;
-        cvOffline.notify_one(); // notify save thread that (this) main thread has exited while loop
+        cvOffline.notify_one(); // notify save-thread that (this) main-thread has exited while loop
     }
     {
         std::unique_lock<std::mutex> lck(mtxOffline);
-        while (OFFLINE_SAVE_DATA) cvOffline.wait(lck); // wait for save thread to complete saving
+        while (OFFLINE_SAVE_DATA) cvOffline.wait(lck); // wait for save-thread to complete saving
     }
 }
 
@@ -431,13 +431,13 @@ void MainWindow::offlinePupilDetectionAllFrames()
 
         {
             std::unique_lock<std::mutex> lck(mtxOffline);
-            while (PROCESSING_ALL_IMAGES) cvOffline.wait(lck); // wait for main thread to exit while loop
+            while (PROCESSING_ALL_IMAGES) cvOffline.wait(lck); // wait for main-thread to exit while loop
         }
         {
             offlineSaveExperimentData();
             std::unique_lock<std::mutex> lck(mtxOffline);
             OFFLINE_SAVE_DATA = false;
-            cvOffline.notify_one(); // notify main thread that saving is completed
+            cvOffline.notify_one(); // notify main-thread that saving has been completed
         }
 
         OfflineImageSlider->setValue(imageIndexOffline);
