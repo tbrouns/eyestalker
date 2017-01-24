@@ -15,27 +15,42 @@
 
 #include "headers/mainwindow.h"
 
-void MainWindow::loadSettings(QString fileName)
+void MainWindow::loadSettings(QString filename)
 {
-    QSettings settings(fileName, QSettings::IniFormat);
+    QSettings settings(filename, QSettings::IniFormat);
 
-    cameraAOIFractionHght                                       = settings.value("CamAOIHghtFraction",              cameraAOIFractionHghtDefaultLeft).toDouble();
-    cameraAOIFractionWdth                                       = settings.value("CamAOIWdthFraction",              cameraAOIFractionWdthDefaultLeft).toDouble();
-    cameraAOIFractionXPos                                       = settings.value("CamAOIXPosFraction",              cameraAOIFractionXPosDefaultLeft).toDouble();
-    cameraAOIFractionYPos                                       = settings.value("CamAOIYPosFraction",              cameraAOIFractionYPosDefaultLeft).toDouble();
-    cameraFrameRateDesired                                      = settings.value("CameraFrameRateDesired",          250).toInt();
-    cameraSubSamplingFactor                                     = settings.value("SubSamplingFactor",               1).toInt();
-    dataDirectory                                               = settings.value("DataDirectory",                   "").toString().toStdString();
-    dataDirectoryOffline                                        = settings.value("DataDirectoryOffline",            "").toString();
-    dataFilename                                                = settings.value("DataFilename",                    "experiment_data").toString().toStdString();
-    trialIndexOffline                                           = settings.value("trialIndexOffline",               0).toInt();
-    imageTotalOffline                                           = settings.value("imageTotalOffline",               0).toInt();
-    editSubjectName                                             = settings.value("SubjectName",                     "").toString();
-    eyeAOIHghtFraction                                          = settings.value("AOIHghtFraction",                 1.0).toDouble();
-    eyeAOIWdthFraction                                          = settings.value("AOIWdthFraction",                 1.0).toDouble();
-    flashThreshold                                              = settings.value("FlashThreshold",                  230).toInt();
-    GAIN_AUTO                                                   = settings.value("GainAuto",                        true).toBool();
-    GAIN_BOOST                                                  = settings.value("GainBoost",                       false).toBool();
+    cameraAOIFractionHght           = settings.value("CamAOIHghtFraction",          cameraAOIFractionHghtDefaultLeft).toDouble();
+    cameraAOIFractionWdth           = settings.value("CamAOIWdthFraction",          cameraAOIFractionWdthDefaultLeft).toDouble();
+    cameraAOIFractionXPos           = settings.value("CamAOIXPosFraction",          cameraAOIFractionXPosDefaultLeft).toDouble();
+    cameraAOIFractionYPos           = settings.value("CamAOIYPosFraction",          cameraAOIFractionYPosDefaultLeft).toDouble();
+    cameraFrameRateDesired          = settings.value("CameraFrameRateDesired",      250).toInt();
+    cameraSubSamplingFactor         = settings.value("SubSamplingFactor",           1).toInt();
+    dataDirectory                   = settings.value("DataDirectory",               "").toString().toStdString();
+    dataDirectoryOffline            = settings.value("DataDirectoryOffline",        "").toString();
+    dataFilename                    = settings.value("DataFilename",                "experiment_data").toString().toStdString();
+    trialIndexOffline               = settings.value("trialIndexOffline",           0).toInt();
+    imageTotalOffline               = settings.value("imageTotalOffline",           0).toInt();
+    editSubjectName                 = settings.value("SubjectName",                 "").toString();
+    eyeAOIHghtFraction              = settings.value("AOIHghtFraction",             1.0).toDouble();
+    eyeAOIWdthFraction              = settings.value("AOIWdthFraction",             1.0).toDouble();
+    flashThreshold                  = settings.value("FlashThreshold",              230).toInt();
+    GAIN_AUTO                       = settings.value("GainAuto",                    true).toBool();
+    GAIN_BOOST                      = settings.value("GainBoost",                   false).toBool();
+    Parameters::eyeAOIXPosFraction  = settings.value("AOIXPosRelative",             0.0).toDouble();
+    Parameters::eyeAOIYPosFraction  = settings.value("AOIYPosRelative",             0.0).toDouble();
+    Parameters::flashAOIHght        = settings.value("FlashAOIHght",                100).toInt();
+    Parameters::flashAOIWdth        = settings.value("FlashAOIWdth",                60).toInt();
+    Parameters::flashAOIXPos        = settings.value("FlashAOIXPos",                227).toInt();
+    Parameters::flashAOIYPos        = settings.value("FlashAOIYPos",                500).toInt();
+    SAVE_ASPECT_RATIO               = settings.value("SaveAspectRatio",             false).toBool();
+    SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           false).toBool();
+    SAVE_POSITION                   = settings.value("SavePosition",                true).toBool();
+    SAVE_EYE_IMAGE                  = settings.value("SaveEyeImage",                true).toBool();
+    subjectIdentifier               = settings.value("SubjectIdentifier",           "").toString();
+    trialTimeLength                 = settings.value("TrialTimeLength",             1500).toInt();
+
+    eyePropertiesParameters mEyePropertiesParameters;
+
     mEyePropertiesParameters.alphaAverage                       = settings.value("AlphaAverage",                    0.005).toDouble();
     mEyePropertiesParameters.alphaMiscellaneous                 = settings.value("AlphaMiscellaneous",              0.75).toDouble();
     mEyePropertiesParameters.alphaMomentum                      = settings.value("AlphaMomentum",                   0.50).toDouble();
@@ -57,28 +72,17 @@ void MainWindow::loadSettings(QString fileName)
     mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     25).toInt();
     mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
     mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
-    Parameters::eyeAOIXPosFraction                              = settings.value("AOIXPosRelative",                 0.0).toDouble();
-    Parameters::eyeAOIYPosFraction                              = settings.value("AOIYPosRelative",                 0.0).toDouble();
-    Parameters::flashAOIHght                                    = settings.value("FlashAOIHght",                    100).toInt();
-    Parameters::flashAOIWdth                                    = settings.value("FlashAOIWdth",                    60).toInt();
-    Parameters::flashAOIXPos                                    = settings.value("FlashAOIXPos",                    227).toInt();
-    Parameters::flashAOIYPos                                    = settings.value("FlashAOIYPos",                    500).toInt();
-    SAVE_ASPECT_RATIO                                           = settings.value("SaveAspectRatio",                 false).toBool();
-    SAVE_CIRCUMFERENCE                                          = settings.value("SaveCircumference",               false).toBool();
-    SAVE_POSITION                                               = settings.value("SavePosition",                    true).toBool();
-    SAVE_EYE_IMAGE                                              = settings.value("SaveEyeImage",                    true).toBool();
-    subjectIdentifier                                           = settings.value("SubjectIdentifier",               "").toString();
-    trialTimeLength                                             = settings.value("TrialTimeLength",                 1500).toInt();
+
+    mEyeParameterWidget->setStructure(mEyePropertiesParameters);
+
 }
 
-void MainWindow::saveSettings(QString fileName)
+void MainWindow::saveSettings(QString filename)
 {
-    QSettings settings(fileName, QSettings::IniFormat);
+    eyePropertiesParameters mEyePropertiesParameters = mEyeParameterWidget->getStructure();
 
-    settings.setValue("AlphaAverage",                   mEyePropertiesParameters.alphaAverage);
-    settings.setValue("AlphaMiscellaneous",             mEyePropertiesParameters.alphaMiscellaneous);
-    settings.setValue("AlphaMomentum",                  mEyePropertiesParameters.alphaMomentum);
-    settings.setValue("AlphaPrediction",                mEyePropertiesParameters.alphaPrediction);
+    QSettings settings(filename, QSettings::IniFormat);
+
     settings.setValue("AOIHghtFraction",                eyeAOIHghtFraction);
     settings.setValue("AOIWdthFraction",                eyeAOIWdthFraction);
     settings.setValue("AOIXPosRelative",                Parameters::eyeAOIXPosFraction);
@@ -92,6 +96,24 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CamAOIXPosFraction",             cameraAOIFractionXPos);
     settings.setValue("CamAOIYPosFraction",             cameraAOIFractionYPos);
     settings.setValue("CameraFrameRateDesired",         cameraFrameRateDesired);
+    settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
+    settings.setValue("FlashAOIHght",                   Parameters::flashAOIHght);
+    settings.setValue("FlashAOIWdth",                   Parameters::flashAOIWdth);
+    settings.setValue("FlashAOIXPos",                   Parameters::flashAOIXPos);
+    settings.setValue("FlashAOIYPos",                   Parameters::flashAOIYPos);
+    settings.setValue("FlashThreshold",                 flashThreshold);
+    settings.setValue("SaveAspectRatio",                SAVE_ASPECT_RATIO);
+    settings.setValue("SaveCircumference",              SAVE_CIRCUMFERENCE);
+    settings.setValue("SavePosition",                   SAVE_POSITION);
+    settings.setValue("SaveEyeImage",                   SAVE_EYE_IMAGE);
+    settings.setValue("SubjectName",                    subjectIdentifier);
+    settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
+    settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text().toInt());
+
+    settings.setValue("AlphaAverage",                   mEyePropertiesParameters.alphaAverage);
+    settings.setValue("AlphaMiscellaneous",             mEyePropertiesParameters.alphaMiscellaneous);
+    settings.setValue("AlphaMomentum",                  mEyePropertiesParameters.alphaMomentum);
+    settings.setValue("AlphaPrediction",                mEyePropertiesParameters.alphaPrediction);
     settings.setValue("CannyBlurLevel",                 mEyePropertiesParameters.cannyBlurLevel);
     settings.setValue("CannyKernelSize",                mEyePropertiesParameters.cannyKernelSize);
     settings.setValue("CannyThresholdLow",              mEyePropertiesParameters.cannyThresholdLow);
@@ -100,27 +122,15 @@ void MainWindow::saveSettings(QString fileName)
     settings.setValue("CircumferenceMin",               mEyePropertiesParameters.circumferenceMin);
     settings.setValue("CurvatureFactor",                mEyePropertiesParameters.curvatureFactor);
     settings.setValue("CurvatureOffset",                mEyePropertiesParameters.curvatureOffsetMin);
-    settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
     settings.setValue("EdgeIntensityOffset",            mEyePropertiesParameters.edgeIntensityOffset);
     settings.setValue("EllipseFitNumberMaximum",        mEyePropertiesParameters.ellipseFitNumberMaximum);
     settings.setValue("EllipseFitErrorMaximum",         mEyePropertiesParameters.ellipseFitErrorMaximum);
-    settings.setValue("FlashAOIHght",                   Parameters::flashAOIHght);
-    settings.setValue("FlashAOIWdth",                   Parameters::flashAOIWdth);
-    settings.setValue("FlashAOIXPos",                   Parameters::flashAOIXPos);
-    settings.setValue("FlashAOIYPos",                   Parameters::flashAOIYPos);
-    settings.setValue("FlashThreshold",                 flashThreshold);
     settings.setValue("AspectRatioMin",                 mEyePropertiesParameters.aspectRatioMin);
     settings.setValue("GlintSize",                      mEyePropertiesParameters.glintSize);
     settings.setValue("PupilOffset",                    mEyePropertiesParameters.pupilOffset);
-    settings.setValue("SaveAspectRatio",                SAVE_ASPECT_RATIO);
-    settings.setValue("SaveCircumference",              SAVE_CIRCUMFERENCE);
-    settings.setValue("SavePosition",                   SAVE_POSITION);
-    settings.setValue("SaveEyeImage",                   SAVE_EYE_IMAGE);
-    settings.setValue("SubjectName",                    subjectIdentifier);
-    settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
     settings.setValue("CircumferenceChangeThreshold",   mEyePropertiesParameters.circumferenceChangeThreshold);
     settings.setValue("AspectRatioChangeThreshold",     mEyePropertiesParameters.aspectRatioChangeThreshold);
-    settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text().toInt());
+
 }
 
 void MainWindow::resetParameters()
@@ -133,7 +143,7 @@ void MainWindow::resetParameters()
 
     QString fileName = "";
     loadSettings(fileName);
-    setParameterWidgets();
+    mEyeParameterWidget->reset();
     resetVariables();
 }
 
@@ -240,156 +250,6 @@ void MainWindow::setEdgeIntensity(double value)
     }
 }
 
-void MainWindow::setPupilCircumferenceMin(double value)
-{
-    if (mEyePropertiesParameters.circumferenceMax < value)
-    {
-        PupilCircumferenceMaxSlider->setDoubleValue(value);
-    }
-
-    mEyePropertiesParameters.circumferenceMin = value;
-    PupilCircumferenceMinLabel->setText(QString::number(mEyePropertiesParameters.circumferenceMin, 'f', 1));
-}
-
-void MainWindow::setPupilCircumferenceMax(double value)
-{
-    if (mEyePropertiesParameters.circumferenceMin > value)
-    {
-        PupilCircumferenceMinSlider->setDoubleValue(value);
-    }
-
-    mEyePropertiesParameters.circumferenceMax = value;
-    PupilCircumferenceMaxLabel->setText(QString::number(mEyePropertiesParameters.circumferenceMax, 'f', 1));
-}
-
-void MainWindow::setPupilAspectRatioMin(double value)
-{
-    mEyePropertiesParameters.aspectRatioMin = value;
-    PupilAspectRatioSlider->setDoubleMinimum(mEyePropertiesParameters.aspectRatioMin);
-    PupilAspectRatioMinLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setEdgeIntensityOffset(double value)
-{
-    mEyePropertiesParameters.edgeIntensityOffset = value;
-    EdgeIntensityOffsetLabel->setText(QString::number(value, 'f', 1));
-}
-
-void MainWindow::setEdgeLengthMinimum(double value)
-{
-    mEyePropertiesParameters.edgeLengthMinimum = value;
-    EdgeLengthMinimumLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setCannyThresholdLow(int value)
-{
-    if (value > mEyePropertiesParameters.cannyThresholdHigh)
-    {
-        CannyThresholdHighSlider->setValue(value);
-    }
-
-    mEyePropertiesParameters.cannyThresholdLow = value;
-    CannyThresholdLowLabel->setText(QString::number(value));
-
-}
-
-void MainWindow::setCannyThresholdHigh(int value)
-{
-    if (value < mEyePropertiesParameters.cannyThresholdLow)
-    {
-        CannyThresholdLowSlider->setValue(value);
-    }
-
-    mEyePropertiesParameters.cannyThresholdHigh = value;
-    CannyThresholdHighLabel->setText(QString::number(value));
-}
-
-void MainWindow::setCannyKernelSize(int value)
-{
-    int newValue = 2 * value - 1;
-    mEyePropertiesParameters.cannyKernelSize = newValue;
-    CannyKernelSizeLabel->setText(QString::number(newValue));
-}
-
-void MainWindow::setCannyBlurLevel(int value)
-{
-    mEyePropertiesParameters.cannyBlurLevel = value;
-    CannyBlurLevelLabel->setText(QString::number(value));
-}
-
-void MainWindow::setAlphaAverage(double value)
-{
-    mEyePropertiesParameters.alphaAverage = value;
-    AlphaAverageLabel->setText(QString::number(value, 'f', 3));
-}
-
-void MainWindow::setAlphaPrediction(double value)
-{
-    mEyePropertiesParameters.alphaPrediction = value;
-    AlphaPredictionLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setAlphaMiscellaneous(double value)
-{
-    mEyePropertiesParameters.alphaMiscellaneous = value;
-    AlphaMiscellaneousLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setAlphaMomentum(double value)
-{
-    mEyePropertiesParameters.alphaMomentum = value;
-    AlphaMomentumLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setThresholdCircumference(double value)
-{
-    mEyePropertiesParameters.circumferenceChangeThreshold = value;
-    ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 1));
-}
-
-void MainWindow::setThresholdAspectRatio(double value)
-{
-    mEyePropertiesParameters.aspectRatioChangeThreshold = value;
-    ThresholdAspectRatioLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setPupilHaarOffset(int value)
-{
-    mEyePropertiesParameters.pupilOffset = value;
-    PupilHaarOffsetLabel->setText(QString::number(value));
-}
-
-void MainWindow::setGlintSize(int value)
-{
-    int newValue = 2 * value;
-    mEyePropertiesParameters.glintSize = newValue;
-    GlintSizeLabel->setText(QString::number(newValue));
-}
-
-void MainWindow::setCurvatureFactor(double value)
-{
-    mEyePropertiesParameters.curvatureFactor = value;
-    CurvatureFactorLabel->setText(QString::number(value, 'f', 2));
-}
-
-void MainWindow::setCurvatureOffset(double value)
-{
-    mEyePropertiesParameters.curvatureOffsetMin = value;
-    CurvatureOffsetLabel->setText(QString::number(value, 'f', 1));
-}
-
-void MainWindow::setEllipseFitNumberMaximum(int value)
-{
-    mEyePropertiesParameters.ellipseFitNumberMaximum = value;
-    EllipseFitNumberMaximumLabel->setText(QString::number(value));
-}
-
-void MainWindow::setEllipseFitErrorMaximum(double value)
-{
-    mEyePropertiesParameters.ellipseFitErrorMaximum = value;
-    EllipseFitErrorMaximumLabel->setText(QString::number(value, 'f', 1));
-}
-
 void MainWindow::setCameraPixelClock(int value)
 {
     cameraPixelClock = value;
@@ -482,8 +342,6 @@ void MainWindow::setCameraSubSampling(int state)
 
     cameraAOIWdthMax = cameraAOIWdthMax * subSamplingChange;
     cameraAOIHghtMax = cameraAOIHghtMax * subSamplingChange;
-
-    ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.circumferenceChangeThreshold * subSamplingChange);
 
     updateCamAOIx();
     updateCamAOIy();

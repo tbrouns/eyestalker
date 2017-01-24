@@ -29,9 +29,6 @@
 const double aspectRatioMinIni = 0.4;
 const double aspectRatioIni    = 0.9;
 
-const double edgeIntensityIni = 255;
-const double circumferenceUpperLimit = 500;
-
 const double fitErrorFraction = 0.05;
 
 // Parameter limits

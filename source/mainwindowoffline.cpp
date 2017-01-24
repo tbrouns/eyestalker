@@ -331,7 +331,7 @@ void MainWindow::offlinePupilDetectionOneFrame()
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
         mEyePropertiesTemp.v = mEyePropertiesVariables;
-        mEyePropertiesTemp.p = mEyePropertiesParameters;
+        mEyePropertiesTemp.p = mEyeParameterWidget->getStructure();
 
         eyeAOIXPosTemp = Parameters::eyeAOIXPos;
         eyeAOIYPosTemp = Parameters::eyeAOIYPos;
@@ -636,6 +636,8 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
     {
+        eyePropertiesParameters mEyePropertiesParameters = mEyeParameterWidget->getStructure();
+
         int pupilHaarWdth       = round(mEyePropertiesVariables.circumferencePrediction / M_PI);
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);
 

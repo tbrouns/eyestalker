@@ -103,7 +103,7 @@ LIBS += C://libs//UEye//Lib//ueye_tools_64.lib
 SOURCES += main.cpp\
         mainwindow.cpp \
     source/drawfunctions.cpp \
-    source/eyetracking.cpp \
+    source/pupildetection.cpp \
     source/mainwindowexperiment.cpp \
     source/mainwindowparameters.cpp \
     source/mainwindowoffline.cpp \
@@ -118,7 +118,7 @@ HEADERS  += \
     headers/confirmationwindow.h \
     headers/constants.h \
     headers/drawfunctions.h \
-    headers/eyetracking.h \
+    headers/pupildetection.h \
     headers/mainwindow.h \
     headers/parameters.h \
     headers/qimageopencv.h \

@@ -62,7 +62,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PROCESSING_ALL_TRIALS   = false;
     imageIndexOffline       = 0;
     imageTotalOffline       = 0;
-    experimentIndex         = 0;
     TRIAL_RECORDING         = false;
     eyeAOIHghtMin           = 75;
     eyeAOIWdthMin           = 100;
@@ -71,11 +70,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FLASH_STANDBY           = false;
     frameCount              = 0;
     guiUpdateFrequency      = 30;
-    pupilOffsetMin          = 0;
     relativeTime            = 0;
     SAVE_EYE_IMAGE          = true;
     startTime               = 0;
     subjectIdentifier       = "";
+    trialIndex              = 0;
+
+    mEyeParameterWidget = new ParameterWidget;
 
     // Grab parameters from ini file
 
@@ -162,6 +163,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeHghtROISlider->setDoubleRange(0, 1.0);
     EyeHghtROISlider->setOrientation(Qt::Vertical);
     QObject::connect(EyeHghtROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeROIHght(double)));
+
+    EyeWdthROISlider->setDoubleValue(eyeAOIWdthFraction);
+    EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);
 
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(cropAOI()));
@@ -342,7 +346,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraOutputLayout->setColumnStretch(0, 1);
     CameraOutputLayout->setColumnStretch(6, 1);
 
-    // Camera settings
+    ///////////////////////////////////////////////////////////////
+    /////////////////////// TAB WIDGET  ///////////////////////////
+    ///////////////////////////////////////////////////////////////
+
+    /////////////////// Camera settings tab ///////////////////////
+
+    // Pixel clock
 
     QLabel *CameraPixelClockTextBox = new QLabel;
     CameraPixelClockTextBox->setText("<b>Pixel clock (MHz): </b>");
@@ -415,7 +425,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraBlackLevelModeCheckBox->setChecked(true);
     QObject::connect(CameraBlackLevelModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setCameraBlackLevelMode(int)));
 
-    //
+    // Gain level
 
     QLabel *CameraHardwareGainTextBox = new QLabel;
     CameraHardwareGainTextBox->setText("<b>Gain: </b>");
@@ -443,7 +453,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraHardwareGainBoostCheckBox->setChecked(GAIN_BOOST);
     QObject::connect(CameraHardwareGainBoostCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setCameraGainBoost(int)));
 
-    //
+    // Sub-sampling
 
     QLabel *CameraSubSamplingTextBox = new QLabel;
     CameraSubSamplingTextBox->setText("<b>Sub-sampling: </b>");
@@ -455,8 +465,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QObject::connect(CameraSubSamplingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setCameraSubSampling(int)));
 
-    CameraParametersWidget = new QWidget;
+    // Set-up layout
 
+    CameraParametersWidget = new QWidget;
     QGridLayout *CameraParametersLayout = new QGridLayout(CameraParametersWidget);
 
     CameraParametersLayout->addWidget(CameraPixelClockTextBox, 0, 0);
@@ -505,9 +516,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraParametersLayout->addWidget(CameraSubSamplingTextBox,  8, 0);
     CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 8, 1);
 
-    // Parameter settings layout
-
-    // Real-time parameter tracking
+    /////////////////// Variables tab ///////////////////////
 
     // Pupil circumference
 
@@ -517,7 +526,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilCircumferenceLabel  = new QLabel();
     PupilCircumferenceSlider = new SliderDouble();
     PupilCircumferenceSlider->setPrecision(1);
-    PupilCircumferenceSlider->setDoubleRange(mEyePropertiesParameters.circumferenceMin, mEyePropertiesParameters.circumferenceMax);
+    PupilCircumferenceSlider->setDoubleRange(0, 500);
     PupilCircumferenceSlider->setOrientation(Qt::Horizontal);
 
     // Pupil aspect ratio
@@ -528,7 +537,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     PupilAspectRatioLabel  = new QLabel();
     PupilAspectRatioSlider = new SliderDouble();
     PupilAspectRatioSlider->setPrecision(2);
-    PupilAspectRatioSlider->setDoubleRange(mEyePropertiesParameters.aspectRatioMin, 1.0);
+    PupilAspectRatioSlider->setDoubleRange(0, 1.0);
     PupilAspectRatioSlider->setOrientation(Qt::Horizontal);
 
     // Edge intensity
@@ -546,248 +555,27 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(PupilAspectRatioSlider,   SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilAspectRatio(double)));
     QObject::connect(EdgeIntensitySlider,      SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeIntensity(double)));
 
-    // Averages and Limits/Thresholds
+    // Set-up layout
 
-    QLabel *ParametersTextBox = new QLabel;
-    ParametersTextBox->setText("<b>Eye-tracking parameters</b>");
-    ParametersTextBox->setAlignment(Qt::AlignCenter);
+    QWidget* RealTimeVariablesWidget = new QWidget;
+    QGridLayout *RealTimeVariablesLayout = new QGridLayout(RealTimeVariablesWidget);
+    RealTimeVariablesLayout->addWidget(PupilCircumferenceTextBox,   0, 0);
+    RealTimeVariablesLayout->addWidget(PupilCircumferenceSlider,    0, 1);
+    RealTimeVariablesLayout->addWidget(PupilCircumferenceLabel,     0, 2);
+    RealTimeVariablesLayout->addWidget(PupilAspectRatioTextBox,     1, 0);
+    RealTimeVariablesLayout->addWidget(PupilAspectRatioSlider,      1, 1);
+    RealTimeVariablesLayout->addWidget(PupilAspectRatioLabel,       1 ,2);
+    RealTimeVariablesLayout->addWidget(EdgeIntensityTextBox,        2, 0);
+    RealTimeVariablesLayout->addWidget(EdgeIntensitySlider,         2, 1);
+    RealTimeVariablesLayout->addWidget(EdgeIntensityLabel,          2, 2);
 
-    // Pupil circumference
+    // Set-up variables
 
-    QLabel *PupilCircumferenceMinTextBox = new QLabel;
-    PupilCircumferenceMinTextBox->setText("<b>Circumference min:</b>");
+    resetVariables();
 
-    PupilCircumferenceMinLabel  = new QLabel;
-    PupilCircumferenceMinSlider = new SliderDouble;
-    PupilCircumferenceMinSlider->setPrecision(1);
-    PupilCircumferenceMinSlider->setDoubleRange(0, circumferenceUpperLimit);
-    PupilCircumferenceMinSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(PupilCircumferenceMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumferenceMin(double)));   
+    /////////////////// Experiment tab ///////////////////////
 
-    QLabel *PupilCircumferenceMaxTextBox = new QLabel;
-    PupilCircumferenceMaxTextBox->setText("<b>Circumference max:</b>");
-
-    PupilCircumferenceMaxLabel  = new QLabel;
-    PupilCircumferenceMaxSlider = new SliderDouble;
-    PupilCircumferenceMaxSlider->setPrecision(1);
-    PupilCircumferenceMaxSlider->setDoubleRange(0, circumferenceUpperLimit);
-    PupilCircumferenceMaxSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(PupilCircumferenceMaxSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumferenceMax(double)));
-
-    // Pupil fraction
-
-    QLabel *PupilAspectRatioMinTextBox = new QLabel;
-    PupilAspectRatioMinTextBox->setText("<b>Fraction minimum:</b>");
-
-    PupilAspectRatioMinLabel  = new QLabel;
-    PupilAspectRatioMinSlider = new SliderDouble;
-    PupilAspectRatioMinSlider->setPrecision(2);
-    PupilAspectRatioMinSlider->setDoubleRange(0.0, 1.0);
-    PupilAspectRatioMinSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(PupilAspectRatioMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilAspectRatioMin(double)));
-
-    // Edge intensity
-
-    QLabel *EdgeIntensityOffsetTextBox = new QLabel;
-    EdgeIntensityOffsetTextBox->setText("<b>Edge intensity offset:</b>");
-
-    EdgeIntensityOffsetLabel  = new QLabel;
-    EdgeIntensityOffsetSlider = new SliderDouble();
-    EdgeIntensityOffsetSlider->setPrecision(1);
-    EdgeIntensityOffsetSlider->setDoubleRange(0.0, 255.0);
-    EdgeIntensityOffsetSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EdgeIntensityOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeIntensityOffset(double)));  
-
-    // Sliders for canny edge parameters
-
-    QLabel *CannyEdgeTextBox = new QLabel;
-    CannyEdgeTextBox->setText("<b>Canny edge detection</b>");
-    CannyEdgeTextBox->setAlignment(Qt::AlignCenter);
-
-    QLabel *CannyThresholdLowTextBox = new QLabel;
-    CannyThresholdLowTextBox->setText("<b>Low threshold:</b>");
-
-    CannyThresholdLowLabel  = new QLabel;
-    CannyThresholdLowSlider = new QSlider;
-    CannyThresholdLowSlider->setRange(0, 300);
-    CannyThresholdLowSlider->setOrientation(Qt::Horizontal);
-    CannyThresholdLowSlider->setSingleStep(1);
-    QObject::connect(CannyThresholdLowSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdLow(int)));
-
-    QLabel *CannyThresholdHighTextBox = new QLabel;
-    CannyThresholdHighTextBox->setText("<b>High threshold:</b>");
-
-    CannyThresholdHighLabel  = new QLabel;
-    CannyThresholdHighSlider = new QSlider;
-    CannyThresholdHighSlider->setRange(0, 300);
-    CannyThresholdHighSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CannyThresholdHighSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdHigh(int)));
-
-    QLabel *CannyBlurLevelTextBox = new QLabel;
-    CannyBlurLevelTextBox->setText("<b>Blur level:</b>");
-
-    CannyBlurLevelLabel  = new QLabel;
-    CannyBlurLevelSlider = new QSlider;
-    CannyBlurLevelSlider->setRange(0, 10);
-    CannyBlurLevelSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CannyBlurLevelSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyBlurLevel(int)));
-
-    QLabel *CannyKernelSizeTextBox = new QLabel;
-    CannyKernelSizeTextBox->setText("<b>Kernel size:</b>");
-
-    CannyKernelSizeLabel  = new QLabel;
-    CannyKernelSizeSlider = new QSlider;
-    CannyKernelSizeSlider->setRange(2, 4);
-    CannyKernelSizeSlider->setOrientation(Qt::Horizontal);
-    CannyKernelSizeSlider->setSingleStep(1);
-    QObject::connect(CannyKernelSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyKernelSize(int)));
-
-    // Learning rate parameters
-
-    QLabel *LearningRatesTextBox = new QLabel;
-    LearningRatesTextBox->setText("<b>Learning rates</b>");
-    LearningRatesTextBox->setAlignment(Qt::AlignCenter);
-
-    QLabel *AlphaAverageTextBox       = new QLabel;
-    QLabel *AlphaPredictionTextBox    = new QLabel;
-    QLabel *AlphaMiscellaneousTextBox = new QLabel;
-    QLabel *AlphaMomentumTextBox      = new QLabel;
-
-    AlphaAverageTextBox      ->setText("<b>Average:</b>");
-    AlphaPredictionTextBox   ->setText("<b>Prediction:</b>");
-    AlphaMiscellaneousTextBox->setText("<b>Miscellaneous:</b>");
-    AlphaMomentumTextBox     ->setText("<b>Momentum:</b>");
-
-    AlphaAverageLabel       = new QLabel;
-    AlphaPredictionLabel    = new QLabel;
-    AlphaMiscellaneousLabel = new QLabel;
-    AlphaMomentumLabel      = new QLabel;
-
-    AlphaAverageSlider       = new SliderDouble;
-    AlphaPredictionSlider    = new SliderDouble;
-    AlphaMiscellaneousSlider = new SliderDouble;
-    AlphaMomentumSlider      = new SliderDouble;
-
-    AlphaAverageSlider      ->setPrecision(3);
-    AlphaPredictionSlider   ->setPrecision(2);
-    AlphaMiscellaneousSlider->setPrecision(2);
-    AlphaMomentumSlider     ->setPrecision(2);
-
-    AlphaAverageSlider      ->setDoubleRange(0, 0.1);
-    AlphaPredictionSlider   ->setDoubleRange(0, 1.0);
-    AlphaMiscellaneousSlider->setDoubleRange(0, 1.0);
-    AlphaMomentumSlider     ->setDoubleRange(0, 1.0);
-
-    AlphaAverageSlider      ->setOrientation(Qt::Horizontal);
-    AlphaPredictionSlider   ->setOrientation(Qt::Horizontal);
-    AlphaMiscellaneousSlider->setOrientation(Qt::Horizontal);
-    AlphaMomentumSlider     ->setOrientation(Qt::Horizontal);
-
-    QObject::connect(AlphaAverageSlider,       SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaAverage(double)));
-    QObject::connect(AlphaPredictionSlider,    SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPrediction(double)));
-    QObject::connect(AlphaMiscellaneousSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMiscellaneous(double)));
-    QObject::connect(AlphaMomentumSlider,      SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMomentum(double)));
-
-    // Threshold parameters
-
-    QLabel *ThresholdParametersTextBox = new QLabel;
-    ThresholdParametersTextBox->setText("<b>Change thresholds</b>");
-    ThresholdParametersTextBox->setAlignment(Qt::AlignCenter);
-
-    QLabel *ThresholdCircumferenceTextBox = new QLabel;
-    ThresholdCircumferenceTextBox->setText("<b>Pupil circumference:</b>");
-
-    QLabel *ThresholdAspectRatioTextBox = new QLabel;
-    ThresholdAspectRatioTextBox->setText("<b>Pupil fraction:</b>");
-
-    ThresholdCircumferenceLabel  = new QLabel;
-    ThresholdCircumferenceSlider = new SliderDouble;
-    ThresholdCircumferenceSlider->setPrecision(1);
-    ThresholdCircumferenceSlider->setDoubleRange(0, 50);
-    ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
-
-    ThresholdAspectRatioLabel  = new QLabel;
-    ThresholdAspectRatioSlider = new SliderDouble;
-    ThresholdAspectRatioSlider->setPrecision(2);
-    ThresholdAspectRatioSlider->setDoubleRange(0, 1.0);
-    ThresholdAspectRatioSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdAspectRatioSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatio(double)));
-
-    // Miscellaneous parameters
-
-    QLabel *MiscParametersTextBox = new QLabel;
-    MiscParametersTextBox->setText("<b>Miscellaneous</b>");
-    MiscParametersTextBox->setAlignment(Qt::AlignCenter);
-
-    QLabel *PupilHaarOffsetTextBox = new QLabel;
-    PupilHaarOffsetTextBox->setText("<b>Pupil Haar-offset:</b>");
-
-    PupilHaarOffsetLabel  = new QLabel;
-    PupilHaarOffsetSlider = new QSlider;
-    PupilHaarOffsetSlider->setRange(pupilOffsetMin, 50);
-    PupilHaarOffsetSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(PupilHaarOffsetSlider, SIGNAL(valueChanged(int)), this, SLOT(setPupilHaarOffset(int)));   
-
-    QLabel *GlintSizeTextBox = new QLabel;
-    GlintSizeTextBox->setText("<b>Glint size:</b>");
-
-    GlintSizeLabel  = new QLabel;
-    GlintSizeSlider = new QSlider;
-    GlintSizeSlider->setRange(0, 10);
-    GlintSizeSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(GlintSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setGlintSize(int)));
-
-    QLabel *CurvatureFactorTextBox = new QLabel;
-    CurvatureFactorTextBox->setText("<b>Curvature factor:</b>");
-
-    CurvatureFactorLabel  = new QLabel;
-    CurvatureFactorSlider = new SliderDouble;
-    CurvatureFactorSlider->setPrecision(2);
-    CurvatureFactorSlider->setDoubleRange(1.0, 1.2);
-    CurvatureFactorSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CurvatureFactorSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureFactor(double)));
-
-    QLabel *CurvatureOffsetTextBox = new QLabel;
-    CurvatureOffsetTextBox->setText("<b>Curvature offset:</b>");
-
-    CurvatureOffsetLabel  = new QLabel;
-    CurvatureOffsetSlider = new SliderDouble;
-    CurvatureOffsetSlider->setPrecision(1);
-    CurvatureOffsetSlider->setDoubleRange(0, 180);
-    CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));  
-
-    QLabel *EdgeLengthMinimumTextBox = new QLabel;
-    EdgeLengthMinimumTextBox->setText("<b>Edge minimum length:");
-
-    EdgeLengthMinimumLabel  = new QLabel;
-    EdgeLengthMinimumSlider = new SliderDouble;
-    EdgeLengthMinimumSlider->setPrecision(2);
-    EdgeLengthMinimumSlider->setDoubleRange(0, 1.0);
-    EdgeLengthMinimumSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EdgeLengthMinimumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeLengthMinimum(double)));
-
-    QLabel *EllipseFitNumberMaximumTextBox = new QLabel;
-    EllipseFitNumberMaximumTextBox->setText("<b>Edge maximum fit number:</b>");
-
-    EllipseFitNumberMaximumLabel  = new QLabel;
-    EllipseFitNumberMaximumSlider = new QSlider;
-    EllipseFitNumberMaximumSlider->setRange(0, 7);
-    EllipseFitNumberMaximumSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EllipseFitNumberMaximumSlider, SIGNAL(valueChanged(int)), this, SLOT(setEllipseFitNumberMaximum(int)));
-
-    QLabel *EllipseFitErrorMaximumTextBox = new QLabel;
-    EllipseFitErrorMaximumTextBox->setText("<b>Ellipse maximum fit error:</b>");
-
-    EllipseFitErrorMaximumLabel  = new QLabel;
-    EllipseFitErrorMaximumSlider = new SliderDouble;
-    EllipseFitErrorMaximumSlider->setPrecision(1);
-    EllipseFitErrorMaximumSlider->setDoubleRange(0, 160);
-    EllipseFitErrorMaximumSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EllipseFitErrorMaximumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEllipseFitErrorMaximum(double)));  
-
-    // Experimental tabs
+    // Subject input
 
     NameInputLineEdit = new QLineEdit;
     NameInputLineEdit->setAlignment(Qt::AlignRight);
@@ -795,6 +583,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QLabel *NameInputTextBox = new QLabel;
     NameInputTextBox->setText("<b>Subject identifier:</b>");
+
+    // Data directory
 
     QLabel* DataDirectoryTitleTextBox = new QLabel;
     DataDirectoryTitleTextBox->setText("<b>Data path:</b>");
@@ -805,6 +595,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton* DataDirectoryButton = new QPushButton("&Browse...");
     QObject::connect(DataDirectoryButton, SIGNAL(clicked()), this, SLOT(selectDirectory()));
 
+    // Data filename
+
     QLabel *DataFilenameTextBox = new QLabel;
     DataFilenameTextBox->setText("<b>File name:</b>");
 
@@ -812,12 +604,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     DataFilenameLineEdit->setAlignment(Qt::AlignRight);
     DataFilenameLineEdit->setText(QString::fromStdString(dataFilename));
 
+    // Trial time length
+
     QLabel *TrialTimeLengthTextBox = new QLabel;
     TrialTimeLengthTextBox->setText("<b>Trial length (ms):</b>");
 
     TrialTimeLengthLineEdit = new QLineEdit;
     TrialTimeLengthLineEdit->setAlignment(Qt::AlignRight);
     TrialTimeLengthLineEdit->setText(QString::number(trialTimeLength));
+
+    // Flash trigger button
 
     FlashStandbySlider = new QSlider;
     FlashStandbySlider->setRange(0, 1);
@@ -829,6 +625,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     FlashStandbyLabel = new QLabel;
     FlashStandbyLabel->setText("<font color='red'><b>OFF</b></font>");
+
+    // Flash threshold
 
     FlashThresholdSlider = new QSlider;
     FlashThresholdSlider->setRange(0, 255);
@@ -845,6 +643,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QLabel* FlashThresholdTextBox = new QLabel;
     FlashThresholdTextBox->setText("<b>Flash threshold:</b>");
+
+    // Flash AOI coordinates
 
     QSpinBox* FlashXPosSpinBox = new QSpinBox;
     QSpinBox* FlashYPosSpinBox = new QSpinBox;
@@ -892,6 +692,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FlashCoordinatesLayout->addWidget(FlashHghtTextBox);
     FlashCoordinatesLayout->addWidget(FlashHghtSpinBox);
 
+    // Trial index
+
     QLabel* TrialIndexTextBox = new QLabel;
     TrialIndexTextBox->setText("<b>Trial index:</b>");
 
@@ -905,8 +707,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     TrialIndexSpinBoxLayout->addStretch();
     TrialIndexSpinBoxLayout->addWidget(TrialIndexSpinBox);
 
+    // Manual record button
+
     QPushButton* StartRecordingButton = new QPushButton("Start");
     QObject::connect(StartRecordingButton, SIGNAL(clicked()), this, SLOT(startRecordingManual()));
+
+    // Data save
 
     QLabel* SaveDataTextBox = new QLabel;
     SaveDataTextBox->setText("<b>Data to be saved:</b>");
@@ -931,6 +737,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(SaveDataAspectRatioCheckBox,   SIGNAL(stateChanged(int)), this, SLOT(setSaveDataAspectRatio(int)));
     QObject::connect(SaveDataCircumferenceCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setSaveDataCircumference(int)));
     QObject::connect(SaveDataPositionCheckBox,      SIGNAL(stateChanged(int)), this, SLOT(setSaveDataPosition(int)));
+
+    // Set-up layouts
 
     QWidget* ExperimentTabWidget = new QWidget;
     QHBoxLayout *ExperimentTabLayout = new QHBoxLayout(ExperimentTabWidget);
@@ -981,106 +789,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ExperimentTabLayout->addLayout(ExperimentTabLeftLayout);
     ExperimentTabLayout->addLayout(ExperimentTabRghtLayout);
 
-    // Set-up parameter settings layout
-
-    QWidget* RealTimeVariablesWidget = new QWidget;
-    QGridLayout *RealTimeVariablesLayout = new QGridLayout(RealTimeVariablesWidget);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceTextBox,   0, 0);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceSlider,    0, 1);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceLabel,     0, 2);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioTextBox,     1, 0);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioSlider,      1, 1);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioLabel,       1 ,2);
-    RealTimeVariablesLayout->addWidget(EdgeIntensityTextBox,        2, 0);
-    RealTimeVariablesLayout->addWidget(EdgeIntensitySlider,         2, 1);
-    RealTimeVariablesLayout->addWidget(EdgeIntensityLabel,          2, 2);
-
-    QWidget *ParameterLimitsWidget = new QWidget;
-    QGridLayout *ParameterLimitsLayout = new QGridLayout(ParameterLimitsWidget);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxTextBox,  0, 0);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxSlider,   0, 1);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxLabel,    0, 2);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMinTextBox,  1, 0);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMinSlider,   1, 1);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMinLabel,    1, 2);
-    ParameterLimitsLayout->addWidget(PupilAspectRatioMinTextBox,    2, 0);
-    ParameterLimitsLayout->addWidget(PupilAspectRatioMinSlider,     2, 1);
-    ParameterLimitsLayout->addWidget(PupilAspectRatioMinLabel,      2, 2);
-    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetTextBox,    3, 0);
-    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetSlider,     3, 1);
-    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetLabel,      3, 2);
-
-    QWidget *LearningRateWidget = new QWidget;
-    QGridLayout *LearningRateLayout = new QGridLayout(LearningRateWidget);
-    LearningRateLayout->addWidget(AlphaPredictionTextBox,       0, 0);
-    LearningRateLayout->addWidget(AlphaPredictionSlider,        0, 1);
-    LearningRateLayout->addWidget(AlphaPredictionLabel,         0, 2);
-    LearningRateLayout->addWidget(AlphaAverageTextBox,          1, 0);
-    LearningRateLayout->addWidget(AlphaAverageSlider,           1, 1);
-    LearningRateLayout->addWidget(AlphaAverageLabel,            1, 2);
-    LearningRateLayout->addWidget(AlphaMomentumTextBox,         2, 0);
-    LearningRateLayout->addWidget(AlphaMomentumSlider,          2, 1);
-    LearningRateLayout->addWidget(AlphaMomentumLabel,           2, 2);
-    LearningRateLayout->addWidget(AlphaMiscellaneousTextBox,    3, 0);
-    LearningRateLayout->addWidget(AlphaMiscellaneousSlider,     3, 1);
-    LearningRateLayout->addWidget(AlphaMiscellaneousLabel,      3, 2);
-
-    QWidget *ThresholdParametersWidget = new QWidget;
-    QGridLayout *ThresholdParametersLayout = new QGridLayout(ThresholdParametersWidget);
-    ThresholdParametersLayout->addWidget(ThresholdCircumferenceTextBox, 0, 0);
-    ThresholdParametersLayout->addWidget(ThresholdCircumferenceSlider,  0, 1);
-    ThresholdParametersLayout->addWidget(ThresholdCircumferenceLabel,   0, 2);
-    ThresholdParametersLayout->addWidget(ThresholdAspectRatioTextBox,   1, 0);
-    ThresholdParametersLayout->addWidget(ThresholdAspectRatioSlider,    1, 1);
-    ThresholdParametersLayout->addWidget(ThresholdAspectRatioLabel,     1, 2);
-
-    QWidget *CannyEdgeWidget = new QWidget;
-    QGridLayout *CannyEdgeLayout = new QGridLayout(CannyEdgeWidget);
-    CannyEdgeLayout->addWidget(CannyThresholdHighTextBox,   0, 0);
-    CannyEdgeLayout->addWidget(CannyThresholdHighSlider,    0, 1);
-    CannyEdgeLayout->addWidget(CannyThresholdHighLabel,     0, 2);
-    CannyEdgeLayout->addWidget(CannyThresholdLowTextBox,    1, 0);
-    CannyEdgeLayout->addWidget(CannyThresholdLowSlider,     1, 1);
-    CannyEdgeLayout->addWidget(CannyThresholdLowLabel,      1, 2);
-    CannyEdgeLayout->addWidget(CannyKernelSizeTextBox,      2, 0);
-    CannyEdgeLayout->addWidget(CannyKernelSizeSlider,       2, 1);
-    CannyEdgeLayout->addWidget(CannyKernelSizeLabel,        2, 2);
-    CannyEdgeLayout->addWidget(CannyBlurLevelTextBox,       3, 0);
-    CannyEdgeLayout->addWidget(CannyBlurLevelSlider,        3, 1);
-    CannyEdgeLayout->addWidget(CannyBlurLevelLabel,         3, 2);
-
-    QWidget *MiscellaneousParametersWidget = new QWidget;
-    QGridLayout *MiscellaneousParametersLayout = new QGridLayout(MiscellaneousParametersWidget);
-    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetTextBox,         0, 0);
-    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetSlider,          0, 1);
-    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetLabel,           0, 2);
-    MiscellaneousParametersLayout->addWidget(GlintSizeTextBox,               1, 0);
-    MiscellaneousParametersLayout->addWidget(GlintSizeSlider,                1, 1);
-    MiscellaneousParametersLayout->addWidget(GlintSizeLabel,                 1, 2);
-    MiscellaneousParametersLayout->addWidget(CurvatureFactorTextBox,         2, 0);
-    MiscellaneousParametersLayout->addWidget(CurvatureFactorSlider,          2, 1);
-    MiscellaneousParametersLayout->addWidget(CurvatureFactorLabel,           2, 2);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetTextBox,         3, 0);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetSlider,          3, 1);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetLabel,           3, 2);
-    MiscellaneousParametersLayout->addWidget(EdgeLengthMinimumTextBox,       4, 0);
-    MiscellaneousParametersLayout->addWidget(EdgeLengthMinimumSlider,        4, 1);
-    MiscellaneousParametersLayout->addWidget(EdgeLengthMinimumLabel,         4, 2);
-    MiscellaneousParametersLayout->addWidget(EllipseFitNumberMaximumTextBox, 5, 0);
-    MiscellaneousParametersLayout->addWidget(EllipseFitNumberMaximumSlider,  5, 1);
-    MiscellaneousParametersLayout->addWidget(EllipseFitNumberMaximumLabel,   5, 2);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumTextBox,  6, 0);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumSlider,   6, 1);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumLabel,    6, 2);
+    /////////////////// Tab layout ///////////////////////
 
     EyeTrackingParameterTabWidget = new QTabWidget;
     EyeTrackingParameterTabWidget->addTab(CameraParametersWidget,        tr("Camera"));
     EyeTrackingParameterTabWidget->addTab(RealTimeVariablesWidget,       tr("Variables"));
-    EyeTrackingParameterTabWidget->addTab(ParameterLimitsWidget,         tr("Limits"));
-    EyeTrackingParameterTabWidget->addTab(CannyEdgeWidget,               tr("Canny-edge"));
-    EyeTrackingParameterTabWidget->addTab(LearningRateWidget,            tr("Learning rates"));
-    EyeTrackingParameterTabWidget->addTab(ThresholdParametersWidget,     tr("Thresholds"));
-    EyeTrackingParameterTabWidget->addTab(MiscellaneousParametersWidget, tr("Miscellaneous"));
+    EyeTrackingParameterTabWidget->addTab(mEyeParameterWidget,              tr("Eye parameters"));
     EyeTrackingParameterTabWidget->addTab(ExperimentTabWidget,           tr("Experimental"));
 
     QWidget *EyeTrackingWidget = new QWidget;
@@ -1099,7 +813,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeTrackingWidgetScrollArea->setWidget(EyeTrackingWidget);
     EyeTrackingWidgetScrollArea->setWidgetResizable(true);
 
-    // External widgets
+    ///////////////////////////////////////////////////////////////
+    //////////////////// EXTERNAL WIDGETS  ////////////////////////
+    ///////////////////////////////////////////////////////////////
 
     // Quit button
 
@@ -1121,6 +837,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QObject::connect(about, &QAction::triggered, this, &MainWindow::openDialogue);
 
+    ///////////////////////////////////////////////////////////////
+    /////////////////////// MAIN LAYOUT ///////////////////////////
+    ///////////////////////////////////////////////////////////////
+
     // Main layout
 
     QVBoxLayout *MainLayout = new QVBoxLayout;
@@ -1135,10 +855,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setCentralWidget(centralWidget);
     resize(0.7 * screenResolution);
 
-    // Set widgets to initial values
-
-    setParameterWidgets();
-    resetVariables();
+    ///////////////////////////////////////////////////////////////
+    //////////////////////// START-UP /////////////////////////////
+    ///////////////////////////////////////////////////////////////
 
     // Start camera
 
@@ -1194,7 +913,7 @@ void MainWindow::pupilTracking()
             imageCamera = imageOriginal.clone();
 
             mEyePropertiesTemp.v = mEyePropertiesVariables;
-            mEyePropertiesTemp.p = mEyePropertiesParameters;
+            mEyePropertiesTemp.p = mEyeParameterWidget->getStructure();
 
             eyeAOIXPosTemp = Parameters::eyeAOIXPos;
             eyeAOIYPosTemp = Parameters::eyeAOIYPos;
@@ -1646,73 +1365,6 @@ void MainWindow::setOfflineMode(int state)
     }
 }
 
-void MainWindow::setParameterWidgets()
-{
-    EyeWdthROISlider->setDoubleValue(eyeAOIWdthFraction);
-    EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);
-
-    PupilCircumferenceMinSlider->setDoubleValue(mEyePropertiesParameters.circumferenceMin);
-    PupilCircumferenceMinLabel ->setText(QString::number(mEyePropertiesParameters.circumferenceMin, 'f', 1));
-
-    PupilCircumferenceMaxSlider->setDoubleValue(mEyePropertiesParameters.circumferenceMax);
-    PupilCircumferenceMaxLabel ->setText(QString::number(mEyePropertiesParameters.circumferenceMax, 'f', 1));
-
-    PupilAspectRatioMinSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioMin);
-    PupilAspectRatioMinLabel ->setText(QString::number(mEyePropertiesParameters.aspectRatioMin, 'f', 2));
-
-    EdgeIntensityOffsetSlider->setDoubleValue(mEyePropertiesParameters.edgeIntensityOffset);
-    EdgeIntensityOffsetLabel ->setText(QString::number(mEyePropertiesParameters.edgeIntensityOffset, 'f', 1));
-
-    CannyThresholdLowSlider->setValue(mEyePropertiesParameters.cannyThresholdLow);
-    CannyThresholdLowLabel ->setText(QString::number(mEyePropertiesParameters.cannyThresholdLow));
-
-    CannyThresholdHighSlider->setValue(mEyePropertiesParameters.cannyThresholdHigh);
-    CannyThresholdHighLabel ->setText(QString::number(mEyePropertiesParameters.cannyThresholdHigh));
-
-    CannyBlurLevelSlider->setValue(mEyePropertiesParameters.cannyBlurLevel);
-    CannyBlurLevelLabel ->setText(QString::number(mEyePropertiesParameters.cannyBlurLevel));
-
-    CannyKernelSizeSlider->setValue(ceil(0.5 * mEyePropertiesParameters.cannyKernelSize));
-    CannyKernelSizeLabel ->setText(QString::number(mEyePropertiesParameters.cannyKernelSize));
-
-    AlphaAverageSlider      ->setDoubleValue(mEyePropertiesParameters.alphaAverage);
-    AlphaPredictionSlider   ->setDoubleValue(mEyePropertiesParameters.alphaPrediction);
-    AlphaMiscellaneousSlider->setDoubleValue(mEyePropertiesParameters.alphaMiscellaneous);
-    AlphaMomentumSlider     ->setDoubleValue(mEyePropertiesParameters.alphaMomentum);
-
-    AlphaAverageLabel      ->setText(QString::number(mEyePropertiesParameters.alphaAverage, 'f', 3));
-    AlphaPredictionLabel   ->setText(QString::number(mEyePropertiesParameters.alphaPrediction, 'f', 2));
-    AlphaMiscellaneousLabel->setText(QString::number(mEyePropertiesParameters.alphaMiscellaneous, 'f', 2));
-    AlphaMomentumLabel     ->setText(QString::number(mEyePropertiesParameters.alphaMomentum, 'f', 2));
-
-    ThresholdCircumferenceSlider->setDoubleValue(mEyePropertiesParameters.circumferenceChangeThreshold);
-    ThresholdCircumferenceLabel ->setText(QString::number(mEyePropertiesParameters.circumferenceChangeThreshold, 'f', 1));
-
-    ThresholdAspectRatioSlider->setDoubleValue(mEyePropertiesParameters.aspectRatioChangeThreshold);
-    ThresholdAspectRatioLabel ->setText(QString::number(mEyePropertiesParameters.aspectRatioChangeThreshold, 'f', 2));
-
-    PupilHaarOffsetSlider->setValue(mEyePropertiesParameters.pupilOffset);
-    PupilHaarOffsetLabel ->setText(QString::number(mEyePropertiesParameters.pupilOffset));
-
-    GlintSizeSlider->setValue(round(0.5 * mEyePropertiesParameters.glintSize));
-    GlintSizeLabel->setText(QString::number(mEyePropertiesParameters.glintSize));
-
-    CurvatureFactorSlider->setDoubleValue(mEyePropertiesParameters.curvatureFactor);
-    CurvatureFactorLabel ->setText(QString::number(mEyePropertiesParameters.curvatureFactor, 'f', 2));
-
-    CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
-    CurvatureOffsetLabel ->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
-
-    EdgeLengthMinimumSlider->setDoubleValue(mEyePropertiesParameters.edgeLengthMinimum);
-    EdgeLengthMinimumLabel ->setText(QString::number(mEyePropertiesParameters.edgeLengthMinimum, 'f', 2));
-
-    EllipseFitNumberMaximumSlider->setValue(mEyePropertiesParameters.ellipseFitNumberMaximum);
-    EllipseFitNumberMaximumLabel ->setText(QString::number(mEyePropertiesParameters.ellipseFitNumberMaximum));
-
-    EllipseFitErrorMaximumSlider->setDoubleValue(mEyePropertiesParameters.ellipseFitErrorMaximum);
-    EllipseFitErrorMaximumLabel ->setText(QString::number(mEyePropertiesParameters.ellipseFitErrorMaximum, 'f', 1));
-}
-
 void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyePropertiesVariables)
 {
     PupilCircumferenceSlider->setDoubleValue(mEyePropertiesVariables.circumferencePrediction);
@@ -1726,19 +1378,21 @@ void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyeProperties
 }
 
 void MainWindow::resetVariables()
-{
-    mEyePropertiesVariables.aspectRatioAverage    = aspectRatioIni;
-    mEyePropertiesVariables.aspectRatioExact      = 0;
-    mEyePropertiesVariables.aspectRatioMomentum   = 0;
-    mEyePropertiesVariables.aspectRatioPrediction = aspectRatioIni;
+{    
+    eyePropertiesParameters mEyePropertiesParameters = mEyeParameterWidget->getStructure();
+
+    mEyePropertiesVariables.aspectRatioAverage    = 1.0;
+    mEyePropertiesVariables.aspectRatioExact      = 0.0;
+    mEyePropertiesVariables.aspectRatioMomentum   = 0.0;
+    mEyePropertiesVariables.aspectRatioPrediction = 1.0;
 
     mEyePropertiesVariables.circumferenceAverage    = 0.5 * (mEyePropertiesParameters.circumferenceMax + mEyePropertiesParameters.circumferenceMin);
     mEyePropertiesVariables.circumferenceExact      = 0;
     mEyePropertiesVariables.circumferenceMomentum   = 0;
     mEyePropertiesVariables.circumferencePrediction = mEyePropertiesVariables.circumferenceAverage;
 
-    mEyePropertiesVariables.edgeIntensityAverage    = edgeIntensityIni;
-    mEyePropertiesVariables.edgeIntensityPrediction = edgeIntensityIni;
+    mEyePropertiesVariables.edgeIntensityAverage    = 255;
+    mEyePropertiesVariables.edgeIntensityPrediction = 255;
 
     mEyePropertiesVariables.heightAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
     mEyePropertiesVariables.heightPrediction = mEyePropertiesVariables.heightAverage;

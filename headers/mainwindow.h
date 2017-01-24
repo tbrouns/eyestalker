@@ -25,8 +25,9 @@
 #include "headers/confirmationwindow.h"
 #include "headers/constants.h"
 #include "headers/drawfunctions.h"
-#include "headers/eyetracking.h"
+#include "headers/pupildetection.h"
 #include "headers/parameters.h"
+#include "headers/parameterwidget.h"
 #include "headers/sliderdouble.h"
 #include "headers/structures.h"
 #include "headers/qimageopencv.h"
@@ -139,7 +140,6 @@ private:
     double cameraAOIFractionXPos;
     double cameraAOIFractionYPos;
     double cameraFrameRate;
-    double circumferenceOffset;
     double eyeAOIHghtFraction;
     double eyeAOIWdthFraction;
     double flashMinIntensity;
@@ -147,7 +147,6 @@ private:
     double relativeTime;       // in ms
     std::vector<std::vector<double>> timeMatrix;
     eyePropertiesMiscellaneous mEyePropertiesMiscellaneous;
-    eyePropertiesParameters    mEyePropertiesParameters;
     eyePropertiesVariables     mEyePropertiesVariables;
     eyePropertiesMiscellaneous mBeadPropertiesMiscellaneous;
     eyePropertiesParameters    mBeadPropertiesParameters;
@@ -167,7 +166,6 @@ private:
     int trialTotalOffline;
     int imageIndexOffline;
     int imageTotalOffline;
-    int experimentIndex;
     int eyeAOIHghtMin;
     int eyeAOIWdthMin;
     int eyeImageHght;
@@ -175,64 +173,37 @@ private:
     int flashThreshold;
     int frameCount;
     int getCurrentTime();
-    int pupilOffsetMin;
     int trialFrameTotal;
     int trialIndex;
     int trialStartTime;
     int trialTimeLength;
+    ParameterWidget *mBeadParameterWidget;
+    ParameterWidget *mEyeParameterWidget;
     QCheckBox *CameraHardwareGainAutoCheckBox;
     QImageOpenCV *CamQImage;
     QImageOpenCV *EyeQImage;
-    QLabel *AlphaMiscellaneousLabel;
-    QLabel *AlphaMomentumLabel;
-    QLabel *AlphaAverageLabel;
-    QLabel *AlphaPredictionLabel;
     QLabel *CameraBlackLevelOffsetLabel;
     QLabel *CameraExposureLabel;
     QLabel *CameraFrameRateLabel;
     QLabel *CameraHardwareGainLabel;
     QLabel *CameraPixelClockLabel;
-    QLabel *CannyBlurLevelLabel;
-    QLabel *CannyKernelSizeLabel;
-    QLabel *CannyThresholdLowLabel;
-    QLabel *CannyThresholdHighLabel;
-    QLabel *CurvatureFactorLabel;
-    QLabel *CurvatureOffsetLabel;
     QLabel *DataAnalysisTitleTextBox;
     QLabel *DataDirectoryTextBox;
     QLabel *EdgeIntensityLabel;
-    QLabel *EdgeIntensityOffsetLabel;
-    QLabel *EdgeLengthMinimumLabel;
-    QLabel *EllipseFitNumberMaximumLabel;
-    QLabel *EllipseFitErrorMaximumLabel;
     QLabel *FlashStandbyLabel;
     QLabel *FlashThresholdLabel;
-    QLabel *GlintSizeLabel;
     QLabel *PupilCircumferenceLabel;
-    QLabel *PupilCircumferenceMinLabel;
-    QLabel *PupilCircumferenceMaxLabel;
-    QLabel *PupilAspectRatioMinLabel;
     QLabel *PupilAspectRatioLabel;
-    QLabel *PupilHaarOffsetLabel;
     QLabel *OfflineImageFrameTextBox;
-    QLabel *ThresholdCircumferenceLabel;
-    QLabel *ThresholdAspectRatioLabel;
     QLineEdit *DataFilenameLineEdit;
     QLineEdit *NameInputLineEdit;
     QLineEdit *TrialTimeLengthLineEdit;
     QSlider *CameraBlackLevelOffsetSlider;
     QSlider *CameraHardwareGainSlider;
     QSlider *CameraPixelClockSlider;
-    QSlider *CannyBlurLevelSlider;
-    QSlider *CannyKernelSizeSlider;
-    QSlider *CannyThresholdLowSlider;
-    QSlider *CannyThresholdHighSlider;
-    QSlider *EllipseFitNumberMaximumSlider;
     QSlider *ExperimentEyeVideoSlider;
     QSlider *FlashThresholdSlider;
     QSlider *FlashStandbySlider;
-    QSlider *GlintSizeSlider;
-    QSlider *PupilHaarOffsetSlider;
     QSlider *OfflineImageSlider;
     QSlider *OfflineTrialSlider;
     QSpinBox *CameraFrameRateDesiredSpinBox;
@@ -247,31 +218,23 @@ private:
     QWidget *CameraParametersWidget;
     QWidget *OfflineModeMainWidget;
     QWidget *OfflineModeHeaderWidget;
-    SliderDouble *AlphaMiscellaneousSlider;
-    SliderDouble *AlphaMomentumSlider;
-    SliderDouble *AlphaAverageSlider;
-    SliderDouble *AlphaPredictionSlider;
+
     SliderDouble *CameraExposureSlider;
     SliderDouble *CameraFrameRateSlider;
     SliderDouble *CamEyeAOIHghtSlider;
     SliderDouble *CamEyeAOIWdthSlider;
     SliderDouble *CamEyeAOIXPosSlider;
     SliderDouble *CamEyeAOIYPosSlider;
-    SliderDouble *CurvatureFactorSlider;
-    SliderDouble *CurvatureOffsetSlider;
-    SliderDouble *EdgeIntensityOffsetSlider;
+
     SliderDouble *EdgeIntensitySlider;
-    SliderDouble *EdgeLengthMinimumSlider;
-    SliderDouble *EllipseFitErrorMaximumSlider;
+
     SliderDouble *EyeHghtROISlider;
     SliderDouble *EyeWdthROISlider;
     SliderDouble *PupilCircumferenceSlider;
-    SliderDouble *PupilCircumferenceMinSlider;
-    SliderDouble *PupilCircumferenceMaxSlider;
-    SliderDouble *PupilAspectRatioMinSlider;
+
+
     SliderDouble *PupilAspectRatioSlider;
-    SliderDouble *ThresholdCircumferenceSlider;
-    SliderDouble *ThresholdAspectRatioSlider;
+
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
     std::condition_variable cvOffline;
@@ -340,10 +303,6 @@ private slots:
     void resetFlashMinIntensity();
     void offlineSaveExperimentData();
     void offlineCombineExperimentData();
-    void setAlphaMiscellaneous(double value);
-    void setAlphaMomentum(double value);
-    void setAlphaAverage(double value);
-    void setAlphaPrediction(double value);
     void setCameraAutoGain(int state);
     void setCameraBlackLevelMode(int state);
     void setCameraBlackLevelOffset(int value);
@@ -357,20 +316,10 @@ private slots:
     void setCamEyeAOIWdth(double);
     void setCamEyeAOIXPos(double);
     void setCamEyeAOIYPos(double);
-    void setCannyBlurLevel(int value);
-    void setCannyKernelSize(int value);
-    void setCannyThresholdLow(int value);
-    void setCannyThresholdHigh(int value);
-    void setCurvatureFactor(double value);
-    void setCurvatureOffset(double value);
     void setDrawEdge(int state);
     void setDrawElps(int state);
     void setDrawHaar(int state);
     void setEdgeIntensity(double);
-    void setEdgeIntensityOffset(double);
-    void setEdgeLengthMinimum(double);
-    void setEllipseFitNumberMaximum(int);
-    void setEllipseFitErrorMaximum(double);
     void setEyeROIHght(double);
     void setEyeROIWdth(double);
     void setFlashAOIXPos(int);
@@ -378,14 +327,9 @@ private slots:
     void setFlashAOIWdth(int);
     void setFlashAOIHght(int);
     void setFlashThreshold(int);
-    void setGlintSize(int);
     void setAOILeftEye();
     void setPupilCircumference(double);
-    void setPupilCircumferenceMin(double);
-    void setPupilCircumferenceMax(double);
     void setPupilAspectRatio(double);
-    void setPupilAspectRatioMin(double);
-    void setPupilHaarOffset(int);
     void setPupilPosition(double, double);
     void setSaveDataAspectRatio(int);
     void setSaveDataCircumference(int);
@@ -394,8 +338,6 @@ private slots:
     void setOfflineMode(int state);
     void setOfflineImageFrame(int);
     void setAOIRghtEye();
-    void setThresholdCircumference(double);
-    void setThresholdAspectRatio(double);
     void setTrialIndex(int);
     void startOfflineSession();
     void startRecordingManual();

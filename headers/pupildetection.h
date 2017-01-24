@@ -13,8 +13,8 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#ifndef EYETRACKING
-#define EYETRACKING
+#ifndef PUPILDETECTION
+#define PUPILDETECTION
 
 // Files
 
@@ -55,5 +55,5 @@ double calculateMean(const std::vector<double>&);
 eyeProperties pupilDetection(const cv::Mat&, eyeProperties);
 double flashDetection(const cv::Mat&);
 
-#endif // EYETRACKING
+#endif // PUPILDETECTION
 
