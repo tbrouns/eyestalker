@@ -79,6 +79,7 @@ struct eyePropertiesParameters
     double curvatureFactor;
     double curvatureOffsetMin;
     double edgeIntensityOffset;
+    double edgeLengthMinimum;
     double ellipseFitErrorMaximum;
     double circumferenceMax;
     double circumferenceMin;
@@ -89,7 +90,7 @@ struct eyePropertiesParameters
     int cannyKernelSize;
     int cannyThresholdLow;
     int cannyThresholdHigh;
-    int edgeMaximumFitNumber;
+    int ellipseFitNumberMaximum;
     int glintSize;
     int pupilOffset;
 };
@@ -147,7 +148,7 @@ struct eyePropertiesMiscellaneous
     int pupilHaarWdth;
     int pupilHaarXPos;
     int pupilHaarYPos;
-    std::vector<int> cannyEdges;
+    std::vector<int> cannyEdgeIndices;
     std::vector<double> ellipseCoefficients;
     std::vector<edgeProperties> edgePropertiesAll;
 };

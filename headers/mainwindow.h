@@ -144,11 +144,14 @@ private:
     double eyeAOIWdthFraction;
     double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
-    double relativeTime; // in ms
+    double relativeTime;       // in ms
     std::vector<std::vector<double>> timeMatrix;
     eyePropertiesMiscellaneous mEyePropertiesMiscellaneous;
     eyePropertiesParameters    mEyePropertiesParameters;
     eyePropertiesVariables     mEyePropertiesVariables;
+    eyePropertiesMiscellaneous mBeadPropertiesMiscellaneous;
+    eyePropertiesParameters    mBeadPropertiesParameters;
+    eyePropertiesVariables     mBeadPropertiesVariables;
     int cameraAOIHghtMax;
     int cameraAOIHghtMin;
     int cameraAOIHghtStepSize;
@@ -173,7 +176,6 @@ private:
     int frameCount;
     int getCurrentTime();
     int pupilOffsetMin;
-    int pupilOffsetIni;
     int trialFrameTotal;
     int trialIndex;
     int trialStartTime;
@@ -200,7 +202,8 @@ private:
     QLabel *DataDirectoryTextBox;
     QLabel *EdgeIntensityLabel;
     QLabel *EdgeIntensityOffsetLabel;
-    QLabel *EdgeMaximumFitNumberLabel;
+    QLabel *EdgeLengthMinimumLabel;
+    QLabel *EllipseFitNumberMaximumLabel;
     QLabel *EllipseFitErrorMaximumLabel;
     QLabel *FlashStandbyLabel;
     QLabel *FlashThresholdLabel;
@@ -224,7 +227,7 @@ private:
     QSlider *CannyKernelSizeSlider;
     QSlider *CannyThresholdLowSlider;
     QSlider *CannyThresholdHighSlider;
-    QSlider *EdgeMaximumFitNumberSlider;
+    QSlider *EllipseFitNumberMaximumSlider;
     QSlider *ExperimentEyeVideoSlider;
     QSlider *FlashThresholdSlider;
     QSlider *FlashStandbySlider;
@@ -258,6 +261,7 @@ private:
     SliderDouble *CurvatureOffsetSlider;
     SliderDouble *EdgeIntensityOffsetSlider;
     SliderDouble *EdgeIntensitySlider;
+    SliderDouble *EdgeLengthMinimumSlider;
     SliderDouble *EllipseFitErrorMaximumSlider;
     SliderDouble *EyeHghtROISlider;
     SliderDouble *EyeWdthROISlider;
@@ -332,6 +336,7 @@ private slots:
     void onFlashStandbySlider(int);
     void prevOfflineImage();
     void selectDirectory();
+    void resetParameters();
     void resetFlashMinIntensity();
     void offlineSaveExperimentData();
     void offlineCombineExperimentData();
@@ -362,9 +367,10 @@ private slots:
     void setDrawElps(int state);
     void setDrawHaar(int state);
     void setEdgeIntensity(double);
-    void setEdgeIntensityOffset(double value);
-    void setEdgeMaximumFitNumber(int value);
-    void setEllipseFitErrorMaximum(double value);
+    void setEdgeIntensityOffset(double);
+    void setEdgeLengthMinimum(double);
+    void setEllipseFitNumberMaximum(int);
+    void setEllipseFitErrorMaximum(double);
     void setEyeROIHght(double);
     void setEyeROIWdth(double);
     void setFlashAOIXPos(int);
@@ -372,15 +378,15 @@ private slots:
     void setFlashAOIWdth(int);
     void setFlashAOIHght(int);
     void setFlashThreshold(int);
-    void setGlintSize(int value);
+    void setGlintSize(int);
     void setAOILeftEye();
     void setPupilCircumference(double);
-    void setPupilCircumferenceMin(double value);
-    void setPupilCircumferenceMax(double value);
+    void setPupilCircumferenceMin(double);
+    void setPupilCircumferenceMax(double);
     void setPupilAspectRatio(double);
     void setPupilAspectRatioMin(double);
-    void setPupilHaarOffset(int value);
-    void setPupilPosition(double xPos, double yPos);
+    void setPupilHaarOffset(int);
+    void setPupilPosition(double, double);
     void setSaveDataAspectRatio(int);
     void setSaveDataCircumference(int);
     void setSaveDataPosition(int);

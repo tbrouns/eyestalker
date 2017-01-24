@@ -17,53 +17,33 @@
 
 void drawHaarDetector(cv::Mat& I, int x0, int y0, int haarWidth, int haarHeight, cv::Vec3b col)
 {
-    unsigned short int wdth = I.rows;
-    unsigned short int hgth = I.cols;
-
-    for (unsigned short int y = 0; y < wdth; y++)
+    for (int x = x0; x < x0 + haarWidth; x++) // left to right
     {
-        for (unsigned short int x = 0; x < hgth; x++)
-        {
-            if (x == x0 || x == x0 + haarWidth)
-            {
-                if (y > y0 && y < y0 + haarHeight)
-                {
-                    I.at<cv::Vec3b>(y, x) = col;
-                }
-            }
+        I.at<cv::Vec3b>(y0,              x) = col; // top
+        I.at<cv::Vec3b>(y0 + haarHeight, x) = col; // bottom
+    }
 
-            if (y == y0 || y == y0 + haarHeight)
-            {
-                if (x > x0 && x < x0 + haarWidth)
-                {
-                    I.at<cv::Vec3b>(y, x) = col;
-                }
-            }
-        }
+    for (int y = y0; y < y0 + haarHeight; y++) // top to bottom
+    {
+        I.at<cv::Vec3b>(y, x0)             = col; // left
+        I.at<cv::Vec3b>(y, x0 + haarWidth) = col; // right
     }
 }
 
-void drawEdges(cv::Mat& I, const std::vector<int>& p, int x0, int y0, int haarWidth, int haarHeight, const cv::Vec3b& col)
+void drawEdges(cv::Mat& I, const std::vector<int>& edgeIndices, int x0, int y0, int haarWidth, const cv::Vec3b& col)
 {
-    int p_size = p.size();
+    int numEdgePoints = edgeIndices.size();
 
-    if (p_size > 0)
+    for (int iEdgePoint = 0; iEdgePoint < numEdgePoints; iEdgePoint++)
     {
-        for (int y = 0; y < haarHeight; y++)
-        {
-            for (int x = 0; x < haarWidth; x++)
-            {
-                int i = y * haarWidth + x;
+        int edgePointIndex = edgeIndices[iEdgePoint];
+        int x =  edgePointIndex % haarWidth;
+        int y = (edgePointIndex - x) / haarWidth;
 
-                int X = x + x0;
-                int Y = y + y0;
+        int X = x + x0;
+        int Y = y + y0;
 
-                if (p[i] == 1 || p[i] == -1)
-                {
-                    I.at<cv::Vec3b>(Y, X) = col;
-                }
-            }
-        }
+        I.at<cv::Vec3b>(Y, X) = col;
     }
 }
 
@@ -171,7 +151,7 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
 
         if (Parameters::drawFlags.edge)
         {
-            drawEdges(I, mEyeProperties.m.cannyEdges, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, mEyeProperties.m.offsetPupilHaarHght, red);
+            drawEdges(I, mEyeProperties.m.cannyEdgeIndices, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, red);
             drawOutline(I, mEyeProperties.m.edgePropertiesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, cyan, green, yellow);
         }
 

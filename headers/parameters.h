@@ -41,10 +41,13 @@ public:
     static bool CAMERA_READY;
     static bool CAMERA_RUNNING;
     static bool ONLINE_PROCESSING;
+
     static double ellipseDrawOutlineWidth;
     static double eyeAOIXPosFraction;
     static double eyeAOIYPosFraction;
+
     static drawBooleans drawFlags;
+
     static int cameraAOIHght;
     static int cameraAOIWdth;
     static int cameraAOIXPos;
@@ -61,7 +64,9 @@ public:
     static int flashAOIYPos;
     static int flashAOIWdth;
     static int flashAOIHght;
+
     static std::condition_variable frameCaptureCV;
+
     static std::mutex frameCaptureMutex;
     static std::mutex primaryMutex;
     static std::mutex secondaryMutex;

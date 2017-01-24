@@ -27,8 +27,8 @@ QImageOpenCV::QImageOpenCV(int type, QWidget *parent) : QLabel(parent)
     sizeW = 0;
     sizeH = 0;
 
-    backgroundColour = QColor(48, 47, 47);
-    textColour = QColor(177, 177, 177);
+    backgroundColour = QColor( 48,  47,  47);
+    textColour       = QColor(177, 177, 177);
 
     this->setLineWidth(2);
     this->setAlignment(Qt::AlignCenter);
@@ -110,12 +110,12 @@ void QImageOpenCV::drawAOI(QPixmap& img, int xPos, int yPos, int wdth, int hght,
 
         painter.setPen(QPen(col, round(lineWidth)));
 
-        painter.drawLine(QPoint(xPos, yPos), QPoint(xPos + wdth, yPos));
+        painter.drawLine(QPoint(xPos, yPos),        QPoint(xPos + wdth, yPos));
         painter.drawLine(QPoint(xPos, yPos + hght), QPoint(xPos + wdth, yPos + hght));
 
         painter.setPen(QPen(col, round(lineWidth)));
 
-        painter.drawLine(QPoint(xPos, yPos), QPoint(xPos, yPos + hght));
+        painter.drawLine(QPoint(xPos,        yPos), QPoint(xPos,        yPos + hght));
         painter.drawLine(QPoint(xPos + wdth, yPos), QPoint(xPos + wdth, yPos + hght));
     }
 }
@@ -127,8 +127,8 @@ void QImageOpenCV::setImage()
         if (imageScaledWdth > 0)
         {
             QPixmap imageEdited = imageScaled;
-            drawAOI(imageEdited, eyeXPosAOI, eyeYPosAOI, eyeWdthAOI, eyeHghtAOI, QColor(255, 0, 0));
-            drawAOI(imageEdited, flashXPosAOI, flashYPosAOI, flashWdthAOI, flashHghtAOI, QColor(0, 0, 255));
+            drawAOI(imageEdited,   eyeXPosAOI,   eyeYPosAOI,   eyeWdthAOI,   eyeHghtAOI, QColor(255, 0,   0));
+            drawAOI(imageEdited, flashXPosAOI, flashYPosAOI, flashWdthAOI, flashHghtAOI, QColor(  0, 0, 255));
             this->setPixmap(imageEdited);
         }
     }

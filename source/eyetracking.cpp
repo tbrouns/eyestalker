@@ -588,6 +588,21 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, int haarWi
     return binaryImageVector;
 }
 
+std::vector<int> cannyConversion(const cv::Mat& img, int haarWidth, int haarHeight)
+{
+    int haarSize = haarWidth * haarHeight;
+    uchar *ptr_img = img.data;
+    std::vector<int> binaryImageVectorRaw(haarSize);
+
+    for (int i = 0; i < haarSize; i++)
+    {
+        if (ptr_img[i] == 255)  { binaryImageVectorRaw[i] = 1; }
+        else                    { binaryImageVectorRaw[i] = 0; }
+    }
+
+    return binaryImageVectorRaw;
+}
+
 std::vector<int> getEdgeIndices(const std::vector<int>& binaryImageVector)
 {
     int haarSize = binaryImageVector.size();
@@ -1101,7 +1116,7 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const std::vector<e
 {
     double expectedCurvature = mEyeProperties.v.edgeCurvaturePrediction;
 
-    int numEdgesMax = mEyeProperties.p.edgeMaximumFitNumber;
+    int numEdgesMax = mEyeProperties.p.ellipseFitNumberMaximum;
     int numEdges    = vEdgePropertiesAll.size();
     if (numEdgesMax > numEdges) { numEdgesMax = numEdges; }
 
@@ -1131,7 +1146,7 @@ std::vector<int> edgeThreshold(eyeProperties mEyeProperties, const std::vector<e
         if (USE_PRIOR_INFORMATION)
         {
             // position score
-            double dR = std::abs(vEdgePropertiesAll[iEdge].distance - radiusPredictionFactor * mEyeProperties.v.radiusPrediction); // reduce prediction by constant factor, because actual pupil edge should envelop prediction
+            double dR = std::abs(vEdgePropertiesAll[iEdge].distance - mEyeProperties.v.radiusPrediction); // reduce prediction by constant factor, because actual pupil edge should envelop prediction
             positionScore = (-15 / (mEyeProperties.v.radiusPrediction)) * dR + 15;
             if (positionScore < 0) { positionScore = 0; }
 
@@ -1308,7 +1323,7 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
 
     for (int iParameter = 0; iParameter < 6; iParameter++)
     {
-        if (isnan(ellipseParameters[iParameter])) { mEllipseProperties.pupilDetected = false; } // ERROR
+        if (std::isnan(ellipseParameters[iParameter])) { mEllipseProperties.pupilDetected = false; } // ERROR
     }
 
     return mEllipseProperties;
@@ -1362,12 +1377,12 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             if (USE_PRIOR_INFORMATION)
             {
-                if (edgeSetLength < mEyeProperties.v.circumferencePrediction * edgeCollectionFraction)
+                if (edgeSetLength < mEyeProperties.v.circumferencePrediction * mEyeProperties.p.ellipseFitNumberMaximum)
                 { continue; }
             }
             else
             {
-                if (edgeSetLength <= mEyeProperties.p.circumferenceMin * edgeCollectionFraction)
+                if (edgeSetLength <= mEyeProperties.p.circumferenceMin * mEyeProperties.p.ellipseFitNumberMaximum)
                 { continue; }
             }
 
@@ -1450,10 +1465,10 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     {
         std::vector<double> featureChange(numFits); // new type of fit error
 
-        double maxScoreFitError         = 20;
-        double maxScoreCircumference    = 20;
-        double maxScoreAspectRatio      = 20;
-        double maxScoreLength           = 20;
+        double maxScoreFitError      = 20;
+        double maxScoreCircumference = 20;
+        double maxScoreAspectRatio   = 20;
+        double maxScoreLength        = 20;
 
         double scoreCircumference = 0;
         double scoreAspectRatio   = 0;
@@ -1461,9 +1476,9 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
         for (int iFit = 0; iFit < numFits; iFit++)
         {
             double circumferenceChange = (std::abs(vEllipsePropertiesAll[iFit].circumference - mEyeProperties.v.circumferencePrediction));
-            double aspectRatioChange   = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio - mEyeProperties.v.aspectRatioPrediction));
+            double aspectRatioChange   = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio   - mEyeProperties.v.aspectRatioPrediction));
+            double lengthDifference    = (std::abs(vEllipsePropertiesAll[iFit].edgeLength    - mEyeProperties.v.circumferencePrediction));
             double fitError            = vEllipsePropertiesAll[iFit].fitError;
-            double lengthDifference    = (std::abs(vEllipsePropertiesAll[iFit].edgeLength - mEyeProperties.v.circumferencePrediction));
 
             if (USE_PRIOR_INFORMATION)
             {
@@ -1489,27 +1504,6 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     }
     
     return mEllipseProperties;
-}
-
-std::vector<int> cannyConversion(const cv::Mat& img, int haarWidth, int haarHeight)
-{
-    int haarSize = haarWidth * haarHeight;
-    uchar *ptr_img = img.data;
-    std::vector<int> binaryImageVectorRaw(haarSize);
-
-    for (int i = 0; i < haarSize; i++)
-    {
-        if (ptr_img[i] == 255)
-        {
-            binaryImageVectorRaw[i] = 1;
-        }
-        else
-        {
-            binaryImageVectorRaw[i] = 0;
-        }
-    }
-
-    return binaryImageVectorRaw;
 }
 
 eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEyeProperties)
@@ -1634,7 +1628,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         double xPosPredictedRelative = mEyeProperties.v.xPosPredicted - offsetPupilHaarXPos;
         double yPosPredictedRelative = mEyeProperties.v.yPosPredicted - offsetPupilHaarYPos;
 
-        std::vector<int> cannyEdges;
+        std::vector<int> cannyEdges; // binary vector
 
         if (USE_PRIOR_INFORMATION)
         {
@@ -1649,7 +1643,8 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
             cannyEdges = cannyConversion(imageCannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
         }
 
-        std::vector<int>  cannyEdgesSharpened = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght); // Morphological operation
+        std::vector<int> edgeIndices         = getEdgeIndices(cannyEdges);
+        std::vector<int> cannyEdgesSharpened = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght); // Morphological operation
 
         // Edge thresholding
 
@@ -1808,7 +1803,7 @@ eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEye
         mEyePropertiesNew.m.glintYPos = glintYPos;
         mEyePropertiesNew.m.glintSize = glintSize;
 
-        mEyePropertiesNew.m.cannyEdges          = cannyEdges;
+        mEyePropertiesNew.m.cannyEdgeIndices    = edgeIndices;
         mEyePropertiesNew.m.ellipseCoefficients = mEllipseProperties.coefficients;
     }
     else

@@ -31,27 +31,29 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     mUEyeOpencvCam.setDeviceInfo(5129, 5445);
 
+    Parameters::cameraXResolution       = 1280;
+    Parameters::cameraYResolution       = 1024;
+    Parameters::CAMERA_READY            = false;
+    Parameters::CAMERA_RUNNING          = false;
+    Parameters::ONLINE_PROCESSING       = true;
+    Parameters::cannyKernelSize         = 3;
+    Parameters::ellipseDrawCrossSize    = 5;
+    Parameters::ellipseDrawOutlineWidth = 0.032;
+
     APP_EXIT    = false;
     APP_RUNNING = true;
-    Parameters::cameraXResolution    = 1280;
-    Parameters::cameraYResolution    = 1024;
     cameraAOIFractionHghtDefaultLeft = 0.19;
     cameraAOIFractionHghtDefaultRght = 0.22;
-    cameraAOIFractionHght = cameraAOIFractionHghtDefaultLeft;
     cameraAOIFractionWdthDefaultLeft = 0.25;
     cameraAOIFractionWdthDefaultRght = 0.31;
-    cameraAOIFractionWdth = cameraAOIFractionWdthDefaultLeft;
     cameraAOIFractionXPosDefaultLeft = 0.20;
     cameraAOIFractionXPosDefaultRght = 0.52;
-    cameraAOIFractionXPos = cameraAOIFractionXPosDefaultLeft;
     cameraAOIFractionYPosDefaultLeft = 0.41;
     cameraAOIFractionYPosDefaultRght = 0.37;
-    cameraAOIFractionYPos = cameraAOIFractionYPosDefaultLeft;
     cameraAOIHghtMin        = 4;
     cameraAOIHghtStepSize   = 2;
     cameraAOIWdthMin        = 32;
     cameraAOIWdthStepSize   = 4;
-    cameraFrameRateDesired  = 250;
     cameraPixelClock        = 24;
     cameraSubSamplingFactor = 2;
     camImageHght            = 200;
@@ -62,28 +64,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     imageTotalOffline       = 0;
     experimentIndex         = 0;
     TRIAL_RECORDING         = false;
-    eyeAOIHghtFraction      = 1.0;
     eyeAOIHghtMin           = 75;
-    eyeAOIWdthFraction      = 1.0;
     eyeAOIWdthMin           = 100;
     eyeImageHght            = 200;
     eyeImageWdth            = 320;
     FLASH_STANDBY           = false;
     frameCount              = 0;
-    GAIN_AUTO               = true;
-    GAIN_BOOST              = false;
     guiUpdateFrequency      = 30;
     pupilOffsetMin          = 0;
-    pupilOffsetIni          = 25;
     relativeTime            = 0;
     SAVE_EYE_IMAGE          = true;
     startTime               = 0;
     subjectIdentifier       = "";
-    trialIndex              = 0;
-    trialTimeLength         = 1500;
-
-    Parameters::CAMERA_RUNNING      = false;
-    Parameters::ONLINE_PROCESSING = true;
 
     // Grab parameters from ini file
 
@@ -130,7 +122,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CamQImage = new QImageOpenCV(1);
     CamQImage->setSize(camImageWdth, camImageHght);
-    CamQImage->setEyeAOI(Parameters::eyeAOIXPos, Parameters::eyeAOIYPos, Parameters::eyeAOIWdth, Parameters::eyeAOIHght);
+    CamQImage->setEyeAOI  (Parameters::eyeAOIXPos,   Parameters::eyeAOIYPos,   Parameters::eyeAOIWdth,   Parameters::eyeAOIHght);
     CamQImage->setFlashAOI(Parameters::flashAOIXPos, Parameters::flashAOIYPos, Parameters::flashAOIWdth, Parameters::flashAOIHght);
 
     CamQImage->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -220,12 +212,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineModeCheckBox->setChecked(false);
     QObject::connect(OfflineModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setOfflineMode(int)));
 
+    QPushButton *ResetParametersPushButton = new QPushButton("Default parameters");
+    QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(resetParameters()));
+
     QHBoxLayout *RealTimeEyeTrackingLayout = new QHBoxLayout;
     RealTimeEyeTrackingLayout->addStretch();
     RealTimeEyeTrackingLayout->addWidget(RealTimeEyeTrackingTextBox);
     RealTimeEyeTrackingLayout->addWidget(RealTimeEyeTrackingCheckBox);
     RealTimeEyeTrackingLayout->addWidget(OfflineModeTextBox);
     RealTimeEyeTrackingLayout->addWidget(OfflineModeCheckBox);
+    RealTimeEyeTrackingLayout->addWidget(ResetParametersPushButton);
     RealTimeEyeTrackingLayout->addStretch();
 
     QPushButton *AOILeftEyeButton = new QPushButton("&Left eye");
@@ -762,14 +758,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));  
 
-    QLabel *EdgeMaximumFitNumberTextBox = new QLabel;
-    EdgeMaximumFitNumberTextBox->setText("<b>Edge maximum fit number:</b>");
+    QLabel *EdgeLengthMinimumTextBox = new QLabel;
+    EdgeLengthMinimumTextBox->setText("<b>Edge minimum length:");
 
-    EdgeMaximumFitNumberLabel  = new QLabel;
-    EdgeMaximumFitNumberSlider = new QSlider;
-    EdgeMaximumFitNumberSlider->setRange(0, 7);
-    EdgeMaximumFitNumberSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EdgeMaximumFitNumberSlider, SIGNAL(valueChanged(int)), this, SLOT(setEdgeMaximumFitNumber(int)));
+    EdgeLengthMinimumLabel  = new QLabel;
+    EdgeLengthMinimumSlider = new SliderDouble;
+    EdgeLengthMinimumSlider->setPrecision(2);
+    EdgeLengthMinimumSlider->setDoubleRange(0, 1.0);
+    EdgeLengthMinimumSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(EdgeLengthMinimumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeLengthMinimum(double)));
+
+    QLabel *EllipseFitNumberMaximumTextBox = new QLabel;
+    EllipseFitNumberMaximumTextBox->setText("<b>Edge maximum fit number:</b>");
+
+    EllipseFitNumberMaximumLabel  = new QLabel;
+    EllipseFitNumberMaximumSlider = new QSlider;
+    EllipseFitNumberMaximumSlider->setRange(0, 7);
+    EllipseFitNumberMaximumSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(EllipseFitNumberMaximumSlider, SIGNAL(valueChanged(int)), this, SLOT(setEllipseFitNumberMaximum(int)));
 
     QLabel *EllipseFitErrorMaximumTextBox = new QLabel;
     EllipseFitErrorMaximumTextBox->setText("<b>Ellipse maximum fit error:</b>");
@@ -777,7 +783,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EllipseFitErrorMaximumLabel  = new QLabel;
     EllipseFitErrorMaximumSlider = new SliderDouble;
     EllipseFitErrorMaximumSlider->setPrecision(1);
-    EllipseFitErrorMaximumSlider->setDoubleRange(0, 80);
+    EllipseFitErrorMaximumSlider->setDoubleRange(0, 160);
     EllipseFitErrorMaximumSlider->setOrientation(Qt::Horizontal);
     QObject::connect(EllipseFitErrorMaximumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEllipseFitErrorMaximum(double)));  
 
@@ -979,45 +985,45 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QWidget* RealTimeVariablesWidget = new QWidget;
     QGridLayout *RealTimeVariablesLayout = new QGridLayout(RealTimeVariablesWidget);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceTextBox, 0, 0);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceSlider, 0, 1);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceLabel, 0, 2);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioTextBox, 1, 0);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioSlider, 1, 1);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioLabel, 1 ,2);
-    RealTimeVariablesLayout->addWidget(EdgeIntensityTextBox, 2, 0);
-    RealTimeVariablesLayout->addWidget(EdgeIntensitySlider, 2, 1);
-    RealTimeVariablesLayout->addWidget(EdgeIntensityLabel, 2, 2);
+    RealTimeVariablesLayout->addWidget(PupilCircumferenceTextBox,   0, 0);
+    RealTimeVariablesLayout->addWidget(PupilCircumferenceSlider,    0, 1);
+    RealTimeVariablesLayout->addWidget(PupilCircumferenceLabel,     0, 2);
+    RealTimeVariablesLayout->addWidget(PupilAspectRatioTextBox,     1, 0);
+    RealTimeVariablesLayout->addWidget(PupilAspectRatioSlider,      1, 1);
+    RealTimeVariablesLayout->addWidget(PupilAspectRatioLabel,       1 ,2);
+    RealTimeVariablesLayout->addWidget(EdgeIntensityTextBox,        2, 0);
+    RealTimeVariablesLayout->addWidget(EdgeIntensitySlider,         2, 1);
+    RealTimeVariablesLayout->addWidget(EdgeIntensityLabel,          2, 2);
 
     QWidget *ParameterLimitsWidget = new QWidget;
     QGridLayout *ParameterLimitsLayout = new QGridLayout(ParameterLimitsWidget);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxTextBox, 0, 0);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxSlider, 0, 1);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxLabel, 0, 2);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMinTextBox, 1, 0);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMinSlider, 1, 1);
-    ParameterLimitsLayout->addWidget(PupilCircumferenceMinLabel, 1, 2);
-    ParameterLimitsLayout->addWidget(PupilAspectRatioMinTextBox, 2, 0);
-    ParameterLimitsLayout->addWidget(PupilAspectRatioMinSlider, 2, 1);
-    ParameterLimitsLayout->addWidget(PupilAspectRatioMinLabel, 2, 2);
-    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetTextBox, 3, 0);
-    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetSlider, 3, 1);
-    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetLabel, 3, 2);
+    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxTextBox,  0, 0);
+    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxSlider,   0, 1);
+    ParameterLimitsLayout->addWidget(PupilCircumferenceMaxLabel,    0, 2);
+    ParameterLimitsLayout->addWidget(PupilCircumferenceMinTextBox,  1, 0);
+    ParameterLimitsLayout->addWidget(PupilCircumferenceMinSlider,   1, 1);
+    ParameterLimitsLayout->addWidget(PupilCircumferenceMinLabel,    1, 2);
+    ParameterLimitsLayout->addWidget(PupilAspectRatioMinTextBox,    2, 0);
+    ParameterLimitsLayout->addWidget(PupilAspectRatioMinSlider,     2, 1);
+    ParameterLimitsLayout->addWidget(PupilAspectRatioMinLabel,      2, 2);
+    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetTextBox,    3, 0);
+    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetSlider,     3, 1);
+    ParameterLimitsLayout->addWidget(EdgeIntensityOffsetLabel,      3, 2);
 
     QWidget *LearningRateWidget = new QWidget;
     QGridLayout *LearningRateLayout = new QGridLayout(LearningRateWidget);
-    LearningRateLayout->addWidget(AlphaPredictionTextBox, 0, 0);
-    LearningRateLayout->addWidget(AlphaPredictionSlider, 0, 1);
-    LearningRateLayout->addWidget(AlphaPredictionLabel, 0, 2);
-    LearningRateLayout->addWidget(AlphaAverageTextBox, 1, 0);
-    LearningRateLayout->addWidget(AlphaAverageSlider, 1, 1);
-    LearningRateLayout->addWidget(AlphaAverageLabel, 1, 2);
-    LearningRateLayout->addWidget(AlphaMomentumTextBox, 2, 0);
-    LearningRateLayout->addWidget(AlphaMomentumSlider, 2, 1);
-    LearningRateLayout->addWidget(AlphaMomentumLabel, 2, 2);
-    LearningRateLayout->addWidget(AlphaMiscellaneousTextBox, 3, 0);
-    LearningRateLayout->addWidget(AlphaMiscellaneousSlider, 3, 1);
-    LearningRateLayout->addWidget(AlphaMiscellaneousLabel, 3, 2);
+    LearningRateLayout->addWidget(AlphaPredictionTextBox,       0, 0);
+    LearningRateLayout->addWidget(AlphaPredictionSlider,        0, 1);
+    LearningRateLayout->addWidget(AlphaPredictionLabel,         0, 2);
+    LearningRateLayout->addWidget(AlphaAverageTextBox,          1, 0);
+    LearningRateLayout->addWidget(AlphaAverageSlider,           1, 1);
+    LearningRateLayout->addWidget(AlphaAverageLabel,            1, 2);
+    LearningRateLayout->addWidget(AlphaMomentumTextBox,         2, 0);
+    LearningRateLayout->addWidget(AlphaMomentumSlider,          2, 1);
+    LearningRateLayout->addWidget(AlphaMomentumLabel,           2, 2);
+    LearningRateLayout->addWidget(AlphaMiscellaneousTextBox,    3, 0);
+    LearningRateLayout->addWidget(AlphaMiscellaneousSlider,     3, 1);
+    LearningRateLayout->addWidget(AlphaMiscellaneousLabel,      3, 2);
 
     QWidget *ThresholdParametersWidget = new QWidget;
     QGridLayout *ThresholdParametersLayout = new QGridLayout(ThresholdParametersWidget);
@@ -1030,39 +1036,42 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QWidget *CannyEdgeWidget = new QWidget;
     QGridLayout *CannyEdgeLayout = new QGridLayout(CannyEdgeWidget);
-    CannyEdgeLayout->addWidget(CannyThresholdHighTextBox, 0, 0);
-    CannyEdgeLayout->addWidget(CannyThresholdHighSlider,  0, 1);
-    CannyEdgeLayout->addWidget(CannyThresholdHighLabel,   0, 2);
-    CannyEdgeLayout->addWidget(CannyThresholdLowTextBox, 1, 0);
-    CannyEdgeLayout->addWidget(CannyThresholdLowSlider,  1, 1);
-    CannyEdgeLayout->addWidget(CannyThresholdLowLabel,   1, 2);
-    CannyEdgeLayout->addWidget(CannyKernelSizeTextBox, 2, 0);
-    CannyEdgeLayout->addWidget(CannyKernelSizeSlider,  2, 1);
-    CannyEdgeLayout->addWidget(CannyKernelSizeLabel,   2, 2);
-    CannyEdgeLayout->addWidget(CannyBlurLevelTextBox,  3, 0);
-    CannyEdgeLayout->addWidget(CannyBlurLevelSlider,   3, 1);
-    CannyEdgeLayout->addWidget(CannyBlurLevelLabel,    3, 2);
+    CannyEdgeLayout->addWidget(CannyThresholdHighTextBox,   0, 0);
+    CannyEdgeLayout->addWidget(CannyThresholdHighSlider,    0, 1);
+    CannyEdgeLayout->addWidget(CannyThresholdHighLabel,     0, 2);
+    CannyEdgeLayout->addWidget(CannyThresholdLowTextBox,    1, 0);
+    CannyEdgeLayout->addWidget(CannyThresholdLowSlider,     1, 1);
+    CannyEdgeLayout->addWidget(CannyThresholdLowLabel,      1, 2);
+    CannyEdgeLayout->addWidget(CannyKernelSizeTextBox,      2, 0);
+    CannyEdgeLayout->addWidget(CannyKernelSizeSlider,       2, 1);
+    CannyEdgeLayout->addWidget(CannyKernelSizeLabel,        2, 2);
+    CannyEdgeLayout->addWidget(CannyBlurLevelTextBox,       3, 0);
+    CannyEdgeLayout->addWidget(CannyBlurLevelSlider,        3, 1);
+    CannyEdgeLayout->addWidget(CannyBlurLevelLabel,         3, 2);
 
     QWidget *MiscellaneousParametersWidget = new QWidget;
     QGridLayout *MiscellaneousParametersLayout = new QGridLayout(MiscellaneousParametersWidget);
-    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetTextBox, 0, 0);
-    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetSlider, 0, 1);
-    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetLabel, 0, 2);
-    MiscellaneousParametersLayout->addWidget(GlintSizeTextBox, 1, 0);
-    MiscellaneousParametersLayout->addWidget(GlintSizeSlider, 1, 1);
-    MiscellaneousParametersLayout->addWidget(GlintSizeLabel, 1, 2);
-    MiscellaneousParametersLayout->addWidget(CurvatureFactorTextBox, 2, 0);
-    MiscellaneousParametersLayout->addWidget(CurvatureFactorSlider, 2, 1);
-    MiscellaneousParametersLayout->addWidget(CurvatureFactorLabel, 2, 2);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetTextBox, 3, 0);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetSlider, 3, 1);
-    MiscellaneousParametersLayout->addWidget(CurvatureOffsetLabel, 3, 2);
-    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberTextBox, 4, 0);
-    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberSlider, 4, 1);
-    MiscellaneousParametersLayout->addWidget(EdgeMaximumFitNumberLabel, 4, 2);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumTextBox, 5, 0);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumSlider, 5, 1);
-    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumLabel, 5, 2);
+    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetTextBox,         0, 0);
+    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetSlider,          0, 1);
+    MiscellaneousParametersLayout->addWidget(PupilHaarOffsetLabel,           0, 2);
+    MiscellaneousParametersLayout->addWidget(GlintSizeTextBox,               1, 0);
+    MiscellaneousParametersLayout->addWidget(GlintSizeSlider,                1, 1);
+    MiscellaneousParametersLayout->addWidget(GlintSizeLabel,                 1, 2);
+    MiscellaneousParametersLayout->addWidget(CurvatureFactorTextBox,         2, 0);
+    MiscellaneousParametersLayout->addWidget(CurvatureFactorSlider,          2, 1);
+    MiscellaneousParametersLayout->addWidget(CurvatureFactorLabel,           2, 2);
+    MiscellaneousParametersLayout->addWidget(CurvatureOffsetTextBox,         3, 0);
+    MiscellaneousParametersLayout->addWidget(CurvatureOffsetSlider,          3, 1);
+    MiscellaneousParametersLayout->addWidget(CurvatureOffsetLabel,           3, 2);
+    MiscellaneousParametersLayout->addWidget(EdgeLengthMinimumTextBox,       4, 0);
+    MiscellaneousParametersLayout->addWidget(EdgeLengthMinimumSlider,        4, 1);
+    MiscellaneousParametersLayout->addWidget(EdgeLengthMinimumLabel,         4, 2);
+    MiscellaneousParametersLayout->addWidget(EllipseFitNumberMaximumTextBox, 5, 0);
+    MiscellaneousParametersLayout->addWidget(EllipseFitNumberMaximumSlider,  5, 1);
+    MiscellaneousParametersLayout->addWidget(EllipseFitNumberMaximumLabel,   5, 2);
+    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumTextBox,  6, 0);
+    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumSlider,   6, 1);
+    MiscellaneousParametersLayout->addWidget(EllipseFitErrorMaximumLabel,    6, 2);
 
     EyeTrackingParameterTabWidget = new QTabWidget;
     EyeTrackingParameterTabWidget->addTab(CameraParametersWidget,        tr("Camera"));
@@ -1139,7 +1148,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     UpdateCameraImageTimer = new QTimer;
     QObject::connect(UpdateCameraImageTimer, SIGNAL(timeout()), this, SLOT(updateCameraImage()));
     QObject::connect(this, SIGNAL(startTimer(int)), UpdateCameraImageTimer, SLOT(start(int)));
-    QObject::connect(this, SIGNAL(stopTimer()), UpdateCameraImageTimer, SLOT(stop()));
+    QObject::connect(this, SIGNAL(stopTimer()),     UpdateCameraImageTimer, SLOT(stop()));
     emit startTimer(round(1000 / guiUpdateFrequency));
 }
 
@@ -1317,8 +1326,10 @@ void MainWindow::pupilTracking()
                 filename << dataDirectory << "/"
                          << currentDate   << "/"
                          << (NameInputLineEdit->text()).toStdString()
-                         << "/trial_"     << trialIndex
-                         << "/raw/"       << frameCount
+                         << "/trial_"
+                         << trialIndex
+                         << "/raw/"
+                         << frameCount
                          << ".png";
 
                 std::vector<int> compression_params;
@@ -1490,19 +1501,19 @@ void MainWindow::getCameraParameters()
 
     CameraPixelClockSlider->setRange(pixelClockRange[0], pixelClockRange[1]);
     CameraPixelClockSlider->setValue(cameraPixelClock);
-    CameraPixelClockLabel->setText(QString::number(cameraPixelClock));
+    CameraPixelClockLabel ->setText(QString::number(cameraPixelClock));
 
     std::vector<double> frameRateRange = mUEyeOpencvCam.getFrameRateRange();
 
     cameraFrameRate = frameRateRange[1]; // set to max
     CameraFrameRateSlider->setDoubleRange(frameRateRange[0], cameraFrameRate);
     CameraFrameRateSlider->setDoubleValue(cameraFrameRate);
-    CameraFrameRateLabel->setText(QString::number(cameraFrameRate, 'f', 1));
+    CameraFrameRateLabel ->setText(QString::number(cameraFrameRate, 'f', 1));
 
     std::vector<int> blackLevelOffsetRange = mUEyeOpencvCam.getBlackLevelOffsetRange();
 
     CameraBlackLevelOffsetSlider->setRange(blackLevelOffsetRange[0], blackLevelOffsetRange[1]);
-    CameraBlackLevelOffsetLabel->setText(QString::number(blackLevelOffsetRange[1]));
+    CameraBlackLevelOffsetLabel ->setText(QString::number(blackLevelOffsetRange[1]));
 }
 
 void MainWindow::findCamera()
@@ -1515,25 +1526,16 @@ void MainWindow::findCamera()
         {
             int retInt = mUEyeOpencvCam.initCamera();
 
-            if (retInt == 0)
-            {
-                continue;
-            }
+            if      (retInt == 0) { continue; }
             else if (retInt == 1)
             {
-                if (!mUEyeOpencvCam.setColorMode())
-                {
-                    continue;
-                }
+                if (!mUEyeOpencvCam.setColorMode()) { continue; }
             }
             else if (retInt == 2)
             {
                 mUEyeOpencvCam.exitCamera();
 
-                if (!mUEyeOpencvCam.initCamera())
-                {
-                    continue;
-                }
+                if (!mUEyeOpencvCam.initCamera()) { continue; }
             }
 
             if (mUEyeOpencvCam.setSubSampling(cameraSubSamplingFactor))
@@ -1556,8 +1558,8 @@ void MainWindow::findCamera()
         {
             mUEyeOpencvCam.setAutoGain(true);
 
-            Parameters::CAMERA_RUNNING = true;
-            Parameters::CAMERA_READY = true;
+            Parameters::CAMERA_RUNNING  = true;
+            Parameters::CAMERA_READY    = true;
 
             std::thread pupilTrackingThread(&MainWindow::pupilTracking, this);
             pupilTrackingThread.detach();
@@ -1701,8 +1703,11 @@ void MainWindow::setParameterWidgets()
     CurvatureOffsetSlider->setDoubleValue(mEyePropertiesParameters.curvatureOffsetMin);
     CurvatureOffsetLabel ->setText(QString::number(mEyePropertiesParameters.curvatureOffsetMin, 'f', 1));
 
-    EdgeMaximumFitNumberSlider->setValue(mEyePropertiesParameters.edgeMaximumFitNumber);
-    EdgeMaximumFitNumberLabel ->setText(QString::number(mEyePropertiesParameters.edgeMaximumFitNumber));
+    EdgeLengthMinimumSlider->setDoubleValue(mEyePropertiesParameters.edgeLengthMinimum);
+    EdgeLengthMinimumLabel ->setText(QString::number(mEyePropertiesParameters.edgeLengthMinimum, 'f', 2));
+
+    EllipseFitNumberMaximumSlider->setValue(mEyePropertiesParameters.ellipseFitNumberMaximum);
+    EllipseFitNumberMaximumLabel ->setText(QString::number(mEyePropertiesParameters.ellipseFitNumberMaximum));
 
     EllipseFitErrorMaximumSlider->setDoubleValue(mEyePropertiesParameters.ellipseFitErrorMaximum);
     EllipseFitErrorMaximumLabel ->setText(QString::number(mEyePropertiesParameters.ellipseFitErrorMaximum, 'f', 1));
@@ -1810,12 +1815,6 @@ void MainWindow::openDialogue()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_F8)
-    {
-        FlashStandbySlider->setValue(1);
-    }
-    else if (event->key() == Qt::Key_F5)
-    {
-        FlashStandbySlider->setValue(0);
-    }
+    if      (event->key() == Qt::Key_F8) { FlashStandbySlider->setValue(1); }
+    else if (event->key() == Qt::Key_F5) { FlashStandbySlider->setValue(0); }
 }
