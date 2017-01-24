@@ -73,13 +73,37 @@ void MainWindow::loadSettings(QString filename)
     mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
     mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
 
-    mEyeParameterWidget->setStructure(mEyePropertiesParameters);
+    mParameterWidgetEye->setStructure(mEyePropertiesParameters);
+
+    mEyePropertiesParameters.alphaAverage                       = settings.value("BeadAlphaAverage",                    0.005).toDouble();
+    mEyePropertiesParameters.alphaMiscellaneous                 = settings.value("BeadAlphaMiscellaneous",              0.75).toDouble();
+    mEyePropertiesParameters.alphaMomentum                      = settings.value("BeadAlphaMomentum",                   0.50).toDouble();
+    mEyePropertiesParameters.alphaPrediction                    = settings.value("BeadAlphaPrediction",                 0.75).toDouble();
+    mEyePropertiesParameters.cannyBlurLevel                     = settings.value("BeadCannyBlurLevel",                  4).toInt();
+    mEyePropertiesParameters.cannyKernelSize                    = settings.value("BeadCannyKernelSize",                 5).toInt();
+    mEyePropertiesParameters.cannyThresholdLow                  = settings.value("BeadCannyThresholdLow",               75).toInt();
+    mEyePropertiesParameters.cannyThresholdHigh                 = settings.value("BeadCannyThresholdHigh",              150).toInt();
+    mEyePropertiesParameters.curvatureFactor                    = settings.value("BeadCurvatureFactor",                 1.05).toDouble();
+    mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("BeadCurvatureOffset",                 5).toDouble();
+    mEyePropertiesParameters.edgeIntensityOffset                = settings.value("BeadEdgeIntensityOffset",             40).toDouble();
+    mEyePropertiesParameters.edgeLengthMinimum                  = settings.value("BeadEdgeLengthMinimum",               0.60).toDouble();
+    mEyePropertiesParameters.ellipseFitNumberMaximum            = settings.value("BeadEllipseFitNumberMaximum",         3).toInt();
+    mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("BeadEllipseFitErrorMaximum",          80).toDouble();
+    mEyePropertiesParameters.glintSize                          = settings.value("BeadGlintSize",                       12).toInt();
+    mEyePropertiesParameters.circumferenceMax                   = settings.value("BeadCircumferenceMax",                320).toDouble();
+    mEyePropertiesParameters.circumferenceMin                   = settings.value("BeadCircumferenceMin",                60).toDouble();
+    mEyePropertiesParameters.aspectRatioMin                     = settings.value("BeadAspectRatioMin",                  0.4).toDouble();
+    mEyePropertiesParameters.pupilOffset                        = settings.value("BeadPupilOffset",                     25).toInt();
+    mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("BeadCircumferenceChangeThreshold",    30.0).toDouble();
+    mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("BeadAspectRatioChangeThreshold",      0.2).toDouble();
+
+    mParameterWidgetBead->setStructure(mEyePropertiesParameters);
 
 }
 
 void MainWindow::saveSettings(QString filename)
 {
-    eyePropertiesParameters mEyePropertiesParameters = mEyeParameterWidget->getStructure();
+    eyePropertiesParameters mEyePropertiesParameters = mParameterWidgetEye->getStructure();
 
     QSettings settings(filename, QSettings::IniFormat);
 
@@ -143,7 +167,7 @@ void MainWindow::resetParameters()
 
     QString fileName = "";
     loadSettings(fileName);
-    mEyeParameterWidget->reset();
+    mParameterWidgetEye->reset();
     resetVariables();
 }
 

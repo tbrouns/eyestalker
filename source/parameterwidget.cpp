@@ -151,10 +151,10 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdParametersTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *ThresholdCircumferenceTextBox = new QLabel;
-    ThresholdCircumferenceTextBox->setText("<b>Pupil circumference:</b>");
+    ThresholdCircumferenceTextBox->setText("<b>Circumference threshold:</b>");
 
     QLabel *ThresholdAspectRatioTextBox = new QLabel;
-    ThresholdAspectRatioTextBox->setText("<b>Pupil fraction:</b>");
+    ThresholdAspectRatioTextBox->setText("<b>Aspect ratio threshold:</b>");
 
     ThresholdCircumferenceLabel  = new QLabel;
     ThresholdCircumferenceSlider = new SliderDouble;
@@ -243,80 +243,99 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     EllipseFitErrorMaximumSlider->setOrientation(Qt::Horizontal);
     QObject::connect(EllipseFitErrorMaximumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEllipseFitErrorMaximum(double)));
 
-    QVBoxLayout *TextBoxLayout = new QVBoxLayout;
-    TextBoxLayout->addWidget(PupilCircumferenceMaxTextBox,   1, Qt::AlignRight);
-    TextBoxLayout->addWidget(PupilCircumferenceMinTextBox,   1, Qt::AlignRight);
-    TextBoxLayout->addWidget(PupilAspectRatioMinTextBox,     1, Qt::AlignRight);
-    TextBoxLayout->addWidget(EdgeIntensityOffsetTextBox,     1, Qt::AlignRight);
-    TextBoxLayout->addWidget(AlphaPredictionTextBox,         1, Qt::AlignRight);
-    TextBoxLayout->addWidget(AlphaAverageTextBox,            1, Qt::AlignRight);
-    TextBoxLayout->addWidget(AlphaMomentumTextBox,           1, Qt::AlignRight);
-    TextBoxLayout->addWidget(AlphaMiscellaneousTextBox,      1, Qt::AlignRight);
-    TextBoxLayout->addWidget(ThresholdCircumferenceTextBox,  1, Qt::AlignRight);
-    TextBoxLayout->addWidget(ThresholdAspectRatioTextBox,    1, Qt::AlignRight);
-    TextBoxLayout->addWidget(CannyThresholdHighTextBox,      1, Qt::AlignRight);
-    TextBoxLayout->addWidget(CannyThresholdLowTextBox,       1, Qt::AlignRight);
-    TextBoxLayout->addWidget(CannyKernelSizeTextBox,         1, Qt::AlignRight);
-    TextBoxLayout->addWidget(CannyBlurLevelTextBox,          1, Qt::AlignRight);
-    TextBoxLayout->addWidget(PupilHaarOffsetTextBox,         1, Qt::AlignRight);
-    TextBoxLayout->addWidget(GlintSizeTextBox,               1, Qt::AlignRight);
-    TextBoxLayout->addWidget(CurvatureFactorTextBox,         1, Qt::AlignRight);
-    TextBoxLayout->addWidget(CurvatureOffsetTextBox,         1, Qt::AlignRight);
-    TextBoxLayout->addWidget(EdgeLengthMinimumTextBox,       1, Qt::AlignRight);
-    TextBoxLayout->addWidget(EllipseFitNumberMaximumTextBox, 1, Qt::AlignRight);
-    TextBoxLayout->addWidget(EllipseFitErrorMaximumTextBox,  1, Qt::AlignRight);
+    QLabel *TitleLimitTextBox  = new QLabel;
+    QLabel *TitleCannyTextBox  = new QLabel;
+    QLabel *TitleLearnTextBox  = new QLabel;
+    QLabel *TitleChangeTextBox = new QLabel;
+    QLabel *TitleMiscTextBox   = new QLabel;
 
-    QVBoxLayout *SliderLayout = new QVBoxLayout;
-    SliderLayout->addWidget(PupilCircumferenceMaxSlider);
-    SliderLayout->addWidget(PupilCircumferenceMinSlider);
-    SliderLayout->addWidget(PupilAspectRatioMinSlider);
-    SliderLayout->addWidget(EdgeIntensityOffsetSlider);
-    SliderLayout->addWidget(AlphaPredictionSlider);
-    SliderLayout->addWidget(AlphaAverageSlider);
-    SliderLayout->addWidget(AlphaMomentumSlider);
-    SliderLayout->addWidget(AlphaMiscellaneousSlider);
-    SliderLayout->addWidget(ThresholdCircumferenceSlider);
-    SliderLayout->addWidget(ThresholdAspectRatioSlider);
-    SliderLayout->addWidget(CannyThresholdHighSlider);
-    SliderLayout->addWidget(CannyThresholdLowSlider);
-    SliderLayout->addWidget(CannyKernelSizeSlider);
-    SliderLayout->addWidget(CannyBlurLevelSlider);
-    SliderLayout->addWidget(PupilHaarOffsetSlider);
-    SliderLayout->addWidget(GlintSizeSlider);
-    SliderLayout->addWidget(CurvatureFactorSlider);
-    SliderLayout->addWidget(CurvatureOffsetSlider);
-    SliderLayout->addWidget(EdgeLengthMinimumSlider);
-    SliderLayout->addWidget(EllipseFitNumberMaximumSlider);
-    SliderLayout->addWidget(EllipseFitErrorMaximumSlider);
-
-    QVBoxLayout *LabelLayout = new QVBoxLayout;
-    LabelLayout->addWidget(PupilCircumferenceMaxLabel);
-    LabelLayout->addWidget(PupilCircumferenceMinLabel);
-    LabelLayout->addWidget(PupilAspectRatioMinLabel);
-    LabelLayout->addWidget(EdgeIntensityOffsetLabel);
-    LabelLayout->addWidget(AlphaPredictionLabel);
-    LabelLayout->addWidget(AlphaAverageLabel);
-    LabelLayout->addWidget(AlphaMomentumLabel);
-    LabelLayout->addWidget(AlphaMiscellaneousLabel);
-    LabelLayout->addWidget(ThresholdCircumferenceLabel);
-    LabelLayout->addWidget(ThresholdAspectRatioLabel);
-    LabelLayout->addWidget(CannyThresholdHighLabel);
-    LabelLayout->addWidget(CannyThresholdLowLabel);
-    LabelLayout->addWidget(CannyKernelSizeLabel);
-    LabelLayout->addWidget(CannyBlurLevelLabel);
-    LabelLayout->addWidget(PupilHaarOffsetLabel);
-    LabelLayout->addWidget(GlintSizeLabel);
-    LabelLayout->addWidget(CurvatureFactorLabel);
-    LabelLayout->addWidget(CurvatureOffsetLabel);
-    LabelLayout->addWidget(EdgeLengthMinimumLabel);
-    LabelLayout->addWidget(EllipseFitNumberMaximumLabel);
-    LabelLayout->addWidget(EllipseFitErrorMaximumLabel);
+    TitleLimitTextBox ->setText("<b>Variable limits</b>");
+    TitleCannyTextBox ->setText("<b>Canny edge detection</b>");
+    TitleLearnTextBox ->setText("<b>Learning rates</b>");
+    TitleChangeTextBox->setText("<b>Change thresholds</b>");
+    TitleMiscTextBox  ->setText("<b>Miscellaneous</b>");
 
     QWidget *ParameterWidget = new QWidget;
-    QHBoxLayout *ParameterLayout = new QHBoxLayout(ParameterWidget);
-    ParameterLayout->addLayout(TextBoxLayout);
-    ParameterLayout->addLayout(SliderLayout);
-    ParameterLayout->addLayout(LabelLayout);
+    QGridLayout *ParameterLayout = new QGridLayout(ParameterWidget);
+
+    ParameterLayout->addWidget(PupilCircumferenceMaxTextBox,     1, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(PupilCircumferenceMinTextBox,     2, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(PupilAspectRatioMinTextBox,       3, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(EdgeIntensityOffsetTextBox,       4, 0, 1, 1, Qt::AlignRight);
+
+    ParameterLayout->addWidget(CannyThresholdHighTextBox,        6, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(CannyThresholdLowTextBox,         7, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(CannyKernelSizeTextBox,           8, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(CannyBlurLevelTextBox,            9, 0, 1, 1, Qt::AlignRight);
+
+    ParameterLayout->addWidget(AlphaPredictionTextBox,          11, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(AlphaAverageTextBox,             12, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(AlphaMomentumTextBox,            13, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(AlphaMiscellaneousTextBox,       14, 0, 1, 1, Qt::AlignRight);
+
+    ParameterLayout->addWidget(ThresholdCircumferenceTextBox,   16, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(ThresholdAspectRatioTextBox,     17, 0, 1, 1, Qt::AlignRight);
+
+    ParameterLayout->addWidget(PupilHaarOffsetTextBox,          19, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(GlintSizeTextBox,                20, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(CurvatureFactorTextBox,          21, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(CurvatureOffsetTextBox,          22, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(EdgeLengthMinimumTextBox,        23, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(EllipseFitNumberMaximumTextBox,  24, 0, 1, 1, Qt::AlignRight);
+    ParameterLayout->addWidget(EllipseFitErrorMaximumTextBox,   25, 0, 1, 1, Qt::AlignRight);
+
+    ParameterLayout->addWidget(TitleLimitTextBox,                0, 1, 1, 1, Qt::AlignCenter);
+    ParameterLayout->addWidget(PupilCircumferenceMaxSlider,      1, 1);
+    ParameterLayout->addWidget(PupilCircumferenceMinSlider,      2, 1);
+    ParameterLayout->addWidget(PupilAspectRatioMinSlider,        3, 1);
+    ParameterLayout->addWidget(EdgeIntensityOffsetSlider,        4, 1);
+    ParameterLayout->addWidget(TitleCannyTextBox,                5, 1, 1, 1, Qt::AlignCenter);
+    ParameterLayout->addWidget(CannyThresholdHighSlider,         6, 1);
+    ParameterLayout->addWidget(CannyThresholdLowSlider,          7, 1);
+    ParameterLayout->addWidget(CannyKernelSizeSlider,            8, 1);
+    ParameterLayout->addWidget(CannyBlurLevelSlider,             9, 1);
+    ParameterLayout->addWidget(TitleLearnTextBox,               10, 1, 1, 1, Qt::AlignCenter);
+    ParameterLayout->addWidget(AlphaPredictionSlider,           11, 1);
+    ParameterLayout->addWidget(AlphaAverageSlider,              12, 1);
+    ParameterLayout->addWidget(AlphaMomentumSlider,             13, 1);
+    ParameterLayout->addWidget(AlphaMiscellaneousSlider,        14, 1);
+    ParameterLayout->addWidget(TitleChangeTextBox,              15, 1, 1, 1, Qt::AlignCenter);
+    ParameterLayout->addWidget(ThresholdCircumferenceSlider,    16, 1);
+    ParameterLayout->addWidget(ThresholdAspectRatioSlider,      17, 1);
+    ParameterLayout->addWidget(TitleMiscTextBox,                18, 1, 1, 1, Qt::AlignCenter);
+    ParameterLayout->addWidget(PupilHaarOffsetSlider,           19, 1);
+    ParameterLayout->addWidget(GlintSizeSlider,                 20, 1);
+    ParameterLayout->addWidget(CurvatureFactorSlider,           21, 1);
+    ParameterLayout->addWidget(CurvatureOffsetSlider,           22, 1);
+    ParameterLayout->addWidget(EdgeLengthMinimumSlider,         23, 1);
+    ParameterLayout->addWidget(EllipseFitNumberMaximumSlider,   24, 1);
+    ParameterLayout->addWidget(EllipseFitErrorMaximumSlider,    25, 1);
+
+    ParameterLayout->addWidget(PupilCircumferenceMaxLabel,    1, 2);
+    ParameterLayout->addWidget(PupilCircumferenceMinLabel,    2, 2);
+    ParameterLayout->addWidget(PupilAspectRatioMinLabel,      3, 2);
+    ParameterLayout->addWidget(EdgeIntensityOffsetLabel,      4, 2);
+
+    ParameterLayout->addWidget(CannyThresholdHighLabel,       6, 2);
+    ParameterLayout->addWidget(CannyThresholdLowLabel,        7, 2);
+    ParameterLayout->addWidget(CannyKernelSizeLabel,          8, 2);
+    ParameterLayout->addWidget(CannyBlurLevelLabel,           9, 2);
+
+    ParameterLayout->addWidget(AlphaPredictionLabel,          11, 2);
+    ParameterLayout->addWidget(AlphaAverageLabel,             12, 2);
+    ParameterLayout->addWidget(AlphaMomentumLabel,            13, 2);
+    ParameterLayout->addWidget(AlphaMiscellaneousLabel,       14, 2);
+
+    ParameterLayout->addWidget(ThresholdCircumferenceLabel,   16, 2);
+    ParameterLayout->addWidget(ThresholdAspectRatioLabel,     17, 2);
+
+    ParameterLayout->addWidget(PupilHaarOffsetLabel,          19, 2);
+    ParameterLayout->addWidget(GlintSizeLabel,                20, 2);
+    ParameterLayout->addWidget(CurvatureFactorLabel,          21, 2);
+    ParameterLayout->addWidget(CurvatureOffsetLabel,          22, 2);
+    ParameterLayout->addWidget(EdgeLengthMinimumLabel,        23, 2);
+    ParameterLayout->addWidget(EllipseFitNumberMaximumLabel,  24, 2);
+    ParameterLayout->addWidget(EllipseFitErrorMaximumLabel,   25, 2);
 
     QScrollArea *ParameterScrollArea = new QScrollArea();
     ParameterScrollArea->setWidget(ParameterWidget);

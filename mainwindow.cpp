@@ -76,7 +76,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     subjectIdentifier       = "";
     trialIndex              = 0;
 
-    mEyeParameterWidget = new ParameterWidget;
+    mParameterWidgetEye  = new ParameterWidget;
+    mParameterWidgetBead = new ParameterWidget;
 
     // Grab parameters from ini file
 
@@ -792,10 +793,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     /////////////////// Tab layout ///////////////////////
 
     EyeTrackingParameterTabWidget = new QTabWidget;
-    EyeTrackingParameterTabWidget->addTab(CameraParametersWidget,        tr("Camera"));
-    EyeTrackingParameterTabWidget->addTab(RealTimeVariablesWidget,       tr("Variables"));
-    EyeTrackingParameterTabWidget->addTab(mEyeParameterWidget,              tr("Eye parameters"));
-    EyeTrackingParameterTabWidget->addTab(ExperimentTabWidget,           tr("Experimental"));
+    EyeTrackingParameterTabWidget->addTab(CameraParametersWidget,  tr("Camera"));
+    EyeTrackingParameterTabWidget->addTab(RealTimeVariablesWidget, tr("Variables"));
+    EyeTrackingParameterTabWidget->addTab(mParameterWidgetEye,     tr("Eye parameters"));
+    EyeTrackingParameterTabWidget->addTab(mParameterWidgetBead,    tr("Bead parameters"));
+    EyeTrackingParameterTabWidget->addTab(ExperimentTabWidget,     tr("Experimental"));
+
+    EyeTrackingParameterTabWidget->setStyleSheet("QTabBar::tab { height: 30px; width: 125px; }");
 
     QWidget *EyeTrackingWidget = new QWidget;
     QVBoxLayout *EyeTrackingLayout = new QVBoxLayout(EyeTrackingWidget);
@@ -913,7 +917,7 @@ void MainWindow::pupilTracking()
             imageCamera = imageOriginal.clone();
 
             mEyePropertiesTemp.v = mEyePropertiesVariables;
-            mEyePropertiesTemp.p = mEyeParameterWidget->getStructure();
+            mEyePropertiesTemp.p = mParameterWidgetEye->getStructure();
 
             eyeAOIXPosTemp = Parameters::eyeAOIXPos;
             eyeAOIYPosTemp = Parameters::eyeAOIYPos;
@@ -1379,7 +1383,7 @@ void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyeProperties
 
 void MainWindow::resetVariables()
 {    
-    eyePropertiesParameters mEyePropertiesParameters = mEyeParameterWidget->getStructure();
+    eyePropertiesParameters mEyePropertiesParameters = mParameterWidgetEye->getStructure();
 
     mEyePropertiesVariables.aspectRatioAverage    = 1.0;
     mEyePropertiesVariables.aspectRatioExact      = 0.0;

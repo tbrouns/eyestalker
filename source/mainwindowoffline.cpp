@@ -305,7 +305,7 @@ void MainWindow::offlinePupilDetectionOneFrame()
 {
     // Grab raw images
 
-    cv::Mat rawEyeImage;
+    cv::Mat eyeImageRaw;
 
     std::stringstream fileNameRaw;
     fileNameRaw << dataDirectoryOffline.toStdString()
@@ -315,12 +315,13 @@ void MainWindow::offlinePupilDetectionOneFrame()
                 << imageIndexOffline
                 << ".png";
 
-    if (boost::filesystem::exists(fileNameRaw.str())) { rawEyeImage = cv::imread(fileNameRaw.str(), CV_LOAD_IMAGE_COLOR); }
+    if (boost::filesystem::exists(fileNameRaw.str())) { eyeImageRaw = cv::imread(fileNameRaw.str(), CV_LOAD_IMAGE_COLOR); }
     else                                              { return; }
 
     // Detect pupil
 
-    eyeProperties mEyePropertiesTemp;
+    eyeProperties  mEyePropertiesTemp;
+    eyeProperties mBeadPropertiesTemp;
 
     int eyeAOIXPosTemp;
     int eyeAOIYPosTemp;
@@ -331,7 +332,10 @@ void MainWindow::offlinePupilDetectionOneFrame()
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
         mEyePropertiesTemp.v = mEyePropertiesVariables;
-        mEyePropertiesTemp.p = mEyeParameterWidget->getStructure();
+        mEyePropertiesTemp.p = mParameterWidgetEye->getStructure();
+
+        mBeadPropertiesTemp.v = mBeadPropertiesVariables;
+        mBeadPropertiesTemp.p = mParameterWidgetBead->getStructure();
 
         eyeAOIXPosTemp = Parameters::eyeAOIXPos;
         eyeAOIYPosTemp = Parameters::eyeAOIYPos;
@@ -340,7 +344,12 @@ void MainWindow::offlinePupilDetectionOneFrame()
     }
 
     cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-    eyeProperties mEyePropertiesNew = pupilDetection(rawEyeImage(eyeRegion), mEyePropertiesTemp);
+    cv::Mat eyeImageCropped = eyeImageRaw(eyeRegion);
+
+    eyeProperties  mEyePropertiesNew = pupilDetection(eyeImageCropped, mEyePropertiesTemp);
+
+
+    eyeProperties mBeadPropertiesNew = pupilDetection(eyeImageCropped, mEyePropertiesTemp);
 
     // Save processed images
 
@@ -636,7 +645,7 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
     {
-        eyePropertiesParameters mEyePropertiesParameters = mEyeParameterWidget->getStructure();
+        eyePropertiesParameters mEyePropertiesParameters = mParameterWidgetEye->getStructure();
 
         int pupilHaarWdth       = round(mEyePropertiesVariables.circumferencePrediction / M_PI);
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);

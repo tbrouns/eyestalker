@@ -177,8 +177,8 @@ private:
     int trialIndex;
     int trialStartTime;
     int trialTimeLength;
-    ParameterWidget *mBeadParameterWidget;
-    ParameterWidget *mEyeParameterWidget;
+    ParameterWidget *mParameterWidgetBead;
+    ParameterWidget *mParameterWidgetEye;
     QCheckBox *CameraHardwareGainAutoCheckBox;
     QImageOpenCV *CamQImage;
     QImageOpenCV *EyeQImage;
