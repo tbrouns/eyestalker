@@ -346,11 +346,18 @@ void MainWindow::offlinePupilDetectionOneFrame()
     cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
     cv::Mat eyeImageCropped = eyeImageRaw(eyeRegion);
 
-    eyeProperties  mEyePropertiesNew = pupilDetection(eyeImageCropped, mEyePropertiesTemp);
+    eyeProperties mEyePropertiesNew;
+    eyeProperties mBeadPropertiesNew;
 
-
-    eyeProperties mBeadPropertiesNew = pupilDetection(eyeImageCropped, mEyePropertiesTemp);
-
+    if (DETECT_BEAD)
+    {
+        mBeadPropertiesNew = pupilDetection(eyeImageCropped, mEyePropertiesTemp, mBeadPropertiesTemp);
+        mEyePropertiesNew  = pupilDetection(eyeImageCropped, mEyePropertiesTemp, mBeadPropertiesNew);
+    }
+    else
+    {
+        mEyePropertiesNew  = pupilDetection(eyeImageCropped, mEyePropertiesTemp);
+    }
     // Save processed images
 
     cv::Mat imageEye = mEyePropertiesNew.m.image.clone();

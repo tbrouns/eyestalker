@@ -1082,7 +1082,7 @@ void MainWindow::pupilTracking()
         {
             std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
-            mEyePropertiesVariables = mEyePropertiesTemp.v;
+            mEyePropertiesVariables     = mEyePropertiesTemp.v;
             mEyePropertiesMiscellaneous = mEyePropertiesTemp.m;
         }
     }

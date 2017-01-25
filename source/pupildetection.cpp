@@ -1506,7 +1506,7 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     return mEllipseProperties;
 }
 
-eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEyeProperties)
+eyeProperties pupilDetection(const cv::Mat& imageOriginalBGR, eyeProperties mEyeProperties, eyeProperties mBeadProperties)
 {
     // Define some variables
     
