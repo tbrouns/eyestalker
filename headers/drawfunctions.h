@@ -23,4 +23,4 @@ void drawOutline(cv::Mat&, const std::vector<std::vector<int> > &, int, int, int
 void drawEllipse(cv::Mat&, const std::vector<double>&, int, int, int, int, const cv::Vec3b&);
 void drawEllipseCross(cv::Mat&, double, double, const cv::Vec3b&);
 void drawAll(cv::Mat&, detectionProperties);
-void drawROI(cv::Mat&, int, int, int, int, cv::Vec3b);
+void drawAOI(cv::Mat&, int, int, int, int, cv::Vec3b);

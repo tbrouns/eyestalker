@@ -176,7 +176,7 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
     }
 }
 
-void drawROI(cv::Mat& I, int x0, int y0, int W, int H, cv::Vec3b col)
+void drawAOI(cv::Mat& I, int x0, int y0, int W, int H, cv::Vec3b col)
 {
     int wdth = I.rows;
     int hgth = I.cols;

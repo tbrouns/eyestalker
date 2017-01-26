@@ -43,8 +43,20 @@ public:
     static bool ONLINE_PROCESSING;
 
     static double ellipseDrawOutlineWidth;
+
     static double eyeAOIXPosFraction;
     static double eyeAOIYPosFraction;
+    static int    eyeAOIHght;
+    static int    eyeAOIWdth;
+    static int    eyeAOIXPos;
+    static int    eyeAOIYPos;
+
+    static double beadAOIXPosFraction;
+    static double beadAOIYPosFraction;
+    static int    beadAOIHght;
+    static int    beadAOIWdth;
+    static int    beadAOIXPos;
+    static int    beadAOIYPos;
 
     static drawBooleans drawFlags;
 
@@ -56,20 +68,11 @@ public:
     static int cameraYResolution;
     static int cannyKernelSize;
     static int ellipseDrawCrossSize;
-    static int eyeAOIHght;
-    static int eyeAOIWdth;
-    static int eyeAOIXPos;
-    static int eyeAOIYPos;
-    static int flashAOIXPos;
-    static int flashAOIYPos;
-    static int flashAOIWdth;
-    static int flashAOIHght;
 
     static std::condition_variable frameCaptureCV;
 
     static std::mutex frameCaptureMutex;
-    static std::mutex primaryMutex;
-    static std::mutex secondaryMutex;
+    static std::mutex mainMutex;
 
 };
 

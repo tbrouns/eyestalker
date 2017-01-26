@@ -1506,7 +1506,7 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     return mEllipseProperties;
 }
 
-detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionProperties mDetectionProperties, detectionProperties mDetectionPropertiesOther)
+detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionProperties mDetectionProperties)
 {
     // Define some variables
     
@@ -1516,7 +1516,6 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
     mEllipseProperties.pupilDetected  = false;
     mDetectionPropertiesNew.m.errorDetected = false;
-    mDetectionPropertiesNew.m.image = imageOriginalBGR;
 
     // Define search area
 
@@ -1528,26 +1527,18 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
     int searchEndX = round(mDetectionProperties.v.xPosPredicted + mDetectionProperties.v.searchRadius);
     int searchEndY = round(mDetectionProperties.v.yPosPredicted + mDetectionProperties.v.searchRadius);
-       
-    if (mDetectionPropertiesOther.p.DETECTION_ON) // Check if other feature is being detected (e.g. bead)
-    {
-        if (mDetectionPropertiesOther.v.xPosPredicted <= 0.5 * imageWdth) // Left side of image
-        {
-            if (searchStartX < mDetectionPropertiesOther.v.xPosPredicted + mDetectionPropertiesOther.v.searchRadius)
-            {   searchStartX = mDetectionPropertiesOther.v.xPosPredicted + mDetectionPropertiesOther.v.searchRadius; }
-        }
-        else // Right side of image
-        {
-            if (searchEndX > mDetectionPropertiesOther.v.xPosPredicted - mDetectionPropertiesOther.v.searchRadius)
-            {   searchEndX = mDetectionPropertiesOther.v.xPosPredicted - mDetectionPropertiesOther.v.searchRadius; }
-        }
-    }
 
-    if (searchStartX < 0) { searchStartX = 0; }
-    if (searchStartY < 0) { searchStartY = 0; }
+    if (searchStartX < mDetectionProperties.p.AOIXPos)
+    {   searchStartX = mDetectionProperties.p.AOIXPos; }
 
-    if (searchEndX >= imageWdth) { searchEndX = imageWdth - 1; }
-    if (searchEndY >= imageHght) { searchEndY = imageHght - 1; }
+    if (searchStartY < mDetectionProperties.p.AOIYPos)
+    {   searchStartY = mDetectionProperties.p.AOIYPos; }
+
+    if (searchEndX > mDetectionProperties.p.AOIXPos + mDetectionProperties.p.AOIWdth - 1)
+    {   searchEndX = mDetectionProperties.p.AOIXPos + mDetectionProperties.p.AOIWdth - 1; }
+
+    if (searchEndY > mDetectionProperties.p.AOIYPos + mDetectionProperties.p.AOIHght - 1)
+    {   searchEndY = mDetectionProperties.p.AOIYPos + mDetectionProperties.p.AOIHght - 1; }
 
     int searchWdth = searchEndX - searchStartX + 1;
     int searchHght = searchEndY - searchStartY + 1;
@@ -1859,9 +1850,9 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         mDetectionPropertiesNew.v.widthPrediction = mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.widthAverage - mDetectionProperties.v.widthPrediction);
 
         mDetectionPropertiesNew.v.xPosPredicted = mDetectionProperties.v.xPosPredicted + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mDetectionProperties.v.xPosPredicted) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.xVelocity     = mDetectionProperties.v.xVelocity * mDetectionProperties.p.alphaMomentum;
-
         mDetectionPropertiesNew.v.yPosPredicted = mDetectionProperties.v.yPosPredicted + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarHght - mDetectionProperties.v.yPosPredicted) + mDetectionProperties.v.yVelocity;
+
+        mDetectionPropertiesNew.v.xVelocity     = mDetectionProperties.v.xVelocity * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.yVelocity     = mDetectionProperties.v.yVelocity * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.aspectRatioExact   = mDetectionProperties.v.aspectRatioExact;

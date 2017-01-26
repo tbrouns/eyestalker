@@ -88,6 +88,10 @@ struct detectionParameters
     double aspectRatioMin;
     double circumferenceChangeThreshold;
     double aspectRatioChangeThreshold;
+    int AOIXPos;
+    int AOIYPos;
+    int AOIWdth;
+    int AOIHght;
     int cannyBlurLevel;
     int cannyKernelSize;
     int cannyThresholdLow;
@@ -138,7 +142,6 @@ struct detectionVariables
 struct detectionMiscellaneous
 {
     bool errorDetected;
-    cv::Mat image;
     cv::Mat imagePupil;
     int glintSize;
     int glintXPos;

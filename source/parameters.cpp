@@ -19,11 +19,19 @@ bool Parameters::CAMERA_READY;
 bool Parameters::CAMERA_RUNNING;
 bool Parameters::ONLINE_PROCESSING;
 
-double Parameters::ellipseDrawOutlineWidth;
 double Parameters::eyeAOIXPosFraction;
 double Parameters::eyeAOIYPosFraction;
+int    Parameters::eyeAOIHght;
+int    Parameters::eyeAOIWdth;
+int    Parameters::eyeAOIXPos;
+int    Parameters::eyeAOIYPos;
 
-drawBooleans Parameters::drawFlags;
+double Parameters::beadAOIXPosFraction;
+double Parameters::beadAOIYPosFraction;
+int    Parameters::beadAOIHght;
+int    Parameters::beadAOIWdth;
+int    Parameters::beadAOIXPos;
+int    Parameters::beadAOIYPos;
 
 int Parameters::cameraAOIHght;
 int Parameters::cameraAOIWdth;
@@ -32,18 +40,13 @@ int Parameters::cameraAOIYPos;
 int Parameters::cameraXResolution;
 int Parameters::cameraYResolution;
 int Parameters::cannyKernelSize;
-int Parameters::ellipseDrawCrossSize;
-int Parameters::eyeAOIHght;
-int Parameters::eyeAOIWdth;
-int Parameters::eyeAOIXPos;
-int Parameters::eyeAOIYPos;
-int Parameters::flashAOIHght;
-int Parameters::flashAOIWdth;
-int Parameters::flashAOIXPos;
-int Parameters::flashAOIYPos;
+
+double Parameters::ellipseDrawOutlineWidth;
+int    Parameters::ellipseDrawCrossSize;
+
+drawBooleans Parameters::drawFlags;
 
 std::condition_variable Parameters::frameCaptureCV;
 
 std::mutex Parameters::frameCaptureMutex;
-std::mutex Parameters::primaryMutex;
-std::mutex Parameters::secondaryMutex;
+std::mutex Parameters::mainMutex;

@@ -143,6 +143,8 @@ private:
     double cameraFrameRate;
     double eyeAOIHghtFraction;
     double eyeAOIWdthFraction;
+    double beadAOIHghtFraction;
+    double beadAOIWdthFraction;
     double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime;       // in ms
@@ -170,6 +172,10 @@ private:
     int eyeAOIWdthMin;
     int eyeImageHght;
     int eyeImageWdth;
+    int flashAOIXPos;
+    int flashAOIYPos;
+    int flashAOIWdth;
+    int flashAOIHght;
     int flashThreshold;
     int frameCount;
     int getCurrentTime();
@@ -249,8 +255,8 @@ private:
     void msWait(int ms);
     void pupilTracking();
     void resetVariables();
-    void offlinePupilDetectionAllFrames();
-    void offlinePupilDetectionOneFrame(int);
+    void detectAllFrames();
+    void detectCurrentFrame(int);
     void saveSettings(QString);
     void saveTrialData();
     void setFlashStandby(bool);
@@ -262,7 +268,6 @@ private:
     void updateCamAOIy();
     void updateEyeAOIx();
     void updateEyeAOIy();
-    void updateOfflineImage(int);
     void updateOfflineTrial();
     void writeToFile(std::ofstream& file, const std::vector<bool>&, const std::vector<double>&, std::string);
 
@@ -279,60 +284,61 @@ public slots:
 
 private slots:
 
-    void changeOfflineSession(int index);
-    void cropAOI();
-    void detectPupilAllFrames();
-    void detectPupilAllTrials();
-    void detectPupilOneFrame();
-    void loadOfflineSession();
-    void nextOfflineImage();
-    void openDialogue();
-    void onQuitButtonClicked();
+    void onImageNext();
+    void onCombineData();
+    void onCropAOI();
+    void onDetectAllFrames();
+    void onDetectAllTrials();
+    void onDetectCurrentFrame();
+    void onDialogueOpen();
     void onFlashStandbySlider(int);
-    void prevOfflineImage();
-    void selectDirectory();
-    void resetParameters();
-    void resetFlashMinIntensity();
-    void offlineSaveExperimentData();
-    void offlineCombineExperimentData();
-    void setBeadDetection(int state);
-    void setCameraAutoGain(int state);
-    void setCameraBlackLevelMode(int state);
-    void setCameraBlackLevelOffset(int value);
-    void setCameraExposure(double value);
-    void setCameraFrameRate(double value);
-    void setCameraGainBoost(int state);
-    void setCameraHardwareGain(int value);
-    void setCameraPixelClock(int value);
-    void setCameraSubSampling(int state);
+    void onImagePrevious();
+    void onLoadSession();
+    void onQuitButtonClicked();
+    void onResetFlashIntensity();
+    void onResetParameters();
+    void onSaveTrialData();
+    void onSetOfflineImage(int);
+    void onSetOfflineMode(int);
+    void onSetTrialIndexOffline(int);
+    void onDirectorySelect();
+    void onSetAOIEyeLeft();
+    void onSetAOIEyeRght();
+    void setBeadDetection(int);
     void setCamEyeAOIHght(double);
     void setCamEyeAOIWdth(double);
     void setCamEyeAOIXPos(double);
     void setCamEyeAOIYPos(double);
-    void setDrawEdge(int state);
-    void setDrawElps(int state);
-    void setDrawHaar(int state);
+    void setCameraAutoGain(int);
+    void setCameraBlackLevelMode(int);
+    void setCameraBlackLevelOffset(int);
+    void setCameraExposure(double);
+    void setCameraFrameRate(double);
+    void setCameraGainBoost(int);
+    void setCameraHardwareGain(int);
+    void setCameraPixelClock(int);
+    void setCameraSubSampling(int);
+    void setDrawEdge(int);
+    void setDrawElps(int);
+    void setDrawHaar(int);
     void setEyeAOIHght(double);
     void setEyeAOIWdth(double);
+    void setFlashAOIHght(int);
+    void setFlashAOIWdth(int);
     void setFlashAOIXPos(int);
     void setFlashAOIYPos(int);
-    void setFlashAOIWdth(int);
-    void setFlashAOIHght(int);
     void setFlashThreshold(int);
-    void setAOILeftEye();
     void setPupilPosition(double, double);
+    void onSetRealTime(int);
     void setSaveDataAspectRatio(int);
     void setSaveDataCircumference(int);
     void setSaveDataPosition(int);
-    void setRealTimeEyeTracking(int state);
-    void setOfflineMode(int state);
-    void setOfflineImage(int);
-    void setAOIRghtEye();
-    void setTrialIndex(int);
+    void onSetTrialIndex(int);
     void startOfflineSession();
     void startRecordingManual();
     void updateCameraImage();
-    void updateRawImage();
+    void updateImageRaw(int);
+    void updateImageProcessed(int);
 
 };
 

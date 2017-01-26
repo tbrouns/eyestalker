@@ -127,13 +127,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CamQImage = new QImageOpenCV(1);
     CamQImage->setSize(camImageWdth, camImageHght);
-    CamQImage->setEyeAOI  (Parameters::eyeAOIXPos,   Parameters::eyeAOIYPos,   Parameters::eyeAOIWdth,   Parameters::eyeAOIHght);
-    CamQImage->setFlashAOI(Parameters::flashAOIXPos, Parameters::flashAOIYPos, Parameters::flashAOIWdth, Parameters::flashAOIHght);
+    CamQImage->setAOIEye  ( Parameters::eyeAOIXPos,   Parameters::eyeAOIYPos,   Parameters::eyeAOIWdth,   Parameters::eyeAOIHght);
+    CamQImage->setAOIBead (Parameters::beadAOIXPos,  Parameters::beadAOIYPos,  Parameters::beadAOIWdth,  Parameters::beadAOIHght);
+    CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
 
     CamQImage->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     CamQImage->loadImage(imgCam);
     CamQImage->setImage();
-    QObject::connect(CamQImage, SIGNAL(updateImage()), this , SLOT(updateRawImage()));
+    QObject::connect(CamQImage, SIGNAL(updateImage(int)), this , SLOT(updateImageRaw(int)));
 
     EyeQImage  = new QImageOpenCV(2);
     EyeQImage->setSize(eyeImageWdth, eyeImageHght);
@@ -172,7 +173,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);
 
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
-    QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(cropAOI()));
+    QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(onCropAOI()));
 
     /////////////////// Draw checkboxes ///////////////////////
 
@@ -214,17 +215,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QCheckBox *RealTimeEyeTrackingCheckBox = new QCheckBox;
     RealTimeEyeTrackingCheckBox->setChecked(!SAVE_EYE_IMAGE);
-    QObject::connect(RealTimeEyeTrackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setRealTimeEyeTracking(int)));
+    QObject::connect(RealTimeEyeTrackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetRealTime(int)));
 
     QLabel *OfflineModeTextBox = new QLabel;
     OfflineModeTextBox->setText("Offline mode:");
 
     QCheckBox *OfflineModeCheckBox = new QCheckBox;
     OfflineModeCheckBox->setChecked(false);
-    QObject::connect(OfflineModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setOfflineMode(int)));
+    QObject::connect(OfflineModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetOfflineMode(int)));
 
     QPushButton *ResetParametersPushButton = new QPushButton("Reset parameters");
-    QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(resetParameters()));
+    QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(onResetParameters()));
 
     QLabel *BeadDetectionTextBox = new QLabel;
     BeadDetectionTextBox->setText("Bead detection:");
@@ -245,10 +246,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OptionsLayout->addStretch();
 
     QPushButton *AOILeftEyeButton = new QPushButton("&Left eye");
-    QObject::connect(AOILeftEyeButton, SIGNAL(clicked()), this, SLOT(setAOILeftEye()));
+    QObject::connect(AOILeftEyeButton, SIGNAL(clicked()), this, SLOT(onSetAOIEyeLeft()));
 
     QPushButton *AOIRghtEyeButton = new QPushButton("&Right eye");
-    QObject::connect(AOIRghtEyeButton, SIGNAL(clicked()), this, SLOT(setAOIRghtEye()));
+    QObject::connect(AOIRghtEyeButton, SIGNAL(clicked()), this, SLOT(onSetAOIEyeRght()));
 
     QHBoxLayout *EyeDetectionsLayout = new QHBoxLayout;
     EyeDetectionsLayout->addStretch();
@@ -260,12 +261,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     /////////////////// Offline mode ///////////////////////
 
     QPushButton *OfflineLoadSessionButton = new QPushButton("Load session");
-    QObject::connect(OfflineLoadSessionButton, SIGNAL(clicked(bool)), this, SLOT(loadOfflineSession()));
+    QObject::connect(OfflineLoadSessionButton, SIGNAL(clicked(bool)), this, SLOT(onLoadSession()));
 
     OfflineImageSlider = new QSlider;
     OfflineImageSlider->setRange(0, 0);
     OfflineImageSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(OfflineImageSlider, SIGNAL(valueChanged(int)), this, SLOT(setOfflineImage(int)));
+    QObject::connect(OfflineImageSlider, SIGNAL(valueChanged(int)), this, SLOT(onSetOfflineImage(int)));
 
     OfflineImageFrameTextBox = new QLabel;
     OfflineImageFrameTextBox->setText("<b>0 / 0</b>");
@@ -273,28 +274,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineImageFrameTextBox->setMinimumWidth(70);
 
     QPushButton *OfflinePrevImageButton = new QPushButton("<");
-    QObject::connect(OfflinePrevImageButton, SIGNAL(clicked(bool)), this, SLOT(prevOfflineImage()));
+    QObject::connect(OfflinePrevImageButton, SIGNAL(clicked(bool)), this, SLOT(onImagePrevious()));
 
     QPushButton *OfflineNextImageButton = new QPushButton(">");
-    QObject::connect(OfflineNextImageButton, SIGNAL(clicked(bool)), this, SLOT(nextOfflineImage()));
+    QObject::connect(OfflineNextImageButton, SIGNAL(clicked(bool)), this, SLOT(onImageNext()));
 
     QLabel *OfflinePupilDetectionTextBox = new QLabel;
     OfflinePupilDetectionTextBox->setText("<b>Detect pupil: </b> ");
 
     QPushButton *OfflinePupilDetectionOneButton = new QPushButton("Current");
-    QObject::connect(OfflinePupilDetectionOneButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilOneFrame()));
+    QObject::connect(OfflinePupilDetectionOneButton, SIGNAL(clicked(bool)), this, SLOT(onDetectCurrentFrame()));
 
     QPushButton *OfflinePupilDetectionAllFramesButton = new QPushButton("All frames");
-    QObject::connect(OfflinePupilDetectionAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllFrames()));
+    QObject::connect(OfflinePupilDetectionAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllFrames()));
 
     QPushButton *OfflinePupilDetectionAllTrialsButton = new QPushButton("All trials");
-    QObject::connect(OfflinePupilDetectionAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(detectPupilAllTrials()));
+    QObject::connect(OfflinePupilDetectionAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllTrials()));
 
     QPushButton *SavePupilDataButton = new QPushButton("Save");
-    QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(offlineSaveExperimentData()));
+    QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(onSaveTrialData()));
 
     QPushButton *CombinePupilDataButton = new QPushButton("Combine");
-    QObject::connect(CombinePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(offlineCombineExperimentData()));
+    QObject::connect(CombinePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(onCombineData()));
 
     OfflineModeMainWidget = new QWidget;
     QHBoxLayout *EyeTrackingOfflineLayout = new QHBoxLayout(OfflineModeMainWidget);
@@ -325,7 +326,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineTrialSlider->setValue(0);
     OfflineTrialSlider->setOrientation(Qt::Horizontal);
 
-    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(changeOfflineSession(int)));
+    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(onSetTrialIndexOffline(int)));
 
     QObject::connect( OfflineTrialSlider, SIGNAL(valueChanged(int)), OfflineTrialSpinBox, SLOT(setValue(int)));
     QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)),  OfflineTrialSlider, SLOT(setValue(int)));
@@ -554,7 +555,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     DataDirectoryTextBox->setText(QString::fromStdString(dataDirectory));
 
     QPushButton* DataDirectoryButton = new QPushButton("&Browse...");
-    QObject::connect(DataDirectoryButton, SIGNAL(clicked()), this, SLOT(selectDirectory()));
+    QObject::connect(DataDirectoryButton, SIGNAL(clicked()), this, SLOT(onDirectorySelect()));
 
     // Data filename
 
@@ -600,7 +601,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(FlashThresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(setFlashThreshold(int)));
 
     QPushButton* FlashThresholdResetButton = new QPushButton("Reset");
-    QObject::connect(FlashThresholdResetButton, SIGNAL(clicked()), this, SLOT(resetFlashMinIntensity()));
+    QObject::connect(FlashThresholdResetButton, SIGNAL(clicked()), this, SLOT(onResetFlashIntensity()));
 
     QLabel* FlashThresholdTextBox = new QLabel;
     FlashThresholdTextBox->setText("<b>Flash threshold:</b>");
@@ -617,10 +618,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FlashWdthSpinBox->setRange(0, Parameters::cameraXResolution);
     FlashHghtSpinBox->setRange(0, Parameters::cameraYResolution);
 
-    FlashXPosSpinBox->setValue(Parameters::flashAOIXPos);
-    FlashYPosSpinBox->setValue(Parameters::flashAOIYPos);
-    FlashWdthSpinBox->setValue(Parameters::flashAOIWdth);
-    FlashHghtSpinBox->setValue(Parameters::flashAOIHght);
+    FlashXPosSpinBox->setValue(flashAOIXPos);
+    FlashYPosSpinBox->setValue(flashAOIYPos);
+    FlashWdthSpinBox->setValue(flashAOIWdth);
+    FlashHghtSpinBox->setValue(flashAOIHght);
 
     QObject::connect(FlashXPosSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setFlashAOIXPos(int)));
     QObject::connect(FlashYPosSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setFlashAOIYPos(int)));
@@ -662,7 +663,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     TrialIndexSpinBox->setRange(0, 999);
     TrialIndexSpinBox->setValue(trialIndex);
     TrialIndexSpinBox->setAlignment(Qt::AlignRight);
-    QObject::connect(TrialIndexSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setTrialIndex(int)));
+    QObject::connect(TrialIndexSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onSetTrialIndex(int)));
 
     QHBoxLayout* TrialIndexSpinBoxLayout = new QHBoxLayout;
     TrialIndexSpinBoxLayout->addStretch();
@@ -818,7 +819,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     file = menuBar()->addMenu("&Help");
     file->addAction(about);
 
-    QObject::connect(about, &QAction::triggered, this, &MainWindow::openDialogue);
+    QObject::connect(about, &QAction::triggered, this, &MainWindow::onDialogueOpen);
 
     ///////////////////////////////////////////////////////////////
     /////////////////////// MAIN LAYOUT ///////////////////////////
@@ -865,11 +866,6 @@ void MainWindow::pupilTracking()
     {
         detectionProperties mDetectionPropertiesEyeTemp;
 
-        int eyeAOIXPosTemp = 0;
-        int eyeAOIYPosTemp = 0;
-        int eyeAOIWdthTemp = 0;
-        int eyeAOIHghtTemp = 0;
-
         int flashAOIXPosTemp = 0;
         int flashAOIYPosTemp = 0;
         int flashAOIWdthTemp = 0;
@@ -889,26 +885,34 @@ void MainWindow::pupilTracking()
 
         relativeTime = relativeTimeNew;
 
-        std::lock_guard<std::mutex> secondaryMutexLock(Parameters::secondaryMutex);
+        int cameraAOIXPos;
+        int cameraAOIYPos;
+        int cameraAOIWdth;
+        int cameraAOIHght;
 
-        { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+        { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
             imageCamera = imageOriginal.clone();
 
             mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
             mDetectionPropertiesEyeTemp.p = mParameterWidgetEye->getStructure();
 
-            eyeAOIXPosTemp = Parameters::eyeAOIXPos;
-            eyeAOIYPosTemp = Parameters::eyeAOIYPos;
-            eyeAOIWdthTemp = Parameters::eyeAOIWdth;
-            eyeAOIHghtTemp = Parameters::eyeAOIHght;
+            cameraAOIXPos = Parameters::cameraAOIXPos;
+            cameraAOIYPos = Parameters::cameraAOIYPos;
+            cameraAOIWdth = Parameters::cameraAOIWdth;
+            cameraAOIHght = Parameters::cameraAOIHght;
+
+            mDetectionPropertiesEyeTemp.p.AOIXPos = Parameters::eyeAOIXPos;
+            mDetectionPropertiesEyeTemp.p.AOIYPos = Parameters::eyeAOIYPos;
+            mDetectionPropertiesEyeTemp.p.AOIWdth = Parameters::eyeAOIWdth;
+            mDetectionPropertiesEyeTemp.p.AOIHght = Parameters::eyeAOIHght;
 
             if (!TRIAL_RECORDING)
             {
-                flashAOIXPosTemp = Parameters::flashAOIXPos - Parameters::cameraAOIXPos;
-                flashAOIYPosTemp = Parameters::flashAOIYPos - Parameters::cameraAOIYPos;
-                flashAOIWdthTemp = Parameters::flashAOIWdth;
-                flashAOIHghtTemp = Parameters::flashAOIHght;
+                flashAOIXPosTemp = flashAOIXPos - cameraAOIXPos;
+                flashAOIYPosTemp = flashAOIYPos - cameraAOIYPos;
+                flashAOIWdthTemp = flashAOIWdth;
+                flashAOIHghtTemp = flashAOIHght;
 
                 if (flashAOIXPosTemp < 0)
                 {
@@ -923,9 +927,9 @@ void MainWindow::pupilTracking()
                         flashAOIXPosTemp = 0;
                     }
                 }
-                else if (flashAOIXPosTemp + flashAOIWdthTemp >= Parameters::cameraAOIWdth)
+                else if (flashAOIXPosTemp + flashAOIWdthTemp >= cameraAOIWdth)
                 {
-                    flashAOIWdthTemp = Parameters::cameraAOIWdth - flashAOIXPosTemp;
+                    flashAOIWdthTemp = cameraAOIWdth - flashAOIXPosTemp;
 
                     if (flashAOIWdthTemp <= 0)
                     {
@@ -947,9 +951,9 @@ void MainWindow::pupilTracking()
                         flashAOIYPosTemp = 0;
                     }
                 }
-                else if (flashAOIYPosTemp + flashAOIHghtTemp >= Parameters::cameraAOIHght)
+                else if (flashAOIYPosTemp + flashAOIHghtTemp >= cameraAOIHght)
                 {
-                    flashAOIHghtTemp = Parameters::cameraAOIHght - flashAOIYPosTemp;
+                    flashAOIHghtTemp = cameraAOIHght - flashAOIYPosTemp;
 
                     if (flashAOIHghtTemp <= 0)
                     {
@@ -965,10 +969,8 @@ void MainWindow::pupilTracking()
         int imgWdth = imageOriginal.cols;
         int imgHght = imageOriginal.rows;
 
-        if (imgHght < (eyeAOIYPosTemp + eyeAOIHghtTemp) || imgWdth < (eyeAOIXPosTemp + eyeAOIWdthTemp))
-        {
-            continue;
-        }
+        if (imgWdth < (mDetectionPropertiesEyeTemp.p.AOIXPos + mDetectionPropertiesEyeTemp.p.AOIWdth)) { continue; }
+        if (imgHght < (mDetectionPropertiesEyeTemp.p.AOIYPos + mDetectionPropertiesEyeTemp.p.AOIHght)) { continue; }
 
         if (!TRIAL_RECORDING)
         {
@@ -998,19 +1000,17 @@ void MainWindow::pupilTracking()
                     FlashThresholdSlider->setMinimum(flashMinIntensity);
                 }
 
-                cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal(eyeRegion), mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
+                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal, mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
             }
         }
         else // Trial recording
         {
             if (!SAVE_EYE_IMAGE)
             {
-                cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal(eyeRegion), mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
+                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal, mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
 
-                mDetectionPropertiesEyeTemp.v.xPosAbsolute = mDetectionPropertiesEyeTemp.v.xPosExact + eyeAOIXPosTemp;
-                mDetectionPropertiesEyeTemp.v.yPosAbsolute = mDetectionPropertiesEyeTemp.v.yPosExact + eyeAOIYPosTemp;
+                mDetectionPropertiesEyeTemp.v.xPosAbsolute = mDetectionPropertiesEyeTemp.v.xPosExact + cameraAOIXPos;
+                mDetectionPropertiesEyeTemp.v.yPosAbsolute = mDetectionPropertiesEyeTemp.v.yPosExact + cameraAOIYPos;
 
                 vDetectionVariablesEye[frameCount] = mDetectionPropertiesEyeTemp.v;
 
@@ -1059,7 +1059,7 @@ void MainWindow::pupilTracking()
         // Update structures
 
         {
-            std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+            std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
             mDetectionVariablesEye     = mDetectionPropertiesEyeTemp.v;
             mDetectionMiscellaneousEye = mDetectionPropertiesEyeTemp.m;
@@ -1103,13 +1103,12 @@ void MainWindow::updateCameraImage()
                 int eyeAOIWdth;
                 int eyeAOIHght;
 
-                int flashAOIXPos;
-                int flashAOIYPos;
-                int flashAOIWdth;
-                int flashAOIHght;
+                int beadAOIXPos;
+                int beadAOIYPos;
+                int beadAOIWdth;
+                int beadAOIHght;
 
-                { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-
+                { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
                     if (!imageCamera.empty())
                     {
                         imageOriginal = imageCamera.clone();
@@ -1122,30 +1121,27 @@ void MainWindow::updateCameraImage()
                         eyeAOIWdth = Parameters::eyeAOIWdth;
                         eyeAOIHght = Parameters::eyeAOIHght;
 
-                        flashAOIXPos = Parameters::flashAOIXPos;
-                        flashAOIYPos = Parameters::flashAOIYPos;
-                        flashAOIWdth = Parameters::flashAOIWdth;
-                        flashAOIHght = Parameters::flashAOIHght;
-                    }
-                    else
-                    {
-                        return;
-                    }
+                        beadAOIXPos = Parameters::beadAOIXPos;
+                        beadAOIYPos = Parameters::beadAOIYPos;
+                        beadAOIWdth = Parameters::beadAOIWdth;
+                        beadAOIHght = Parameters::beadAOIHght;
+
+                    } else { return; }
                 }
 
                 CamQImage->loadImage(imageOriginal);
-                CamQImage->setEyeAOI(eyeAOIXPos, eyeAOIYPos, eyeAOIWdth, eyeAOIHght);
-                CamQImage->setFlashAOI(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
-
+                CamQImage->setAOIEye  (  eyeAOIXPos,   eyeAOIYPos,   eyeAOIWdth,   eyeAOIHght);
+                CamQImage->setAOIBead ( beadAOIXPos,  beadAOIYPos,  beadAOIWdth,  beadAOIHght);
+                CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
                 CamQImage->setImage();
 
                 if (eyeAOIWdth >= eyeAOIWdthMin && eyeAOIHght >= eyeAOIHghtMin)
                 {
                     if (!mDetectionPropertiesEyeTemp.m.errorDetected)
                     {
-                        cv::Mat imageEye = mDetectionPropertiesEyeTemp.m.image.clone();
-                        drawAll(imageEye, mDetectionPropertiesEyeTemp);
-                        EyeQImage->loadImage(imageEye);
+                        cv::Mat imageProcessed = imageOriginal.clone();
+                        drawAll(imageProcessed, mDetectionPropertiesEyeTemp);
+                        EyeQImage->loadImage(imageProcessed);
                         EyeQImage->setImage();
                     }
                 }
@@ -1305,7 +1301,7 @@ void MainWindow::onQuitButtonClicked()
     qApp->quit();
 }
 
-void MainWindow::setOfflineMode(int state)
+void MainWindow::onSetOfflineMode(int state)
 {
     if (!state)
     {
@@ -1356,16 +1352,16 @@ int MainWindow::getCurrentTime()
     return td.total_milliseconds(); // return time of day in milliseconds
 }
 
-void MainWindow::selectDirectory()
+void MainWindow::onDirectorySelect()
 {
     QString directory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     DataDirectoryTextBox->setText(directory);
     dataDirectory = directory.toStdString();
 }
 
-void MainWindow::openDialogue()
+void MainWindow::onDialogueOpen()
 {
-    QString text = "Copyright 2016 Terence Brouns. <br> <br> "
+    QString text = "Copyright 2016 - 2017 Terence Brouns. <br> <br> "
                    "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; <br> "
                    "without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. <br><br>"
                    "See the GNU General Public License for more details. <br><br>"
@@ -1399,7 +1395,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::setPupilPosition(double xPos, double yPos)
 {
-    std::lock_guard<std::mutex> secondaryMutexLock(Parameters::secondaryMutex);
+    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
     if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
     {

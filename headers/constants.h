@@ -41,7 +41,7 @@ const int cameraFrameRateUpperLimit = 500;
 
 // Other
 
-const bool DETECT_BEAD = false;
+const bool DETECT_BEAD      = false;
 const bool SAVE_PUPIL_IMAGE = false;
 
 const double pupilHaarReductionFactor = 0.75;

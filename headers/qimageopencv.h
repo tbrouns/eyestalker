@@ -51,15 +51,21 @@ public:
     ~QImageOpenCV();
 
     QSize sizeHint() const;
+
     void clearImage();
-    void drawAOI(QPixmap &img, int x0, int y0, int W, int H, QColor col);
     void loadImage(const cv::Mat& cvimage);
     void resizeImage();
-    void setAOIError();
-    void setEyeAOI(int x, int y, int w, int h);
-    void setFindingCamera();
-    void setFlashAOI(int x, int y, int w, int h);
     void setImage();
+
+    void setFindingCamera();
+
+    void setAOIError();
+    void setAOIBead (int x, int y, int w, int h);
+    void setAOIEye  (int x, int y, int w, int h);
+    void setAOIFlash(int x, int y, int w, int h);
+    void drawAOI(QPixmap &img, int x0, int y0, int W, int H, QColor col);
+
+
     void setSize(int, int);
     void setSpinner();
 
@@ -68,6 +74,10 @@ private:
     double aspectRatio;
     double imageScaleFactorX;
     double imageScaleFactorY;
+    int beadHghtAOI;
+    int beadWdthAOI;
+    int beadXPosAOI;
+    int beadYPosAOI;
     int eyeHghtAOI;
     int eyeWdthAOI;
     int eyeXPosAOI;
@@ -97,7 +107,7 @@ protected:
 signals:
 
     void imageMouseClick(double, double);
-    void updateImage();
+    void updateImage(int);
 
 };
 

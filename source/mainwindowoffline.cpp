@@ -46,7 +46,6 @@ void MainWindow::startOfflineSession()
     // hide tab with camera parameters
     MainTabWidget->removeTab(0);
 
-    updateOfflineImage(0);
     setupOfflineSession();
 }
 
@@ -88,7 +87,7 @@ void MainWindow::countNumImages()
 }
 
 
-void MainWindow::loadOfflineSession()
+void MainWindow::onLoadSession()
 {
     dataDirectoryOffline = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
@@ -103,14 +102,12 @@ void MainWindow::setupOfflineSession()
 {
     if (!dataDirectoryOffline.isEmpty())
     {
-        trialIndexOffline = 0; // start with first trial
-
         countNumTrials();
 
         if (trialTotalOffline > 0)
         {
-            updateOfflineTrial();
-            updateOfflineImage(0);
+            if (trialIndexOffline != 0) { OfflineTrialSlider->setValue(0); } // start with first trial
+            else { onSetTrialIndexOffline(0); }
 
             std::stringstream directoryName;
             directoryName << dataDirectoryOffline.toStdString()
@@ -148,15 +145,10 @@ void MainWindow::setupOfflineSession()
     }
 }
 
-void MainWindow::changeOfflineSession(int index)
+void MainWindow::onSetTrialIndexOffline(int index)
 {
     trialIndexOffline = index;
-    updateOfflineTrial();
-    updateOfflineImage(0);
-}
 
-void MainWindow::updateOfflineTrial()
-{
     countNumImages();
 
     if (imageTotalOffline > 0)
@@ -171,8 +163,9 @@ void MainWindow::updateOfflineTrial()
         vDetectionVariablesEye[0]  = mVariableWidgetEye ->getStructure();
         vDetectionVariablesBead[0] = mVariableWidgetBead->getStructure();
 
-        imageIndexOffline = 0;
-        OfflineImageSlider->setValue(imageIndexOffline);
+        if (imageIndexOffline != 0) { OfflineImageSlider->setValue(0); } // start with first frame
+        else { onSetOfflineImage(0); }
+
         OfflineImageSlider->setMaximum(imageTotalOffline - 1);
 
         // Create folder
@@ -188,8 +181,83 @@ void MainWindow::updateOfflineTrial()
     }
 }
 
-void MainWindow::updateOfflineImage(int imgIndex)
+void MainWindow::updateImageRaw(int imgIndex) // for signal from qimageopencv
 {
+    if (imgIndex < 0) { imgIndex = imageIndexOffline; }
+
+    std::stringstream imagePath;
+    imagePath << dataDirectoryOffline.toStdString()
+              << "/trial_"
+              << trialIndexOffline
+              << "/raw/"
+              << imgIndex
+              << ".png";
+
+    if (boost::filesystem::exists(imagePath.str()))
+    {
+        cv::Mat eyeImageRaw = cv::imread(imagePath.str(), CV_LOAD_IMAGE_COLOR);
+        CamQImage->loadImage(eyeImageRaw);
+        { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+            Parameters::cameraAOIWdth = eyeImageRaw.cols;
+            Parameters::cameraAOIHght = eyeImageRaw.rows;
+            updateEyeAOIx();
+            updateEyeAOIy();
+            CamQImage->setAOIEye ( Parameters::eyeAOIXPos,  Parameters::eyeAOIYPos,  Parameters::eyeAOIWdth,  Parameters::eyeAOIHght);
+            CamQImage->setAOIBead(Parameters::beadAOIXPos, Parameters::beadAOIYPos, Parameters::beadAOIWdth, Parameters::beadAOIHght);
+        }
+        CamQImage->setImage();
+    } else { CamQImage->clearImage(); }
+}
+
+void MainWindow::updateImageProcessed(int imgIndex)
+{
+    std::stringstream fileName;
+    fileName << dataDirectoryOffline.toStdString()
+             << "/trial_"
+             << trialIndexOffline
+             << "/processed/"
+             << imgIndex
+             << ".png";
+
+    if (boost::filesystem::exists(fileName.str()))
+    {
+        cv::Mat eyeImage = cv::imread(fileName.str(), CV_LOAD_IMAGE_COLOR);
+        EyeQImage->loadImage(eyeImage);
+        EyeQImage->setImage();
+    }
+    else
+    {
+        EyeQImage->clearImage();
+    }
+}
+
+void MainWindow::onImagePrevious()
+{
+    if (imageIndexOffline > 0)
+    {
+        imageIndexOffline--;
+        OfflineImageSlider->setValue(imageIndexOffline);
+    }
+}
+
+void MainWindow::onImageNext()
+{
+    if (imageIndexOffline < imageTotalOffline - 1)
+    {
+        imageIndexOffline++;
+        OfflineImageSlider->setValue(imageIndexOffline);
+    }
+}
+
+void MainWindow::onSetOfflineImage(int imgIndex)
+{
+    if (!PROCESSING_ALL_IMAGES) { imageIndexOffline = imgIndex; }
+
+    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+        mVariableWidgetEye ->setWidgets(vDetectionVariablesEye [imgIndex]);
+        mVariableWidgetBead->setWidgets(vDetectionVariablesBead[imgIndex]);
+    }
+
     if (imageTotalOffline > 0)
     {
         std::stringstream ss;
@@ -197,28 +265,8 @@ void MainWindow::updateOfflineImage(int imgIndex)
         QString title = QString::fromStdString(ss.str());
         OfflineImageFrameTextBox->setText(title);
 
-        updateRawImage();
-
-        // Processed
-
-        std::stringstream fileName;
-        fileName << dataDirectoryOffline.toStdString()
-                 << "/trial_"
-                 << trialIndexOffline
-                 << "/processed/"
-                 << imgIndex
-                 << ".png";
-
-        if (boost::filesystem::exists(fileName.str()))
-        {
-            cv::Mat eyeImage = cv::imread(fileName.str(), CV_LOAD_IMAGE_COLOR);
-            EyeQImage->loadImage(eyeImage);
-            EyeQImage->setImage();
-        }
-        else
-        {
-            EyeQImage->clearImage();
-        }
+        updateImageRaw(imgIndex);
+        updateImageProcessed(imgIndex);
     }
     else
     {
@@ -228,66 +276,11 @@ void MainWindow::updateOfflineImage(int imgIndex)
     }
 }
 
-void MainWindow::updateRawImage() // for signal from qimageopencv
-{
-    std::stringstream imagePath;
-    imagePath << dataDirectoryOffline.toStdString()
-              << "/trial_"
-              << trialIndexOffline
-              << "/raw/"
-              << imageIndexOffline
-              << ".png";
-
-    if (boost::filesystem::exists(imagePath.str()))
-    {
-        cv::Mat eyeImageRaw = cv::imread(imagePath.str(), CV_LOAD_IMAGE_COLOR);
-        CamQImage->loadImage(eyeImageRaw);
-        { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-            Parameters::cameraAOIWdth = eyeImageRaw.cols;
-            Parameters::cameraAOIHght = eyeImageRaw.rows;
-            updateEyeAOIx();
-            updateEyeAOIy();
-            CamQImage->setEyeAOI(Parameters::eyeAOIXPos, Parameters::eyeAOIYPos, Parameters::eyeAOIWdth, Parameters::eyeAOIHght);
-        }
-        CamQImage->setImage();
-    } else { CamQImage->clearImage(); }
-}
-
-void MainWindow::prevOfflineImage()
-{
-    if (imageIndexOffline > 0)
-    {
-        imageIndexOffline--;
-        OfflineImageSlider->setValue(imageIndexOffline);
-    }
-}
-
-void MainWindow::nextOfflineImage()
-{
-    if (imageIndexOffline < imageTotalOffline - 1)
-    {
-        imageIndexOffline++;
-        OfflineImageSlider->setValue(imageIndexOffline);
-    }
-}
-
-void MainWindow::setOfflineImage(int imageIndex)
-{
-    if (!PROCESSING_ALL_IMAGES) { imageIndexOffline = imageIndex; }
-
-    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-        mVariableWidgetEye ->setWidgets(vDetectionVariablesEye [imageIndex]);
-        mVariableWidgetBead->setWidgets(vDetectionVariablesBead[imageIndex]);
-    }
-
-    updateOfflineImage(imageIndex);
-}
-
-void MainWindow::offlinePupilDetectionOneFrame(int imageIndex)
+void MainWindow::detectCurrentFrame(int imageIndex)
 {
     // Grab raw images
 
-    cv::Mat eyeImageRaw;
+    cv::Mat imageRaw;
 
     std::stringstream imagePathRaw;
     imagePathRaw << dataDirectoryOffline.toStdString()
@@ -297,20 +290,18 @@ void MainWindow::offlinePupilDetectionOneFrame(int imageIndex)
                  << imageIndex
                  << ".png";
 
-    if (boost::filesystem::exists(imagePathRaw.str())) { eyeImageRaw = cv::imread(imagePathRaw.str(), CV_LOAD_IMAGE_COLOR); }
+    if (boost::filesystem::exists(imagePathRaw.str())) { imageRaw = cv::imread(imagePathRaw.str(), CV_LOAD_IMAGE_COLOR); }
     else                                               { return; }
 
     // Detect pupil
 
+    int cameraAOIXPos;
+    int cameraAOIYPos;
+
     detectionProperties mDetectionPropertiesEye;
     detectionProperties mDetectionPropertiesBead;
 
-    int eyeAOIXPosTemp;
-    int eyeAOIYPosTemp;
-    int eyeAOIWdthTemp;
-    int eyeAOIHghtTemp;
-
-    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
         mDetectionPropertiesEye.v = vDetectionVariablesEye[imageIndex];
         mDetectionPropertiesEye.p = mParameterWidgetEye->getStructure();
@@ -318,40 +309,39 @@ void MainWindow::offlinePupilDetectionOneFrame(int imageIndex)
         mDetectionPropertiesBead.v = vDetectionVariablesBead[imageIndex];
         mDetectionPropertiesBead.p = mParameterWidgetBead->getStructure();
 
-        Parameters::cameraAOIWdth = eyeImageRaw.cols;
-        Parameters::cameraAOIHght = eyeImageRaw.rows;
+        cameraAOIXPos = imageRaw.cols;
+        cameraAOIYPos = imageRaw.rows;
+
+        Parameters::cameraAOIWdth = cameraAOIXPos;
+        Parameters::cameraAOIHght = cameraAOIYPos;
 
         updateEyeAOIx();
         updateEyeAOIy();
 
-        eyeAOIXPosTemp = Parameters::eyeAOIXPos;
-        eyeAOIYPosTemp = Parameters::eyeAOIYPos;
-        eyeAOIWdthTemp = Parameters::eyeAOIWdth;
-        eyeAOIHghtTemp = Parameters::eyeAOIHght;
+        mDetectionPropertiesEye.p.AOIXPos = Parameters::eyeAOIXPos;
+        mDetectionPropertiesEye.p.AOIYPos = Parameters::eyeAOIYPos;
+        mDetectionPropertiesEye.p.AOIWdth = Parameters::eyeAOIWdth;
+        mDetectionPropertiesEye.p.AOIHght = Parameters::eyeAOIHght;
+
+        mDetectionPropertiesBead.p.AOIXPos = Parameters::beadAOIXPos;
+        mDetectionPropertiesBead.p.AOIYPos = Parameters::beadAOIYPos;
+        mDetectionPropertiesBead.p.AOIWdth = Parameters::beadAOIWdth;
+        mDetectionPropertiesBead.p.AOIHght = Parameters::beadAOIHght;
     }
 
-    cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-    cv::Mat eyeImageCropped = eyeImageRaw(eyeRegion);
+    detectionProperties mDetectionPropertiesNewEye = pupilDetection(imageRaw, mDetectionPropertiesEye);
 
-    detectionProperties mDetectionPropertiesNewEye;
+    cv::Mat imageProcessed = imageRaw.clone();
+    drawAll(imageProcessed, mDetectionPropertiesNewEye);
+
     detectionProperties mDetectionPropertiesNewBead;
-
     if (mParameterWidgetBead->getState())
     {
-        mDetectionPropertiesNewBead = pupilDetection(eyeImageCropped, mDetectionPropertiesBead);
-        mDetectionPropertiesNewEye  = pupilDetection(eyeImageCropped, mDetectionPropertiesEye, mDetectionPropertiesNewBead);
-    }
-    else
-    {
-        mDetectionPropertiesNewEye = pupilDetection(eyeImageCropped, mDetectionPropertiesEye);
+        mDetectionPropertiesNewBead = pupilDetection(imageRaw, mDetectionPropertiesBead);
+        drawAll(imageProcessed, mDetectionPropertiesNewBead);
     }
 
     // Save processed images
-
-    cv::Mat imageEye = mDetectionPropertiesNewEye.m.image.clone();
-    drawAll(imageEye, mDetectionPropertiesNewEye);
-
-    if (mParameterWidgetBead->getState()) { drawAll(imageEye, mDetectionPropertiesNewBead); }
 
     std::stringstream imagePath;
     imagePath << dataDirectoryOffline.toStdString()
@@ -361,16 +351,16 @@ void MainWindow::offlinePupilDetectionOneFrame(int imageIndex)
               << imageIndex
               << ".png";
 
-    cv::imwrite(imagePath.str(), imageEye);
+    cv::imwrite(imagePath.str(), imageProcessed);
 
     // Get pupil coords in screen coords
 
-    mDetectionPropertiesNewEye.v.xPosAbsolute = mDetectionPropertiesNewEye.v.xPosExact + eyeAOIXPosTemp;
-    mDetectionPropertiesNewEye.v.yPosAbsolute = mDetectionPropertiesNewEye.v.yPosExact + eyeAOIYPosTemp;
+    mDetectionPropertiesNewEye.v.xPosAbsolute = mDetectionPropertiesNewEye.v.xPosExact + cameraAOIXPos;
+    mDetectionPropertiesNewEye.v.yPosAbsolute = mDetectionPropertiesNewEye.v.yPosExact + cameraAOIYPos;
 
     // Record pupil positions
 
-    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         vDetectionVariablesEye[imageIndex + 1] = mDetectionPropertiesNewEye.v;
         vDetectionMiscellaneousEye[imageIndex] = mDetectionPropertiesNewEye.m;
 
@@ -381,20 +371,20 @@ void MainWindow::offlinePupilDetectionOneFrame(int imageIndex)
     }
 }
 
-void MainWindow::detectPupilOneFrame()
+void MainWindow::onDetectCurrentFrame()
 {
-    offlinePupilDetectionOneFrame(imageIndexOffline);
-    updateOfflineImage(imageIndexOffline);
+    detectCurrentFrame(imageIndexOffline);
+    updateImageProcessed(imageIndexOffline);
 }
 
-void MainWindow::detectPupilAllFrames()
+void MainWindow::onDetectAllFrames()
 {
     if (!PROCESSING_ALL_IMAGES)
     {
         PROCESSING_ALL_IMAGES = true;
         OFFLINE_SAVE_DATA     = false;
 
-        std::thread pupilDetectionThread(&MainWindow::offlinePupilDetectionAllFrames, this);
+        std::thread pupilDetectionThread(&MainWindow::detectAllFrames, this);
         pupilDetectionThread.detach();
 
         while (!OFFLINE_SAVE_DATA && PROCESSING_ALL_IMAGES)
@@ -421,13 +411,13 @@ void MainWindow::detectPupilAllFrames()
     }
 }
 
-void MainWindow::offlinePupilDetectionAllFrames()
+void MainWindow::detectAllFrames()
 {
     int initialIndex = imageIndexOffline; // needed for progressbar
 
     for (imageIndexOffline = initialIndex; imageIndexOffline < imageTotalOffline && PROCESSING_ALL_IMAGES; imageIndexOffline++)
     {
-        offlinePupilDetectionOneFrame(imageIndexOffline);
+        detectCurrentFrame(imageIndexOffline);
     }
 
     imageIndexOffline--; // for-loop overshoots value
@@ -439,7 +429,7 @@ void MainWindow::offlinePupilDetectionAllFrames()
         { std::unique_lock<std::mutex> lck(mtxOffline);
             while (PROCESSING_ALL_IMAGES) cvOffline.wait(lck); } // wait for main-thread to exit while loop
 
-        offlineSaveExperimentData();
+        onSaveTrialData();
 
         { std::unique_lock<std::mutex> lck(mtxOffline);
             OFFLINE_SAVE_DATA = false;
@@ -449,7 +439,7 @@ void MainWindow::offlinePupilDetectionAllFrames()
     }
 }
 
-void MainWindow::detectPupilAllTrials()
+void MainWindow::onDetectAllTrials()
 {
     if (!PROCESSING_ALL_TRIALS)
     {
@@ -458,7 +448,7 @@ void MainWindow::detectPupilAllTrials()
         for (int iTrial = trialIndexOffline; iTrial < trialTotalOffline && PROCESSING_ALL_TRIALS; iTrial++)
         {
             OfflineTrialSlider->setValue(iTrial);
-            detectPupilAllFrames();
+            onDetectAllFrames();
         }
     }
 
@@ -466,7 +456,7 @@ void MainWindow::detectPupilAllTrials()
     PROCESSING_ALL_TRIALS = false;
 }
 
-void MainWindow::offlineSaveExperimentData()
+void MainWindow::onSaveTrialData()
 {
     std::string delimiter = ";";
 
@@ -579,7 +569,7 @@ void MainWindow::offlineSaveExperimentData()
     }
 }
 
-void MainWindow::offlineCombineExperimentData()
+void MainWindow::onCombineData()
 {
     dataFilename = (DataFilenameLineEdit->text()).toStdString();
     std::stringstream fileNameWriteSS;
