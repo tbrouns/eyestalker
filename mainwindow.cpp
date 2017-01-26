@@ -79,6 +79,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     mParameterWidgetEye  = new ParameterWidget;
     mParameterWidgetBead = new ParameterWidget;
 
+    mVariableWidgetEye  = new VariableWidget;
+    mVariableWidgetBead = new VariableWidget;
+
     // Grab parameters from ini file
 
     LastUsedSettingsFileName = "config_user.ini";
@@ -171,7 +174,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(cropAOI()));
 
-    // Check boxes for draw functions
+    /////////////////// Draw checkboxes ///////////////////////
 
     QLabel *HaarTextBox = new QLabel;
     HaarTextBox->setText("<b>Box: </b>");
@@ -195,6 +198,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(ElpsCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setDrawElps(int)));
 
     QHBoxLayout *DrawFunctionsLayout = new QHBoxLayout;
+    DrawFunctionsLayout->addStretch();
     DrawFunctionsLayout->addWidget(HaarTextBox);
     DrawFunctionsLayout->addWidget(HaarCheckBox);
     DrawFunctionsLayout->addWidget(EdgeTextBox);
@@ -203,31 +207,42 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     DrawFunctionsLayout->addWidget(ElpsCheckBox);
     DrawFunctionsLayout->addStretch();
 
+    /////////////////// Options checkboxes ///////////////////////
+
     QLabel *RealTimeEyeTrackingTextBox = new QLabel;
-    RealTimeEyeTrackingTextBox->setText("<b>Real-time eye tracking: </b>");
+    RealTimeEyeTrackingTextBox->setText("Real-time eye tracking:");
 
     QCheckBox *RealTimeEyeTrackingCheckBox = new QCheckBox;
     RealTimeEyeTrackingCheckBox->setChecked(!SAVE_EYE_IMAGE);
     QObject::connect(RealTimeEyeTrackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setRealTimeEyeTracking(int)));
 
     QLabel *OfflineModeTextBox = new QLabel;
-    OfflineModeTextBox->setText("<b>Offline mode: </b>");
+    OfflineModeTextBox->setText("Offline mode:");
 
     QCheckBox *OfflineModeCheckBox = new QCheckBox;
     OfflineModeCheckBox->setChecked(false);
     QObject::connect(OfflineModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setOfflineMode(int)));
 
-    QPushButton *ResetParametersPushButton = new QPushButton("Default parameters");
+    QPushButton *ResetParametersPushButton = new QPushButton("Reset parameters");
     QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(resetParameters()));
 
-    QHBoxLayout *RealTimeEyeTrackingLayout = new QHBoxLayout;
-    RealTimeEyeTrackingLayout->addStretch();
-    RealTimeEyeTrackingLayout->addWidget(RealTimeEyeTrackingTextBox);
-    RealTimeEyeTrackingLayout->addWidget(RealTimeEyeTrackingCheckBox);
-    RealTimeEyeTrackingLayout->addWidget(OfflineModeTextBox);
-    RealTimeEyeTrackingLayout->addWidget(OfflineModeCheckBox);
-    RealTimeEyeTrackingLayout->addWidget(ResetParametersPushButton);
-    RealTimeEyeTrackingLayout->addStretch();
+    QLabel *BeadDetectionTextBox = new QLabel;
+    BeadDetectionTextBox->setText("Bead detection:");
+
+    QCheckBox *BeadDetectionCheckBox = new QCheckBox;
+    BeadDetectionCheckBox->setChecked(mParameterWidgetBead->getState());
+    QObject::connect(BeadDetectionCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setBeadDetection(int)));
+
+    QHBoxLayout *OptionsLayout = new QHBoxLayout;
+    OptionsLayout->addStretch();
+    OptionsLayout->addWidget(RealTimeEyeTrackingTextBox);
+    OptionsLayout->addWidget(RealTimeEyeTrackingCheckBox);
+    OptionsLayout->addWidget(OfflineModeTextBox);
+    OptionsLayout->addWidget(OfflineModeCheckBox);
+    OptionsLayout->addWidget(BeadDetectionTextBox);
+    OptionsLayout->addWidget(BeadDetectionCheckBox);
+    OptionsLayout->addWidget(ResetParametersPushButton);
+    OptionsLayout->addStretch();
 
     QPushButton *AOILeftEyeButton = new QPushButton("&Left eye");
     QObject::connect(AOILeftEyeButton, SIGNAL(clicked()), this, SLOT(setAOILeftEye()));
@@ -242,13 +257,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeDetectionsLayout->addWidget(AOICropButton);
     EyeDetectionsLayout->addStretch();
 
+    /////////////////// Offline mode ///////////////////////
+
     QPushButton *OfflineLoadSessionButton = new QPushButton("Load session");
     QObject::connect(OfflineLoadSessionButton, SIGNAL(clicked(bool)), this, SLOT(loadOfflineSession()));
 
     OfflineImageSlider = new QSlider;
     OfflineImageSlider->setRange(0, 0);
     OfflineImageSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(OfflineImageSlider, SIGNAL(valueChanged(int)), this, SLOT(setOfflineImageFrame(int)));
+    QObject::connect(OfflineImageSlider, SIGNAL(valueChanged(int)), this, SLOT(setOfflineImage(int)));
 
     OfflineImageFrameTextBox = new QLabel;
     OfflineImageFrameTextBox->setText("<b>0 / 0</b>");
@@ -340,9 +357,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraOutputLayout->addWidget(EyeHghtROISlider, 1, 5);
     CameraOutputLayout->addWidget(EyeQImage, 1, 4, Qt::AlignCenter);
     CameraOutputLayout->addWidget(EyeWdthROISlider, 2, 4);
-    CameraOutputLayout->addLayout(RealTimeEyeTrackingLayout, 4, 2);
+    CameraOutputLayout->addLayout(OptionsLayout, 4, 2);
     CameraOutputLayout->addLayout(EyeDetectionsLayout, 3, 2);
-    CameraOutputLayout->addLayout(DrawFunctionsLayout, 3, 4);
+    CameraOutputLayout->addLayout(DrawFunctionsLayout, 3, 4, Qt::AlignCenter);
 
     CameraOutputLayout->setColumnStretch(0, 1);
     CameraOutputLayout->setColumnStretch(6, 1);
@@ -516,63 +533,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CameraParametersLayout->addWidget(CameraSubSamplingTextBox,  8, 0);
     CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 8, 1);
-
-    /////////////////// Variables tab ///////////////////////
-
-    // Pupil circumference
-
-    QLabel *PupilCircumferenceTextBox = new QLabel;
-    PupilCircumferenceTextBox->setText("<b>Pupil circumference:</b>");
-
-    PupilCircumferenceLabel  = new QLabel();
-    PupilCircumferenceSlider = new SliderDouble();
-    PupilCircumferenceSlider->setPrecision(1);
-    PupilCircumferenceSlider->setDoubleRange(0, 500);
-    PupilCircumferenceSlider->setOrientation(Qt::Horizontal);
-
-    // Pupil aspect ratio
-
-    QLabel *PupilAspectRatioTextBox = new QLabel;
-    PupilAspectRatioTextBox->setText("<b>Pupil aspect ratio:</b>");
-
-    PupilAspectRatioLabel  = new QLabel();
-    PupilAspectRatioSlider = new SliderDouble();
-    PupilAspectRatioSlider->setPrecision(2);
-    PupilAspectRatioSlider->setDoubleRange(0, 1.0);
-    PupilAspectRatioSlider->setOrientation(Qt::Horizontal);
-
-    // Edge intensity
-
-    QLabel *EdgeIntensityTextBox = new QLabel;
-    EdgeIntensityTextBox->setText("<b>Edge intensity:</b>");
-
-    EdgeIntensityLabel  = new QLabel();
-    EdgeIntensitySlider = new SliderDouble();
-    EdgeIntensitySlider->setPrecision(1);
-    EdgeIntensitySlider->setDoubleRange(0.0, 255.0);
-    EdgeIntensitySlider->setOrientation(Qt::Horizontal);
-
-    QObject::connect(PupilCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilCircumference(double)));
-    QObject::connect(PupilAspectRatioSlider,   SIGNAL(doubleValueChanged(double)), this, SLOT(setPupilAspectRatio(double)));
-    QObject::connect(EdgeIntensitySlider,      SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeIntensity(double)));
-
-    // Set-up layout
-
-    QWidget* RealTimeVariablesWidget = new QWidget;
-    QGridLayout *RealTimeVariablesLayout = new QGridLayout(RealTimeVariablesWidget);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceTextBox,   0, 0);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceSlider,    0, 1);
-    RealTimeVariablesLayout->addWidget(PupilCircumferenceLabel,     0, 2);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioTextBox,     1, 0);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioSlider,      1, 1);
-    RealTimeVariablesLayout->addWidget(PupilAspectRatioLabel,       1 ,2);
-    RealTimeVariablesLayout->addWidget(EdgeIntensityTextBox,        2, 0);
-    RealTimeVariablesLayout->addWidget(EdgeIntensitySlider,         2, 1);
-    RealTimeVariablesLayout->addWidget(EdgeIntensityLabel,          2, 2);
-
-    // Set-up variables
-
-    resetVariables();
 
     /////////////////// Experiment tab ///////////////////////
 
@@ -792,30 +752,49 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     /////////////////// Tab layout ///////////////////////
 
-    EyeTrackingParameterTabWidget = new QTabWidget;
-    EyeTrackingParameterTabWidget->addTab(CameraParametersWidget,  tr("Camera"));
-    EyeTrackingParameterTabWidget->addTab(RealTimeVariablesWidget, tr("Variables"));
-    EyeTrackingParameterTabWidget->addTab(mParameterWidgetEye,     tr("Eye parameters"));
-    EyeTrackingParameterTabWidget->addTab(mParameterWidgetBead,    tr("Bead parameters"));
-    EyeTrackingParameterTabWidget->addTab(ExperimentTabWidget,     tr("Experimental"));
 
-    EyeTrackingParameterTabWidget->setStyleSheet("QTabBar::tab { height: 30px; width: 125px; }");
-
-    QWidget *EyeTrackingWidget = new QWidget;
+    QWidget* EyeTrackingWidget = new QWidget;
     QVBoxLayout *EyeTrackingLayout = new QVBoxLayout(EyeTrackingWidget);
-    EyeTrackingLayout->addWidget(CameraSettings);
-    EyeTrackingLayout->addWidget(EyeTrackingParameterTabWidget);
+    EyeTrackingLayout->addWidget(mVariableWidgetEye);
+    EyeTrackingLayout->addWidget(mParameterWidgetEye);
+
+    QScrollArea *EyeTrackingScrollArea = new QScrollArea();
+    EyeTrackingScrollArea->setWidget(EyeTrackingWidget);
+    EyeTrackingScrollArea->setWidgetResizable(true);
+
+    QWidget* BeadTrackingWidget = new QWidget;
+    QVBoxLayout *BeadTrackingLayout = new QVBoxLayout(BeadTrackingWidget);
+    BeadTrackingLayout->addWidget(mVariableWidgetBead);
+    BeadTrackingLayout->addWidget(mParameterWidgetBead);
+
+    BeadTrackingScrollArea = new QScrollArea();
+    BeadTrackingScrollArea->setWidget(BeadTrackingWidget);
+    BeadTrackingScrollArea->setWidgetResizable(true);
+
+    MainTabWidget = new QTabWidget;
+    MainTabWidget->addTab(CameraParametersWidget,  tr("Camera"));
+    MainTabWidget->addTab(ExperimentTabWidget,     tr("Experimental"));
+    MainTabWidget->addTab(EyeTrackingScrollArea,   tr("Eye-tracking"));
+    if (mParameterWidgetBead->getState()) { MainTabWidget->addTab(BeadTrackingScrollArea,  tr("Bead-tracking")); }
+
+
+    MainTabWidget->setStyleSheet("QTabBar::tab { height: 30px; width: 125px; }");
+
+    QWidget *CentralWidget = new QWidget;
+    QVBoxLayout *CentralLayout = new QVBoxLayout(CentralWidget);
+    CentralLayout->addWidget(CameraSettings);
+    CentralLayout->addWidget(MainTabWidget);
 
     // Tab widget
 
     QSize screenResolution = QDesktopWidget().availableGeometry(this).size();
     double screenOffset = 0.9;
 
-    EyeTrackingWidget->setMaximumSize(screenResolution * screenOffset);
-    EyeTrackingWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    QScrollArea *EyeTrackingWidgetScrollArea = new QScrollArea();
-    EyeTrackingWidgetScrollArea->setWidget(EyeTrackingWidget);
-    EyeTrackingWidgetScrollArea->setWidgetResizable(true);
+    CentralWidget->setMaximumSize(screenResolution * screenOffset);
+    CentralWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    QScrollArea *CentralWidgetScrollArea = new QScrollArea();
+    CentralWidgetScrollArea->setWidget(CentralWidget);
+    CentralWidgetScrollArea->setWidgetResizable(true);
 
     ///////////////////////////////////////////////////////////////
     //////////////////// EXTERNAL WIDGETS  ////////////////////////
@@ -848,7 +827,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // Main layout
 
     QVBoxLayout *MainLayout = new QVBoxLayout;
-    MainLayout->addWidget(EyeTrackingWidgetScrollArea);
+    MainLayout->addWidget(CentralWidgetScrollArea);
     MainLayout->addLayout(ExternalLayout);
 
     // Central widget set-up
@@ -884,7 +863,7 @@ void MainWindow::pupilTracking()
 {
     while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
-        eyeProperties mEyePropertiesTemp;
+        detectionProperties mDetectionPropertiesEyeTemp;
 
         int eyeAOIXPosTemp = 0;
         int eyeAOIYPosTemp = 0;
@@ -916,8 +895,8 @@ void MainWindow::pupilTracking()
 
             imageCamera = imageOriginal.clone();
 
-            mEyePropertiesTemp.v = mEyePropertiesVariables;
-            mEyePropertiesTemp.p = mParameterWidgetEye->getStructure();
+            mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
+            mDetectionPropertiesEyeTemp.p = mParameterWidgetEye->getStructure();
 
             eyeAOIXPosTemp = Parameters::eyeAOIXPos;
             eyeAOIYPosTemp = Parameters::eyeAOIYPos;
@@ -1003,7 +982,7 @@ void MainWindow::pupilTracking()
 
             if (FLASH_STANDBY)
             {
-                resetVariables();
+                mVariableWidgetEye->resetStructure(mDetectionPropertiesEyeTemp.p);
 
                 if (avgIntensity > flashThreshold)
                 {
@@ -1020,7 +999,7 @@ void MainWindow::pupilTracking()
                 }
 
                 cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-                mEyePropertiesTemp = pupilDetection(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
+                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal(eyeRegion), mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
             }
         }
         else // Trial recording
@@ -1028,12 +1007,12 @@ void MainWindow::pupilTracking()
             if (!SAVE_EYE_IMAGE)
             {
                 cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
-                mEyePropertiesTemp = pupilDetection(imageOriginal(eyeRegion), mEyePropertiesTemp); // Pupil tracking algorithm
+                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal(eyeRegion), mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
 
-                mEyePropertiesTemp.v.xPosAbsolute = mEyePropertiesTemp.v.xPosExact + eyeAOIXPosTemp;
-                mEyePropertiesTemp.v.yPosAbsolute = mEyePropertiesTemp.v.yPosExact + eyeAOIYPosTemp;
+                mDetectionPropertiesEyeTemp.v.xPosAbsolute = mDetectionPropertiesEyeTemp.v.xPosExact + eyeAOIXPosTemp;
+                mDetectionPropertiesEyeTemp.v.yPosAbsolute = mDetectionPropertiesEyeTemp.v.yPosExact + eyeAOIYPosTemp;
 
-                vEyePropertiesVariables[frameCount] = mEyePropertiesTemp.v;
+                vDetectionVariablesEye[frameCount] = mDetectionPropertiesEyeTemp.v;
 
                 timeStamps[frameCount] = relativeTime; // save time stamps
 
@@ -1082,8 +1061,8 @@ void MainWindow::pupilTracking()
         {
             std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
-            mEyePropertiesVariables     = mEyePropertiesTemp.v;
-            mEyePropertiesMiscellaneous = mEyePropertiesTemp.m;
+            mDetectionVariablesEye     = mDetectionPropertiesEyeTemp.v;
+            mDetectionMiscellaneousEye = mDetectionPropertiesEyeTemp.m;
         }
     }
 
@@ -1115,7 +1094,7 @@ void MainWindow::updateCameraImage()
         {
             if (Parameters::CAMERA_RUNNING)
             {
-                eyeProperties mEyePropertiesTemp;
+                detectionProperties mDetectionPropertiesEyeTemp;
 
                 cv::Mat imageOriginal;
 
@@ -1135,8 +1114,8 @@ void MainWindow::updateCameraImage()
                     {
                         imageOriginal = imageCamera.clone();
 
-                        mEyePropertiesTemp.v = mEyePropertiesVariables;
-                        mEyePropertiesTemp.m = mEyePropertiesMiscellaneous;
+                        mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
+                        mDetectionPropertiesEyeTemp.m = mDetectionMiscellaneousEye;
 
                         eyeAOIXPos = Parameters::eyeAOIXPos;
                         eyeAOIYPos = Parameters::eyeAOIYPos;
@@ -1162,10 +1141,10 @@ void MainWindow::updateCameraImage()
 
                 if (eyeAOIWdth >= eyeAOIWdthMin && eyeAOIHght >= eyeAOIHghtMin)
                 {
-                    if (!mEyePropertiesTemp.m.errorDetected)
+                    if (!mDetectionPropertiesEyeTemp.m.errorDetected)
                     {
-                        cv::Mat imageEye = mEyePropertiesTemp.m.image.clone();
-                        drawAll(imageEye, mEyePropertiesTemp);
+                        cv::Mat imageEye = mDetectionPropertiesEyeTemp.m.image.clone();
+                        drawAll(imageEye, mDetectionPropertiesEyeTemp);
                         EyeQImage->loadImage(imageEye);
                         EyeQImage->setImage();
                     }
@@ -1175,7 +1154,7 @@ void MainWindow::updateCameraImage()
                     EyeQImage->setAOIError();
                 }
 
-                setVariableWidgets(mEyePropertiesTemp.v); // update sliders
+                mVariableWidgetEye->setWidgets(mDetectionPropertiesEyeTemp.v); // update sliders
 
                 if (CameraHardwareGainAutoCheckBox->checkState())
                 {
@@ -1332,9 +1311,9 @@ void MainWindow::setOfflineMode(int state)
     {
         imageIndexOffline = 0;
 
-        EyeTrackingParameterTabWidget->setUpdatesEnabled(false);
-        EyeTrackingParameterTabWidget->insertTab(0, CameraParametersWidget, tr("Camera"));
-        EyeTrackingParameterTabWidget->setUpdatesEnabled(true);
+        MainTabWidget->setUpdatesEnabled(false);
+        MainTabWidget->insertTab(0, CameraParametersWidget, tr("Camera"));
+        MainTabWidget->setUpdatesEnabled(true);
 
         CamEyeAOIWdthSlider->setVisible(true);
         CamEyeAOIHghtSlider->setVisible(true);
@@ -1369,65 +1348,6 @@ void MainWindow::setOfflineMode(int state)
     }
 }
 
-void MainWindow::setVariableWidgets(const eyePropertiesVariables& mEyePropertiesVariables)
-{
-    PupilCircumferenceSlider->setDoubleValue(mEyePropertiesVariables.circumferencePrediction);
-    PupilCircumferenceLabel->setText(QString::number(mEyePropertiesVariables.circumferencePrediction, 'f', 1));
-
-    PupilAspectRatioSlider->setDoubleValue(mEyePropertiesVariables.aspectRatioPrediction);
-    PupilAspectRatioLabel->setText(QString::number(mEyePropertiesVariables.aspectRatioPrediction, 'f', 2));
-
-    EdgeIntensitySlider->setDoubleValue(mEyePropertiesVariables.edgeIntensityPrediction);
-    EdgeIntensityLabel->setText(QString::number(mEyePropertiesVariables.edgeIntensityPrediction, 'f', 1));
-}
-
-void MainWindow::resetVariables()
-{    
-    eyePropertiesParameters mEyePropertiesParameters = mParameterWidgetEye->getStructure();
-
-    mEyePropertiesVariables.aspectRatioAverage    = 1.0;
-    mEyePropertiesVariables.aspectRatioExact      = 0.0;
-    mEyePropertiesVariables.aspectRatioMomentum   = 0.0;
-    mEyePropertiesVariables.aspectRatioPrediction = 1.0;
-
-    mEyePropertiesVariables.circumferenceAverage    = 0.5 * (mEyePropertiesParameters.circumferenceMax + mEyePropertiesParameters.circumferenceMin);
-    mEyePropertiesVariables.circumferenceExact      = 0;
-    mEyePropertiesVariables.circumferenceMomentum   = 0;
-    mEyePropertiesVariables.circumferencePrediction = mEyePropertiesVariables.circumferenceAverage;
-
-    mEyePropertiesVariables.edgeIntensityAverage    = 255;
-    mEyePropertiesVariables.edgeIntensityPrediction = 255;
-
-    mEyePropertiesVariables.heightAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
-    mEyePropertiesVariables.heightPrediction = mEyePropertiesVariables.heightAverage;
-    mEyePropertiesVariables.heightMomentum   = 0;
-
-    mEyePropertiesVariables.radiusMomentum   = 0;
-    mEyePropertiesVariables.radiusPrediction = 0.5 * mEyePropertiesVariables.circumferencePrediction / M_PI;
-
-    mEyePropertiesVariables.searchRadius = 0.5 * Parameters::eyeAOIWdth;
-
-    mEyePropertiesVariables.thresholdCircumferenceChange = mEyePropertiesParameters.circumferenceMax;
-    mEyePropertiesVariables.thresholdAspectRatioChange   = 1.0;
-
-    mEyePropertiesVariables.widthAverage    = mEyePropertiesVariables.circumferencePrediction / M_PI;
-    mEyePropertiesVariables.widthPrediction = mEyePropertiesVariables.widthAverage;
-    mEyePropertiesVariables.widthMomentum   = 0;
-
-    mEyePropertiesVariables.xPosAbsolute  = 0;
-    mEyePropertiesVariables.xPosExact     = 0;
-    mEyePropertiesVariables.xPosPredicted = 0.5 * Parameters::eyeAOIWdth;
-    mEyePropertiesVariables.xVelocity     = 0;
-
-    mEyePropertiesVariables.yPosAbsolute  = 0;
-    mEyePropertiesVariables.yPosExact     = 0;
-    mEyePropertiesVariables.yPosPredicted = 0.5 * Parameters::eyeAOIHght;
-    mEyePropertiesVariables.yVelocity     = 0;
-
-    mEyePropertiesVariables.priorCertainty = certaintyLowerLimit;
-
-    setVariableWidgets(mEyePropertiesVariables);
-}
 
 int MainWindow::getCurrentTime()
 {
@@ -1475,4 +1395,21 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     if      (event->key() == Qt::Key_F8) { FlashStandbySlider->setValue(1); }
     else if (event->key() == Qt::Key_F5) { FlashStandbySlider->setValue(0); }
+}
+
+void MainWindow::setPupilPosition(double xPos, double yPos)
+{
+    std::lock_guard<std::mutex> secondaryMutexLock(Parameters::secondaryMutex);
+
+    if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
+    {
+        detectionParameters mDetectionParametersEye = mParameterWidgetEye->getStructure();
+
+        int pupilHaarWdth       = round(mDetectionVariablesEye.circumferencePrediction / M_PI);
+        int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mDetectionParametersEye.pupilOffset * 2);
+
+        mDetectionVariablesEye.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);
+        mDetectionVariablesEye.xPosPredicted = xPos;
+        mDetectionVariablesEye.yPosPredicted = yPos;
+    }
 }

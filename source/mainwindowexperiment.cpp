@@ -43,7 +43,9 @@ void MainWindow::startTrialRecording()
 
         frameCount = 0;
 
-        vEyePropertiesVariables.resize(trialFrameTotal);
+        vDetectionVariablesEye.resize(trialFrameTotal);
+        vDetectionVariablesBead.resize(trialFrameTotal);
+
         timeStamps.assign(trialFrameTotal, 0);
 
         if (SAVE_EYE_IMAGE)
@@ -138,23 +140,23 @@ void MainWindow::saveTrialData()
         file << std::fixed;
         file << std::setprecision(3);
 
-        for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].pupilDetected << delimiter; }
+        for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].pupilDetected << delimiter; }
         for (int i = 0; i < frameCount; i++) { file << timeStamps[i] << delimiter; } // saving ALL timestamps allows for accurate frame-rate calculation during data processing
 
         if (SAVE_POSITION)
         {
-            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].xPosAbsolute  << delimiter; }
-            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].yPosAbsolute  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].xPosAbsolute  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].yPosAbsolute  << delimiter; }
         }
 
         if (SAVE_CIRCUMFERENCE)
         {
-            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].circumferenceExact << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].circumferenceExact << delimiter; }
         }
 
         if (SAVE_ASPECT_RATIO)
         {
-            for (int i = 0; i < frameCount; i++) { file << vEyePropertiesVariables[i].aspectRatioExact << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].aspectRatioExact << delimiter; }
         }
 
         file.close();

@@ -21,8 +21,10 @@ class ParameterWidget : public QWidget
 public:
 
     void reset();
-    eyePropertiesParameters getStructure();
-    void setStructure(eyePropertiesParameters);
+    detectionParameters getStructure();
+    bool getState();
+    void setState(bool);
+    void setStructure(detectionParameters);
 
     explicit ParameterWidget(QWidget *parent = 0);
     ~ParameterWidget();
@@ -44,10 +46,10 @@ private:
     QLabel *EllipseFitNumberMaximumLabel;
     QLabel *EllipseFitErrorMaximumLabel;
     QLabel *GlintSizeLabel;
-    QLabel *PupilCircumferenceMinLabel;
-    QLabel *PupilCircumferenceMaxLabel;
-    QLabel *PupilAspectRatioMinLabel;
-    QLabel *PupilHaarOffsetLabel;
+    QLabel *CircumferenceMinLabel;
+    QLabel *CircumferenceMaxLabel;
+    QLabel *AspectRatioMinLabel;
+    QLabel *HaarOffsetLabel;
     QLabel *ThresholdCircumferenceLabel;
     QLabel *ThresholdAspectRatioLabel;
 
@@ -57,7 +59,7 @@ private:
     QSlider *CannyThresholdHighSlider;
     QSlider *EllipseFitNumberMaximumSlider;
     QSlider *GlintSizeSlider;
-    QSlider *PupilHaarOffsetSlider;
+    QSlider *HaarOffsetSlider;
 
     SliderDouble *AlphaMiscellaneousSlider;
     SliderDouble *AlphaMomentumSlider;
@@ -68,13 +70,13 @@ private:
     SliderDouble *EdgeIntensityOffsetSlider;
     SliderDouble *EdgeLengthMinimumSlider;
     SliderDouble *EllipseFitErrorMaximumSlider;
-    SliderDouble *PupilCircumferenceMinSlider;
-    SliderDouble *PupilCircumferenceMaxSlider;
-    SliderDouble *PupilAspectRatioMinSlider;
+    SliderDouble *CircumferenceMinSlider;
+    SliderDouble *CircumferenceMaxSlider;
+    SliderDouble *AspectRatioMinSlider;
     SliderDouble *ThresholdCircumferenceSlider;
     SliderDouble *ThresholdAspectRatioSlider;
 
-    eyePropertiesParameters mEyePropertiesParameters;
+    detectionParameters mDetectionParameters;
 
 signals:
 
@@ -95,10 +97,10 @@ private slots:
     void setEllipseFitNumberMaximum (int);
     void setEllipseFitErrorMaximum  (double);
     void setGlintSize               (int);
-    void setPupilCircumferenceMin   (double);
-    void setPupilCircumferenceMax   (double);
-    void setPupilAspectRatioMin     (double);
-    void setPupilHaarOffset         (int);
+    void setCircumferenceMin   (double);
+    void setCircumferenceMax   (double);
+    void setAspectRatioMin     (double);
+    void setHaarOffset         (int);
     void setThresholdCircumference  (double);
     void setThresholdAspectRatio    (double);
 

@@ -70,8 +70,10 @@ struct ellipseProperties
 
 };
 
-struct eyePropertiesParameters
+struct detectionParameters
 {
+    detectionParameters(): DETECTION_ON(false) { }
+
     double alphaMiscellaneous;
     double alphaMomentum;
     double alphaAverage;
@@ -93,9 +95,10 @@ struct eyePropertiesParameters
     int ellipseFitNumberMaximum;
     int glintSize;
     int pupilOffset;
+    bool DETECTION_ON;
 };
 
-struct eyePropertiesVariables
+struct detectionVariables
 {
     bool pupilDetected;
     double aspectRatioAverage;
@@ -132,7 +135,7 @@ struct eyePropertiesVariables
     double yVelocity;
 };
 
-struct eyePropertiesMiscellaneous
+struct detectionMiscellaneous
 {
     bool errorDetected;
     cv::Mat image;
@@ -153,11 +156,11 @@ struct eyePropertiesMiscellaneous
     std::vector<edgeProperties> edgePropertiesAll;
 };
 
-struct eyeProperties
+struct detectionProperties
 {
-    eyePropertiesParameters     p;
-    eyePropertiesVariables      v;
-    eyePropertiesMiscellaneous  m;
+    detectionParameters     p;
+    detectionVariables      v;
+    detectionMiscellaneous  m;
 };
 
 struct imageInfo

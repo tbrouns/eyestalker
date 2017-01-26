@@ -49,61 +49,64 @@ void MainWindow::loadSettings(QString filename)
     subjectIdentifier               = settings.value("SubjectIdentifier",           "").toString();
     trialTimeLength                 = settings.value("TrialTimeLength",             1500).toInt();
 
-    eyePropertiesParameters mEyePropertiesParameters;
+    detectionParameters mDetectionParametersEye;
 
-    mEyePropertiesParameters.alphaAverage                       = settings.value("AlphaAverage",                    0.005).toDouble();
-    mEyePropertiesParameters.alphaMiscellaneous                 = settings.value("AlphaMiscellaneous",              0.75).toDouble();
-    mEyePropertiesParameters.alphaMomentum                      = settings.value("AlphaMomentum",                   0.50).toDouble();
-    mEyePropertiesParameters.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
-    mEyePropertiesParameters.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  4).toInt();
-    mEyePropertiesParameters.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
-    mEyePropertiesParameters.cannyThresholdLow                  = settings.value("CannyThresholdLow",               75).toInt();
-    mEyePropertiesParameters.cannyThresholdHigh                 = settings.value("CannyThresholdHigh",              150).toInt();
-    mEyePropertiesParameters.curvatureFactor                    = settings.value("CurvatureFactor",                 1.05).toDouble();
-    mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
-    mEyePropertiesParameters.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
-    mEyePropertiesParameters.edgeLengthMinimum                  = settings.value("EdgeLengthMinimum",               0.60).toDouble();
-    mEyePropertiesParameters.ellipseFitNumberMaximum            = settings.value("EllipseFitNumberMaximum",         3).toInt();
-    mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          80).toDouble();
-    mEyePropertiesParameters.glintSize                          = settings.value("GlintSize",                       12).toInt();
-    mEyePropertiesParameters.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
-    mEyePropertiesParameters.circumferenceMin                   = settings.value("CircumferenceMin",                60).toDouble();
-    mEyePropertiesParameters.aspectRatioMin                     = settings.value("AspectRatioMin",                  0.4).toDouble();
-    mEyePropertiesParameters.pupilOffset                        = settings.value("PupilOffset",                     25).toInt();
-    mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
-    mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
+    mDetectionParametersEye.alphaAverage                       = settings.value("AlphaAverage",                    0.005).toDouble();
+    mDetectionParametersEye.alphaMiscellaneous                 = settings.value("AlphaMiscellaneous",              0.75).toDouble();
+    mDetectionParametersEye.alphaMomentum                      = settings.value("AlphaMomentum",                   0.50).toDouble();
+    mDetectionParametersEye.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
+    mDetectionParametersEye.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  4).toInt();
+    mDetectionParametersEye.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
+    mDetectionParametersEye.cannyThresholdLow                  = settings.value("CannyThresholdLow",               75).toInt();
+    mDetectionParametersEye.cannyThresholdHigh                 = settings.value("CannyThresholdHigh",              150).toInt();
+    mDetectionParametersEye.curvatureFactor                    = settings.value("CurvatureFactor",                 1.05).toDouble();
+    mDetectionParametersEye.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
+    mDetectionParametersEye.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
+    mDetectionParametersEye.edgeLengthMinimum                  = settings.value("EdgeLengthMinimum",               0.60).toDouble();
+    mDetectionParametersEye.ellipseFitNumberMaximum            = settings.value("EllipseFitNumberMaximum",         3).toInt();
+    mDetectionParametersEye.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          80).toDouble();
+    mDetectionParametersEye.glintSize                          = settings.value("GlintSize",                       12).toInt();
+    mDetectionParametersEye.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
+    mDetectionParametersEye.circumferenceMin                   = settings.value("CircumferenceMin",                60).toDouble();
+    mDetectionParametersEye.aspectRatioMin                     = settings.value("AspectRatioMin",                  0.4).toDouble();
+    mDetectionParametersEye.pupilOffset                        = settings.value("PupilOffset",                     25).toInt();
+    mDetectionParametersEye.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
+    mDetectionParametersEye.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
 
-    mParameterWidgetEye->setStructure(mEyePropertiesParameters);
+    mParameterWidgetEye ->setStructure(mDetectionParametersEye);
+    mVariableWidgetEye->resetStructure(mDetectionParametersEye);
 
-    mEyePropertiesParameters.alphaAverage                       = settings.value("BeadAlphaAverage",                    0.005).toDouble();
-    mEyePropertiesParameters.alphaMiscellaneous                 = settings.value("BeadAlphaMiscellaneous",              0.75).toDouble();
-    mEyePropertiesParameters.alphaMomentum                      = settings.value("BeadAlphaMomentum",                   0.50).toDouble();
-    mEyePropertiesParameters.alphaPrediction                    = settings.value("BeadAlphaPrediction",                 0.75).toDouble();
-    mEyePropertiesParameters.cannyBlurLevel                     = settings.value("BeadCannyBlurLevel",                  4).toInt();
-    mEyePropertiesParameters.cannyKernelSize                    = settings.value("BeadCannyKernelSize",                 5).toInt();
-    mEyePropertiesParameters.cannyThresholdLow                  = settings.value("BeadCannyThresholdLow",               75).toInt();
-    mEyePropertiesParameters.cannyThresholdHigh                 = settings.value("BeadCannyThresholdHigh",              150).toInt();
-    mEyePropertiesParameters.curvatureFactor                    = settings.value("BeadCurvatureFactor",                 1.05).toDouble();
-    mEyePropertiesParameters.curvatureOffsetMin                 = settings.value("BeadCurvatureOffset",                 5).toDouble();
-    mEyePropertiesParameters.edgeIntensityOffset                = settings.value("BeadEdgeIntensityOffset",             40).toDouble();
-    mEyePropertiesParameters.edgeLengthMinimum                  = settings.value("BeadEdgeLengthMinimum",               0.60).toDouble();
-    mEyePropertiesParameters.ellipseFitNumberMaximum            = settings.value("BeadEllipseFitNumberMaximum",         3).toInt();
-    mEyePropertiesParameters.ellipseFitErrorMaximum             = settings.value("BeadEllipseFitErrorMaximum",          80).toDouble();
-    mEyePropertiesParameters.glintSize                          = settings.value("BeadGlintSize",                       12).toInt();
-    mEyePropertiesParameters.circumferenceMax                   = settings.value("BeadCircumferenceMax",                320).toDouble();
-    mEyePropertiesParameters.circumferenceMin                   = settings.value("BeadCircumferenceMin",                60).toDouble();
-    mEyePropertiesParameters.aspectRatioMin                     = settings.value("BeadAspectRatioMin",                  0.4).toDouble();
-    mEyePropertiesParameters.pupilOffset                        = settings.value("BeadPupilOffset",                     25).toInt();
-    mEyePropertiesParameters.circumferenceChangeThreshold       = settings.value("BeadCircumferenceChangeThreshold",    30.0).toDouble();
-    mEyePropertiesParameters.aspectRatioChangeThreshold         = settings.value("BeadAspectRatioChangeThreshold",      0.2).toDouble();
+    detectionParameters mDetectionParametersBead;
 
-    mParameterWidgetBead->setStructure(mEyePropertiesParameters);
+    mDetectionParametersBead.alphaAverage                       = settings.value("BeadAlphaAverage",                    0.005).toDouble();
+    mDetectionParametersBead.alphaMiscellaneous                 = settings.value("BeadAlphaMiscellaneous",              0.75).toDouble();
+    mDetectionParametersBead.alphaMomentum                      = settings.value("BeadAlphaMomentum",                   0.50).toDouble();
+    mDetectionParametersBead.alphaPrediction                    = settings.value("BeadAlphaPrediction",                 0.75).toDouble();
+    mDetectionParametersBead.cannyBlurLevel                     = settings.value("BeadCannyBlurLevel",                  4).toInt();
+    mDetectionParametersBead.cannyKernelSize                    = settings.value("BeadCannyKernelSize",                 5).toInt();
+    mDetectionParametersBead.cannyThresholdLow                  = settings.value("BeadCannyThresholdLow",               75).toInt();
+    mDetectionParametersBead.cannyThresholdHigh                 = settings.value("BeadCannyThresholdHigh",              150).toInt();
+    mDetectionParametersBead.curvatureFactor                    = settings.value("BeadCurvatureFactor",                 1.05).toDouble();
+    mDetectionParametersBead.curvatureOffsetMin                 = settings.value("BeadCurvatureOffset",                 5).toDouble();
+    mDetectionParametersBead.edgeIntensityOffset                = settings.value("BeadEdgeIntensityOffset",             40).toDouble();
+    mDetectionParametersBead.edgeLengthMinimum                  = settings.value("BeadEdgeLengthMinimum",               0.60).toDouble();
+    mDetectionParametersBead.ellipseFitNumberMaximum            = settings.value("BeadEllipseFitNumberMaximum",         3).toInt();
+    mDetectionParametersBead.ellipseFitErrorMaximum             = settings.value("BeadEllipseFitErrorMaximum",          80).toDouble();
+    mDetectionParametersBead.glintSize                          = settings.value("BeadGlintSize",                       12).toInt();
+    mDetectionParametersBead.circumferenceMax                   = settings.value("BeadCircumferenceMax",                320).toDouble();
+    mDetectionParametersBead.circumferenceMin                   = settings.value("BeadCircumferenceMin",                60).toDouble();
+    mDetectionParametersBead.aspectRatioMin                     = settings.value("BeadAspectRatioMin",                  0.4).toDouble();
+    mDetectionParametersBead.pupilOffset                        = settings.value("BeadPupilOffset",                     25).toInt();
+    mDetectionParametersBead.circumferenceChangeThreshold       = settings.value("BeadCircumferenceChangeThreshold",    30.0).toDouble();
+    mDetectionParametersBead.aspectRatioChangeThreshold         = settings.value("BeadAspectRatioChangeThreshold",      0.2).toDouble();
 
+    mParameterWidgetBead ->setStructure(mDetectionParametersBead);
+    mVariableWidgetBead->resetStructure(mDetectionParametersBead);
 }
 
 void MainWindow::saveSettings(QString filename)
 {
-    eyePropertiesParameters mEyePropertiesParameters = mParameterWidgetEye->getStructure();
+    detectionParameters mDetectionParametersEye = mParameterWidgetEye->getStructure();
 
     QSettings settings(filename, QSettings::IniFormat);
 
@@ -134,26 +137,26 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
     settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text().toInt());
 
-    settings.setValue("AlphaAverage",                   mEyePropertiesParameters.alphaAverage);
-    settings.setValue("AlphaMiscellaneous",             mEyePropertiesParameters.alphaMiscellaneous);
-    settings.setValue("AlphaMomentum",                  mEyePropertiesParameters.alphaMomentum);
-    settings.setValue("AlphaPrediction",                mEyePropertiesParameters.alphaPrediction);
-    settings.setValue("CannyBlurLevel",                 mEyePropertiesParameters.cannyBlurLevel);
-    settings.setValue("CannyKernelSize",                mEyePropertiesParameters.cannyKernelSize);
-    settings.setValue("CannyThresholdLow",              mEyePropertiesParameters.cannyThresholdLow);
-    settings.setValue("CannyThresholdHigh",             mEyePropertiesParameters.cannyThresholdHigh);
-    settings.setValue("CircumferenceMax",               mEyePropertiesParameters.circumferenceMax);
-    settings.setValue("CircumferenceMin",               mEyePropertiesParameters.circumferenceMin);
-    settings.setValue("CurvatureFactor",                mEyePropertiesParameters.curvatureFactor);
-    settings.setValue("CurvatureOffset",                mEyePropertiesParameters.curvatureOffsetMin);
-    settings.setValue("EdgeIntensityOffset",            mEyePropertiesParameters.edgeIntensityOffset);
-    settings.setValue("EllipseFitNumberMaximum",        mEyePropertiesParameters.ellipseFitNumberMaximum);
-    settings.setValue("EllipseFitErrorMaximum",         mEyePropertiesParameters.ellipseFitErrorMaximum);
-    settings.setValue("AspectRatioMin",                 mEyePropertiesParameters.aspectRatioMin);
-    settings.setValue("GlintSize",                      mEyePropertiesParameters.glintSize);
-    settings.setValue("PupilOffset",                    mEyePropertiesParameters.pupilOffset);
-    settings.setValue("CircumferenceChangeThreshold",   mEyePropertiesParameters.circumferenceChangeThreshold);
-    settings.setValue("AspectRatioChangeThreshold",     mEyePropertiesParameters.aspectRatioChangeThreshold);
+    settings.setValue("AlphaAverage",                   mDetectionParametersEye.alphaAverage);
+    settings.setValue("AlphaMiscellaneous",             mDetectionParametersEye.alphaMiscellaneous);
+    settings.setValue("AlphaMomentum",                  mDetectionParametersEye.alphaMomentum);
+    settings.setValue("AlphaPrediction",                mDetectionParametersEye.alphaPrediction);
+    settings.setValue("CannyBlurLevel",                 mDetectionParametersEye.cannyBlurLevel);
+    settings.setValue("CannyKernelSize",                mDetectionParametersEye.cannyKernelSize);
+    settings.setValue("CannyThresholdLow",              mDetectionParametersEye.cannyThresholdLow);
+    settings.setValue("CannyThresholdHigh",             mDetectionParametersEye.cannyThresholdHigh);
+    settings.setValue("CircumferenceMax",               mDetectionParametersEye.circumferenceMax);
+    settings.setValue("CircumferenceMin",               mDetectionParametersEye.circumferenceMin);
+    settings.setValue("CurvatureFactor",                mDetectionParametersEye.curvatureFactor);
+    settings.setValue("CurvatureOffset",                mDetectionParametersEye.curvatureOffsetMin);
+    settings.setValue("EdgeIntensityOffset",            mDetectionParametersEye.edgeIntensityOffset);
+    settings.setValue("EllipseFitNumberMaximum",        mDetectionParametersEye.ellipseFitNumberMaximum);
+    settings.setValue("EllipseFitErrorMaximum",         mDetectionParametersEye.ellipseFitErrorMaximum);
+    settings.setValue("AspectRatioMin",                 mDetectionParametersEye.aspectRatioMin);
+    settings.setValue("GlintSize",                      mDetectionParametersEye.glintSize);
+    settings.setValue("PupilOffset",                    mDetectionParametersEye.pupilOffset);
+    settings.setValue("CircumferenceChangeThreshold",   mDetectionParametersEye.circumferenceChangeThreshold);
+    settings.setValue("AspectRatioChangeThreshold",     mDetectionParametersEye.aspectRatioChangeThreshold);
 
 }
 
@@ -165,15 +168,31 @@ void MainWindow::resetParameters()
 
     if(mConfirmationWindow.exec() == QDialog::Rejected) { return; }
 
-    QString fileName = "";
-    loadSettings(fileName);
+    QString filename = "";
+    loadSettings(filename);
     mParameterWidgetEye->reset();
-    resetVariables();
+    mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure());
 }
 
 void MainWindow::startRecordingManual()
 {
     if (!FLASH_STANDBY) { startTrialRecording(); }
+}
+
+void MainWindow::setBeadDetection(int state)
+{
+    if (state)
+    {
+        MainTabWidget->setUpdatesEnabled(false);
+        MainTabWidget->insertTab(3, BeadTrackingScrollArea, tr("Bead-tracking"));
+        MainTabWidget->setUpdatesEnabled(true);
+        mParameterWidgetBead->setState(true);
+    }
+    else
+    {
+        MainTabWidget->removeTab(3);
+        mParameterWidgetBead->setState(false);
+    }
 }
 
 void MainWindow::setRealTimeEyeTracking(int state)
@@ -247,32 +266,6 @@ void MainWindow::resetFlashMinIntensity()
     FlashThresholdSlider->setValue(0);
 }
 
-void MainWindow::setPupilCircumference(double value)
-{
-    if (!Parameters::ONLINE_PROCESSING)
-    {
-        mEyePropertiesVariables.circumferencePrediction = value;
-        PupilCircumferenceLabel->setText(QString::number(value, 'f', 1));
-    }
-}
-
-void MainWindow::setPupilAspectRatio(double value)
-{
-    if (!Parameters::ONLINE_PROCESSING)
-    {
-        mEyePropertiesVariables.aspectRatioPrediction = value;
-        PupilAspectRatioLabel->setText(QString::number(value, 'f', 2));
-    }
-}
-
-void MainWindow::setEdgeIntensity(double value)
-{
-    if (!Parameters::ONLINE_PROCESSING)
-    {
-        mEyePropertiesVariables.edgeIntensityPrediction = value;
-        EdgeIntensityLabel->setText(QString::number(value, 'f', 1));
-    }
-}
 
 void MainWindow::setCameraPixelClock(int value)
 {
@@ -433,9 +426,7 @@ void MainWindow::updateEyeAOIx()
     Parameters::eyeAOIXPos = round(Parameters::cameraAOIWdth * Parameters::eyeAOIXPosFraction);
 
     if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth > Parameters::cameraAOIWdth)
-    {
-        Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth;
-    }
+    {   Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth; }
 }
 
 void MainWindow::updateEyeAOIy()
@@ -446,9 +437,7 @@ void MainWindow::updateEyeAOIy()
     Parameters::eyeAOIYPos = round(Parameters::cameraAOIHght * Parameters::eyeAOIYPosFraction);
 
     if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght > Parameters::cameraAOIHght)
-    {
-        Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght;
-    }
+    {   Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght; }
 }
 
 void MainWindow::setCamEyeAOIWdth(double fraction)
@@ -538,9 +527,7 @@ void MainWindow::setEyeROIWdth(double fraction)
     Parameters::eyeAOIWdth = round(Parameters::cameraAOIWdth * eyeAOIWdthFraction);
 
     if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth > Parameters::cameraAOIWdth)
-    {
-        Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth;
-    }
+    {   Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth; }
 }
 
 void MainWindow::setEyeROIHght(double fraction)
@@ -552,9 +539,7 @@ void MainWindow::setEyeROIHght(double fraction)
     Parameters::eyeAOIHght = round(Parameters::cameraAOIHght * eyeAOIHghtFraction);
 
     if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght > Parameters::cameraAOIHght)
-    {
-        Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght;
-    }
+    {   Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght; }
 }
 
 void MainWindow::setFlashAOIXPos(int val)
@@ -602,38 +587,20 @@ void MainWindow::setTrialIndex(int val)
 
 void MainWindow::setSaveDataAspectRatio(int state)
 {
-    if (state)
-    {
-        SAVE_ASPECT_RATIO = true;
-    }
-    else
-    {
-        SAVE_ASPECT_RATIO = false;
-    }
+    if (state) { SAVE_ASPECT_RATIO = true;  }
+    else       { SAVE_ASPECT_RATIO = false; }
 }
 
 void MainWindow::setSaveDataCircumference(int state)
 {
-    if (state)
-    {
-        SAVE_CIRCUMFERENCE = true;
-    }
-    else
-    {
-        SAVE_CIRCUMFERENCE = false;
-    }
+    if (state) { SAVE_CIRCUMFERENCE = true;  }
+    else       { SAVE_CIRCUMFERENCE = false; }
 }
 
 void MainWindow::setSaveDataPosition(int state)
 {
-    if (state)
-    {
-        SAVE_POSITION = true;
-    }
-    else
-    {
-        SAVE_POSITION = false;
-    }
+    if (state) { SAVE_POSITION = true;  }
+    else       { SAVE_POSITION = false; }
 }
 
 void MainWindow::setAOILeftEye()

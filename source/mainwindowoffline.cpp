@@ -44,9 +44,9 @@ void MainWindow::startOfflineSession()
     EyeQImage->clearImage();
 
     // hide tab with camera parameters
-    EyeTrackingParameterTabWidget->removeTab(0);
+    MainTabWidget->removeTab(0);
 
-    updateOfflineImages(0);
+    updateOfflineImage(0);
     setupOfflineSession();
 }
 
@@ -109,8 +109,8 @@ void MainWindow::setupOfflineSession()
 
         if (trialTotalOffline > 0)
         {
-            updateOfflineSession();
-            updateOfflineImages(0);
+            updateOfflineTrial();
+            updateOfflineImage(0);
 
             std::stringstream directoryName;
             directoryName << dataDirectoryOffline.toStdString()
@@ -153,21 +153,25 @@ void MainWindow::setupOfflineSession()
 void MainWindow::changeOfflineSession(int index)
 {
     trialIndexOffline = index;
-    updateOfflineSession();
-    updateOfflineImages(0);
+    updateOfflineTrial();
+    updateOfflineImage(0);
 }
 
-void MainWindow::updateOfflineSession()
+void MainWindow::updateOfflineTrial()
 {
     countNumImages();
 
     if (imageTotalOffline > 0)
     {
-        vEyePropertiesMiscellaneous.resize(imageTotalOffline);
-        vEyePropertiesVariables.resize(imageTotalOffline + 1);
+        vDetectionMiscellaneousEye.resize(imageTotalOffline);
+        vDetectionVariablesEye.resize(imageTotalOffline + 1);
+        vDetectionVariablesBead.resize(imageTotalOffline + 1);
 
-        resetVariables();
-        vEyePropertiesVariables[0] = mEyePropertiesVariables;
+        mVariableWidgetEye ->resetStructure(mParameterWidgetEye ->getStructure());
+        mVariableWidgetBead->resetStructure(mParameterWidgetBead->getStructure());
+
+        vDetectionVariablesEye[0]  = mVariableWidgetEye ->getStructure();
+        vDetectionVariablesBead[0] = mVariableWidgetBead->getStructure();
 
         imageIndexOffline = 0;
         OfflineImageSlider->setValue(imageIndexOffline);
@@ -175,20 +179,18 @@ void MainWindow::updateOfflineSession()
 
         // Create folder
 
-        std::stringstream directoryName;
-        directoryName << dataDirectoryOffline.toStdString()
+        std::stringstream directoryPath;
+        directoryPath << dataDirectoryOffline.toStdString()
                       << "/trial_"
                       << trialIndexOffline
                       << "/processed/";
 
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
+        if (!boost::filesystem::exists(directoryPath.str()))
+        {    boost::filesystem::create_directory(directoryPath.str().c_str()); }
     }
 }
 
-void MainWindow::updateOfflineImages(int imgIndex)
+void MainWindow::updateOfflineImage(int imgIndex)
 {
     if (imageTotalOffline > 0)
     {
@@ -255,17 +257,17 @@ void MainWindow::updateOfflineImages(int imgIndex)
 
 void MainWindow::updateRawImage() // for signal from qimageopencv
 {
-    std::stringstream fileNameRaw;
-    fileNameRaw << dataDirectoryOffline.toStdString()
+    std::stringstream imagePath;
+    imagePath << dataDirectoryOffline.toStdString()
                 << "/trial_"
                 << trialIndexOffline
                 << "/raw/"
                 << imageIndexOffline
                 << ".png";
 
-    if (boost::filesystem::exists(fileNameRaw.str()))
+    if (boost::filesystem::exists(imagePath.str()))
     {
-        cv::Mat rawEyeImage = cv::imread(fileNameRaw.str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat rawEyeImage = cv::imread(imagePath.str(), CV_LOAD_IMAGE_COLOR);
         CamQImage->loadImage(rawEyeImage);
         CamQImage->setEyeAOI(Parameters::eyeAOIXPos, Parameters::eyeAOIYPos, Parameters::eyeAOIWdth, Parameters::eyeAOIHght);
         CamQImage->setImage();
@@ -290,15 +292,13 @@ void MainWindow::nextOfflineImage()
     }
 }
 
-void MainWindow::setOfflineImageFrame(int imageIndex)
+void MainWindow::setOfflineImage(int imageIndex)
 {
-    if (!PROCESSING_ALL_IMAGES)
-    {
-        imageIndexOffline = imageIndex;
-        mEyePropertiesVariables = vEyePropertiesVariables[imageIndexOffline];
-        setVariableWidgets(mEyePropertiesVariables);
-        updateOfflineImages(imageIndexOffline);
-    }
+    if (!PROCESSING_ALL_IMAGES) { imageIndexOffline = imageIndex; }
+
+    mVariableWidgetEye ->setWidgets(vDetectionVariablesEye [imageIndexOffline]);
+    mVariableWidgetBead->setWidgets(vDetectionVariablesBead[imageIndexOffline]);
+    updateOfflineImage(imageIndexOffline);
 }
 
 void MainWindow::offlinePupilDetectionOneFrame()
@@ -307,21 +307,22 @@ void MainWindow::offlinePupilDetectionOneFrame()
 
     cv::Mat eyeImageRaw;
 
-    std::stringstream fileNameRaw;
-    fileNameRaw << dataDirectoryOffline.toStdString()
+    std::stringstream imagePathRaw;
+    imagePathRaw << dataDirectoryOffline.toStdString()
                 << "/trial_"
                 << trialIndexOffline
                 << "/raw/"
                 << imageIndexOffline
                 << ".png";
 
-    if (boost::filesystem::exists(fileNameRaw.str())) { eyeImageRaw = cv::imread(fileNameRaw.str(), CV_LOAD_IMAGE_COLOR); }
-    else                                              { return; }
+    if (boost::filesystem::exists(imagePathRaw.str())) { eyeImageRaw = cv::imread(imagePathRaw.str(), CV_LOAD_IMAGE_COLOR); }
+    else                                               { return; }
+
 
     // Detect pupil
 
-    eyeProperties  mEyePropertiesTemp;
-    eyeProperties mBeadPropertiesTemp;
+    detectionProperties mDetectionPropertiesEye;
+    detectionProperties mDetectionPropertiesBead;
 
     int eyeAOIXPosTemp;
     int eyeAOIYPosTemp;
@@ -331,11 +332,11 @@ void MainWindow::offlinePupilDetectionOneFrame()
     { // Mutex lock
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
-        mEyePropertiesTemp.v = mEyePropertiesVariables;
-        mEyePropertiesTemp.p = mParameterWidgetEye->getStructure();
+        mDetectionPropertiesEye.v = vDetectionVariablesEye[imageIndexOffline];
+        mDetectionPropertiesEye.p = mParameterWidgetEye->getStructure();
 
-        mBeadPropertiesTemp.v = mBeadPropertiesVariables;
-        mBeadPropertiesTemp.p = mParameterWidgetBead->getStructure();
+        mDetectionPropertiesBead.v = vDetectionVariablesBead[imageIndexOffline];
+        mDetectionPropertiesBead.p = mParameterWidgetBead->getStructure();
 
         eyeAOIXPosTemp = Parameters::eyeAOIXPos;
         eyeAOIYPosTemp = Parameters::eyeAOIYPos;
@@ -346,60 +347,67 @@ void MainWindow::offlinePupilDetectionOneFrame()
     cv::Rect eyeRegion(eyeAOIXPosTemp, eyeAOIYPosTemp, eyeAOIWdthTemp, eyeAOIHghtTemp);
     cv::Mat eyeImageCropped = eyeImageRaw(eyeRegion);
 
-    eyeProperties mEyePropertiesNew;
-    eyeProperties mBeadPropertiesNew;
+    detectionProperties mDetectionPropertiesNewEye;
+    detectionProperties mDetectionPropertiesNewBead;
 
-    if (DETECT_BEAD)
+    if (mParameterWidgetBead->getState())
     {
-        mBeadPropertiesNew = pupilDetection(eyeImageCropped, mEyePropertiesTemp, mBeadPropertiesTemp);
-        mEyePropertiesNew  = pupilDetection(eyeImageCropped, mEyePropertiesTemp, mBeadPropertiesNew);
+        mDetectionPropertiesNewBead = pupilDetection(eyeImageCropped, mDetectionPropertiesBead);
+        mDetectionPropertiesNewEye  = pupilDetection(eyeImageCropped, mDetectionPropertiesEye, mDetectionPropertiesNewBead);
     }
     else
     {
-        mEyePropertiesNew  = pupilDetection(eyeImageCropped, mEyePropertiesTemp);
+        mDetectionPropertiesNewEye  = pupilDetection(eyeImageCropped, mDetectionPropertiesEye);
     }
+
     // Save processed images
 
-    cv::Mat imageEye = mEyePropertiesNew.m.image.clone();
-    drawAll(imageEye, mEyePropertiesNew);
+    cv::Mat imageEye = mDetectionPropertiesNewEye.m.image.clone();
+    drawAll(imageEye, mDetectionPropertiesNewEye);
 
-    std::stringstream filename;
-    filename << dataDirectoryOffline.toStdString()
+    if (mParameterWidgetBead->getState()) { drawAll(imageEye, mDetectionPropertiesNewBead); }
+
+    std::stringstream imagePath;
+    imagePath << dataDirectoryOffline.toStdString()
              << "/trial_"
              << trialIndexOffline
              << "/processed/"
              << imageIndexOffline
              << ".png";
 
-    cv::imwrite(filename.str(), imageEye);
+    cv::imwrite(imagePath.str(), imageEye);
 
     // Get pupil coords in screen coords
 
-    mEyePropertiesNew.v.xPosAbsolute = mEyePropertiesNew.v.xPosExact + eyeAOIXPosTemp;
-    mEyePropertiesNew.v.yPosAbsolute = mEyePropertiesNew.v.yPosExact + eyeAOIYPosTemp;
+    mDetectionPropertiesNewEye.v.xPosAbsolute = mDetectionPropertiesNewEye.v.xPosExact + eyeAOIXPosTemp;
+    mDetectionPropertiesNewEye.v.yPosAbsolute = mDetectionPropertiesNewEye.v.yPosExact + eyeAOIYPosTemp;
 
     // Record pupil positions
 
     { // Mutex lock
         std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-        vEyePropertiesVariables[imageIndexOffline + 1] = mEyePropertiesNew.v;
-        vEyePropertiesMiscellaneous[imageIndexOffline] = mEyePropertiesNew.m;
-        mEyePropertiesMiscellaneous = mEyePropertiesNew.m;
+        vDetectionVariablesEye[imageIndexOffline + 1] = mDetectionPropertiesNewEye.v;
+        vDetectionMiscellaneousEye[imageIndexOffline] = mDetectionPropertiesNewEye.m;
+
+        if (mParameterWidgetBead->getState())
+        {
+            vDetectionVariablesBead[imageIndexOffline + 1] = mDetectionPropertiesNewBead.v;
+        }
     }
 }
 
 void MainWindow::detectPupilOneFrame()
 {
     offlinePupilDetectionOneFrame();
-    updateOfflineImages(imageIndexOffline);
+    updateOfflineImage(imageIndexOffline);
 }
 
 void MainWindow::detectPupilAllFrames()
 {
     if (!PROCESSING_ALL_IMAGES)
     {
-        PROCESSING_ALL_IMAGES   = true;
-        OFFLINE_SAVE_DATA       = false;
+        PROCESSING_ALL_IMAGES = true;
+        OFFLINE_SAVE_DATA     = false;
 
         std::thread pupilDetectionThread(&MainWindow::offlinePupilDetectionAllFrames, this);
         pupilDetectionThread.detach();
@@ -411,8 +419,7 @@ void MainWindow::detectPupilAllFrames()
             QString title = QString::fromStdString(ss.str());
             OfflineImageFrameTextBox->setText(title);
 
-            OfflineImageSlider->setValue(imageIndexOffline); // Show progress
-            updateOfflineImages(imageIndexOffline - 1);
+            OfflineImageSlider->setValue(imageIndexOffline - 1); // Show progress
 
             msWait(1000 / guiUpdateFrequency);
         }
@@ -435,7 +442,6 @@ void MainWindow::offlinePupilDetectionAllFrames()
 
     for (imageIndexOffline = initialIndex; imageIndexOffline < imageTotalOffline && PROCESSING_ALL_IMAGES; imageIndexOffline++)
     {
-        mEyePropertiesVariables = vEyePropertiesVariables[imageIndexOffline];
         offlinePupilDetectionOneFrame();
     }
 
@@ -509,7 +515,7 @@ void MainWindow::offlineSaveExperimentData()
 
         // write data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].pupilDetected << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].pupilDetected << delimiter; }
 
         if (timeMatrix.size() > 0)
         {
@@ -518,22 +524,22 @@ void MainWindow::offlineSaveExperimentData()
 
         if (SAVE_POSITION)
         {
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].xPosAbsolute  << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].yPosAbsolute  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].xPosAbsolute  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].yPosAbsolute  << delimiter; }
         }
 
         if (SAVE_CIRCUMFERENCE)
         {
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].circumferenceExact << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].circumferenceExact << delimiter; }
         }
 
         if (SAVE_ASPECT_RATIO)
         {
-            for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i + 1].aspectRatioExact << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].aspectRatioExact << delimiter; }
         }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeCurvaturePrediction << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vEyePropertiesVariables[i].edgeIntensityPrediction << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].edgeCurvaturePrediction << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].edgeIntensityPrediction << delimiter; }
 
         file.close();
     }
@@ -551,16 +557,16 @@ void MainWindow::offlineSaveExperimentData()
 
         for (int i = 0; i < imageTotalOffline; i++)
         {
-            int numEdges = vEyePropertiesMiscellaneous[i].edgePropertiesAll.size();
+            int numEdges = vDetectionMiscellaneousEye[i].edgePropertiesAll.size();
 
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].flag         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMax << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureMin << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].length       << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].size         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].distance     << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vEyePropertiesMiscellaneous[i].edgePropertiesAll[j].intensity    << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].flag         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureMax << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureMin << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].length       << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].size         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].distance     << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].intensity    << delimiter; }
             file << "\n";
         }
 
@@ -582,7 +588,7 @@ void MainWindow::offlineSaveExperimentData()
 
         for (int i = 0; i < imageTotalOffline; i++)
         {
-            if (vEyePropertiesVariables[i + 1].pupilDetected)
+            if (vDetectionVariablesEye[i + 1].pupilDetected)
             {
                 std::stringstream filename;
                 filename << dataDirectoryOffline.toStdString()
@@ -596,7 +602,7 @@ void MainWindow::offlineSaveExperimentData()
                 compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
                 compression_params.push_back(0);
 
-                cv::imwrite(filename.str(), vEyePropertiesMiscellaneous[i].imagePupil, compression_params);
+                cv::imwrite(filename.str(), vDetectionMiscellaneousEye[i].imagePupil, compression_params);
             }
         }
     }
@@ -646,25 +652,4 @@ void MainWindow::offlineCombineExperimentData()
     }
 }
 
-void MainWindow::setPupilPosition(double xPos, double yPos)
-{
-    std::lock_guard<std::mutex> secondaryMutexLock(Parameters::secondaryMutex);
 
-    if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
-    {
-        eyePropertiesParameters mEyePropertiesParameters = mParameterWidgetEye->getStructure();
-
-        int pupilHaarWdth       = round(mEyePropertiesVariables.circumferencePrediction / M_PI);
-        int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mEyePropertiesParameters.pupilOffset * 2);
-
-        mEyePropertiesVariables.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);
-        mEyePropertiesVariables.xPosPredicted = xPos;
-        mEyePropertiesVariables.yPosPredicted = yPos;
-
-        if (imageIndexOffline == 0)
-        {
-            mEyePropertiesVariables.xPosExact = xPos;
-            mEyePropertiesVariables.yPosExact = yPos;
-        }
-    }
-}

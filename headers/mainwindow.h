@@ -32,6 +32,7 @@
 #include "headers/structures.h"
 #include "headers/qimageopencv.h"
 #include "headers/ueyeopencv.h"
+#include "headers/variablewidget.h"
 
 // Standard Template
 
@@ -146,11 +147,10 @@ private:
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime;       // in ms
     std::vector<std::vector<double>> timeMatrix;
-    eyePropertiesMiscellaneous mEyePropertiesMiscellaneous;
-    eyePropertiesVariables     mEyePropertiesVariables;
-    eyePropertiesMiscellaneous mBeadPropertiesMiscellaneous;
-    eyePropertiesParameters    mBeadPropertiesParameters;
-    eyePropertiesVariables     mBeadPropertiesVariables;
+    detectionMiscellaneous mDetectionMiscellaneousEye;
+    detectionMiscellaneous mDetectionMiscellaneousBead;
+    detectionVariables mDetectionVariablesEye;
+    detectionVariables mDetectionVariablesBead;
     int cameraAOIHghtMax;
     int cameraAOIHghtMin;
     int cameraAOIHghtStepSize;
@@ -179,6 +179,8 @@ private:
     int trialTimeLength;
     ParameterWidget *mParameterWidgetBead;
     ParameterWidget *mParameterWidgetEye;
+    VariableWidget *mVariableWidgetEye;
+    VariableWidget *mVariableWidgetBead;
     QCheckBox *CameraHardwareGainAutoCheckBox;
     QImageOpenCV *CamQImage;
     QImageOpenCV *EyeQImage;
@@ -189,15 +191,13 @@ private:
     QLabel *CameraPixelClockLabel;
     QLabel *DataAnalysisTitleTextBox;
     QLabel *DataDirectoryTextBox;
-    QLabel *EdgeIntensityLabel;
     QLabel *FlashStandbyLabel;
     QLabel *FlashThresholdLabel;
-    QLabel *PupilCircumferenceLabel;
-    QLabel *PupilAspectRatioLabel;
     QLabel *OfflineImageFrameTextBox;
     QLineEdit *DataFilenameLineEdit;
     QLineEdit *NameInputLineEdit;
     QLineEdit *TrialTimeLengthLineEdit;
+    QScrollArea *BeadTrackingScrollArea;
     QSlider *CameraBlackLevelOffsetSlider;
     QSlider *CameraHardwareGainSlider;
     QSlider *CameraPixelClockSlider;
@@ -213,28 +213,19 @@ private:
     QString editSubjectName;
     QString subjectIdentifier;
     QString LastUsedSettingsFileName;
-    QTabWidget *EyeTrackingParameterTabWidget;
+    QTabWidget *MainTabWidget;
     QTimer *UpdateCameraImageTimer;
     QWidget *CameraParametersWidget;
     QWidget *OfflineModeMainWidget;
     QWidget *OfflineModeHeaderWidget;
-
     SliderDouble *CameraExposureSlider;
     SliderDouble *CameraFrameRateSlider;
     SliderDouble *CamEyeAOIHghtSlider;
     SliderDouble *CamEyeAOIWdthSlider;
     SliderDouble *CamEyeAOIXPosSlider;
     SliderDouble *CamEyeAOIYPosSlider;
-
-    SliderDouble *EdgeIntensitySlider;
-
     SliderDouble *EyeHghtROISlider;
     SliderDouble *EyeWdthROISlider;
-    SliderDouble *PupilCircumferenceSlider;
-
-
-    SliderDouble *PupilAspectRatioSlider;
-
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
     std::condition_variable cvOffline;
@@ -244,8 +235,9 @@ private:
     std::string dataDirectory;
     std::string dataFilename;
     std::vector<double> timeStamps;
-    std::vector<eyePropertiesMiscellaneous> vEyePropertiesMiscellaneous;
-    std::vector<eyePropertiesVariables> vEyePropertiesVariables;
+    std::vector<detectionMiscellaneous> vDetectionMiscellaneousEye;
+    std::vector<detectionVariables> vDetectionVariablesBead;
+    std::vector<detectionVariables> vDetectionVariablesEye;
     UEyeOpencvCam mUEyeOpencvCam;
     unsigned long long absoluteTime; // in units of 0.1 microseconds
     unsigned long long startTime;
@@ -263,15 +255,15 @@ private:
     void saveTrialData();
     void setFlashStandby(bool);
     void setParameterWidgets();
-    void setVariableWidgets(const eyePropertiesVariables &mEyePropertiesVariables);
+    void setVariableWidgets(const detectionVariables &mDetectionVariablesEye);
     void setupOfflineSession();
     void startTrialRecording();
     void updateCamAOIx();
     void updateCamAOIy();
     void updateEyeAOIx();
     void updateEyeAOIy();
-    void updateOfflineImages(int);
-    void updateOfflineSession();
+    void updateOfflineImage(int);
+    void updateOfflineTrial();
     void writeToFile(std::ofstream& file, const std::vector<bool>&, const std::vector<double>&, std::string);
 
 protected:
@@ -303,6 +295,7 @@ private slots:
     void resetFlashMinIntensity();
     void offlineSaveExperimentData();
     void offlineCombineExperimentData();
+    void setBeadDetection(int state);
     void setCameraAutoGain(int state);
     void setCameraBlackLevelMode(int state);
     void setCameraBlackLevelOffset(int value);
@@ -319,7 +312,6 @@ private slots:
     void setDrawEdge(int state);
     void setDrawElps(int state);
     void setDrawHaar(int state);
-    void setEdgeIntensity(double);
     void setEyeROIHght(double);
     void setEyeROIWdth(double);
     void setFlashAOIXPos(int);
@@ -328,15 +320,13 @@ private slots:
     void setFlashAOIHght(int);
     void setFlashThreshold(int);
     void setAOILeftEye();
-    void setPupilCircumference(double);
-    void setPupilAspectRatio(double);
     void setPupilPosition(double, double);
     void setSaveDataAspectRatio(int);
     void setSaveDataCircumference(int);
     void setSaveDataPosition(int);
     void setRealTimeEyeTracking(int state);
     void setOfflineMode(int state);
-    void setOfflineImageFrame(int);
+    void setOfflineImage(int);
     void setAOIRghtEye();
     void setTrialIndex(int);
     void startOfflineSession();

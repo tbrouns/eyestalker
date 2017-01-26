@@ -83,19 +83,11 @@ bool UEyeOpencvCam::findCamera()
 
 int UEyeOpencvCam::initCamera()
 {
-    if (DEVICE_INITIALIZED)
-    {
-        return 2;
-    }
+    if (DEVICE_INITIALIZED) { return 2; }
     else
     {
         int retInt = is_InitCamera(&hCam, 0);
-
-        if (retInt != IS_SUCCESS)
-        {
-            std::cout << "Failed to initialize camera" << std::endl;
-            return 0;
-        }
+        if (retInt != IS_SUCCESS) { return 0; }
     }
 
     DEVICE_INITIALIZED = true;
@@ -108,37 +100,22 @@ bool UEyeOpencvCam::setSubSampling(int subSamplingFactor)
 
     if (subSamplingFactor == 2)
     {
-        if (is_SetSubSampling(hCam, IS_SUBSAMPLING_2X_VERTICAL | IS_SUBSAMPLING_2X_HORIZONTAL) != IS_SUCCESS)
-        {
-            std::cout << "Failed to set subsampling" << std::endl;
-            return false;
-        }
+        if (is_SetSubSampling(hCam, IS_SUBSAMPLING_2X_VERTICAL | IS_SUBSAMPLING_2X_HORIZONTAL) != IS_SUCCESS) { return false; }
     }
     else if (subSamplingFactor == 1)
     {
-        if (is_SetSubSampling(hCam, IS_SUBSAMPLING_DISABLE) != IS_SUCCESS)
-        {
-            std::cout << "Failed to set subsampling" << std::endl;
-            return false;
-        }
+        if (is_SetSubSampling(hCam, IS_SUBSAMPLING_DISABLE) != IS_SUCCESS) { return false; }
     }
-    else
-    {
-        return false;
-    }
+    else { return false; }
 
-    return true;
+    return true; // SUCCESS
 }
 
 bool UEyeOpencvCam::freeImageMemory()
 {
     std::lock_guard<std::mutex> lock(Parameters::frameCaptureMutex);
 
-    if (is_FreeImageMem(hCam, ppcImgMem, pid) != IS_SUCCESS)
-    {
-        std::cout << "Failed to free image memory" << std::endl;
-        return false;
-    }
+    if (is_FreeImageMem(hCam, ppcImgMem, pid) != IS_SUCCESS) { return false; }
     else
     {
         vImageInfo.clear();
@@ -165,7 +142,6 @@ bool UEyeOpencvCam::setAOI(int xAOI, int yAOI, int wAOI, int hAOI)
 
     if (retInt != IS_SUCCESS)
     {
-        std::cout << "Failed to set AOI" << std::endl;
         return false;
     }
 
@@ -176,22 +152,13 @@ bool UEyeOpencvCam::allocateMemory(int wdth, int hght)
 {
     std::lock_guard<std::mutex> lock(Parameters::frameCaptureMutex);
 
-    width = wdth;
+    width  = wdth;
     height = hght;
 
     // Allocate and set memory
 
-    if (is_AllocImageMem(hCam, width, height, 24, &ppcImgMem, &pid) != IS_SUCCESS)
-    {
-        std::cout << "Failed memory allocation" << std::endl;
-        return false;
-    }
-
-    if (is_SetImageMem(hCam, ppcImgMem, pid) != IS_SUCCESS)
-    {
-        std::cout << "Failed to set image memory" << std::endl;
-        return false;
-    }
+    if (is_AllocImageMem(hCam, width, height, 24, &ppcImgMem, &pid) != IS_SUCCESS) { return false; }
+    if (is_SetImageMem(hCam, ppcImgMem, pid) != IS_SUCCESS) { return false; }
 
     return true;
 }
@@ -200,11 +167,7 @@ bool UEyeOpencvCam::setColorMode()
 {
     int retInt = is_SetColorMode(hCam, IS_CM_BGR8_PACKED);
 
-    if (retInt != IS_SUCCESS)
-    {
-        std::cout << "Failed set colour mode" << std::endl;
-        return false;
-    }
+    if (retInt != IS_SUCCESS) { return false; }
 
     return true;
 }
@@ -213,7 +176,6 @@ bool UEyeOpencvCam::startVideoCapture()
 {
     if (is_CaptureVideo(hCam, IS_DONT_WAIT) != IS_SUCCESS)
     {
-        std::cout << "Failed to start video capture" << std::endl;
         Parameters::CAMERA_RUNNING = false;
         return false;
     }
@@ -228,8 +190,8 @@ void UEyeOpencvCam::exitCamera()
 {
     is_StopLiveVideo(hCam, IS_FORCE_VIDEO_STOP);
 
-    EVENT_ENABLED = false;
     DEVICE_INITIALIZED = false;
+    EVENT_ENABLED      = false;
 
     std::unique_lock<std::mutex> lck(exitMutex);
     while (THREAD_ACTIVE) exitCV.wait(lck);
@@ -237,10 +199,7 @@ void UEyeOpencvCam::exitCamera()
     is_ExitCamera(hCam); // also releases image memory
 }
 
-UEyeOpencvCam::~UEyeOpencvCam()
-{
-
-}
+UEyeOpencvCam::~UEyeOpencvCam() {}
 
 void UEyeOpencvCam::threadFrameCapture()
 {
@@ -470,33 +429,16 @@ void UEyeOpencvCam::setAutoGain(bool FLAG)
 {
     double dEnable;
 
-    if (FLAG)
-    {
-        dEnable = 1;
-    }
-    else
-    {
-        dEnable = 0;
-    }
+    if (FLAG) { dEnable = 1; }
+    else      { dEnable = 0; }
 
-    int retInt = is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_GAIN, &dEnable, 0);
-
-    if (retInt != IS_SUCCESS)
-    {
-        std::cout << "Failed to set auto gain" << std::endl;
-    }
+    is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_GAIN, &dEnable, 0);
 }
 
 void UEyeOpencvCam::setGainBoost(bool FLAG)
 {
-    if (FLAG)
-    {
-        is_SetGainBoost (hCam, IS_SET_GAINBOOST_ON);
-    }
-    else
-    {
-        is_SetGainBoost (hCam, IS_SET_GAINBOOST_OFF);
-    }
+    if (FLAG) { is_SetGainBoost (hCam, IS_SET_GAINBOOST_ON);  }
+    else      { is_SetGainBoost (hCam, IS_SET_GAINBOOST_OFF); }
 }
 
 void UEyeOpencvCam::setHardwareGain(int nMaster)

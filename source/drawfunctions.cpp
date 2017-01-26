@@ -15,18 +15,26 @@
 
 #include "headers/drawfunctions.h"
 
-void drawHaarDetector(cv::Mat& I, int x0, int y0, int haarWidth, int haarHeight, cv::Vec3b col)
+void drawHaarDetector(cv::Mat& I, int x0, int y0, int haarWdth, int haarHght, cv::Vec3b col)
 {
-    for (int x = x0; x < x0 + haarWidth; x++) // left to right
+    int imgWdth = I.cols;
+    int imgHght = I.rows;
+
+    if (x0 < 0) { x0 = 0; }
+    if (y0 < 0) { y0 = 0; }
+    if (x0 + haarWdth >= imgWdth) { haarWdth = imgWdth - x0 - 1; }
+    if (y0 + haarHght >= imgHght) { haarHght = imgHght - y0 - 1; }
+
+    for (int x = x0; x < x0 + haarWdth; x++) // left to right
     {
-        I.at<cv::Vec3b>(y0,              x) = col; // top
-        I.at<cv::Vec3b>(y0 + haarHeight, x) = col; // bottom
+        I.at<cv::Vec3b>(y0,            x) = col; // top
+        I.at<cv::Vec3b>(y0 + haarHght, x) = col; // bottom
     }
 
-    for (int y = y0; y < y0 + haarHeight; y++) // top to bottom
+    for (int y = y0; y < y0 + haarHght; y++) // top to bottom
     {
         I.at<cv::Vec3b>(y, x0)             = col; // left
-        I.at<cv::Vec3b>(y, x0 + haarWidth) = col; // right
+        I.at<cv::Vec3b>(y, x0 + haarWdth) = col; // right
     }
 }
 
@@ -131,7 +139,7 @@ void drawEllipseCross(cv::Mat& I, double cx, double cy, int ellipseDrawCrossSize
     }
 }
 
-void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
+void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
 {
     cv::Vec3b blue  (255,   0,   0);
     cv::Vec3b green (  0, 255,   0);
@@ -144,27 +152,27 @@ void drawAll(cv::Mat &I, eyeProperties mEyeProperties)
     {
         if (Parameters::drawFlags.haar)
         {
-            drawHaarDetector(I, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, mEyeProperties.m.offsetPupilHaarHght, blue);
-            drawHaarDetector(I, mEyeProperties.m.pupilHaarXPos, mEyeProperties.m.pupilHaarYPos, mEyeProperties.m.pupilHaarWdth, mEyeProperties.m.pupilHaarHght, blue);
-            drawHaarDetector(I, mEyeProperties.m.glintXPos, mEyeProperties.m.glintYPos, mEyeProperties.m.glintSize, mEyeProperties.m.glintSize, blue);
+            drawHaarDetector(I, mDetectionProperties.m.offsetPupilHaarXPos, mDetectionProperties.m.offsetPupilHaarYPos, mDetectionProperties.m.offsetPupilHaarWdth, mDetectionProperties.m.offsetPupilHaarHght, blue);
+            drawHaarDetector(I, mDetectionProperties.m.pupilHaarXPos, mDetectionProperties.m.pupilHaarYPos, mDetectionProperties.m.pupilHaarWdth, mDetectionProperties.m.pupilHaarHght, blue);
+            drawHaarDetector(I, mDetectionProperties.m.glintXPos, mDetectionProperties.m.glintYPos, mDetectionProperties.m.glintSize, mDetectionProperties.m.glintSize, blue);
         }
 
         if (Parameters::drawFlags.edge)
         {
-            drawEdges(I, mEyeProperties.m.cannyEdgeIndices, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, red);
-            drawOutline(I, mEyeProperties.m.edgePropertiesAll, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, cyan, green, yellow);
+            drawEdges(I, mDetectionProperties.m.cannyEdgeIndices, mDetectionProperties.m.offsetPupilHaarXPos, mDetectionProperties.m.offsetPupilHaarYPos, mDetectionProperties.m.offsetPupilHaarWdth, red);
+            drawOutline(I, mDetectionProperties.m.edgePropertiesAll, mDetectionProperties.m.offsetPupilHaarXPos, mDetectionProperties.m.offsetPupilHaarYPos, mDetectionProperties.m.offsetPupilHaarWdth, cyan, green, yellow);
         }
 
         if (Parameters::drawFlags.elps)
         {
-            if (mEyeProperties.v.pupilDetected)
+            if (mDetectionProperties.v.pupilDetected)
             {
-                drawEllipse(I, mEyeProperties.m.ellipseCoefficients, mEyeProperties.m.offsetPupilHaarXPos, mEyeProperties.m.offsetPupilHaarYPos, mEyeProperties.m.offsetPupilHaarWdth, mEyeProperties.m.offsetPupilHaarHght, white);
-                drawEllipseCross(I, mEyeProperties.v.xPosExact, mEyeProperties.v.yPosExact, Parameters::ellipseDrawCrossSize, white);
+                drawEllipse(I, mDetectionProperties.m.ellipseCoefficients, mDetectionProperties.m.offsetPupilHaarXPos, mDetectionProperties.m.offsetPupilHaarYPos, mDetectionProperties.m.offsetPupilHaarWdth, mDetectionProperties.m.offsetPupilHaarHght, white);
+                drawEllipseCross(I, mDetectionProperties.v.xPosExact, mDetectionProperties.v.yPosExact, Parameters::ellipseDrawCrossSize, white);
             }
         }
 
-        drawEllipseCross(I, mEyeProperties.v.xPosPredicted, mEyeProperties.v.yPosPredicted, Parameters::ellipseDrawCrossSize, cyan);
+        drawEllipseCross(I, mDetectionProperties.v.xPosPredicted, mDetectionProperties.v.yPosPredicted, Parameters::ellipseDrawCrossSize, cyan);
     }
 }
 
