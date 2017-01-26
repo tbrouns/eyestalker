@@ -42,7 +42,7 @@ private:
     QLabel *CurvatureFactorLabel;
     QLabel *CurvatureOffsetLabel;
     QLabel *EdgeIntensityOffsetLabel;
-    QLabel *EdgeLengthMinimumLabel;
+    QLabel *EdgeLengthFractionLabel;
     QLabel *EllipseFitNumberMaximumLabel;
     QLabel *EllipseFitErrorMaximumLabel;
     QLabel *GlintSizeLabel;
@@ -68,7 +68,7 @@ private:
     SliderDouble *CurvatureFactorSlider;
     SliderDouble *CurvatureOffsetSlider;
     SliderDouble *EdgeIntensityOffsetSlider;
-    SliderDouble *EdgeLengthMinimumSlider;
+    SliderDouble *EdgeLengthFractionSlider;
     SliderDouble *EllipseFitErrorMaximumSlider;
     SliderDouble *CircumferenceMinSlider;
     SliderDouble *CircumferenceMaxSlider;
@@ -93,7 +93,7 @@ private slots:
     void setCurvatureFactor         (double);
     void setCurvatureOffset         (double);
     void setEdgeIntensityOffset     (double);
-    void setEdgeLengthMinimum       (double);
+    void setEdgeLengthFraction       (double);
     void setEllipseFitNumberMaximum (int);
     void setEllipseFitErrorMaximum  (double);
     void setGlintSize               (int);

@@ -250,7 +250,7 @@ private:
     void pupilTracking();
     void resetVariables();
     void offlinePupilDetectionAllFrames();
-    void offlinePupilDetectionOneFrame();
+    void offlinePupilDetectionOneFrame(int);
     void saveSettings(QString);
     void saveTrialData();
     void setFlashStandby(bool);
@@ -312,8 +312,8 @@ private slots:
     void setDrawEdge(int state);
     void setDrawElps(int state);
     void setDrawHaar(int state);
-    void setEyeROIHght(double);
-    void setEyeROIWdth(double);
+    void setEyeAOIHght(double);
+    void setEyeAOIWdth(double);
     void setFlashAOIXPos(int);
     void setFlashAOIYPos(int);
     void setFlashAOIWdth(int);

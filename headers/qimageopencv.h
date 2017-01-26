@@ -77,12 +77,12 @@ private:
     int flashXPosAOI;
     int flashYPosAOI;
     int imageHght;
-    int imageScaledHght;
-    int imageScaledWdth;
+    int imageHghtScaled;
+    int imageWdthScaled;
     int imageType;
     int imageWdth;
-    int sizeH;
-    int sizeW;
+    int widgetHght;
+    int widgetWdth;
     int spinnerDegrees;
     QColor backgroundColour;
     QColor textColour;

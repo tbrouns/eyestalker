@@ -62,7 +62,7 @@ void MainWindow::loadSettings(QString filename)
     mDetectionParametersEye.curvatureFactor                    = settings.value("CurvatureFactor",                 1.05).toDouble();
     mDetectionParametersEye.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
     mDetectionParametersEye.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
-    mDetectionParametersEye.edgeLengthMinimum                  = settings.value("EdgeLengthMinimum",               0.60).toDouble();
+    mDetectionParametersEye.edgeLengthFraction                 = settings.value("EdgeLengthFraction",              0.60).toDouble();
     mDetectionParametersEye.ellipseFitNumberMaximum            = settings.value("EllipseFitNumberMaximum",         3).toInt();
     mDetectionParametersEye.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          80).toDouble();
     mDetectionParametersEye.glintSize                          = settings.value("GlintSize",                       12).toInt();
@@ -89,7 +89,7 @@ void MainWindow::loadSettings(QString filename)
     mDetectionParametersBead.curvatureFactor                    = settings.value("BeadCurvatureFactor",                 1.05).toDouble();
     mDetectionParametersBead.curvatureOffsetMin                 = settings.value("BeadCurvatureOffset",                 5).toDouble();
     mDetectionParametersBead.edgeIntensityOffset                = settings.value("BeadEdgeIntensityOffset",             40).toDouble();
-    mDetectionParametersBead.edgeLengthMinimum                  = settings.value("BeadEdgeLengthMinimum",               0.60).toDouble();
+    mDetectionParametersBead.edgeLengthFraction                 = settings.value("BeadEdgeLengthFraction",              0.60).toDouble();
     mDetectionParametersBead.ellipseFitNumberMaximum            = settings.value("BeadEllipseFitNumberMaximum",         3).toInt();
     mDetectionParametersBead.ellipseFitErrorMaximum             = settings.value("BeadEllipseFitErrorMaximum",          80).toDouble();
     mDetectionParametersBead.glintSize                          = settings.value("BeadGlintSize",                       12).toInt();
@@ -407,7 +407,9 @@ void MainWindow::updateCamAOIx()
     Parameters::cameraAOIWdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
     Parameters::cameraAOIXPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
     CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOIWdth) / (double) cameraAOIWdthMax);
-    updateEyeAOIx();
+
+    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+        updateEyeAOIx(); }
 }
 
 void MainWindow::updateCamAOIy()
@@ -415,13 +417,13 @@ void MainWindow::updateCamAOIy()
     Parameters::cameraAOIHght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
     Parameters::cameraAOIYPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
     CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOIHght) / (double) cameraAOIHghtMax);
-    updateEyeAOIy();
+
+    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+        updateEyeAOIy(); }
 }
 
 void MainWindow::updateEyeAOIx()
 {
-    std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-
     Parameters::eyeAOIWdth = round(Parameters::cameraAOIWdth * eyeAOIWdthFraction);
     Parameters::eyeAOIXPos = round(Parameters::cameraAOIWdth * Parameters::eyeAOIXPosFraction);
 
@@ -430,9 +432,7 @@ void MainWindow::updateEyeAOIx()
 }
 
 void MainWindow::updateEyeAOIy()
-{    
-    std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
-
+{
     Parameters::eyeAOIHght = round(Parameters::cameraAOIHght * eyeAOIHghtFraction);
     Parameters::eyeAOIYPos = round(Parameters::cameraAOIHght * Parameters::eyeAOIYPosFraction);
 
@@ -442,11 +442,10 @@ void MainWindow::updateEyeAOIy()
 
 void MainWindow::setCamEyeAOIWdth(double fraction)
 {
-    cameraAOIFractionWdth = fraction;
-
-    Parameters::cameraAOIWdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-
-    updateEyeAOIx();
+    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+        cameraAOIFractionWdth = fraction;
+        Parameters::cameraAOIWdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+        updateEyeAOIx(); }
 
     if (mUEyeOpencvCam.freeImageMemory())
     {
@@ -468,11 +467,10 @@ void MainWindow::setCamEyeAOIWdth(double fraction)
 
 void MainWindow::setCamEyeAOIHght(double fraction)
 {
-    cameraAOIFractionHght = fraction;
-
-    Parameters::cameraAOIHght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-
-    updateEyeAOIy();
+    { std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
+        cameraAOIFractionHght = fraction;
+        Parameters::cameraAOIHght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+        updateEyeAOIy(); }
 
     if (mUEyeOpencvCam.freeImageMemory())
     {
@@ -518,7 +516,7 @@ void MainWindow::setCamEyeAOIYPos(double fraction)
     }
 }
 
-void MainWindow::setEyeROIWdth(double fraction)
+void MainWindow::setEyeAOIWdth(double fraction)
 {
     std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 
@@ -530,7 +528,7 @@ void MainWindow::setEyeROIWdth(double fraction)
     {   Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth; }
 }
 
-void MainWindow::setEyeROIHght(double fraction)
+void MainWindow::setEyeAOIHght(double fraction)
 {
     std::lock_guard<std::mutex> primaryMutexLock(Parameters::primaryMutex);
 

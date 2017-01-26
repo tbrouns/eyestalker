@@ -214,15 +214,15 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
 
-    QLabel *EdgeLengthMinimumTextBox = new QLabel;
-    EdgeLengthMinimumTextBox->setText("<b>Edge minimum length:");
+    QLabel *EdgeLengthFractionTextBox = new QLabel;
+    EdgeLengthFractionTextBox->setText("<b>Edge minimum length:");
 
-    EdgeLengthMinimumLabel  = new QLabel;
-    EdgeLengthMinimumSlider = new SliderDouble;
-    EdgeLengthMinimumSlider->setPrecision(2);
-    EdgeLengthMinimumSlider->setDoubleRange(0, 1.0);
-    EdgeLengthMinimumSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EdgeLengthMinimumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeLengthMinimum(double)));
+    EdgeLengthFractionLabel  = new QLabel;
+    EdgeLengthFractionSlider = new SliderDouble;
+    EdgeLengthFractionSlider->setPrecision(2);
+    EdgeLengthFractionSlider->setDoubleRange(0, 1.0);
+    EdgeLengthFractionSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(EdgeLengthFractionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeLengthFraction(double)));
 
     QLabel *EllipseFitNumberMaximumTextBox = new QLabel;
     EllipseFitNumberMaximumTextBox->setText("<b>Edge maximum fit number:</b>");
@@ -258,9 +258,9 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     QWidget *MainWidget = new QWidget;
     QGridLayout *MainLayout = new QGridLayout(MainWidget);
 
-    MainLayout->addWidget(CircumferenceMaxTextBox,     1, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CircumferenceMinTextBox,     2, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AspectRatioMinTextBox,       3, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CircumferenceMaxTextBox,          1, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CircumferenceMinTextBox,          2, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AspectRatioMinTextBox,            3, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(EdgeIntensityOffsetTextBox,       4, 0, 1, 1, Qt::AlignRight);
 
     MainLayout->addWidget(CannyThresholdHighTextBox,        6, 0, 1, 1, Qt::AlignRight);
@@ -276,18 +276,18 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdCircumferenceTextBox,   16, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdAspectRatioTextBox,     17, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(HaarOffsetTextBox,          19, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(HaarOffsetTextBox,               19, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(GlintSizeTextBox,                20, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CurvatureFactorTextBox,          21, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CurvatureOffsetTextBox,          22, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EdgeLengthMinimumTextBox,        23, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EdgeLengthFractionTextBox,       23, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(EllipseFitNumberMaximumTextBox,  24, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(EllipseFitErrorMaximumTextBox,   25, 0, 1, 1, Qt::AlignRight);
 
     MainLayout->addWidget(TitleLimitTextBox,                0, 1, 1, 1, Qt::AlignCenter);
-    MainLayout->addWidget(CircumferenceMaxSlider,      1, 1);
-    MainLayout->addWidget(CircumferenceMinSlider,      2, 1);
-    MainLayout->addWidget(AspectRatioMinSlider,        3, 1);
+    MainLayout->addWidget(CircumferenceMaxSlider,           1, 1);
+    MainLayout->addWidget(CircumferenceMinSlider,           2, 1);
+    MainLayout->addWidget(AspectRatioMinSlider,             3, 1);
     MainLayout->addWidget(EdgeIntensityOffsetSlider,        4, 1);
     MainLayout->addWidget(TitleCannyTextBox,                5, 1, 1, 1, Qt::AlignCenter);
     MainLayout->addWidget(CannyThresholdHighSlider,         6, 1);
@@ -303,17 +303,17 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdCircumferenceSlider,    16, 1);
     MainLayout->addWidget(ThresholdAspectRatioSlider,      17, 1);
     MainLayout->addWidget(TitleMiscTextBox,                18, 1, 1, 1, Qt::AlignCenter);
-    MainLayout->addWidget(HaarOffsetSlider,           19, 1);
+    MainLayout->addWidget(HaarOffsetSlider,                19, 1);
     MainLayout->addWidget(GlintSizeSlider,                 20, 1);
     MainLayout->addWidget(CurvatureFactorSlider,           21, 1);
     MainLayout->addWidget(CurvatureOffsetSlider,           22, 1);
-    MainLayout->addWidget(EdgeLengthMinimumSlider,         23, 1);
+    MainLayout->addWidget(EdgeLengthFractionSlider,        23, 1);
     MainLayout->addWidget(EllipseFitNumberMaximumSlider,   24, 1);
     MainLayout->addWidget(EllipseFitErrorMaximumSlider,    25, 1);
 
-    MainLayout->addWidget(CircumferenceMaxLabel,    1, 2);
-    MainLayout->addWidget(CircumferenceMinLabel,    2, 2);
-    MainLayout->addWidget(AspectRatioMinLabel,      3, 2);
+    MainLayout->addWidget(CircumferenceMaxLabel,         1, 2);
+    MainLayout->addWidget(CircumferenceMinLabel,         2, 2);
+    MainLayout->addWidget(AspectRatioMinLabel,           3, 2);
     MainLayout->addWidget(EdgeIntensityOffsetLabel,      4, 2);
 
     MainLayout->addWidget(CannyThresholdHighLabel,       6, 2);
@@ -329,11 +329,11 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdCircumferenceLabel,   16, 2);
     MainLayout->addWidget(ThresholdAspectRatioLabel,     17, 2);
 
-    MainLayout->addWidget(HaarOffsetLabel,          19, 2);
+    MainLayout->addWidget(HaarOffsetLabel,               19, 2);
     MainLayout->addWidget(GlintSizeLabel,                20, 2);
     MainLayout->addWidget(CurvatureFactorLabel,          21, 2);
     MainLayout->addWidget(CurvatureOffsetLabel,          22, 2);
-    MainLayout->addWidget(EdgeLengthMinimumLabel,        23, 2);
+    MainLayout->addWidget(EdgeLengthFractionLabel,       23, 2);
     MainLayout->addWidget(EllipseFitNumberMaximumLabel,  24, 2);
     MainLayout->addWidget(EllipseFitErrorMaximumLabel,   25, 2);
 
@@ -424,8 +424,8 @@ void ParameterWidget::reset()
     CurvatureOffsetSlider->setDoubleValue(mDetectionParameters.curvatureOffsetMin);
     CurvatureOffsetLabel ->setText(QString::number(mDetectionParameters.curvatureOffsetMin, 'f', 1));
 
-    EdgeLengthMinimumSlider->setDoubleValue(mDetectionParameters.edgeLengthMinimum);
-    EdgeLengthMinimumLabel ->setText(QString::number(mDetectionParameters.edgeLengthMinimum, 'f', 2));
+    EdgeLengthFractionSlider->setDoubleValue(mDetectionParameters.edgeLengthFraction);
+    EdgeLengthFractionLabel ->setText(QString::number(mDetectionParameters.edgeLengthFraction, 'f', 2));
 
     EllipseFitNumberMaximumSlider->setValue(mDetectionParameters.ellipseFitNumberMaximum);
     EllipseFitNumberMaximumLabel ->setText(QString::number(mDetectionParameters.ellipseFitNumberMaximum));
@@ -468,10 +468,10 @@ void ParameterWidget::setEdgeIntensityOffset(double value)
     EdgeIntensityOffsetLabel->setText(QString::number(value, 'f', 1));
 }
 
-void ParameterWidget::setEdgeLengthMinimum(double value)
+void ParameterWidget::setEdgeLengthFraction(double value)
 {
-    mDetectionParameters.edgeLengthMinimum = value;
-    EdgeLengthMinimumLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.edgeLengthFraction = value;
+    EdgeLengthFractionLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setCannyThresholdLow(int value)

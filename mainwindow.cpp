@@ -160,13 +160,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeWdthROISlider->setPrecision(2);
     EyeWdthROISlider->setDoubleRange(0, 1.0);
     EyeWdthROISlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EyeWdthROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeROIWdth(double)));
+    QObject::connect(EyeWdthROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeAOIWdth(double)));
 
     EyeHghtROISlider = new SliderDouble;
     EyeHghtROISlider->setPrecision(2);
     EyeHghtROISlider->setDoubleRange(0, 1.0);
     EyeHghtROISlider->setOrientation(Qt::Vertical);
-    QObject::connect(EyeHghtROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeROIHght(double)));
+    QObject::connect(EyeHghtROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeAOIHght(double)));
 
     EyeWdthROISlider->setDoubleValue(eyeAOIWdthFraction);
     EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);

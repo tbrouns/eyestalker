@@ -1377,12 +1377,12 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             if (USE_PRIOR_INFORMATION)
             {
-                if (edgeSetLength < mDetectionProperties.v.circumferencePrediction * mDetectionProperties.p.ellipseFitNumberMaximum)
+                if (edgeSetLength < mDetectionProperties.v.circumferencePrediction * mDetectionProperties.p.edgeLengthFraction)
                 { continue; }
             }
             else
             {
-                if (edgeSetLength <= mDetectionProperties.p.circumferenceMin * mDetectionProperties.p.ellipseFitNumberMaximum)
+                if (edgeSetLength <= mDetectionProperties.p.circumferenceMin * mDetectionProperties.p.edgeLengthFraction)
                 { continue; }
             }
 

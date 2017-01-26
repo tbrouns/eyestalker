@@ -24,8 +24,8 @@ QImageOpenCV::QImageOpenCV(int type, QWidget *parent) : QLabel(parent)
     imageWdth = 0;
     imageHght = 0;
 
-    sizeW = 0;
-    sizeH = 0;
+    widgetWdth = 0;
+    widgetHght = 0;
 
     backgroundColour = QColor( 48,  47,  47);
     textColour       = QColor(177, 177, 177);
@@ -42,14 +42,14 @@ QImageOpenCV::~QImageOpenCV()
 
 void QImageOpenCV::setSize(int W, int H)
 {
-    sizeW = W;
-    sizeH = H;
+    widgetWdth = W;
+    widgetHght = H;
     aspectRatio = W / (double) H;
 }
 
 QSize QImageOpenCV::sizeHint() const
 {
-    return QSize(sizeW, sizeH);
+    return QSize(widgetWdth, widgetHght);
 }
 
 void QImageOpenCV::loadImage(const cv::Mat& cvimage)
@@ -72,22 +72,22 @@ void QImageOpenCV::loadImage(const cv::Mat& cvimage)
 
 void QImageOpenCV::resizeImage()
 {
-    if (imageWdth > sizeW || imageHght > sizeH)
+    if (imageWdth > widgetWdth || imageHght > widgetHght)
     {
-        imageScaled = image.scaled(QSize(sizeW, sizeH), Qt::KeepAspectRatio);
+        imageScaled = image.scaled(QSize(widgetWdth, widgetHght), Qt::KeepAspectRatio);
 
-        imageScaledWdth = imageScaled.width();
-        imageScaledHght = imageScaled.height();
+        imageWdthScaled = imageScaled.width();
+        imageHghtScaled = imageScaled.height();
 
-        imageScaleFactorX = imageScaledWdth / (double) imageWdth;
-        imageScaleFactorY = imageScaledHght / (double) imageHght;
+        imageScaleFactorX = imageWdthScaled / (double) imageWdth;
+        imageScaleFactorY = imageHghtScaled / (double) imageHght;
     }
     else
     {
         imageScaled = image;
 
-        imageScaledWdth = imageWdth;
-        imageScaledHght = imageHght;
+        imageWdthScaled = imageWdth;
+        imageHghtScaled = imageHght;
 
         imageScaleFactorX = 1.0;
         imageScaleFactorY = 1.0;
@@ -96,7 +96,7 @@ void QImageOpenCV::resizeImage()
 
 void QImageOpenCV::drawAOI(QPixmap& img, int xPos, int yPos, int wdth, int hght, QColor col)
 {
-    if (imageScaledWdth > 0 && wdth > 0 && hght > 0)
+    if (imageWdthScaled > 0 && wdth > 0 && hght > 0)
     {
         xPos = round(imageScaleFactorX * xPos);
         wdth = round(imageScaleFactorX * wdth);
@@ -106,7 +106,7 @@ void QImageOpenCV::drawAOI(QPixmap& img, int xPos, int yPos, int wdth, int hght,
 
         QPainter painter(&img);
 
-        int lineWidth = round(0.003 * (sizeW + sizeH));
+        int lineWidth = round(0.003 * (widgetWdth + widgetHght));
 
         painter.setPen(QPen(col, round(lineWidth)));
 
@@ -124,7 +124,7 @@ void QImageOpenCV::setImage()
 {
     if (imageType == 1)
     {
-        if (imageScaledWdth > 0)
+        if (imageWdthScaled > 0)
         {
             QPixmap imageEdited = imageScaled;
             drawAOI(imageEdited,   eyeXPosAOI,   eyeYPosAOI,   eyeWdthAOI,   eyeHghtAOI, QColor(255, 0,   0));
@@ -134,7 +134,7 @@ void QImageOpenCV::setImage()
     }
     else
     {
-        if (imageScaledWdth > 0)
+        if (imageWdthScaled > 0)
         {
             this->setPixmap(imageScaled);
         }
@@ -148,16 +148,16 @@ void QImageOpenCV::clearImage()
 
 void QImageOpenCV::setFindingCamera()
 {
-    QPixmap pic(sizeW, sizeH);
+    QPixmap pic(widgetWdth, widgetHght);
     pic.fill(backgroundColour);
 
-    QRect rec(0, 0, round(0.9 * sizeW), round(0.5 * sizeH));
+    QRect rec(0, 0, round(0.9 * widgetWdth), round(0.5 * widgetHght));
     rec.moveCenter(rect().center());
 
     QPainter painter(&pic);
 
     QFont font = painter.font();
-    font.setPointSize(round(0.032 * sizeW));
+    font.setPointSize(round(0.032 * widgetWdth));
     font.setWeight(QFont::DemiBold);
     painter.setFont(font);
 
@@ -210,16 +210,16 @@ void QImageOpenCV::setFlashAOI(int x, int y, int w, int h)
 
 void QImageOpenCV::setAOIError()
 {
-    QPixmap pic(sizeW, sizeH);
+    QPixmap pic(widgetWdth, widgetHght);
     pic.fill(backgroundColour);
 
-    QRect rec(0, 0, round(0.9 * sizeW), round(0.5 * sizeH));
+    QRect rec(0, 0, round(0.9 * widgetWdth), round(0.5 * widgetHght));
     rec.moveCenter(rect().center());
 
     QPainter painter(&pic);
 
     QFont font = painter.font();
-    font.setPointSize(round(0.032 * sizeW));
+    font.setPointSize(round(0.032 * widgetWdth));
     font.setWeight(QFont::DemiBold);
     painter.setFont(font);
 
@@ -230,10 +230,10 @@ void QImageOpenCV::setAOIError()
 
 void QImageOpenCV::setSpinner()
 {
-    QPixmap pic(sizeW, sizeH);
+    QPixmap pic(widgetWdth, widgetHght);
     pic.fill(backgroundColour);
 
-    QRect rec(0, 0, round(0.4 * sizeH), round(0.4 * sizeH));
+    QRect rec(0, 0, round(0.4 * widgetHght), round(0.4 * widgetHght));
     rec.moveCenter(rect().center());
 
     QPainter painter(&pic);
@@ -259,8 +259,8 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
 {
     if (imageType == 1)
     {
-        int imageScaledXOffset = 0.5 * (sizeW - imageScaledWdth);
-        int imageScaledYOffset = 0.5 * (sizeH - imageScaledHght);
+        int imageScaledXOffset = 0.5 * (widgetWdth - imageWdthScaled);
+        int imageScaledYOffset = 0.5 * (widgetHght - imageHghtScaled);
 
         if (event->button() == Qt::LeftButton)
         {
@@ -269,33 +269,25 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
 
                 double mouseXPos = (event->x()) - imageScaledXOffset;
 
-                Parameters::eyeAOIXPos = round(mouseXPos * (Parameters::cameraAOIWdth / (double) imageScaledWdth) - 0.5 * Parameters::eyeAOIWdth);
+                Parameters::eyeAOIXPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::eyeAOIWdth);
 
-                if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth >= Parameters::cameraAOIWdth)
-                {
-                    Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth;
-                }
+                if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth >= imageWdth)
+                {   Parameters::eyeAOIXPos = imageWdth - Parameters::eyeAOIWdth; }
                 else if (Parameters::eyeAOIXPos < 0)
-                {
-                    Parameters::eyeAOIXPos = 0;
-                }
+                {        Parameters::eyeAOIXPos = 0; }
 
-                Parameters::eyeAOIXPosFraction = Parameters::eyeAOIXPos / (double) Parameters::cameraAOIWdth;
+                Parameters::eyeAOIXPosFraction = Parameters::eyeAOIXPos / (double) imageWdth;
 
                 double mouseYPos = (event->y()) - imageScaledYOffset;
 
-                Parameters::eyeAOIYPos = round(mouseYPos * (Parameters::cameraAOIHght / (double) imageScaledHght) - 0.5 * Parameters::eyeAOIHght);
+                Parameters::eyeAOIYPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::eyeAOIHght);
 
-                if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght >= Parameters::cameraAOIHght)
-                {
-                    Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght;
-                }
+                if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght >= imageHght)
+                {   Parameters::eyeAOIYPos = imageHght - Parameters::eyeAOIHght; }
                 else if (Parameters::eyeAOIYPos < 0)
-                {
-                    Parameters::eyeAOIYPos = 0;
-                }
+                {        Parameters::eyeAOIYPos = 0; }
 
-                Parameters::eyeAOIYPosFraction = Parameters::eyeAOIYPos / (double) Parameters::cameraAOIHght;
+                Parameters::eyeAOIYPosFraction = Parameters::eyeAOIYPos / (double) imageHght;
 
                 setEyeAOI(Parameters::eyeAOIXPos, Parameters::eyeAOIYPos, Parameters::eyeAOIWdth, Parameters::eyeAOIHght);
                 setImage();
@@ -306,16 +298,16 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
     }
     else if (imageType == 2)
     {
-        int imageScaledXOffset = 0.5 * (sizeW - imageScaledWdth);
-        int imageScaledYOffset = 0.5 * (sizeH - imageScaledHght);
+        int imageScaledXOffset = 0.5 * (widgetWdth - imageWdthScaled);
+        int imageScaledYOffset = 0.5 * (widgetHght - imageHghtScaled);
 
         if (event->button() == Qt::LeftButton)
         {
             double mouseXPos = (event->x()) - imageScaledXOffset;
             double mouseYPos = (event->y()) - imageScaledYOffset;
 
-            double XPos = mouseXPos * (Parameters::eyeAOIWdth / (double) imageScaledWdth);
-            double YPos = mouseYPos * (Parameters::eyeAOIHght / (double) imageScaledHght);
+            double XPos = mouseXPos * (Parameters::eyeAOIWdth / (double) imageWdthScaled);
+            double YPos = mouseYPos * (Parameters::eyeAOIHght / (double) imageHghtScaled);
 
             emit imageMouseClick(XPos, YPos);
         }

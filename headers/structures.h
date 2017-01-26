@@ -81,7 +81,7 @@ struct detectionParameters
     double curvatureFactor;
     double curvatureOffsetMin;
     double edgeIntensityOffset;
-    double edgeLengthMinimum;
+    double edgeLengthFraction;
     double ellipseFitErrorMaximum;
     double circumferenceMax;
     double circumferenceMin;
