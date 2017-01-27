@@ -63,8 +63,7 @@ void MainWindow::loadSettings(QString filename)
     mDetectionParametersEye.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
     mDetectionParametersEye.cannyThresholdLow                  = settings.value("CannyThresholdLow",               75).toInt();
     mDetectionParametersEye.cannyThresholdHigh                 = settings.value("CannyThresholdHigh",              150).toInt();
-    mDetectionParametersEye.curvatureFactor                    = settings.value("CurvatureFactor",                 1.05).toDouble();
-    mDetectionParametersEye.curvatureOffsetMin                 = settings.value("CurvatureOffset",                 5).toDouble();
+    mDetectionParametersEye.curvatureOffset                    = settings.value("CurvatureOffset",                 10).toDouble();
     mDetectionParametersEye.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
     mDetectionParametersEye.edgeLengthFraction                 = settings.value("EdgeLengthFraction",              0.60).toDouble();
     mDetectionParametersEye.ellipseFitNumberMaximum            = settings.value("EllipseFitNumberMaximum",         3).toInt();
@@ -90,8 +89,7 @@ void MainWindow::loadSettings(QString filename)
     mDetectionParametersBead.cannyKernelSize                    = settings.value("BeadCannyKernelSize",                 5).toInt();
     mDetectionParametersBead.cannyThresholdLow                  = settings.value("BeadCannyThresholdLow",               75).toInt();
     mDetectionParametersBead.cannyThresholdHigh                 = settings.value("BeadCannyThresholdHigh",              150).toInt();
-    mDetectionParametersBead.curvatureFactor                    = settings.value("BeadCurvatureFactor",                 1.05).toDouble();
-    mDetectionParametersBead.curvatureOffsetMin                 = settings.value("BeadCurvatureOffset",                 5).toDouble();
+    mDetectionParametersBead.curvatureOffset                    = settings.value("BeadCurvatureOffset",                 10).toDouble();
     mDetectionParametersBead.edgeIntensityOffset                = settings.value("BeadEdgeIntensityOffset",             40).toDouble();
     mDetectionParametersBead.edgeLengthFraction                 = settings.value("BeadEdgeLengthFraction",              0.60).toDouble();
     mDetectionParametersBead.ellipseFitNumberMaximum            = settings.value("BeadEllipseFitNumberMaximum",         3).toInt();
@@ -156,8 +154,7 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("CannyThresholdHigh",             mDetectionParametersEye.cannyThresholdHigh);
     settings.setValue("CircumferenceMax",               mDetectionParametersEye.circumferenceMax);
     settings.setValue("CircumferenceMin",               mDetectionParametersEye.circumferenceMin);
-    settings.setValue("CurvatureFactor",                mDetectionParametersEye.curvatureFactor);
-    settings.setValue("CurvatureOffset",                mDetectionParametersEye.curvatureOffsetMin);
+    settings.setValue("CurvatureOffset",                mDetectionParametersEye.curvatureOffset);
     settings.setValue("EdgeIntensityOffset",            mDetectionParametersEye.edgeIntensityOffset);
     settings.setValue("EllipseFitNumberMaximum",        mDetectionParametersEye.ellipseFitNumberMaximum);
     settings.setValue("EllipseFitErrorMaximum",         mDetectionParametersEye.ellipseFitErrorMaximum);
@@ -177,8 +174,7 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("BeadCannyThresholdHigh",             mDetectionParametersBead.cannyThresholdHigh);
     settings.setValue("BeadCircumferenceMax",               mDetectionParametersBead.circumferenceMax);
     settings.setValue("BeadCircumferenceMin",               mDetectionParametersBead.circumferenceMin);
-    settings.setValue("BeadCurvatureFactor",                mDetectionParametersBead.curvatureFactor);
-    settings.setValue("BeadCurvatureOffset",                mDetectionParametersBead.curvatureOffsetMin);
+    settings.setValue("BeadCurvatureOffset",                mDetectionParametersBead.curvatureOffset);
     settings.setValue("BeadEdgeIntensityOffset",            mDetectionParametersBead.edgeIntensityOffset);
     settings.setValue("BeadEllipseFitNumberMaximum",        mDetectionParametersBead.ellipseFitNumberMaximum);
     settings.setValue("BeadEllipseFitErrorMaximum",         mDetectionParametersBead.ellipseFitErrorMaximum);

@@ -194,16 +194,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     GlintSizeSlider->setOrientation(Qt::Horizontal);
     QObject::connect(GlintSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setGlintSize(int)));
 
-    QLabel *CurvatureFactorTextBox = new QLabel;
-    CurvatureFactorTextBox->setText("<b>Curvature factor:</b>");
-
-    CurvatureFactorLabel  = new QLabel;
-    CurvatureFactorSlider = new SliderDouble;
-    CurvatureFactorSlider->setPrecision(2);
-    CurvatureFactorSlider->setDoubleRange(1.0, 1.2);
-    CurvatureFactorSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CurvatureFactorSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureFactor(double)));
-
     QLabel *CurvatureOffsetTextBox = new QLabel;
     CurvatureOffsetTextBox->setText("<b>Curvature offset:</b>");
 
@@ -278,7 +268,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     MainLayout->addWidget(HaarOffsetTextBox,               19, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(GlintSizeTextBox,                20, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CurvatureFactorTextBox,          21, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CurvatureOffsetTextBox,          22, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(EdgeLengthFractionTextBox,       23, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(EllipseFitNumberMaximumTextBox,  24, 0, 1, 1, Qt::AlignRight);
@@ -305,7 +294,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(TitleMiscTextBox,                18, 1, 1, 1, Qt::AlignCenter);
     MainLayout->addWidget(HaarOffsetSlider,                19, 1);
     MainLayout->addWidget(GlintSizeSlider,                 20, 1);
-    MainLayout->addWidget(CurvatureFactorSlider,           21, 1);
     MainLayout->addWidget(CurvatureOffsetSlider,           22, 1);
     MainLayout->addWidget(EdgeLengthFractionSlider,        23, 1);
     MainLayout->addWidget(EllipseFitNumberMaximumSlider,   24, 1);
@@ -331,7 +319,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     MainLayout->addWidget(HaarOffsetLabel,               19, 2);
     MainLayout->addWidget(GlintSizeLabel,                20, 2);
-    MainLayout->addWidget(CurvatureFactorLabel,          21, 2);
     MainLayout->addWidget(CurvatureOffsetLabel,          22, 2);
     MainLayout->addWidget(EdgeLengthFractionLabel,       23, 2);
     MainLayout->addWidget(EllipseFitNumberMaximumLabel,  24, 2);
@@ -418,11 +405,8 @@ void ParameterWidget::reset()
     GlintSizeSlider->setValue(round(0.5 * mDetectionParameters.glintSize));
     GlintSizeLabel->setText(QString::number(mDetectionParameters.glintSize));
 
-    CurvatureFactorSlider->setDoubleValue(mDetectionParameters.curvatureFactor);
-    CurvatureFactorLabel ->setText(QString::number(mDetectionParameters.curvatureFactor, 'f', 2));
-
-    CurvatureOffsetSlider->setDoubleValue(mDetectionParameters.curvatureOffsetMin);
-    CurvatureOffsetLabel ->setText(QString::number(mDetectionParameters.curvatureOffsetMin, 'f', 1));
+    CurvatureOffsetSlider->setDoubleValue(mDetectionParameters.curvatureOffset);
+    CurvatureOffsetLabel ->setText(QString::number(mDetectionParameters.curvatureOffset, 'f', 1));
 
     EdgeLengthFractionSlider->setDoubleValue(mDetectionParameters.edgeLengthFraction);
     EdgeLengthFractionLabel ->setText(QString::number(mDetectionParameters.edgeLengthFraction, 'f', 2));
@@ -559,15 +543,9 @@ void ParameterWidget::setGlintSize(int value)
     GlintSizeLabel->setText(QString::number(newValue));
 }
 
-void ParameterWidget::setCurvatureFactor(double value)
-{
-    mDetectionParameters.curvatureFactor = value;
-    CurvatureFactorLabel->setText(QString::number(value, 'f', 2));
-}
-
 void ParameterWidget::setCurvatureOffset(double value)
 {
-    mDetectionParameters.curvatureOffsetMin = value;
+    mDetectionParameters.curvatureOffset = value;
     CurvatureOffsetLabel->setText(QString::number(value, 'f', 1));
 }
 

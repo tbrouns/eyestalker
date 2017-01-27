@@ -78,8 +78,7 @@ struct detectionParameters
     double alphaMomentum;
     double alphaAverage;
     double alphaPrediction;
-    double curvatureFactor;
-    double curvatureOffsetMin;
+    double curvatureOffset;
     double edgeIntensityOffset;
     double edgeLengthFraction;
     double ellipseFitErrorMaximum;

@@ -39,7 +39,6 @@ private:
     QLabel *CannyKernelSizeLabel;
     QLabel *CannyThresholdLowLabel;
     QLabel *CannyThresholdHighLabel;
-    QLabel *CurvatureFactorLabel;
     QLabel *CurvatureOffsetLabel;
     QLabel *EdgeIntensityOffsetLabel;
     QLabel *EdgeLengthFractionLabel;
@@ -65,7 +64,6 @@ private:
     SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaAverageSlider;
     SliderDouble *AlphaPredictionSlider;
-    SliderDouble *CurvatureFactorSlider;
     SliderDouble *CurvatureOffsetSlider;
     SliderDouble *EdgeIntensityOffsetSlider;
     SliderDouble *EdgeLengthFractionSlider;
@@ -90,7 +88,6 @@ private slots:
     void setCannyKernelSize         (int);
     void setCannyThresholdLow       (int);
     void setCannyThresholdHigh      (int);
-    void setCurvatureFactor         (double);
     void setCurvatureOffset         (double);
     void setEdgeIntensityOffset     (double);
     void setEdgeLengthFraction       (double);

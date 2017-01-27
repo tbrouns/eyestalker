@@ -127,7 +127,8 @@ HEADERS  += \
     headers/structures.h \
     headers/ueyeopencv.h \
     headers/parameterwidget.h \
-    headers/variablewidget.h
+    headers/variablewidget.h \
+    headers/arrays.h
 
 RESOURCES += \
     resources/qdarkstyle/style.qrc

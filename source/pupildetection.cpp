@@ -612,7 +612,7 @@ std::vector<int> getEdgeIndices(const std::vector<int>& binaryImageVector)
     return cannyEdgeIndices;
 }
 
-std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, int haarWidth, int haarHeight, double pupilXCentre, double pupilYCentre, double curvatureLowerLimit, double curvatureUpperLimit, bool USE_PRIOR_INFORMATION)
+std::vector<edgeProperties> edgeSegmentation(const cv::Mat& img, std::vector<int>& p, int haarWidth, int haarHeight, double pupilXCentre, double pupilYCentre, double curvatureLowerLimit, double curvatureUpperLimit, bool USE_PRIOR_INFORMATION)
 {
     std::vector<edgeProperties> vEdgePropertiesAll; // new structure containing length and indices of all edges
 
@@ -1112,7 +1112,7 @@ std::vector<edgeProperties> edgeFilter(const cv::Mat& img, std::vector<int>& p, 
     return vEdgePropertiesAll; // return structure
 }
 
-std::vector<int> edgeThreshold(detectionProperties mDetectionProperties, const std::vector<edgeProperties>& vEdgePropertiesAll, bool USE_PRIOR_INFORMATION)
+std::vector<int> edgeFilter(detectionProperties mDetectionProperties, const std::vector<edgeProperties>& vEdgePropertiesAll, bool USE_PRIOR_INFORMATION)
 {
     double expectedCurvature = mDetectionProperties.v.edgeCurvaturePrediction;
 
@@ -1570,8 +1570,8 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
         if (mDetectionProperties.v.curvatureOffset > 180)
         {   mDetectionProperties.v.curvatureOffset = 180; }
-        else if (mDetectionProperties.v.curvatureOffset < mDetectionProperties.p.curvatureOffsetMin)
-        {        mDetectionProperties.v.curvatureOffset = mDetectionProperties.p.curvatureOffsetMin; }
+        else if (mDetectionProperties.v.curvatureOffset < mDetectionProperties.p.curvatureOffset)
+        {        mDetectionProperties.v.curvatureOffset = mDetectionProperties.p.curvatureOffset; }
 
         // Check if prior pupil information should be used
 
@@ -1583,7 +1583,9 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         cv::Mat imageOriginalGray;
         cv::cvtColor(imageOriginalBGR, imageOriginalGray, cv::COLOR_BGR2GRAY);
 
-        // Initial approximate detection
+        ////////////////////////////////////////////////////////////////////
+        /////////////////////// INITIAL DETECTION  /////////////////////////
+        ////////////////////////////////////////////////////////////////////
 
         std::vector<unsigned int> integralImage = calculateIntImg(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght);
 
@@ -1623,7 +1625,9 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         cv::Mat imagePupilGray;
         cv::cvtColor(imagePupilBGR, imagePupilGray, cv::COLOR_BGR2GRAY);
 
-        // Canny edge detection
+        ///////////////////////////////////////////////////////////////////////
+        /////////////////////// CANNY EDGE DETECTION  /////////////////////////
+        ///////////////////////////////////////////////////////////////////////
 
         cv::Mat imagePupilGrayBlurred;
         int cannyBlurLevel = 2 * mDetectionProperties.p.cannyBlurLevel - 1; // should be odd
@@ -1651,81 +1655,42 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         std::vector<int> edgeIndices         = getEdgeIndices(cannyEdges);
         std::vector<int> cannyEdgesSharpened = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght); // Morphological operation
 
-        // Edge thresholding
+        //////////////////////////////////////////////////////////////////////////////
+        /////////////////////// EDGE SELECTION & SEGMENTATION  ///////////////////////
+        //////////////////////////////////////////////////////////////////////////////
 
-        double curvatureUpperLimit;
+        // Calculate curvature limits
 
+        int arrayWidth = arrayCircumferences.size();
+
+        int arrayXPos = 0;
+        for (int x = 0; x < arrayWidth; x++)
         {
-            double x = mDetectionProperties.v.circumferencePrediction;
-            double y = mDetectionProperties.v.aspectRatioPrediction;
-
-            double p00 =       223.4;
-            double p10 =      0.8889;
-            double p01 =       93.66;
-            double p20 =      0.0014;
-            double p11 =      -12.66;
-            double p02 =      -129.8;
-            double p30 =   -5.23e-05;
-            double p21 =     0.05832;
-            double p12 =       11.94;
-            double p03 =       107.3;
-            double p40 =   1.981e-07;
-            double p31 =  -0.0001222;
-            double p22 =     -0.0296;
-            double p13 =      -5.114;
-            double p04 =      -134.4;
-            double p50 =  -2.322e-10;
-            double p41 =   1.042e-07;
-            double p32 =   2.461e-05;
-            double p23 =    0.005287;
-            double p14 =      0.8476;
-            double p05 =       70.94;
-
-            curvatureUpperLimit =
-                    p00           + p10*x         + p01*y         + p20*x*x       + p11*x*y       + p02*y*y       + p30*x*x*x
-                    + p21*x*x*y   + p12*x*y*y     + p03*y*y*y     + p40*x*x*x*x   + p31*x*x*x*y   + p22*x*x*y*y   + p13*x*y*y*y
-                    + p04*y*y*y*y + p50*x*x*x*x*x + p41*x*x*x*x*y + p32*x*x*x*y*y + p23*x*x*y*y*y + p14*x*y*y*y*y + p05*y*y*y*y*y;
-
-            curvatureUpperLimit = mDetectionProperties.p.curvatureFactor * curvatureUpperLimit + mDetectionProperties.v.curvatureOffset;
+            if (arrayCircumferences[x] < mDetectionProperties.v.circumferencePrediction)
+            {
+                arrayXPos = x;
+                break;
+            }
         }
 
-        double curvatureLowerLimit;
-
+        int arrayYPos = 0;
+        for (int y = 0; y < arrayWidth; y++)
         {
-            double x = mDetectionProperties.v.circumferencePrediction;
-            double y = mDetectionProperties.v.aspectRatioPrediction;
-
-            double p00 =       35.26;
-            double p10 =      -1.282;
-            double p01 =       89.44;
-            double p20 =     0.01675;
-            double p11 =      -3.123;
-            double p02 =       373.6;
-            double p30 =  -0.0001031;
-            double p21 =     0.02731;
-            double p12 =      -1.822;
-            double p03 =      -537.1;
-            double p40 =    2.98e-07;
-            double p31 =  -0.0001016;
-            double p22 =     0.01206;
-            double p13 =      -1.537;
-            double p04 =       706.4;
-            double p50 =  -3.192e-10;
-            double p41 =    1.13e-07;
-            double p32 =   7.157e-07;
-            double p23 =   -0.007374;
-            double p14 =       2.088;
-            double p05 =      -394.1;
-
-            curvatureLowerLimit =
-                    p00           + p10*x         + p01*y         + p20*x*x       + p11*x*y       + p02*y*y       + p30*x*x*x
-                    + p21*x*x*y   + p12*x*y*y     + p03*y*y*y     + p40*x*x*x*x   + p31*x*x*x*y   + p22*x*x*y*y   + p13*x*y*y*y
-                    + p04*y*y*y*y + p50*x*x*x*x*x + p41*x*x*x*x*y + p32*x*x*x*y*y + p23*x*x*y*y*y + p14*x*y*y*y*y + p05*y*y*y*y*y;
-
-            curvatureLowerLimit = (2 - mDetectionProperties.p.curvatureFactor) * curvatureLowerLimit  - mDetectionProperties.v.curvatureOffset;
+            if (arrayAspectRatios[y] < mDetectionProperties.v.aspectRatioPrediction)
+            {
+                arrayYPos = y;
+                break;
+            }
         }
 
-        std::vector<edgeProperties> vEdgePropertiesAll = edgeFilter(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
+        double curvatureUpperLimit = arrayCurvatureMax[arrayXPos * arrayWidth + arrayYPos] + mDetectionProperties.v.curvatureOffset;
+        double curvatureLowerLimit = arrayCurvatureMin[arrayXPos * arrayWidth + arrayYPos] - mDetectionProperties.v.curvatureOffset;
+
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeSegmentation(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
+
+        /////////////////////////////////////////////////////////////////
+        /////////////////////// EDGE FILTER  ////////////////////////////
+        /////////////////////////////////////////////////////////////////
 
         int numEdgesTotal = vEdgePropertiesAll.size();
 
@@ -1759,7 +1724,7 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
             mDetectionProperties.v.edgeCurvaturePrediction = 0.5 * (curvatureUpperLimit + curvatureLowerLimit);
 
-            std::vector<int> acceptedEdges = edgeThreshold(mDetectionProperties, vEdgePropertiesAll, USE_PRIOR_INFORMATION);
+            std::vector<int> acceptedEdges = edgeFilter(mDetectionProperties, vEdgePropertiesAll, USE_PRIOR_INFORMATION);
             int numEdges = acceptedEdges.size();
 
             for (int iEdge = 0; iEdge < numEdges; iEdge++) // grab accepted edges
@@ -1769,18 +1734,26 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
                 vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
             }
 
+            //////////////////////////////////////////////////////////////////
+            /////////////////////// ELLIPSE FITTING  /////////////////////////
+            //////////////////////////////////////////////////////////////////
+
             mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mDetectionProperties, USE_PRIOR_INFORMATION); // ellipse fitting
+
+            // Classify edges
+
+            int numEdgesNew = mEllipseProperties.edgeIndices.size();
+
+            for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
+            {
+                int jEdge = mEllipseProperties.edgeIndices[iEdge];
+                vEdgePropertiesAll[jEdge].flag = 2;
+            }
         }
 
-        // Classify edges
-
-        int numEdgesNew = mEllipseProperties.edgeIndices.size();
-
-        for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
-        {
-            int jEdge = mEllipseProperties.edgeIndices[iEdge];
-            vEdgePropertiesAll[jEdge].flag = 2;
-        }
+        /////////////////////////////////////////////////////////////////
+        /////////////////////// SAVING DATA  ////////////////////////////
+        /////////////////////////////////////////////////////////////////
 
         // Features for all edges
 
@@ -1979,8 +1952,8 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
     if (mDetectionPropertiesNew.v.curvatureOffset > 180)
     {   mDetectionPropertiesNew.v.curvatureOffset = 180; }
-    else if (mDetectionPropertiesNew.v.curvatureOffset < mDetectionPropertiesNew.p.curvatureOffsetMin)
-    {        mDetectionPropertiesNew.v.curvatureOffset = mDetectionPropertiesNew.p.curvatureOffsetMin; }
+    else if (mDetectionPropertiesNew.v.curvatureOffset < mDetectionPropertiesNew.p.curvatureOffset)
+    {        mDetectionPropertiesNew.v.curvatureOffset = mDetectionPropertiesNew.p.curvatureOffset; }
 
     if (mDetectionPropertiesNew.v.priorCertainty > certaintyUpperLimit)
     {   mDetectionPropertiesNew.v.priorCertainty = certaintyUpperLimit; }
