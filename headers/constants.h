@@ -49,12 +49,7 @@ const double pupilImageFactor = 1.15;
 
 // Edge processing
 
-const int curvatureWindowLength = 10; // window length for curvature
+const int curvatureWindowLength = 5; // window length for curvature
 const int edgeIntensityPositionOffset = 2;
-
-
-
-
-
 
 #endif

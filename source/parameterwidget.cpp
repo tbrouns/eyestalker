@@ -30,10 +30,10 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CircumferenceMaxSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CircumferenceMaxSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumferenceMax(double)));
 
-    // Pupil fraction
+    // Pupil aspect ratio
 
     QLabel *AspectRatioMinTextBox = new QLabel;
-    AspectRatioMinTextBox->setText("<b>Fraction minimum:</b>");
+    AspectRatioMinTextBox->setText("<b>Aspect ratio minimum:</b>");
 
     AspectRatioMinLabel  = new QLabel;
     AspectRatioMinSlider = new SliderDouble;
@@ -177,7 +177,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MiscParametersTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *HaarOffsetTextBox = new QLabel;
-    HaarOffsetTextBox->setText("<b>Pupil Haar-offset:</b>");
+    HaarOffsetTextBox->setText("<b>Haar-offset:</b>");
 
     HaarOffsetLabel  = new QLabel;
     HaarOffsetSlider = new QSlider;

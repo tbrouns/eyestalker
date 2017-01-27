@@ -1683,6 +1683,8 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
             }
         }
 
+        std::vector<double> v = arrayCurvatureMax;
+
         double curvatureUpperLimit = arrayCurvatureMax[arrayXPos * arrayWidth + arrayYPos] + mDetectionProperties.v.curvatureOffset;
         double curvatureLowerLimit = arrayCurvatureMin[arrayXPos * arrayWidth + arrayYPos] - mDetectionProperties.v.curvatureOffset;
 

@@ -251,6 +251,7 @@ private:
     void countNumImages();
     void findCamera();
     void getCameraParameters();
+    detectionParameters loadParameters(QString, QString);
     void loadSettings(QString);
     void msWait(int ms);
     void pupilTracking();
