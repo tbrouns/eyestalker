@@ -1516,8 +1516,8 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
         for (int iFit = 0; iFit < numFits; iFit++)
         {
-            double dx = vEllipsePropertiesAll[iFit].xPos - mDetectionProperties.v.xPosPredicted;
-            double dy = vEllipsePropertiesAll[iFit].yPos - mDetectionProperties.v.yPosPredicted;
+            double dx = vEllipsePropertiesAll[iFit].xPos - mDetectionProperties.v.xPosPrediction;
+            double dy = vEllipsePropertiesAll[iFit].yPos - mDetectionProperties.v.yPosPrediction;
             double displacementChange  = sqrt(pow(dx,2) + pow(dy,2));
             double circumferenceChange = (std::abs(vEllipsePropertiesAll[iFit].circumference - mDetectionProperties.v.circumferencePrediction));
             double aspectRatioChange   = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio   - mDetectionProperties.v.aspectRatioPrediction));
@@ -1567,11 +1567,11 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
     int imageWdth = imageOriginalBGR.cols;
     int imageHght = imageOriginalBGR.rows;
 
-    int searchStartX = round(mDetectionProperties.v.xPosPredicted - mDetectionProperties.v.searchRadius);
-    int searchStartY = round(mDetectionProperties.v.yPosPredicted - mDetectionProperties.v.searchRadius);
+    int searchStartX = round(mDetectionProperties.v.xPosPrediction - mDetectionProperties.v.searchRadius);
+    int searchStartY = round(mDetectionProperties.v.yPosPrediction - mDetectionProperties.v.searchRadius);
 
-    int searchEndX = round(mDetectionProperties.v.xPosPredicted + mDetectionProperties.v.searchRadius);
-    int searchEndY = round(mDetectionProperties.v.yPosPredicted + mDetectionProperties.v.searchRadius);
+    int searchEndX = round(mDetectionProperties.v.xPosPrediction + mDetectionProperties.v.searchRadius);
+    int searchEndY = round(mDetectionProperties.v.yPosPrediction + mDetectionProperties.v.searchRadius);
 
     if (searchStartX < mDetectionProperties.p.AOIXPos)
     {   searchStartX = mDetectionProperties.p.AOIXPos; }
@@ -1679,15 +1679,15 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         if (cannyBlurLevel > 0) { cv::GaussianBlur(imagePupilGray, imagePupilGrayBlurred, cv::Size(cannyBlurLevel, cannyBlurLevel), 0, 0);
         } else                  { imagePupilGrayBlurred = imagePupilGray; }
 
-        double xPosPredictedRelative = mDetectionProperties.v.xPosPredicted - offsetPupilHaarXPos;
-        double yPosPredictedRelative = mDetectionProperties.v.yPosPredicted - offsetPupilHaarYPos;
+        double xPosPredictionRelative = mDetectionProperties.v.xPosPrediction - offsetPupilHaarXPos;
+        double yPosPredictionRelative = mDetectionProperties.v.yPosPrediction - offsetPupilHaarYPos;
 
         std::vector<int> cannyEdges; // binary vector
 
         if (USE_PRIOR_INFORMATION)
         {
-            std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mDetectionProperties.p.cannyKernelSize, xPosPredictedRelative, yPosPredictedRelative);
-            std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative);
+            std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mDetectionProperties.p.cannyKernelSize, xPosPredictionRelative, yPosPredictionRelative);
+            std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictionRelative, yPosPredictionRelative);
             cannyEdges = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mDetectionProperties.p.cannyThresholdHigh, mDetectionProperties.p.cannyThresholdLow);
         }
         else
@@ -1733,7 +1733,7 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         double curvatureUpperLimit = arrayCurvatureMax[arrayXPos * arrayWidth + arrayYPos] + mDetectionProperties.v.curvatureOffset;
         double curvatureLowerLimit = arrayCurvatureMin[arrayXPos * arrayWidth + arrayYPos] - mDetectionProperties.v.curvatureOffset;
 
-        std::vector<edgeProperties> vEdgePropertiesAll = edgeSegmentation(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeSegmentation(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictionRelative, yPosPredictionRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
 
         ///////////////////////////////////////////////////////////////////////
         /////////////////////// EDGE CLASSIFICATION  //////////////////////////
@@ -1760,8 +1760,8 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
                     int edgePointXPos  =  edgePointIndex % offsetPupilHaarWdth;
                     int edgePointYPos  = (edgePointIndex - edgePointXPos) / offsetPupilHaarWdth;
 
-                    double dX = mDetectionProperties.v.xPosPredicted - (edgePointXPos + offsetPupilHaarXPos);
-                    double dY = mDetectionProperties.v.yPosPredicted - (edgePointYPos + offsetPupilHaarYPos);
+                    double dX = mDetectionProperties.v.xPosPrediction - (edgePointXPos + offsetPupilHaarXPos);
+                    double dY = mDetectionProperties.v.yPosPrediction - (edgePointYPos + offsetPupilHaarYPos);
 
                     dR += sqrt(pow(dX, 2) + pow(dY, 2));
                 }
@@ -1866,8 +1866,8 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         mDetectionPropertiesNew.v.widthMomentum   = mDetectionProperties.v.widthMomentum * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.widthPrediction = mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.widthAverage - mDetectionProperties.v.widthPrediction);
 
-        mDetectionPropertiesNew.v.xPosPredicted = mDetectionProperties.v.xPosPredicted + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mDetectionProperties.v.xPosPredicted) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.yPosPredicted = mDetectionProperties.v.yPosPredicted + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarHght - mDetectionProperties.v.yPosPredicted) + mDetectionProperties.v.yVelocity;
+        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
+        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarHght - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
 
         mDetectionPropertiesNew.v.xVelocity     = mDetectionProperties.v.xVelocity * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.yVelocity     = mDetectionProperties.v.yVelocity * mDetectionProperties.p.alphaMomentum;
@@ -1906,12 +1906,12 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         mDetectionPropertiesNew.v.widthPrediction =  mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.width - mDetectionProperties.v.widthPrediction) + mDetectionProperties.v.widthMomentum;
 
         mDetectionPropertiesNew.v.xPosExact = mEllipseProperties.xPos + offsetPupilHaarXPos;
-        mDetectionPropertiesNew.v.xPosPredicted = mDetectionProperties.v.xPosPredicted + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.xPosExact - mDetectionProperties.v.xPosPredicted) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.xVelocity = (mDetectionProperties.v.xVelocity + (mDetectionPropertiesNew.v.xPosPredicted - mDetectionProperties.v.xPosPredicted)) * mDetectionProperties.p.alphaMomentum;
+        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.xPosExact - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
+        mDetectionPropertiesNew.v.xVelocity = (mDetectionProperties.v.xVelocity + (mDetectionPropertiesNew.v.xPosPrediction - mDetectionProperties.v.xPosPrediction)) * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.yPosExact = mEllipseProperties.yPos + offsetPupilHaarYPos;
-        mDetectionPropertiesNew.v.yPosPredicted = mDetectionProperties.v.yPosPredicted + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.yPosExact - mDetectionProperties.v.yPosPredicted) + mDetectionProperties.v.yVelocity;
-        mDetectionPropertiesNew.v.yVelocity = (mDetectionProperties.v.yVelocity + (mDetectionPropertiesNew.v.yPosPredicted - mDetectionProperties.v.yPosPredicted)) * mDetectionProperties.p.alphaMomentum;
+        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.yPosExact - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
+        mDetectionPropertiesNew.v.yVelocity = (mDetectionProperties.v.yVelocity + (mDetectionPropertiesNew.v.yPosPrediction - mDetectionProperties.v.yPosPrediction)) * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.aspectRatioExact   = mEllipseProperties.aspectRatio;
         mDetectionPropertiesNew.v.circumferenceExact = mEllipseProperties.circumference;

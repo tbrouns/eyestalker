@@ -113,6 +113,7 @@ struct detectionVariables
     double circumferenceMomentum;
     double circumferencePrediction;
     double curvatureOffset;
+    double detectionDuration;
     double edgeCurvaturePrediction;
     double heightAverage;
     double heightMomentum;
@@ -128,11 +129,11 @@ struct detectionVariables
     double widthPrediction;
     double xPosAbsolute;
     double xPosExact;
-    double xPosPredicted;
+    double xPosPrediction;
     double xVelocity;
     double yPosAbsolute;
     double yPosExact;
-    double yPosPredicted;
+    double yPosPrediction;
     double yVelocity;
 };
 

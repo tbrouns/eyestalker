@@ -101,12 +101,12 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
 
     mDetectionVariables.xPosAbsolute  = 0;
     mDetectionVariables.xPosExact     = 0;
-    mDetectionVariables.xPosPredicted = 0.5 * Parameters::eyeAOIWdth;
+    mDetectionVariables.xPosPrediction = 0.5 * Parameters::eyeAOIWdth;
     mDetectionVariables.xVelocity     = 0;
 
     mDetectionVariables.yPosAbsolute  = 0;
     mDetectionVariables.yPosExact     = 0;
-    mDetectionVariables.yPosPredicted = 0.5 * Parameters::eyeAOIHght;
+    mDetectionVariables.yPosPrediction = 0.5 * Parameters::eyeAOIHght;
     mDetectionVariables.yVelocity     = 0;
 
     mDetectionVariables.priorCertainty = certaintyLowerLimit;

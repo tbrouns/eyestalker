@@ -1405,7 +1405,7 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mDetectionParametersEye.pupilOffset * 2);
 
         mDetectionVariablesEye.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);
-        mDetectionVariablesEye.xPosPredicted = xPos;
-        mDetectionVariablesEye.yPosPredicted = yPos;
+        mDetectionVariablesEye.xPosPrediction = xPos;
+        mDetectionVariablesEye.yPosPrediction = yPos;
     }
 }

@@ -172,7 +172,7 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
             }
         }
 
-        drawEllipseCross(I, mDetectionProperties.v.xPosPredicted, mDetectionProperties.v.yPosPredicted, Parameters::ellipseDrawCrossSize, cyan);
+        drawEllipseCross(I, mDetectionProperties.v.xPosPrediction, mDetectionProperties.v.yPosPrediction, Parameters::ellipseDrawCrossSize, cyan);
     }
 }
 

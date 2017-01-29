@@ -329,7 +329,11 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         mDetectionPropertiesBead.p.AOIHght = Parameters::beadAOIHght;
     }
 
+    auto t1 = std::chrono::high_resolution_clock::now();
     detectionProperties mDetectionPropertiesNewEye = pupilDetection(imageRaw, mDetectionPropertiesEye);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+    mDetectionPropertiesNewEye.v.detectionDuration = fp_ms.count();
 
     cv::Mat imageProcessed = imageRaw.clone();
     drawAll(imageProcessed, mDetectionPropertiesNewEye);
@@ -499,7 +503,11 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].aspectRatioExact << delimiter; }
         }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].edgeCurvaturePrediction << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].xPosPrediction          << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].yPosPrediction          << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].circumferencePrediction << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].aspectRatioPrediction   << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].detectionDuration       << delimiter; }
 
         file.close();
     }
