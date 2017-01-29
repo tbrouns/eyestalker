@@ -40,7 +40,6 @@ private:
     QLabel *CannyThresholdLowLabel;
     QLabel *CannyThresholdHighLabel;
     QLabel *CurvatureOffsetLabel;
-    QLabel *EdgeIntensityOffsetLabel;
     QLabel *EdgeLengthFractionLabel;
     QLabel *EllipseFitNumberMaximumLabel;
     QLabel *EllipseFitErrorMaximumLabel;
@@ -65,7 +64,6 @@ private:
     SliderDouble *AlphaAverageSlider;
     SliderDouble *AlphaPredictionSlider;
     SliderDouble *CurvatureOffsetSlider;
-    SliderDouble *EdgeIntensityOffsetSlider;
     SliderDouble *EdgeLengthFractionSlider;
     SliderDouble *EllipseFitErrorMaximumSlider;
     SliderDouble *CircumferenceMinSlider;
@@ -89,7 +87,6 @@ private slots:
     void setCannyThresholdLow       (int);
     void setCannyThresholdHigh      (int);
     void setCurvatureOffset         (double);
-    void setEdgeIntensityOffset     (double);
     void setEdgeLengthFraction       (double);
     void setEllipseFitNumberMaximum (int);
     void setEllipseFitErrorMaximum  (double);

@@ -52,4 +52,13 @@ const double pupilImageFactor = 1.15;
 const int curvatureWindowLength = 5; // window length for curvature
 const int edgeIntensityPositionOffset = 2;
 
+// Edge classification
+
+const double scoreFactorRadius        = 0.67;
+const double scoreFactorCurvature     = 0.05;
+const double scoreFactorCircumference = 0.81;
+const double scoreFactorIntensity     = 0.55;
+
+const double scoreThreshold = 0.3324;
+
 #endif

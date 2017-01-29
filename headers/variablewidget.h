@@ -26,9 +26,6 @@ public:
 
 private:
 
-    QLabel *EdgeIntensityLabel;
-
-    SliderDouble *EdgeIntensitySlider;
     SliderDouble *CircumferenceSlider;
     SliderDouble *AspectRatioSlider;
     QLabel *CircumferenceLabel;
@@ -42,7 +39,6 @@ public slots:
 
 private slots:
 
-    void setEdgeIntensity(double);
     void setCircumference(double);
     void setAspectRatio(double);
 

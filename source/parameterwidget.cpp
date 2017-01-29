@@ -42,18 +42,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     AspectRatioMinSlider->setOrientation(Qt::Horizontal);
     QObject::connect(AspectRatioMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAspectRatioMin(double)));
 
-    // Edge intensity
-
-    QLabel *EdgeIntensityOffsetTextBox = new QLabel;
-    EdgeIntensityOffsetTextBox->setText("<b>Edge intensity offset:</b>");
-
-    EdgeIntensityOffsetLabel  = new QLabel;
-    EdgeIntensityOffsetSlider = new SliderDouble();
-    EdgeIntensityOffsetSlider->setPrecision(1);
-    EdgeIntensityOffsetSlider->setDoubleRange(0.0, 255.0);
-    EdgeIntensityOffsetSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EdgeIntensityOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeIntensityOffset(double)));
-
     // Sliders for canny edge parameters
 
     QLabel *CannyEdgeTextBox = new QLabel;
@@ -251,7 +239,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CircumferenceMaxTextBox,          1, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CircumferenceMinTextBox,          2, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AspectRatioMinTextBox,            3, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EdgeIntensityOffsetTextBox,       4, 0, 1, 1, Qt::AlignRight);
 
     MainLayout->addWidget(CannyThresholdHighTextBox,        6, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CannyThresholdLowTextBox,         7, 0, 1, 1, Qt::AlignRight);
@@ -277,7 +264,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CircumferenceMaxSlider,           1, 1);
     MainLayout->addWidget(CircumferenceMinSlider,           2, 1);
     MainLayout->addWidget(AspectRatioMinSlider,             3, 1);
-    MainLayout->addWidget(EdgeIntensityOffsetSlider,        4, 1);
     MainLayout->addWidget(TitleCannyTextBox,                5, 1, 1, 1, Qt::AlignCenter);
     MainLayout->addWidget(CannyThresholdHighSlider,         6, 1);
     MainLayout->addWidget(CannyThresholdLowSlider,          7, 1);
@@ -302,7 +288,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CircumferenceMaxLabel,         1, 2);
     MainLayout->addWidget(CircumferenceMinLabel,         2, 2);
     MainLayout->addWidget(AspectRatioMinLabel,           3, 2);
-    MainLayout->addWidget(EdgeIntensityOffsetLabel,      4, 2);
 
     MainLayout->addWidget(CannyThresholdHighLabel,       6, 2);
     MainLayout->addWidget(CannyThresholdLowLabel,        7, 2);
@@ -367,9 +352,6 @@ void ParameterWidget::reset()
 
     AspectRatioMinSlider->setDoubleValue(mDetectionParameters.aspectRatioMin);
     AspectRatioMinLabel ->setText(QString::number(mDetectionParameters.aspectRatioMin, 'f', 2));
-
-    EdgeIntensityOffsetSlider->setDoubleValue(mDetectionParameters.edgeIntensityOffset);
-    EdgeIntensityOffsetLabel ->setText(QString::number(mDetectionParameters.edgeIntensityOffset, 'f', 1));
 
     CannyThresholdLowSlider->setValue(mDetectionParameters.cannyThresholdLow);
     CannyThresholdLowLabel ->setText(QString::number(mDetectionParameters.cannyThresholdLow));
@@ -444,12 +426,6 @@ void ParameterWidget::setAspectRatioMin(double value)
 {
     mDetectionParameters.aspectRatioMin = value;
     AspectRatioMinLabel->setText(QString::number(value, 'f', 2));
-}
-
-void ParameterWidget::setEdgeIntensityOffset(double value)
-{
-    mDetectionParameters.edgeIntensityOffset = value;
-    EdgeIntensityOffsetLabel->setText(QString::number(value, 'f', 1));
 }
 
 void ParameterWidget::setEdgeLengthFraction(double value)

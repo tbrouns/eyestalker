@@ -53,63 +53,40 @@ void MainWindow::loadSettings(QString filename)
     subjectIdentifier               = settings.value("SubjectIdentifier",           "").toString();
     trialTimeLength                 = settings.value("TrialTimeLength",             1500).toInt();
 
-    detectionParameters mDetectionParametersEye = loadParameters(filename, "Bead");
-
-    mDetectionParametersEye.alphaAverage                       = settings.value("AlphaAverage",                    0.005).toDouble();
-    mDetectionParametersEye.alphaMiscellaneous                 = settings.value("AlphaMiscellaneous",              0.75).toDouble();
-    mDetectionParametersEye.alphaMomentum                      = settings.value("AlphaMomentum",                   0.50).toDouble();
-    mDetectionParametersEye.alphaPrediction                    = settings.value("AlphaPrediction",                 0.75).toDouble();
-    mDetectionParametersEye.cannyBlurLevel                     = settings.value("CannyBlurLevel",                  4).toInt();
-    mDetectionParametersEye.cannyKernelSize                    = settings.value("CannyKernelSize",                 5).toInt();
-    mDetectionParametersEye.cannyThresholdLow                  = settings.value("CannyThresholdLow",               75).toInt();
-    mDetectionParametersEye.cannyThresholdHigh                 = settings.value("CannyThresholdHigh",              150).toInt();
-    mDetectionParametersEye.curvatureOffset                    = settings.value("CurvatureOffset",                 10).toDouble();
-    mDetectionParametersEye.edgeIntensityOffset                = settings.value("EdgeIntensityOffset",             40).toDouble();
-    mDetectionParametersEye.edgeLengthFraction                 = settings.value("EdgeLengthFraction",              0.60).toDouble();
-    mDetectionParametersEye.ellipseFitNumberMaximum            = settings.value("EllipseFitNumberMaximum",         3).toInt();
-    mDetectionParametersEye.ellipseFitErrorMaximum             = settings.value("EllipseFitErrorMaximum",          80).toDouble();
-    mDetectionParametersEye.glintSize                          = settings.value("GlintSize",                       12).toInt();
-    mDetectionParametersEye.circumferenceMax                   = settings.value("CircumferenceMax",                320).toDouble();
-    mDetectionParametersEye.circumferenceMin                   = settings.value("CircumferenceMin",                60).toDouble();
-    mDetectionParametersEye.aspectRatioMin                     = settings.value("AspectRatioMin",                  0.4).toDouble();
-    mDetectionParametersEye.pupilOffset                        = settings.value("PupilOffset",                     25).toInt();
-    mDetectionParametersEye.circumferenceChangeThreshold       = settings.value("CircumferenceChangeThreshold",    30.0).toDouble();
-    mDetectionParametersEye.aspectRatioChangeThreshold         = settings.value("AspectRatioChangeThreshold",      0.2).toDouble();
-
+    detectionParameters mDetectionParametersEye  = loadParameters(filename, "Eye",  parametersEye);
     mParameterWidgetEye ->setStructure(mDetectionParametersEye);
     mVariableWidgetEye->resetStructure(mDetectionParametersEye);
 
-    detectionParameters mDetectionParametersBead = loadParameters(filename, "Bead");
-
+    detectionParameters mDetectionParametersBead = loadParameters(filename, "Bead", parametersBead);
     mParameterWidgetBead ->setStructure(mDetectionParametersBead);
     mVariableWidgetBead->resetStructure(mDetectionParametersBead);
 }
 
-detectionParameters MainWindow::loadParameters(QString filename, QString prefix)
+detectionParameters MainWindow::loadParameters(QString filename, QString prefix, std::vector<double> parameters)
 {
     QSettings settings(filename, QSettings::IniFormat);
 
     detectionParameters mDetectionParameters;
-    mDetectionParameters.alphaAverage                       = settings.value(prefix + "AlphaAverage",                    0.005).toDouble();
-    mDetectionParameters.alphaMiscellaneous                 = settings.value(prefix + "AlphaMiscellaneous",              0.75).toDouble();
-    mDetectionParameters.alphaMomentum                      = settings.value(prefix + "AlphaMomentum",                   0.50).toDouble();
-    mDetectionParameters.alphaPrediction                    = settings.value(prefix + "AlphaPrediction",                 0.75).toDouble();
-    mDetectionParameters.cannyBlurLevel                     = settings.value(prefix + "CannyBlurLevel",                  4).toInt();
-    mDetectionParameters.cannyKernelSize                    = settings.value(prefix + "CannyKernelSize",                 3).toInt();
-    mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               75).toInt();
-    mDetectionParameters.cannyThresholdHigh                 = settings.value(prefix + "CannyThresholdHigh",              150).toInt();
-    mDetectionParameters.curvatureOffset                    = settings.value(prefix + "CurvatureOffset",                 10).toDouble();
-    mDetectionParameters.edgeIntensityOffset                = settings.value(prefix + "EdgeIntensityOffset",             40).toDouble();
-    mDetectionParameters.edgeLengthFraction                 = settings.value(prefix + "EdgeLengthFraction",              0.60).toDouble();
-    mDetectionParameters.ellipseFitNumberMaximum            = settings.value(prefix + "EllipseFitNumberMaximum",         3).toInt();
-    mDetectionParameters.ellipseFitErrorMaximum             = settings.value(prefix + "EllipseFitErrorMaximum",          80).toDouble();
-    mDetectionParameters.glintSize                          = settings.value(prefix + "GlintSize",                       0).toInt();
-    mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                130).toDouble();
-    mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                90).toDouble();
-    mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  0.8).toDouble();
-    mDetectionParameters.pupilOffset                        = settings.value(prefix + "PupilOffset",                     15).toInt();
-    mDetectionParameters.circumferenceChangeThreshold       = settings.value(prefix + "CircumferenceChangeThreshold",    5.0).toDouble();
-    mDetectionParameters.aspectRatioChangeThreshold         = settings.value(prefix + "AspectRatioChangeThreshold",      0.05).toDouble();
+    mDetectionParameters.alphaAverage                       = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
+    mDetectionParameters.alphaMiscellaneous                 = settings.value(prefix + "AlphaMiscellaneous",              parameters[1]).toDouble();
+    mDetectionParameters.alphaMomentum                      = settings.value(prefix + "AlphaMomentum",                   parameters[2]).toDouble();
+    mDetectionParameters.alphaPrediction                    = settings.value(prefix + "AlphaPrediction",                 parameters[3]).toDouble();
+    mDetectionParameters.cannyBlurLevel                     = settings.value(prefix + "CannyBlurLevel",                  parameters[4]).toInt();
+    mDetectionParameters.cannyKernelSize                    = settings.value(prefix + "CannyKernelSize",                 parameters[5]).toInt();
+    mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               parameters[6]).toInt();
+    mDetectionParameters.cannyThresholdHigh                 = settings.value(prefix + "CannyThresholdHigh",              parameters[7]).toInt();
+    mDetectionParameters.curvatureOffset                    = settings.value(prefix + "CurvatureOffset",                 parameters[8]).toDouble();
+    mDetectionParameters.edgeLengthFraction                 = settings.value(prefix + "EdgeLengthFraction",              parameters[9]).toDouble();
+    mDetectionParameters.ellipseFitNumberMaximum            = settings.value(prefix + "EllipseFitNumberMaximum",         parameters[10]).toInt();
+    mDetectionParameters.ellipseFitErrorMaximum             = settings.value(prefix + "EllipseFitErrorMaximum",          parameters[11]).toDouble();
+    mDetectionParameters.glintSize                          = settings.value(prefix + "GlintSize",                       parameters[12]).toInt();
+    mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
+    mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
+    mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
+    mDetectionParameters.pupilOffset                        = settings.value(prefix + "HaarOffset",                      parameters[16]).toInt();
+    mDetectionParameters.circumferenceChangeThreshold       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
+    mDetectionParameters.aspectRatioChangeThreshold         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
+    mDetectionParameters.displacementChangeThreshold        = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
 
     return mDetectionParameters;
 }
@@ -117,9 +94,6 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix)
 
 void MainWindow::saveSettings(QString filename)
 {
-    detectionParameters mDetectionParametersEye  = mParameterWidgetEye->getStructure();
-    detectionParameters mDetectionParametersBead = mParameterWidgetBead->getStructure(); // turn this into function
-
     QSettings settings(filename, QSettings::IniFormat);
 
     settings.setValue("AOIHghtFraction",                eyeAOIHghtFraction);
@@ -153,45 +127,36 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
     settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text().toInt());
 
-    settings.setValue("AlphaAverage",                   mDetectionParametersEye.alphaAverage);
-    settings.setValue("AlphaMiscellaneous",             mDetectionParametersEye.alphaMiscellaneous);
-    settings.setValue("AlphaMomentum",                  mDetectionParametersEye.alphaMomentum);
-    settings.setValue("AlphaPrediction",                mDetectionParametersEye.alphaPrediction);
-    settings.setValue("CannyBlurLevel",                 mDetectionParametersEye.cannyBlurLevel);
-    settings.setValue("CannyKernelSize",                mDetectionParametersEye.cannyKernelSize);
-    settings.setValue("CannyThresholdLow",              mDetectionParametersEye.cannyThresholdLow);
-    settings.setValue("CannyThresholdHigh",             mDetectionParametersEye.cannyThresholdHigh);
-    settings.setValue("CircumferenceMax",               mDetectionParametersEye.circumferenceMax);
-    settings.setValue("CircumferenceMin",               mDetectionParametersEye.circumferenceMin);
-    settings.setValue("CurvatureOffset",                mDetectionParametersEye.curvatureOffset);
-    settings.setValue("EdgeIntensityOffset",            mDetectionParametersEye.edgeIntensityOffset);
-    settings.setValue("EllipseFitNumberMaximum",        mDetectionParametersEye.ellipseFitNumberMaximum);
-    settings.setValue("EllipseFitErrorMaximum",         mDetectionParametersEye.ellipseFitErrorMaximum);
-    settings.setValue("AspectRatioMin",                 mDetectionParametersEye.aspectRatioMin);
-    settings.setValue("GlintSize",                      mDetectionParametersEye.glintSize);
-    settings.setValue("PupilOffset",                    mDetectionParametersEye.pupilOffset);
-    settings.setValue("CircumferenceChangeThreshold",   mDetectionParametersEye.circumferenceChangeThreshold);
-    settings.setValue("AspectRatioChangeThreshold",     mDetectionParametersEye.aspectRatioChangeThreshold);
+    detectionParameters mDetectionParametersEye  = mParameterWidgetEye->getStructure();
+    saveParameters(filename,  "Eye", mDetectionParametersEye);
 
-    settings.setValue("BeadAlphaAverage",                   mDetectionParametersBead.alphaAverage);
-    settings.setValue("BeadAlphaMiscellaneous",             mDetectionParametersBead.alphaMiscellaneous);
-    settings.setValue("BeadAlphaMomentum",                  mDetectionParametersBead.alphaMomentum);
-    settings.setValue("BeadAlphaPrediction",                mDetectionParametersBead.alphaPrediction);
-    settings.setValue("BeadCannyBlurLevel",                 mDetectionParametersBead.cannyBlurLevel);
-    settings.setValue("BeadCannyKernelSize",                mDetectionParametersBead.cannyKernelSize);
-    settings.setValue("BeadCannyThresholdLow",              mDetectionParametersBead.cannyThresholdLow);
-    settings.setValue("BeadCannyThresholdHigh",             mDetectionParametersBead.cannyThresholdHigh);
-    settings.setValue("BeadCircumferenceMax",               mDetectionParametersBead.circumferenceMax);
-    settings.setValue("BeadCircumferenceMin",               mDetectionParametersBead.circumferenceMin);
-    settings.setValue("BeadCurvatureOffset",                mDetectionParametersBead.curvatureOffset);
-    settings.setValue("BeadEdgeIntensityOffset",            mDetectionParametersBead.edgeIntensityOffset);
-    settings.setValue("BeadEllipseFitNumberMaximum",        mDetectionParametersBead.ellipseFitNumberMaximum);
-    settings.setValue("BeadEllipseFitErrorMaximum",         mDetectionParametersBead.ellipseFitErrorMaximum);
-    settings.setValue("BeadAspectRatioMin",                 mDetectionParametersBead.aspectRatioMin);
-    settings.setValue("BeadGlintSize",                      mDetectionParametersBead.glintSize);
-    settings.setValue("BeadPupilOffset",                    mDetectionParametersBead.pupilOffset);
-    settings.setValue("BeadCircumferenceChangeThreshold",   mDetectionParametersBead.circumferenceChangeThreshold);
-    settings.setValue("BeadAspectRatioChangeThreshold",     mDetectionParametersBead.aspectRatioChangeThreshold);
+    detectionParameters mDetectionParametersBead = mParameterWidgetBead->getStructure();
+    saveParameters(filename, "Bead", mDetectionParametersBead);
+}
+
+void MainWindow::saveParameters(QString filename, QString prefix, detectionParameters mDetectionParameters)
+{
+    QSettings settings(filename, QSettings::IniFormat);
+
+    settings.setValue(prefix + "AlphaAverage",                   mDetectionParameters.alphaAverage);
+    settings.setValue(prefix + "AlphaMiscellaneous",             mDetectionParameters.alphaMiscellaneous);
+    settings.setValue(prefix + "AlphaMomentum",                  mDetectionParameters.alphaMomentum);
+    settings.setValue(prefix + "AlphaPrediction",                mDetectionParameters.alphaPrediction);
+    settings.setValue(prefix + "CannyBlurLevel",                 mDetectionParameters.cannyBlurLevel);
+    settings.setValue(prefix + "CannyKernelSize",                mDetectionParameters.cannyKernelSize);
+    settings.setValue(prefix + "CannyThresholdLow",              mDetectionParameters.cannyThresholdLow);
+    settings.setValue(prefix + "CannyThresholdHigh",             mDetectionParameters.cannyThresholdHigh);
+    settings.setValue(prefix + "CircumferenceMax",               mDetectionParameters.circumferenceMax);
+    settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.circumferenceMin);
+    settings.setValue(prefix + "CurvatureOffset",                mDetectionParameters.curvatureOffset);
+    settings.setValue(prefix + "EllipseFitNumberMaximum",        mDetectionParameters.ellipseFitNumberMaximum);
+    settings.setValue(prefix + "EllipseFitErrorMaximum",         mDetectionParameters.ellipseFitErrorMaximum);
+    settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
+    settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintSize);
+    settings.setValue(prefix + "HaarOffset",                     mDetectionParameters.pupilOffset);
+    settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.circumferenceChangeThreshold);
+    settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.aspectRatioChangeThreshold);
+    settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.displacementChangeThreshold);
 }
 
 void MainWindow::onResetParameters()

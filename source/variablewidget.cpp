@@ -24,20 +24,8 @@ VariableWidget::VariableWidget(QWidget *parent) : QWidget(parent)
     AspectRatioSlider->setDoubleRange(0, 1.0);
     AspectRatioSlider->setOrientation(Qt::Horizontal);
 
-    // Edge intensity
-
-    QLabel *EdgeIntensityTextBox = new QLabel;
-    EdgeIntensityTextBox->setText("<b>Edge intensity:</b>");
-
-    EdgeIntensityLabel  = new QLabel();
-    EdgeIntensitySlider = new SliderDouble();
-    EdgeIntensitySlider->setPrecision(1);
-    EdgeIntensitySlider->setDoubleRange(0.0, 255.0);
-    EdgeIntensitySlider->setOrientation(Qt::Horizontal);
-
     QObject::connect(CircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumference(double)));
     QObject::connect(AspectRatioSlider,   SIGNAL(doubleValueChanged(double)), this, SLOT(setAspectRatio(double)));
-    QObject::connect(EdgeIntensitySlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeIntensity(double)));
 
     // Title
 
@@ -55,9 +43,6 @@ VariableWidget::VariableWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(AspectRatioTextBox,   2, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AspectRatioSlider,    2, 1);
     MainLayout->addWidget(AspectRatioLabel,     2 ,2);
-    MainLayout->addWidget(EdgeIntensityTextBox, 3, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EdgeIntensitySlider,  3, 1);
-    MainLayout->addWidget(EdgeIntensityLabel,   3, 2);
 
     MainLayout->setColumnStretch(0,1);
     MainLayout->setColumnStretch(1,3);
@@ -84,9 +69,6 @@ void VariableWidget::setWidgets(const detectionVariables& mDetectionVariables)
 
     AspectRatioSlider->setDoubleValue(mDetectionVariables.aspectRatioPrediction);
     AspectRatioLabel->setText(QString::number(mDetectionVariables.aspectRatioPrediction, 'f', 2));
-
-    EdgeIntensitySlider->setDoubleValue(mDetectionVariables.edgeIntensityPrediction);
-    EdgeIntensityLabel->setText(QString::number(mDetectionVariables.edgeIntensityPrediction, 'f', 1));
 }
 
 void VariableWidget::resetStructure(const detectionParameters& mDetectionParameters)
@@ -100,9 +82,6 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.circumferenceExact      = 0;
     mDetectionVariables.circumferenceMomentum   = 0;
     mDetectionVariables.circumferencePrediction = mDetectionVariables.circumferenceAverage;
-
-    mDetectionVariables.edgeIntensityAverage    = 255;
-    mDetectionVariables.edgeIntensityPrediction = 255;
 
     mDetectionVariables.heightAverage    = mDetectionVariables.circumferencePrediction / M_PI;
     mDetectionVariables.heightPrediction = mDetectionVariables.heightAverage;
@@ -152,13 +131,3 @@ void VariableWidget::setAspectRatio(double value)
         AspectRatioLabel->setText(QString::number(value, 'f', 2));
     }
 }
-
-void VariableWidget::setEdgeIntensity(double value)
-{
-    if (!Parameters::ONLINE_PROCESSING)
-    {
-        mDetectionVariables.edgeIntensityPrediction = value;
-        EdgeIntensityLabel->setText(QString::number(value, 'f', 1));
-    }
-}
-

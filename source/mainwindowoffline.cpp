@@ -500,7 +500,6 @@ void MainWindow::onSaveTrialData()
         }
 
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].edgeCurvaturePrediction << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].edgeIntensityPrediction << delimiter; }
 
         file.close();
     }
@@ -526,7 +525,7 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].length       << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].size         << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].distance     << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].radius     << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].intensity    << delimiter; }
             file << "\n";
         }

@@ -1112,74 +1112,90 @@ std::vector<edgeProperties> edgeSegmentation(const cv::Mat& img, std::vector<int
     return vEdgePropertiesAll; // return structure
 }
 
-std::vector<int> edgeFilter(detectionProperties mDetectionProperties, const std::vector<edgeProperties>& vEdgePropertiesAll, bool USE_PRIOR_INFORMATION)
+std::vector<int> edgeClassification(detectionProperties mDetectionProperties, const std::vector<edgeProperties>& vEdgePropertiesAll, bool USE_PRIOR_INFORMATION)
 {
-    double expectedCurvature = mDetectionProperties.v.edgeCurvaturePrediction;
-
     int numEdgesMax = mDetectionProperties.p.ellipseFitNumberMaximum;
     int numEdges    = vEdgePropertiesAll.size();
     if (numEdgesMax > numEdges) { numEdgesMax = numEdges; }
 
-    std::vector<int> acceptedEdges(numEdgesMax);
-    std::vector<double> totalScoresUnsorted(numEdges);
+    // Classify edges based on score
+
+    std::vector<double> totalScores(numEdges);
+
+    const double norm = scoreFactorRadius + scoreFactorCurvature + scoreFactorCircumference + scoreFactorIntensity;
 
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        double intensityScore = 0;
-        double positionScore  = 0;
-        double lengthScore    = 0;
-        double curvatureScore = 0;
+        double dRadius          = mDetectionProperties.v.circumferencePrediction / (2 * M_PI) - vEdgePropertiesAll[iEdge].radius;
+        double dCircumference   = mDetectionProperties.v.circumferencePrediction - vEdgePropertiesAll[iEdge].length;
+        double dCurvature       = mDetectionProperties.v.edgeCurvaturePrediction - vEdgePropertiesAll[iEdge].curvatureAvg;
+        double intensity        = vEdgePropertiesAll[iEdge].intensity;
 
-        // intensity score
-        double intensity = vEdgePropertiesAll[iEdge].intensity;
-        intensityScore = (20 / (1 + 0.01 * pow(0.90, -intensity + mDetectionProperties.v.edgeIntensityPrediction)));
-        if (intensityScore < 0) { intensityScore = 0; }
-
-        // length score
-        double length = vEdgePropertiesAll[iEdge].length;
-        if (length <= mDetectionProperties.v.circumferencePrediction)
-        { lengthScore = 12 * (1 - exp(-0.0002 * mDetectionProperties.v.circumferencePrediction * length)); } // longer = better
-        else
-        { lengthScore = 12 / (1 + 0.01 * pow(0.85, -length + mDetectionProperties.v.circumferencePrediction)); } // closer to prediction = better
-        if (lengthScore < 0) { lengthScore = 0; }
+        double scoreRadius          = 0;
+        double scoreCurvature       = 0;
+        double scoreCircumference   = 0;
+        double scoreIntensity       = 0;
 
         if (USE_PRIOR_INFORMATION)
         {
-            // position score
-            double dR = std::abs(vEdgePropertiesAll[iEdge].distance - mDetectionProperties.v.radiusPrediction); // reduce prediction by constant factor, because actual pupil edge should envelop prediction
-            positionScore = (-15 / (mDetectionProperties.v.radiusPrediction)) * dR + 15;
-            if (positionScore < 0) { positionScore = 0; }
-
-            // curvature score
-            double dC = std::abs(vEdgePropertiesAll[iEdge].curvatureAvg - expectedCurvature); // closer to prediction = better
-            curvatureScore = (-7 / expectedCurvature) * dC + 7;
-            if (curvatureScore < 0) { curvatureScore = 0; }
+            scoreRadius        = scoreFactorRadius        * (exp(-(pow(   dRadius, 2) / 20)));
+            scoreCurvature     = scoreFactorCurvature     * (exp(-(pow(dCurvature, 2) / 20)));
+            scoreCircumference = scoreFactorCircumference * (1 - 1 / (1 + exp(-0.10 * (dCircumference - 75))));
         }
 
-        totalScoresUnsorted[iEdge] = intensityScore + positionScore + lengthScore + curvatureScore;
+        scoreIntensity = scoreFactorIntensity * (1 - 1 / (1 + exp(-0.25 * (intensity - 50))));
+
+        totalScores[iEdge] = (scoreRadius + scoreCurvature + scoreCircumference + scoreIntensity) / norm;
     }
 
-    // Grab edges with highest score
+    // Only pick edges above threshold
 
-    std::vector<double> totalScoresSorted = totalScoresUnsorted;
-    std::sort(totalScoresSorted.begin(), totalScoresSorted.end());
-    std::reverse(totalScoresSorted.begin(), totalScoresSorted.end());
+    std::vector<int> pupilEdges;
 
-    for (int iEdge = 0; iEdge < numEdgesMax; iEdge++) // THRESHOLD: do not handle more than a fixed number of edges
+    for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        for (int jEdge = 0; jEdge < numEdges; jEdge++)
+        if (totalScores[iEdge] >= scoreThreshold || !USE_PRIOR_INFORMATION)
         {
-            if (totalScoresSorted[iEdge] == totalScoresUnsorted[jEdge])
+            pupilEdges.push_back(iEdge);
+        }
+    }
+
+    int numEdgesNew = pupilEdges.size();
+
+    if (numEdgesNew > numEdgesMax) // Grab edges with highest score if maximum is exceeded
+    {
+        std::vector<double> totalScoresUnsorted;
+
+        for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
+        {
+            totalScoresUnsorted.push_back(totalScores[pupilEdges[iEdge]]);
+        }
+
+        std::vector<int> acceptedEdges(numEdgesMax);
+
+        std::vector<double> totalScoresSorted = totalScoresUnsorted;
+        std::sort(totalScoresSorted.begin(), totalScoresSorted.end());
+        std::reverse(totalScoresSorted.begin(), totalScoresSorted.end());
+
+        for (int iEdge = 0; iEdge < numEdgesMax; iEdge++) // THRESHOLD: do not handle more than a fixed number of edges
+        {
+            for (int jEdge = 0; jEdge < numEdgesNew; jEdge++)
             {
-                acceptedEdges[iEdge] = jEdge;
-                totalScoresUnsorted[jEdge] = -1;
-                break;
+                if (totalScoresSorted[iEdge] == totalScoresUnsorted[jEdge])
+                {
+                    acceptedEdges[iEdge] = pupilEdges[jEdge];
+                    totalScoresUnsorted[jEdge] = -1;
+                    break;
+                }
             }
         }
+
+        return acceptedEdges;
     }
-
-    return acceptedEdges;
-
+    else
+    {
+        return pupilEdges;
+    }
 }
 
 std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
@@ -1369,11 +1385,11 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
                 }
             }
             
-            // calculate lengths
+            // Find properties of edge collection
+
+            // Calculate total length
 
             int edgeSetLength = std::accumulate(combiEdgeLengths.begin(), combiEdgeLengths.end(), 0);
-
-            // ignore edge collections that are too small
 
             if (USE_PRIOR_INFORMATION)
             {
@@ -1388,7 +1404,7 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             int edgeSetSize = std::accumulate(combiEdgeSizes.begin(), combiEdgeSizes.end(), 0);
 
-            // concatenate index vectors
+            // Concatenate index vectors
 
             std::vector<int> edgeIndices; // vector containing all indices for fit
             edgeIndices.reserve(edgeSetSize); // preallocate memory
@@ -1396,7 +1412,30 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
             for (int iEdge = 0; iEdge < combiNumEdges; iEdge++)
             { edgeIndices.insert(edgeIndices.end(), combiEdgePointIndices[iEdge].begin(), combiEdgePointIndices[iEdge].end()); }
 
-            // fit ellipse
+            // Calculate range
+
+            std::vector<int> edgeXPositions(edgeSetSize);
+            std::vector<int> edgeYPositions(edgeSetSize);
+
+            for (int iEdgePoint = 0; iEdgePoint < edgeSetSize; iEdgePoint++)
+            {
+                int edgePointIndex = edgeIndices[iEdgePoint];
+                edgeXPositions[iEdgePoint] = edgePointIndex % haarWidth;
+                edgeYPositions[iEdgePoint] = (edgePointIndex - edgeXPositions[iEdgePoint]) / haarWidth;
+            }
+
+            int XPosMin = *std::min_element(std::begin(edgeXPositions), std::end(edgeXPositions));
+            int XPosMax = *std::max_element(std::begin(edgeXPositions), std::end(edgeXPositions));
+            int YPosMin = *std::min_element(std::begin(edgeYPositions), std::end(edgeYPositions));
+            int YPosMax = *std::max_element(std::begin(edgeYPositions), std::end(edgeYPositions));
+
+            int combiWdth = XPosMax - XPosMin;
+            int combiHght = YPosMax - YPosMin;
+
+            if (combiWdth * 2 * M_PI > mDetectionProperties.p.circumferenceMax || combiHght * 2 * M_PI > mDetectionProperties.p.circumferenceMax) { continue; } // no large pupils
+            if (combiWdth * 2 * M_PI < mDetectionProperties.p.circumferenceMin && combiHght * 2 * M_PI < mDetectionProperties.p.circumferenceMin) { continue; } // no small pupils
+
+            // Fit ellipse
 
             ellipseProperties mEllipsePropertiesNew = fitEllipse(edgeIndices, edgeSetSize, haarWidth);
 
@@ -1465,16 +1504,21 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     {
         std::vector<double> featureChange(numFits); // new type of fit error
 
-        double maxScoreFitError      = 20;
-        double maxScoreCircumference = 20;
-        double maxScoreAspectRatio   = 20;
-        double maxScoreLength        = 20;
+        double maxScoreAspectRatio   = 1;
+        double maxScoreCircumference = 1;
+        double maxScoreDisplacement  = 1;
+        double maxScoreFitError      = 2;
+        double maxScoreLength        = 2;
 
-        double scoreCircumference = 0;
         double scoreAspectRatio   = 0;
+        double scoreCircumference = 0;
+        double scoreDisplacement  = 0;
 
         for (int iFit = 0; iFit < numFits; iFit++)
         {
+            double dx = vEllipsePropertiesAll[iFit].xPos - mDetectionProperties.v.xPosPredicted;
+            double dy = vEllipsePropertiesAll[iFit].yPos - mDetectionProperties.v.yPosPredicted;
+            double displacementChange  = sqrt(pow(dx,2) + pow(dy,2));
             double circumferenceChange = (std::abs(vEllipsePropertiesAll[iFit].circumference - mDetectionProperties.v.circumferencePrediction));
             double aspectRatioChange   = (std::abs(vEllipsePropertiesAll[iFit].aspectRatio   - mDetectionProperties.v.aspectRatioPrediction));
             double lengthDifference    = (std::abs(vEllipsePropertiesAll[iFit].edgeLength    - mDetectionProperties.v.circumferencePrediction));
@@ -1482,8 +1526,9 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
 
             if (USE_PRIOR_INFORMATION)
             {
-                scoreCircumference  = (-maxScoreCircumference / mDetectionProperties.p.circumferenceChangeThreshold) * circumferenceChange + maxScoreCircumference;
-                scoreAspectRatio    = (-maxScoreAspectRatio   / mDetectionProperties.p.aspectRatioChangeThreshold)   * aspectRatioChange   + maxScoreAspectRatio;
+                scoreAspectRatio   = (-maxScoreAspectRatio   / mDetectionProperties.p.aspectRatioChangeThreshold)   * aspectRatioChange   + maxScoreAspectRatio;
+                scoreCircumference = (-maxScoreCircumference / mDetectionProperties.p.circumferenceChangeThreshold) * circumferenceChange + maxScoreCircumference;
+                scoreDisplacement  = (-maxScoreDisplacement  / mDetectionProperties.p.displacementChangeThreshold)  * displacementChange  + maxScoreDisplacement;
             }
 
             double scoreFitError = (-maxScoreFitError   / mDetectionProperties.p.ellipseFitErrorMaximum)  * fitError         + maxScoreFitError;
@@ -1494,7 +1539,7 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
             if (scoreFitError       < 0) { scoreFitError        = 0; }
             if (scoreLength         < 0) { scoreLength          = 0; }
 
-            featureChange[iFit] = scoreCircumference + scoreAspectRatio + scoreFitError + scoreLength;
+            featureChange[iFit] = scoreAspectRatio + scoreCircumference + scoreDisplacement + scoreFitError + scoreLength;
         }
 
         int acceptedFitIndex = std::distance(featureChange.begin(), std::max_element(featureChange.begin(), featureChange.end()));
@@ -1690,9 +1735,9 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
         std::vector<edgeProperties> vEdgePropertiesAll = edgeSegmentation(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictedRelative, yPosPredictedRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
 
-        /////////////////////////////////////////////////////////////////
-        /////////////////////// EDGE FILTER  ////////////////////////////
-        /////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////
+        /////////////////////// EDGE CLASSIFICATION  //////////////////////////
+        ///////////////////////////////////////////////////////////////////////
 
         int numEdgesTotal = vEdgePropertiesAll.size();
 
@@ -1721,12 +1766,12 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
                     dR += sqrt(pow(dX, 2) + pow(dY, 2));
                 }
 
-                vEdgePropertiesAll[iEdge].distance = dR / edgeSize;
+                vEdgePropertiesAll[iEdge].radius = dR / edgeSize; // average radius
             }
 
             mDetectionProperties.v.edgeCurvaturePrediction = 0.5 * (curvatureUpperLimit + curvatureLowerLimit);
 
-            std::vector<int> acceptedEdges = edgeFilter(mDetectionProperties, vEdgePropertiesAll, USE_PRIOR_INFORMATION);
+            std::vector<int> acceptedEdges = edgeClassification(mDetectionProperties, vEdgePropertiesAll, USE_PRIOR_INFORMATION);
             int numEdges = acceptedEdges.size();
 
             for (int iEdge = 0; iEdge < numEdges; iEdge++) // grab accepted edges
@@ -1805,9 +1850,6 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
         mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * (1 / mDetectionProperties.p.alphaMiscellaneous);
 
-        mDetectionPropertiesNew.v.edgeIntensityAverage    = mDetectionProperties.v.edgeIntensityAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.edgeIntensityPrediction - mDetectionProperties.v.edgeIntensityAverage);
-        mDetectionPropertiesNew.v.edgeIntensityPrediction = mDetectionProperties.v.edgeIntensityPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionProperties.v.edgeIntensityAverage - mDetectionProperties.v.edgeIntensityPrediction);
-
         mDetectionPropertiesNew.v.heightAverage    = mDetectionProperties.v.heightAverage + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.heightPrediction - mDetectionProperties.v.heightAverage);
         mDetectionPropertiesNew.v.heightMomentum   = mDetectionProperties.v.heightMomentum * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.heightPrediction = mDetectionProperties.v.heightPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.heightAverage - mDetectionProperties.v.heightPrediction);
@@ -1846,9 +1888,6 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         mDetectionPropertiesNew.v.circumferencePrediction =  mDetectionProperties.v.circumferencePrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.circumference - mDetectionProperties.v.circumferencePrediction) + mDetectionProperties.v.circumferenceMomentum;
 
         mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * mDetectionProperties.p.alphaMiscellaneous;
-
-        mDetectionPropertiesNew.v.edgeIntensityAverage    = mDetectionProperties.v.edgeIntensityAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.edgeIntensityPrediction - mDetectionProperties.v.edgeIntensityAverage);
-        mDetectionPropertiesNew.v.edgeIntensityPrediction = mDetectionProperties.v.edgeIntensityPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.intensity - mDetectionProperties.v.edgeIntensityPrediction);
 
         mDetectionPropertiesNew.v.heightAverage    =  mDetectionProperties.v.heightAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.heightPrediction - mDetectionProperties.v.heightAverage);
         mDetectionPropertiesNew.v.heightMomentum   = (mDetectionProperties.v.heightMomentum   + mDetectionProperties.p.alphaMomentum   * (mDetectionPropertiesNew.v.heightPrediction - mDetectionProperties.v.heightPrediction));

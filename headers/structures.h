@@ -44,7 +44,7 @@ struct edgeProperties
     double curvatureMin;
     double curvatureAvg;
     double intensity;
-    double distance;
+    double radius;
     int index;
     int length;
     int size;
@@ -79,7 +79,6 @@ struct detectionParameters
     double alphaAverage;
     double alphaPrediction;
     double curvatureOffset;
-    double edgeIntensityOffset;
     double edgeLengthFraction;
     double ellipseFitErrorMaximum;
     double circumferenceMax;
@@ -87,6 +86,7 @@ struct detectionParameters
     double aspectRatioMin;
     double circumferenceChangeThreshold;
     double aspectRatioChangeThreshold;
+    double displacementChangeThreshold;
     int AOIXPos;
     int AOIYPos;
     int AOIWdth;
@@ -114,8 +114,6 @@ struct detectionVariables
     double circumferencePrediction;
     double curvatureOffset;
     double edgeCurvaturePrediction;
-    double edgeIntensityAverage;
-    double edgeIntensityPrediction;
     double heightAverage;
     double heightMomentum;
     double heightPrediction;
