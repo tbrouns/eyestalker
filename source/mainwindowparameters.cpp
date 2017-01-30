@@ -42,10 +42,10 @@ void MainWindow::loadSettings(QString filename)
     Parameters::eyeAOIYPosFraction  = settings.value("AOIYPosRelative",             0.0).toDouble();
     Parameters::beadAOIXPosFraction = settings.value("AOIBeadXPosRelative",         0.2).toDouble();
     Parameters::beadAOIYPosFraction = settings.value("AOIBeadYPosRelative",         0.5).toDouble();
-    flashAOIHght                    = settings.value("FlashAOIHght",                100).toInt();
-    flashAOIWdth                    = settings.value("FlashAOIWdth",                60).toInt();
-    flashAOIXPos                    = settings.value("FlashAOIXPos",                227).toInt();
-    flashAOIYPos                    = settings.value("FlashAOIYPos",                500).toInt();
+    flashAOI.hght                   = settings.value("FlashAOIHght",                100).toInt();
+    flashAOI.wdth                   = settings.value("FlashAOIWdth",                60).toInt();
+    flashAOI.xPos                   = settings.value("FlashAOIXPos",                227).toInt();
+    flashAOI.yPos                   = settings.value("FlashAOIYPos",                500).toInt();
     SAVE_ASPECT_RATIO               = settings.value("SaveAspectRatio",             false).toBool();
     SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           false).toBool();
     SAVE_POSITION                   = settings.value("SavePosition",                true).toBool();
@@ -73,20 +73,21 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.alphaPrediction                    = settings.value(prefix + "AlphaPrediction",                 parameters[3]).toDouble();
     mDetectionParameters.cannyBlurLevel                     = settings.value(prefix + "CannyBlurLevel",                  parameters[4]).toInt();
     mDetectionParameters.cannyKernelSize                    = settings.value(prefix + "CannyKernelSize",                 parameters[5]).toInt();
-    mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               parameters[6]).toInt();
-    mDetectionParameters.cannyThresholdHigh                 = settings.value(prefix + "CannyThresholdHigh",              parameters[7]).toInt();
+    mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               parameters[6]).toDouble();
+    mDetectionParameters.cannyThresholdHigh                 = settings.value(prefix + "CannyThresholdHigh",              parameters[7]).toDouble();
     mDetectionParameters.curvatureOffset                    = settings.value(prefix + "CurvatureOffset",                 parameters[8]).toDouble();
     mDetectionParameters.edgeLengthFraction                 = settings.value(prefix + "EdgeLengthFraction",              parameters[9]).toDouble();
     mDetectionParameters.ellipseFitNumberMaximum            = settings.value(prefix + "EllipseFitNumberMaximum",         parameters[10]).toInt();
     mDetectionParameters.ellipseFitErrorMaximum             = settings.value(prefix + "EllipseFitErrorMaximum",          parameters[11]).toDouble();
-    mDetectionParameters.glintSize                          = settings.value(prefix + "GlintSize",                       parameters[12]).toInt();
+    mDetectionParameters.glintWdth                          = settings.value(prefix + "GlintSize",                       parameters[12]).toInt();
     mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
     mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
     mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
-    mDetectionParameters.pupilOffset                        = settings.value(prefix + "HaarOffset",                      parameters[16]).toInt();
+    mDetectionParameters.haarOffset                        = settings.value(prefix + "HaarOffset",                       parameters[16]).toInt();
     mDetectionParameters.circumferenceChangeThreshold       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
     mDetectionParameters.aspectRatioChangeThreshold         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.displacementChangeThreshold        = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
+    mDetectionParameters.scoreThreshold                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
 
     return mDetectionParameters;
 }
@@ -114,10 +115,10 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("CamAOIYPosFraction",             cameraAOIFractionYPos);
     settings.setValue("CameraFrameRateDesired",         cameraFrameRateDesired);
     settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
-    settings.setValue("FlashAOIHght",                   flashAOIHght);
-    settings.setValue("FlashAOIWdth",                   flashAOIWdth);
-    settings.setValue("FlashAOIXPos",                   flashAOIXPos);
-    settings.setValue("FlashAOIYPos",                   flashAOIYPos);
+    settings.setValue("FlashAOIHght",                   flashAOI.hght);
+    settings.setValue("FlashAOIWdth",                   flashAOI.wdth);
+    settings.setValue("FlashAOIXPos",                   flashAOI.xPos);
+    settings.setValue("FlashAOIYPos",                   flashAOI.yPos);
     settings.setValue("FlashThreshold",                 flashThreshold);
     settings.setValue("SaveAspectRatio",                SAVE_ASPECT_RATIO);
     settings.setValue("SaveCircumference",              SAVE_CIRCUMFERENCE);
@@ -152,11 +153,12 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "EllipseFitNumberMaximum",        mDetectionParameters.ellipseFitNumberMaximum);
     settings.setValue(prefix + "EllipseFitErrorMaximum",         mDetectionParameters.ellipseFitErrorMaximum);
     settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
-    settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintSize);
-    settings.setValue(prefix + "HaarOffset",                     mDetectionParameters.pupilOffset);
+    settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);
+    settings.setValue(prefix + "HaarOffset",                     mDetectionParameters.haarOffset);
     settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.circumferenceChangeThreshold);
     settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.aspectRatioChangeThreshold);
     settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.displacementChangeThreshold);
+    settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.scoreThreshold);
 }
 
 void MainWindow::onResetParameters()
@@ -370,9 +372,9 @@ void MainWindow::setCameraSubSampling(int state)
         {
             if (mUEyeOpencvCam.setSubSampling(cameraSubSamplingFactor))
             {
-                if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+                if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
                 {
-                    mUEyeOpencvCam.setAOI(Parameters::cameraAOIXPos, Parameters::cameraAOIYPos, Parameters::cameraAOIWdth, Parameters::cameraAOIHght);
+                    mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght);
                     Parameters::CAMERA_READY = true;
                 }
             }
@@ -384,13 +386,13 @@ void MainWindow::setCameraSubSampling(int state)
 
 void MainWindow::onCropAOI()
 {
-    int absXPos = Parameters::eyeAOIXPos + Parameters::cameraAOIXPos;
-    int absYPos = Parameters::eyeAOIYPos + Parameters::cameraAOIYPos;
+    int absXPos = Parameters::eyeAOI.xPos + Parameters::cameraAOI.xPos;
+    int absYPos = Parameters::eyeAOI.yPos + Parameters::cameraAOI.yPos;
 
     double fracXPos = absXPos / (double) cameraAOIWdthMax;
     double fracYPos = absYPos / (double) cameraAOIHghtMax;
-    double fracWdth = (Parameters::eyeAOIWdth - cameraAOIWdthMin) / (double) (cameraAOIWdthMax - cameraAOIWdthMin);
-    double fracHght = (Parameters::eyeAOIHght - cameraAOIHghtMin) / (double) (cameraAOIHghtMax - cameraAOIHghtMin);
+    double fracWdth = (Parameters::eyeAOI.wdth - cameraAOIWdthMin) / (double) (cameraAOIWdthMax - cameraAOIWdthMin);
+    double fracHght = (Parameters::eyeAOI.hght - cameraAOIHghtMin) / (double) (cameraAOIHghtMax - cameraAOIHghtMin);
 
     Parameters::eyeAOIXPosFraction = 1.0;
     Parameters::eyeAOIYPosFraction = 1.0;
@@ -405,9 +407,9 @@ void MainWindow::onCropAOI()
 
 void MainWindow::updateCamAOIx()
 {
-    Parameters::cameraAOIWdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-    Parameters::cameraAOIXPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-    CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOIWdth) / (double) cameraAOIWdthMax);
+    Parameters::cameraAOI.wdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+    Parameters::cameraAOI.xPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+    CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         updateEyeAOIx(); }
@@ -415,9 +417,9 @@ void MainWindow::updateCamAOIx()
 
 void MainWindow::updateCamAOIy()
 {
-    Parameters::cameraAOIHght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-    Parameters::cameraAOIYPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-    CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOIHght) / (double) cameraAOIHghtMax);
+    Parameters::cameraAOI.hght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+    Parameters::cameraAOI.yPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+    CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         updateEyeAOIy(); }
@@ -425,48 +427,48 @@ void MainWindow::updateCamAOIy()
 
 void MainWindow::updateEyeAOIx()
 {
-    Parameters::eyeAOIWdth = round(Parameters::cameraAOIWdth * eyeAOIWdthFraction);
-    Parameters::eyeAOIXPos = round(Parameters::cameraAOIWdth * Parameters::eyeAOIXPosFraction);
+    Parameters::eyeAOI.wdth = round(Parameters::cameraAOI.wdth * eyeAOIWdthFraction);
+    Parameters::eyeAOI.xPos = round(Parameters::cameraAOI.wdth * Parameters::eyeAOIXPosFraction);
 
-    if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth > Parameters::cameraAOIWdth)
-    {   Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth; }
+    if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::cameraAOI.wdth)
+    {   Parameters::eyeAOI.xPos = Parameters::cameraAOI.wdth - Parameters::eyeAOI.wdth; }
 
-    Parameters::beadAOIWdth = round(Parameters::cameraAOIWdth * beadAOIWdthFraction);
-    Parameters::beadAOIXPos = round(Parameters::cameraAOIWdth * Parameters::beadAOIXPosFraction);
+    Parameters::beadAOI.wdth = round(Parameters::cameraAOI.wdth * beadAOIWdthFraction);
+    Parameters::beadAOI.xPos = round(Parameters::cameraAOI.wdth * Parameters::beadAOIXPosFraction);
 
-    if (Parameters::beadAOIXPos + Parameters::beadAOIWdth > Parameters::cameraAOIWdth)
-    {   Parameters::beadAOIXPos = Parameters::cameraAOIWdth - Parameters::beadAOIWdth; }
+    if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth > Parameters::cameraAOI.wdth)
+    {   Parameters::beadAOI.xPos = Parameters::cameraAOI.wdth - Parameters::beadAOI.wdth; }
 }
 
 void MainWindow::updateEyeAOIy()
 {
-    Parameters::eyeAOIHght = round(Parameters::cameraAOIHght * eyeAOIHghtFraction);
-    Parameters::eyeAOIYPos = round(Parameters::cameraAOIHght * Parameters::eyeAOIYPosFraction);
+    Parameters::eyeAOI.hght = round(Parameters::cameraAOI.hght * eyeAOIHghtFraction);
+    Parameters::eyeAOI.yPos = round(Parameters::cameraAOI.hght * Parameters::eyeAOIYPosFraction);
 
-    if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght > Parameters::cameraAOIHght)
-    {   Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght; }
+    if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::cameraAOI.hght)
+    {   Parameters::eyeAOI.yPos = Parameters::cameraAOI.hght - Parameters::eyeAOI.hght; }
 
-    Parameters::beadAOIHght = round(Parameters::cameraAOIHght * beadAOIHghtFraction);
-    Parameters::beadAOIYPos = round(Parameters::cameraAOIHght * Parameters::beadAOIYPosFraction);
+    Parameters::beadAOI.hght = round(Parameters::cameraAOI.hght * beadAOIHghtFraction);
+    Parameters::beadAOI.yPos = round(Parameters::cameraAOI.hght * Parameters::beadAOIYPosFraction);
 
-    if (Parameters::beadAOIYPos + Parameters::beadAOIHght > Parameters::cameraAOIHght)
-    {   Parameters::beadAOIYPos = Parameters::cameraAOIHght - Parameters::beadAOIHght; }
+    if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght > Parameters::cameraAOI.hght)
+    {   Parameters::beadAOI.yPos = Parameters::cameraAOI.hght - Parameters::beadAOI.hght; }
 }
 
 void MainWindow::setCamEyeAOIWdth(double fraction)
 {
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         cameraAOIFractionWdth = fraction;
-        Parameters::cameraAOIWdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+        Parameters::cameraAOI.wdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
         updateEyeAOIx(); }
 
     if (mUEyeOpencvCam.freeImageMemory())
     {
-        if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+        if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
         {
-            if (Parameters::cameraAOIXPos + Parameters::cameraAOIWdth <= cameraAOIWdthMax)
+            if (Parameters::cameraAOI.xPos + Parameters::cameraAOI.wdth <= cameraAOIWdthMax)
             {
-                if (mUEyeOpencvCam.setAOI(Parameters::cameraAOIXPos, Parameters::cameraAOIYPos, Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+                if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
                 {
                     Parameters::CAMERA_READY = true;
                     getCameraParameters();
@@ -475,23 +477,23 @@ void MainWindow::setCamEyeAOIWdth(double fraction)
         }
     }
 
-    CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOIWdth) / (double) cameraAOIWdthMax);
+    CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
 }
 
 void MainWindow::setCamEyeAOIHght(double fraction)
 {
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         cameraAOIFractionHght = fraction;
-        Parameters::cameraAOIHght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+        Parameters::cameraAOI.hght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
         updateEyeAOIy(); }
 
     if (mUEyeOpencvCam.freeImageMemory())
     {
-        if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+        if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
         {
-            if (Parameters::cameraAOIYPos + Parameters::cameraAOIHght <= cameraAOIHghtMax)
+            if (Parameters::cameraAOI.yPos + Parameters::cameraAOI.hght <= cameraAOIHghtMax)
             {
-                if (mUEyeOpencvCam.setAOI(Parameters::cameraAOIXPos, Parameters::cameraAOIYPos, Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+                if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
                 {
                     Parameters::CAMERA_READY = true;
                     getCameraParameters();
@@ -500,16 +502,16 @@ void MainWindow::setCamEyeAOIHght(double fraction)
         }
     }
 
-    CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOIHght) / (double) cameraAOIHghtMax);
+    CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
 }
 
 void MainWindow::setCamEyeAOIXPos(double fraction)
 {
     cameraAOIFractionXPos = fraction;
 
-    Parameters::cameraAOIXPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+    Parameters::cameraAOI.xPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
 
-    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOIXPos, Parameters::cameraAOIYPos, Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
     {
         Parameters::CAMERA_READY = true;
         getCameraParameters();
@@ -520,9 +522,9 @@ void MainWindow::setCamEyeAOIYPos(double fraction)
 {
     cameraAOIFractionYPos = fraction;
 
-    Parameters::cameraAOIYPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+    Parameters::cameraAOI.yPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
 
-    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOIXPos, Parameters::cameraAOIYPos, Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
     {
         Parameters::CAMERA_READY = true;
         getCameraParameters();
@@ -535,10 +537,10 @@ void MainWindow::setEyeAOIWdth(double fraction)
 
     eyeAOIWdthFraction = fraction;
 
-    Parameters::eyeAOIWdth = round(Parameters::cameraAOIWdth * eyeAOIWdthFraction);
+    Parameters::eyeAOI.wdth = round(Parameters::cameraAOI.wdth * eyeAOIWdthFraction);
 
-    if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth > Parameters::cameraAOIWdth)
-    {   Parameters::eyeAOIXPos = Parameters::cameraAOIWdth - Parameters::eyeAOIWdth; }
+    if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::cameraAOI.wdth)
+    {   Parameters::eyeAOI.xPos = Parameters::cameraAOI.wdth - Parameters::eyeAOI.wdth; }
 }
 
 void MainWindow::setEyeAOIHght(double fraction)
@@ -547,42 +549,42 @@ void MainWindow::setEyeAOIHght(double fraction)
 
     eyeAOIHghtFraction = fraction;
 
-    Parameters::eyeAOIHght = round(Parameters::cameraAOIHght * eyeAOIHghtFraction);
+    Parameters::eyeAOI.hght = round(Parameters::cameraAOI.hght * eyeAOIHghtFraction);
 
-    if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght > Parameters::cameraAOIHght)
-    {   Parameters::eyeAOIYPos = Parameters::cameraAOIHght - Parameters::eyeAOIHght; }
+    if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::cameraAOI.hght)
+    {   Parameters::eyeAOI.yPos = Parameters::cameraAOI.hght - Parameters::eyeAOI.hght; }
 }
 
 void MainWindow::setFlashAOIXPos(int val)
 {
     std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-    flashAOIXPos = val;
-    CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
+    flashAOI.xPos = val;
+    CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::setFlashAOIYPos(int val)
 {
     std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-    flashAOIYPos = val;
-    CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
+    flashAOI.yPos = val;
+    CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::setFlashAOIWdth(int val)
 {
     std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-    flashAOIWdth = val;
-    CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
+    flashAOI.wdth = val;
+    CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::setFlashAOIHght(int val)
 {
     std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-    flashAOIHght = val;
-    CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
+    flashAOI.hght = val;
+    CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::setFlashThreshold(int val)

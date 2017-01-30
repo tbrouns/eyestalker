@@ -127,9 +127,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CamQImage = new QImageOpenCV(1);
     CamQImage->setSize(camImageWdth, camImageHght);
-    CamQImage->setAOIEye  ( Parameters::eyeAOIXPos,   Parameters::eyeAOIYPos,   Parameters::eyeAOIWdth,   Parameters::eyeAOIHght);
-    CamQImage->setAOIBead (Parameters::beadAOIXPos,  Parameters::beadAOIYPos,  Parameters::beadAOIWdth,  Parameters::beadAOIHght);
-    CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
+    CamQImage->setAOIEye  (Parameters::eyeAOI);
+    CamQImage->setAOIBead (Parameters::beadAOI);
+    CamQImage->setAOIFlash(flashAOI);
 
     CamQImage->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     CamQImage->loadImage(imgCam);
@@ -618,10 +618,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FlashWdthSpinBox->setRange(0, Parameters::cameraXResolution);
     FlashHghtSpinBox->setRange(0, Parameters::cameraYResolution);
 
-    FlashXPosSpinBox->setValue(flashAOIXPos);
-    FlashYPosSpinBox->setValue(flashAOIYPos);
-    FlashWdthSpinBox->setValue(flashAOIWdth);
-    FlashHghtSpinBox->setValue(flashAOIHght);
+    FlashXPosSpinBox->setValue(flashAOI.xPos);
+    FlashYPosSpinBox->setValue(flashAOI.yPos);
+    FlashWdthSpinBox->setValue(flashAOI.wdth);
+    FlashHghtSpinBox->setValue(flashAOI.hght);
 
     QObject::connect(FlashXPosSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setFlashAOIXPos(int)));
     QObject::connect(FlashYPosSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setFlashAOIYPos(int)));
@@ -866,10 +866,12 @@ void MainWindow::pupilTracking()
     {
         detectionProperties mDetectionPropertiesEyeTemp;
 
-        int flashAOIXPosTemp = 0;
-        int flashAOIYPosTemp = 0;
-        int flashAOIWdthTemp = 0;
-        int flashAOIHghtTemp = 0;
+        AOIProperties flashAOITemp;
+
+        flashAOITemp.xPos = 0;
+        flashAOITemp.yPos = 0;
+        flashAOITemp.wdth = 0;
+        flashAOITemp.hght = 0;
 
         bool FLASH_REGION_VISIBLE = true;
 
@@ -897,65 +899,65 @@ void MainWindow::pupilTracking()
             mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
             mDetectionPropertiesEyeTemp.p = mParameterWidgetEye->getStructure();
 
-            cameraAOIXPos = Parameters::cameraAOIXPos;
-            cameraAOIYPos = Parameters::cameraAOIYPos;
-            cameraAOIWdth = Parameters::cameraAOIWdth;
-            cameraAOIHght = Parameters::cameraAOIHght;
+            cameraAOIXPos = Parameters::cameraAOI.xPos;
+            cameraAOIYPos = Parameters::cameraAOI.yPos;
+            cameraAOIWdth = Parameters::cameraAOI.wdth;
+            cameraAOIHght = Parameters::cameraAOI.hght;
 
-            mDetectionPropertiesEyeTemp.p.AOIXPos = Parameters::eyeAOIXPos;
-            mDetectionPropertiesEyeTemp.p.AOIYPos = Parameters::eyeAOIYPos;
-            mDetectionPropertiesEyeTemp.p.AOIWdth = Parameters::eyeAOIWdth;
-            mDetectionPropertiesEyeTemp.p.AOIHght = Parameters::eyeAOIHght;
+            mDetectionPropertiesEyeTemp.p.AOIXPos = Parameters::eyeAOI.xPos;
+            mDetectionPropertiesEyeTemp.p.AOIYPos = Parameters::eyeAOI.yPos;
+            mDetectionPropertiesEyeTemp.p.AOIWdth = Parameters::eyeAOI.wdth;
+            mDetectionPropertiesEyeTemp.p.AOIHght = Parameters::eyeAOI.hght;
 
             if (!TRIAL_RECORDING)
             {
-                flashAOIXPosTemp = flashAOIXPos - cameraAOIXPos;
-                flashAOIYPosTemp = flashAOIYPos - cameraAOIYPos;
-                flashAOIWdthTemp = flashAOIWdth;
-                flashAOIHghtTemp = flashAOIHght;
+                flashAOITemp.xPos = flashAOI.xPos - cameraAOIXPos;
+                flashAOITemp.yPos = flashAOI.yPos - cameraAOIYPos;
+                flashAOITemp.wdth = flashAOI.wdth;
+                flashAOITemp.hght = flashAOI.hght;
 
-                if (flashAOIXPosTemp < 0)
+                if (flashAOITemp.xPos < 0)
                 {
-                    if (flashAOIXPosTemp + flashAOIWdthTemp < 0) // Flash AOI not in camera AOI
+                    if (flashAOITemp.xPos + flashAOITemp.wdth < 0) // Flash AOI not in camera AOI
                     {
                         FlashStandbySlider->setValue(0);
                         FLASH_REGION_VISIBLE = false;
                     }
                     else
                     {
-                        flashAOIWdthTemp = flashAOIXPosTemp + flashAOIWdthTemp;
-                        flashAOIXPosTemp = 0;
+                        flashAOITemp.wdth = flashAOITemp.xPos + flashAOITemp.wdth;
+                        flashAOITemp.xPos = 0;
                     }
                 }
-                else if (flashAOIXPosTemp + flashAOIWdthTemp >= cameraAOIWdth)
+                else if (flashAOITemp.xPos + flashAOITemp.wdth >= cameraAOIWdth)
                 {
-                    flashAOIWdthTemp = cameraAOIWdth - flashAOIXPosTemp;
+                    flashAOITemp.wdth = cameraAOIWdth - flashAOITemp.xPos;
 
-                    if (flashAOIWdthTemp <= 0)
+                    if (flashAOITemp.wdth <= 0)
                     {
                         FlashStandbySlider->setValue(0);
                         FLASH_REGION_VISIBLE = false;
                     }
                 }
 
-                if (flashAOIYPosTemp < 0)
+                if (flashAOITemp.yPos < 0)
                 {
-                    if (flashAOIYPosTemp + flashAOIHghtTemp < 0) // Flash AOI not in camera AOI
+                    if (flashAOITemp.yPos + flashAOITemp.hght < 0) // Flash AOI not in camera AOI
                     {
                         FlashStandbySlider->setValue(0);
                         FLASH_REGION_VISIBLE = false;
                     }
                     else
                     {
-                        flashAOIHghtTemp = flashAOIYPosTemp + flashAOIHghtTemp;
-                        flashAOIYPosTemp = 0;
+                        flashAOITemp.hght = flashAOITemp.yPos + flashAOITemp.hght;
+                        flashAOITemp.yPos = 0;
                     }
                 }
-                else if (flashAOIYPosTemp + flashAOIHghtTemp >= cameraAOIHght)
+                else if (flashAOITemp.yPos + flashAOITemp.hght >= cameraAOIHght)
                 {
-                    flashAOIHghtTemp = cameraAOIHght - flashAOIYPosTemp;
+                    flashAOITemp.hght = cameraAOIHght - flashAOITemp.yPos;
 
-                    if (flashAOIHghtTemp <= 0)
+                    if (flashAOITemp.hght <= 0)
                     {
                         FlashStandbySlider->setValue(0);
                         FLASH_REGION_VISIBLE = false;
@@ -978,7 +980,7 @@ void MainWindow::pupilTracking()
 
             if (FLASH_REGION_VISIBLE)
             {
-                cv::Rect flashRegion(flashAOIXPosTemp, flashAOIYPosTemp, flashAOIWdthTemp, flashAOIHghtTemp);
+                cv::Rect flashRegion(flashAOITemp.xPos, flashAOITemp.yPos, flashAOITemp.wdth, flashAOITemp.hght);
                 avgIntensity = flashDetection(imageOriginal(flashRegion));
             }
 
@@ -1098,15 +1100,9 @@ void MainWindow::updateCameraImage()
 
                 cv::Mat imageOriginal;
 
-                int eyeAOIXPos;
-                int eyeAOIYPos;
-                int eyeAOIWdth;
-                int eyeAOIHght;
-
-                int beadAOIXPos;
-                int beadAOIYPos;
-                int beadAOIWdth;
-                int beadAOIHght;
+                AOIProperties   eyeAOITemp;
+                AOIProperties  beadAOITemp;
+                AOIProperties flashAOITemp;
 
                 { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
                     if (!imageCamera.empty())
@@ -1116,26 +1112,20 @@ void MainWindow::updateCameraImage()
                         mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
                         mDetectionPropertiesEyeTemp.m = mDetectionMiscellaneousEye;
 
-                        eyeAOIXPos = Parameters::eyeAOIXPos;
-                        eyeAOIYPos = Parameters::eyeAOIYPos;
-                        eyeAOIWdth = Parameters::eyeAOIWdth;
-                        eyeAOIHght = Parameters::eyeAOIHght;
-
-                        beadAOIXPos = Parameters::beadAOIXPos;
-                        beadAOIYPos = Parameters::beadAOIYPos;
-                        beadAOIWdth = Parameters::beadAOIWdth;
-                        beadAOIHght = Parameters::beadAOIHght;
+                         eyeAOITemp = Parameters::eyeAOI;
+                        beadAOITemp = Parameters::beadAOI;
+                       flashAOITemp = flashAOI;
 
                     } else { return; }
                 }
 
                 CamQImage->loadImage(imageOriginal);
-                CamQImage->setAOIEye  (  eyeAOIXPos,   eyeAOIYPos,   eyeAOIWdth,   eyeAOIHght);
-                CamQImage->setAOIBead ( beadAOIXPos,  beadAOIYPos,  beadAOIWdth,  beadAOIHght);
-                CamQImage->setAOIFlash(flashAOIXPos, flashAOIYPos, flashAOIWdth, flashAOIHght);
+                CamQImage->setAOIEye  (  eyeAOITemp);
+                CamQImage->setAOIBead ( beadAOITemp);
+                CamQImage->setAOIFlash(flashAOITemp);
                 CamQImage->setImage();
 
-                if (eyeAOIWdth >= eyeAOIWdthMin && eyeAOIHght >= eyeAOIHghtMin)
+                if (eyeAOITemp.wdth >= eyeAOIWdthMin && eyeAOITemp.hght >= eyeAOIHghtMin)
                 {
                     if (!mDetectionPropertiesEyeTemp.m.errorDetected)
                     {
@@ -1238,9 +1228,9 @@ void MainWindow::findCamera()
 
             if (mUEyeOpencvCam.setSubSampling(cameraSubSamplingFactor))
             {
-                if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+                if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
                 {
-                    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOIXPos, Parameters::cameraAOIYPos, Parameters::cameraAOIWdth, Parameters::cameraAOIHght))
+                    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
                     {
                         CAMERA_START = true;
                         break;
@@ -1397,12 +1387,12 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 {
     std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-    if (xPos > 0 && xPos < Parameters::eyeAOIWdth && yPos > 0 && yPos < Parameters::eyeAOIHght)
+    if (xPos > 0 && xPos < Parameters::eyeAOI.wdth && yPos > 0 && yPos < Parameters::eyeAOI.hght)
     {
         detectionParameters mDetectionParametersEye = mParameterWidgetEye->getStructure();
 
         int pupilHaarWdth       = round(mDetectionVariablesEye.circumferencePrediction / M_PI);
-        int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mDetectionParametersEye.pupilOffset * 2);
+        int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mDetectionParametersEye.haarOffset * 2);
 
         mDetectionVariablesEye.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);
         mDetectionVariablesEye.xPosPrediction = xPos;

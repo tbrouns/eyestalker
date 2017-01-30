@@ -46,26 +46,18 @@ public:
 
     static double eyeAOIXPosFraction;
     static double eyeAOIYPosFraction;
-    static int    eyeAOIHght;
-    static int    eyeAOIWdth;
-    static int    eyeAOIXPos;
-    static int    eyeAOIYPos;
+    static AOIProperties eyeAOI;
 
     static double beadAOIXPosFraction;
     static double beadAOIYPosFraction;
-    static int    beadAOIHght;
-    static int    beadAOIWdth;
-    static int    beadAOIXPos;
-    static int    beadAOIYPos;
+    static AOIProperties beadAOI;
 
     static drawBooleans drawFlags;
 
-    static int cameraAOIHght;
-    static int cameraAOIWdth;
-    static int cameraAOIXPos;
-    static int cameraAOIYPos;
     static int cameraXResolution;
     static int cameraYResolution;
+    static AOIProperties cameraAOI;
+
     static int cannyKernelSize;
     static int ellipseDrawCrossSize;
 

@@ -27,8 +27,13 @@ double ceil2( double value )
     else             { return  ceil(value); }
 }
 
-std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, int startX, int startY, int width, int height)
+std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, AOIProperties searchAOI)
 {
+    int startX = searchAOI.xPos;
+    int startY = searchAOI.yPos;
+    int width  = searchAOI.wdth;
+    int height = searchAOI.hght;
+
     uchar *ptr = img.data;
     
     std::vector<unsigned int> integralImage(width * height); // unsigned due to large positive values
@@ -52,31 +57,31 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, int 
     return integralImage;
 }
 
-haarProperties detectGlint(const cv::Mat& img, int imgWidth, int startX, int startY, int width, int height, int glintSize)
+AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties searchAOI, AOIProperties glintAOI)
 {
-    int gradientWindowLength = glintSize;
-    int glintRadius = round(0.5 * glintSize);
+    int gradientWindowLength = glintAOI.wdth;
+    int glintRadius = round(0.5 * glintAOI.wdth);
 
     uchar *ptr = img.data;
     
-    std::vector<double> imageGradient(width * height, 0.0);
+    std::vector<double> imageGradient(searchAOI.wdth * searchAOI.hght, 0.0);
     
     std::vector<int> dZ(8);
     dZ[0] = -1;
-    dZ[1] = -width - 1;
-    dZ[2] = -width;
-    dZ[3] = -width + 1;
+    dZ[1] = -searchAOI.wdth - 1;
+    dZ[2] = -searchAOI.wdth;
+    dZ[3] = -searchAOI.wdth + 1;
     dZ[4] = 1;
-    dZ[5] = width + 1;
-    dZ[6] = width;
-    dZ[7] = width - 1;
+    dZ[5] = searchAOI.wdth + 1;
+    dZ[6] = searchAOI.wdth;
+    dZ[7] = searchAOI.wdth - 1;
     
-    for (int y = gradientWindowLength; y < height - gradientWindowLength; y++)
+    for (int y = gradientWindowLength; y < searchAOI.hght - gradientWindowLength; y++)
     {
-        for (int x = gradientWindowLength; x < width - gradientWindowLength; x++)
+        for (int x = gradientWindowLength; x < searchAOI.wdth - gradientWindowLength; x++)
         {
-            int i = width * y + x; // gradient coordinates
-            int j = imgWidth * (y + startY) + (x + startX); // image coordinates
+            int i = searchAOI.wdth * y + x; // gradient coordinates
+            int j = imgWidth * (y + searchAOI.yPos) + (x + searchAOI.xPos); // image coordinates
             
             double centreSum = ptr[j];
             for (int m = 0; m < 8; m++) { centreSum += ptr[j + dZ[m]]; }
@@ -89,41 +94,39 @@ haarProperties detectGlint(const cv::Mat& img, int imgWidth, int startX, int sta
     
     int glintIndex = std::distance(imageGradient.begin(), std::max_element(imageGradient.begin(), imageGradient.end()));
     
-    int x = glintIndex % width;
-    int y = (glintIndex - x) / width;
-    
-    haarProperties glint;
-    
-    glint.xPos = x - glintRadius;
-    glint.yPos = y - glintRadius;
+    int x = glintIndex % searchAOI.wdth;
+    int y = (glintIndex - x) / searchAOI.wdth;
 
-    return glint;
+    glintAOI.xPos = x - glintRadius;
+    glintAOI.yPos = y - glintRadius;
+
+    return glintAOI;
 }
 
-haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, int height, int haarWidth, int haarHeight, int glintX, int glintY, int glintSize)
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties innerAOI, AOIProperties glintAOI)
 {
-    int pupilX = 0;
-    int pupilY = 0;
+    innerAOI.xPos = 0;
+    innerAOI.yPos = 0;
     
     double minPupilIntensity = pow(10, 10); // arbitrarily large value
     
-    int pupilArea = (haarWidth - 1) * (haarHeight - 1);
+    int innerAOIArea = (innerAOI.wdth - 1) * (innerAOI.hght - 1);
     
-    for (int y = 0; y < height - haarHeight; y++)
+    for (int y = 0; y < searchAOI.hght - innerAOI.hght; y++)
     {
-        for (int x = 0; x < width - haarWidth; x++)
+        for (int x = 0; x < searchAOI.wdth - innerAOI.wdth; x++)
         {
             // vertices of inner square
             
             int topLeftX = x;
             int topLeftY = y;
             
-            int backRightX = topLeftX + (haarWidth  - 1);
-            int backRightY = topLeftY + (haarHeight - 1);
+            int backRightX = topLeftX + (innerAOI.wdth  - 1);
+            int backRightY = topLeftY + (innerAOI.hght - 1);
             
-            int topLeftIndex  = width * topLeftY + topLeftX;
-            int topRghtIndex  = topLeftIndex + (haarWidth  - 1);
-            int backLeftIndex = topLeftIndex + (haarHeight - 1) * width;
+            int topLeftIndex  = searchAOI.wdth * topLeftY + topLeftX;
+            int topRghtIndex  = topLeftIndex + (innerAOI.wdth  - 1);
+            int backLeftIndex = topLeftIndex + (innerAOI.hght - 1) * searchAOI.wdth;
             int backRghtIndex = topRghtIndex + backLeftIndex - topLeftIndex;
             
             // calculate glint intensity
@@ -136,8 +139,8 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
             std::vector<int> z(4);
             z[0] = 0;
             z[1] = 0;
-            z[2] = glintSize;
-            z[3] = glintSize;
+            z[2] = glintAOI.wdth;
+            z[3] = glintAOI.wdth;
             
             // check if glint overlaps with Haar detector
             
@@ -145,9 +148,9 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
             {
                 int n = (m + 1) % 4;
                 
-                if (glintX + z[m] >= topLeftX && glintX + z[m] <= backRightX)
+                if (glintAOI.xPos + z[m] >= topLeftX && glintAOI.xPos + z[m] <= backRightX)
                 {
-                    if (glintY + z[n] >= topLeftY && glintY + z[n] <= backRightY)
+                    if (glintAOI.yPos + z[n] >= topLeftY && glintAOI.yPos + z[n] <= backRightY)
                     {
                         glintWithinHaarDetector = true;
                         break;
@@ -162,28 +165,28 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
                 bool glintOverlapsTopEdge    = false;
                 bool glintOverlapsBottomEdge = false;
                 
-                if (glintX < topLeftX)
+                if (glintAOI.xPos < topLeftX)
                 {
                     glintOverlapsLeftEdge = true;
                 }
-                else if (glintX + glintSize > backRightX)
+                else if (glintAOI.xPos + glintAOI.wdth > backRightX)
                 {
                     glintOverlapsRightEdge = true;
                 }
                 
-                if (glintY < topLeftY)
+                if (glintAOI.yPos < topLeftY)
                 {
                     glintOverlapsTopEdge = true;
                 }
-                else if (glintY + glintSize > backRightY)
+                else if (glintAOI.yPos + glintAOI.wdth > backRightY)
                 {
                     glintOverlapsBottomEdge = true;
                 }
                 
                 // coordinates of corners of glint square
-                int glintTopLeftIndex  = width * glintY + glintX;
-                int glintTopRghtIndex  = width * glintY + glintX + glintSize;
-                int glintBackLeftIndex = width * (glintY + glintSize) + glintX;
+                int glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
+                int glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
+                int glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
                 int glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 
                 // check if glint square overlaps with edge or corner of pupil square
@@ -192,35 +195,35 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
                 
                 if (!glintOverlapsLeftEdge && !glintOverlapsRightEdge && glintOverlapsTopEdge) // top edge
                 {
-                    glintTopLeftIndex  = width * topLeftY + glintX;
-                    glintTopRghtIndex  = width * topLeftY + glintX + glintSize;
-                    glintBackLeftIndex = width * (glintY + glintSize) + glintX;
+                    glintTopLeftIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos;
+                    glintTopRghtIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos + glintAOI.wdth;
+                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
                 
                 if (!glintOverlapsLeftEdge && !glintOverlapsRightEdge && glintOverlapsBottomEdge) // bottom edge
                 {
-                    glintTopLeftIndex  = width * glintY + glintX;
-                    glintTopRghtIndex  = width * glintY + glintX + glintSize;
-                    glintBackLeftIndex = width * backRightY + glintX;
+                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
+                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
+                    glintBackLeftIndex = searchAOI.wdth * backRightY + glintAOI.xPos;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
                 
                 if (glintOverlapsLeftEdge && !glintOverlapsTopEdge && !glintOverlapsBottomEdge) // left edge
                 {
-                    glintTopLeftIndex  = width * glintY + topLeftX;
-                    glintTopRghtIndex  = width * glintY + glintX + glintSize;
-                    glintBackLeftIndex = width * (glintY + glintSize) + topLeftX;
+                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + topLeftX;
+                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
+                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + topLeftX;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
                 if (glintOverlapsRightEdge && !glintOverlapsTopEdge && !glintOverlapsBottomEdge) // right edge
                 {
-                    glintTopLeftIndex  = width * glintY + glintX;
-                    glintTopRghtIndex  = width * glintY + backRightX;
-                    glintBackLeftIndex = width * (glintY + glintSize) + glintX;
+                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
+                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + backRightX;
+                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
@@ -229,68 +232,61 @@ haarProperties detectPupilApprox(const std::vector<unsigned int>& I, int width, 
                 if (glintOverlapsLeftEdge && glintOverlapsTopEdge) // top left corner
                 {
                     glintTopLeftIndex  = topLeftIndex;
-                    glintTopRghtIndex  = width * topLeftY + glintX + glintSize;
-                    glintBackLeftIndex = width * (glintY + glintSize) + topLeftX;
+                    glintTopRghtIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos + glintAOI.wdth;
+                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + topLeftX;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
                 if (glintOverlapsRightEdge && glintOverlapsTopEdge) // top right corner
                 {
-                    glintTopLeftIndex  = width * topLeftY + glintX;
+                    glintTopLeftIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos;
                     glintTopRghtIndex  = topRghtIndex ;
-                    glintBackLeftIndex = width * (glintY + glintSize) + glintX;
+                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
                 if (glintOverlapsLeftEdge && glintOverlapsBottomEdge) // bottom left corner
                 {
-                    glintTopLeftIndex  = width * glintY + topLeftX;
-                    glintTopRghtIndex  = width * glintY + glintX + glintSize;
+                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + topLeftX;
+                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
                     glintBackLeftIndex = backLeftIndex;
                     glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
                 }
                 
                 if (glintOverlapsRightEdge && glintOverlapsBottomEdge) // bottom right corner
                 {
-                    glintTopLeftIndex  = width * glintY + glintX;
-                    glintTopRghtIndex  = width * glintY + backRightX;
-                    glintBackLeftIndex = width * backRightY + glintX;
+                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
+                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + backRightX;
+                    glintBackLeftIndex = searchAOI.wdth * backRightY + glintAOI.xPos;
                     glintBackRghtIndex = backRghtIndex;
                 }
                 
                 // calculate area and intensity of glint
                 glintIntensity = I[glintBackRghtIndex] - I[glintBackLeftIndex] - I[glintTopRghtIndex] + I[glintTopLeftIndex];
-                glintArea      = (glintTopRghtIndex - glintTopLeftIndex) * ((glintBackLeftIndex - glintTopLeftIndex) / width);
+                glintArea      = (glintTopRghtIndex - glintTopLeftIndex) * ((glintBackLeftIndex - glintTopLeftIndex) / searchAOI.wdth);
             }
             
             // calculate average pupil intensity, adjusting for glint
             
-            double pupilIntensity = ((I[backRghtIndex] - I[backLeftIndex] - I[topRghtIndex] + I[topLeftIndex]) - glintIntensity) / (pupilArea - glintArea);
+            double pupilIntensity = ((I[backRghtIndex] - I[backLeftIndex] - I[topRghtIndex] + I[topLeftIndex]) - glintIntensity) / (innerAOIArea - glintArea);
             
             if (pupilIntensity < minPupilIntensity)
             {
-                pupilX = topLeftX;
-                pupilY = topLeftY;
+                innerAOI.xPos = topLeftX;
+                innerAOI.yPos = topLeftY;
                 minPupilIntensity = pupilIntensity;
             }
         }
     }
-    
-    haarProperties pupil;
-    
-    pupil.xPos = pupilX;
-    pupil.yPos = pupilY;
-    
-    return pupil;
+
+    return innerAOI;
 }
 
 std::vector<int> radialGradient(const cv::Mat& img, int kernelSize, double pupilXCentre, double pupilYCentre)
 {
-    int kernelPerimeter = 8; // perimeter length of kernel
-    double fc =  6.0;
-    double sd =  1.0;
+    int numDirections = 8;
 
-    std::vector<int> dX(kernelPerimeter);
+    std::vector<int> dX(numDirections);
     dX[0] =  1;
     dX[1] =  1;
     dX[2] =  0;
@@ -300,7 +296,7 @@ std::vector<int> radialGradient(const cv::Mat& img, int kernelSize, double pupil
     dX[6] =  0;
     dX[7] =  1;
 
-    std::vector<int> dY(kernelPerimeter);
+    std::vector<int> dY(numDirections);
     dY[0] =  0;
     dY[1] = -1;
     dY[2] = -1;
@@ -316,11 +312,11 @@ std::vector<int> radialGradient(const cv::Mat& img, int kernelSize, double pupil
 
     std::vector<int> gradientVector(width * height, 0);
 
-    int borderSize = (kernelSize - 1) / 2;
+    int kernelRadius = (kernelSize - 1) / 2;
 
-    for (int y = borderSize; y < height - borderSize; y++)
+    for (int y = kernelRadius; y < height - kernelRadius; y++)
     {
-        for (int x = borderSize; x < width - borderSize; x++)
+        for (int x = kernelRadius; x < width - kernelRadius; x++)
         {
             double dx = x - pupilXCentre;
             double dy = pupilYCentre - y;
@@ -343,26 +339,16 @@ std::vector<int> radialGradient(const cv::Mat& img, int kernelSize, double pupil
             }
             else { theta = 0; } // arbitrary choice
 
-            double alpha = theta * kernelPerimeter / (2 * M_PI);
-            double val = 0;
+            int positiveDirection = round(theta * (numDirections - 1) / (2 * M_PI)); // direction index of gradient
+            int negativeDirection = (int)(positiveDirection + 0.5 * numDirections) % numDirections;
 
-            for (int i = 0; i < kernelPerimeter; i++)
-            {
-                double dpos = std::abs(i - alpha);
-                if (dpos > kernelPerimeter / 2) { dpos = kernelPerimeter - dpos; }
-                double dneg = 0.5 * kernelPerimeter - dpos;
+            int neighbourIndexPositive = width * (y + dY[positiveDirection] * kernelRadius) + (x + dX[positiveDirection] * kernelRadius);
+            int neighbourIndexNegative = width * (y + dY[negativeDirection] * kernelRadius) + (x + dX[negativeDirection] * kernelRadius);
 
-                double kernelVal = fc * (exp(- pow(dpos, 2) / sd) - exp(- pow(dneg, 2) / sd));
-
-                // Do convolution
-                int iPixel = width * (y + dY[i] * borderSize) + (x + dX[i] * borderSize);
-                double pixelIntensity = ptr[iPixel];
-                val += pixelIntensity * kernelVal;
-            }
-
+            double val = ptr[neighbourIndexPositive] - ptr[neighbourIndexNegative];
             if (val < 0) { val = 0; }
-            int iPixel = width * y + x;
-            gradientVector[iPixel] = val;
+            int centreIndex = width * y + x;
+            gradientVector[centreIndex] = val;
         }
     }
 
@@ -1154,7 +1140,7 @@ std::vector<int> edgeClassification(detectionProperties mDetectionProperties, co
 
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        if (totalScores[iEdge] >= scoreThreshold || !USE_PRIOR_INFORMATION)
+        if (totalScores[iEdge] >= mDetectionProperties.p.scoreThreshold || !USE_PRIOR_INFORMATION)
         {
             pupilEdges.push_back(iEdge);
         }
@@ -1345,7 +1331,7 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
     return mEllipseProperties;
 }
 
-ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePropertiesAll, int haarWidth, detectionProperties mDetectionProperties, bool USE_PRIOR_INFORMATION)
+ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePropertiesAll, AOIProperties mAOI, detectionProperties mDetectionProperties, bool USE_PRIOR_INFORMATION)
 {
     ellipseProperties mEllipseProperties;
     mEllipseProperties.pupilDetected = false;
@@ -1420,8 +1406,8 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
             for (int iEdgePoint = 0; iEdgePoint < edgeSetSize; iEdgePoint++)
             {
                 int edgePointIndex = edgeIndices[iEdgePoint];
-                edgeXPositions[iEdgePoint] = edgePointIndex % haarWidth;
-                edgeYPositions[iEdgePoint] = (edgePointIndex - edgeXPositions[iEdgePoint]) / haarWidth;
+                edgeXPositions[iEdgePoint] = edgePointIndex % mAOI.wdth;
+                edgeYPositions[iEdgePoint] = (edgePointIndex - edgeXPositions[iEdgePoint]) / mAOI.wdth;
             }
 
             int XPosMin = *std::min_element(std::begin(edgeXPositions), std::end(edgeXPositions));
@@ -1432,25 +1418,30 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
             int combiWdth = XPosMax - XPosMin;
             int combiHght = YPosMax - YPosMin;
 
-            if (combiWdth * 2 * M_PI > mDetectionProperties.p.circumferenceMax || combiHght * 2 * M_PI > mDetectionProperties.p.circumferenceMax) { continue; } // no large pupils
-            if (combiWdth * 2 * M_PI < mDetectionProperties.p.circumferenceMin && combiHght * 2 * M_PI < mDetectionProperties.p.circumferenceMin) { continue; } // no small pupils
+            if (combiWdth * M_PI > mDetectionProperties.p.circumferenceMax || combiHght * M_PI > mDetectionProperties.p.circumferenceMax) { continue; } // no large ellipse
+            if (combiWdth * M_PI < mDetectionProperties.p.circumferenceMin && combiHght * M_PI < mDetectionProperties.p.circumferenceMin) { continue; } // no small ellipse
 
             // Fit ellipse
 
-            ellipseProperties mEllipsePropertiesNew = fitEllipse(edgeIndices, edgeSetSize, haarWidth);
+            ellipseProperties mEllipsePropertiesNew = fitEllipse(edgeIndices, edgeSetSize, mAOI.wdth);
 
             if (!mEllipsePropertiesNew.pupilDetected) { continue; } // error
 
             // Size and shape filters
             
-            if (mEllipsePropertiesNew.circumference > mDetectionProperties.p.circumferenceMax) { continue; } // no large pupils
-            if (mEllipsePropertiesNew.circumference < mDetectionProperties.p.circumferenceMin) { continue; } // no small pupils
+            if (mEllipsePropertiesNew.circumference > mDetectionProperties.p.circumferenceMax) { continue; } // no large ellipse
+            if (mEllipsePropertiesNew.circumference < mDetectionProperties.p.circumferenceMin) { continue; } // no small ellipse
             if (mEllipsePropertiesNew.aspectRatio   < mDetectionProperties.p.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
 
             if (USE_PRIOR_INFORMATION)
             {
-                if (std::abs(mEllipsePropertiesNew.circumference - mDetectionProperties.v.circumferencePrediction) > mDetectionProperties.v.thresholdCircumferenceChange) { continue; } // no large pupil size changes
-                if (std::abs(mEllipsePropertiesNew.aspectRatio   - mDetectionProperties.v.aspectRatioPrediction  ) > mDetectionProperties.v.thresholdAspectRatioChange  ) { continue; } // no large pupil shape changes
+                double dX = mEllipsePropertiesNew.xPos - (mDetectionProperties.v.xPosPrediction - mAOI.xPos);
+                double dY = mEllipsePropertiesNew.yPos - (mDetectionProperties.v.yPosPrediction - mAOI.yPos);
+                double dR = sqrt(pow(dX,2) + pow(dY,2));
+
+                if (dR > mDetectionProperties.v.thresholdDisplacementChange) { continue; } // no large ellipse displacements
+                if (std::abs(mEllipsePropertiesNew.circumference - mDetectionProperties.v.circumferencePrediction) > mDetectionProperties.v.thresholdCircumferenceChange) { continue; } // no large ellipse size changes
+                if (std::abs(mEllipsePropertiesNew.aspectRatio   - mDetectionProperties.v.aspectRatioPrediction  ) > mDetectionProperties.v.thresholdAspectRatioChange  ) { continue; } // no large ellipse shape changes
             }
 
             // calculate error between fit and every edge point
@@ -1470,8 +1461,8 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
             {
                 int edgePointIndex = edgeIndices[iEdgePoint];
 
-                double x = edgePointIndex % haarWidth;
-                double y = (edgePointIndex - x) / haarWidth;
+                double x = edgePointIndex % mAOI.wdth;
+                double y = (edgePointIndex - x) / mAOI.wdth;
 
                 fitErrors[iEdgePoint] = std::abs(A * x * x + B * x * y + C * y * y + D * x + E * y + F);
             }
@@ -1559,7 +1550,7 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
     std::vector<edgeProperties> vEdgePropertiesNew;
     ellipseProperties mEllipseProperties;
 
-    mEllipseProperties.pupilDetected  = false;
+    mEllipseProperties.pupilDetected        = false;
     mDetectionPropertiesNew.m.errorDetected = false;
 
     // Define search area
@@ -1567,17 +1558,19 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
     int imageWdth = imageOriginalBGR.cols;
     int imageHght = imageOriginalBGR.rows;
 
-    int searchStartX = round(mDetectionProperties.v.xPosPrediction - mDetectionProperties.v.searchRadius);
-    int searchStartY = round(mDetectionProperties.v.yPosPrediction - mDetectionProperties.v.searchRadius);
+    AOIProperties searchAOI;
+
+    searchAOI.xPos = round(mDetectionProperties.v.xPosPrediction - mDetectionProperties.v.searchRadius);
+    searchAOI.yPos = round(mDetectionProperties.v.yPosPrediction - mDetectionProperties.v.searchRadius);
 
     int searchEndX = round(mDetectionProperties.v.xPosPrediction + mDetectionProperties.v.searchRadius);
     int searchEndY = round(mDetectionProperties.v.yPosPrediction + mDetectionProperties.v.searchRadius);
 
-    if (searchStartX < mDetectionProperties.p.AOIXPos)
-    {   searchStartX = mDetectionProperties.p.AOIXPos; }
+    if (searchAOI.xPos < mDetectionProperties.p.AOIXPos)
+    {   searchAOI.xPos = mDetectionProperties.p.AOIXPos; }
 
-    if (searchStartY < mDetectionProperties.p.AOIYPos)
-    {   searchStartY = mDetectionProperties.p.AOIYPos; }
+    if (searchAOI.yPos < mDetectionProperties.p.AOIYPos)
+    {   searchAOI.yPos = mDetectionProperties.p.AOIYPos; }
 
     if (searchEndX > mDetectionProperties.p.AOIXPos + mDetectionProperties.p.AOIWdth - 1)
     {   searchEndX = mDetectionProperties.p.AOIXPos + mDetectionProperties.p.AOIWdth - 1; }
@@ -1585,23 +1578,29 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
     if (searchEndY > mDetectionProperties.p.AOIYPos + mDetectionProperties.p.AOIHght - 1)
     {   searchEndY = mDetectionProperties.p.AOIYPos + mDetectionProperties.p.AOIHght - 1; }
 
-    int searchWdth = searchEndX - searchStartX + 1;
-    int searchHght = searchEndY - searchStartY + 1;
+    searchAOI.wdth = searchEndX - searchAOI.xPos + 1;
+    searchAOI.hght = searchEndY - searchAOI.yPos + 1;
 
-    int pupilHaarWdth = round(pupilHaarReductionFactor * mDetectionProperties.v.widthPrediction);
-    int pupilHaarHght = round(pupilHaarReductionFactor * mDetectionProperties.v.heightPrediction);
+    AOIProperties innerAOI;
+    innerAOI.wdth = round(pupilHaarReductionFactor * mDetectionProperties.v.widthPrediction);
+    innerAOI.hght = round(pupilHaarReductionFactor * mDetectionProperties.v.heightPrediction);
+    if (innerAOI.wdth > searchAOI.wdth) { innerAOI.wdth = searchAOI.wdth; }
+    if (innerAOI.hght > searchAOI.hght) { innerAOI.hght = searchAOI.hght; }
 
-    if (pupilHaarWdth > searchWdth) { pupilHaarWdth = searchWdth; }
-    if (pupilHaarHght > searchHght) { pupilHaarHght = searchHght; }
+    AOIProperties outerAOI;
+    outerAOI.xPos = 0;
+    outerAOI.yPos = 0;
+    outerAOI.wdth = 0;
+    outerAOI.hght = 0;
 
-    int offsetPupilHaarXPos = 0;
-    int offsetPupilHaarYPos = 0;
-    int offsetPupilHaarWdth = 0;
-    int offsetPupilHaarHght = 0;
-
-    if (pupilHaarWdth > 0 && pupilHaarHght > 0)
+    if (innerAOI.wdth > 0 && innerAOI.hght > 0)
     {
         // Needed for offline mode when threshold is too low
+
+        if (mDetectionProperties.v.thresholdDisplacementChange > imageWdth)
+        {   mDetectionProperties.v.thresholdDisplacementChange = imageWdth; }
+        else if (mDetectionProperties.v.thresholdDisplacementChange < mDetectionProperties.p.displacementChangeThreshold)
+        {        mDetectionProperties.v.thresholdDisplacementChange = mDetectionProperties.p.displacementChangeThreshold; }
 
         if (mDetectionProperties.v.thresholdCircumferenceChange > mDetectionProperties.p.circumferenceMax)
         {   mDetectionProperties.v.thresholdCircumferenceChange = mDetectionProperties.p.circumferenceMax; }
@@ -1632,38 +1631,38 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         /////////////////////// INITIAL DETECTION  /////////////////////////
         ////////////////////////////////////////////////////////////////////
 
-        std::vector<unsigned int> integralImage = calculateIntImg(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght);
+        std::vector<unsigned int> integralImage = calculateIntImg(imageOriginalGray, imageWdth, searchAOI);
 
-        int glintSize = mDetectionProperties.p.glintSize;
+        AOIProperties glintAOI;
+        glintAOI.wdth = mDetectionProperties.p.glintWdth;
+        glintAOI.hght = glintAOI.wdth;
 
-        haarProperties glintHaarProperties = detectGlint(imageOriginalGray, imageWdth, searchStartX, searchStartY, searchWdth, searchHght, glintSize);
+        glintAOI      = detectGlint(imageOriginalGray, imageWdth, searchAOI, glintAOI);
+        glintAOI.xPos = searchAOI.xPos + glintAOI.xPos;
+        glintAOI.yPos = searchAOI.yPos + glintAOI.yPos;
 
-        int glintXPos = searchStartX + glintHaarProperties.xPos;
-        int glintYPos = searchStartY + glintHaarProperties.yPos;
+        innerAOI      = detectPupilApprox(integralImage, searchAOI, innerAOI, glintAOI);
+        innerAOI.xPos = searchAOI.xPos + innerAOI.xPos;
+        innerAOI.yPos = searchAOI.yPos + innerAOI.yPos;
 
-        haarProperties pupilHaarProperties = detectPupilApprox(integralImage, searchWdth, searchHght, pupilHaarWdth, pupilHaarHght, glintXPos, glintYPos, mDetectionProperties.p.glintSize);
-
-        int pupilHaarXPos = searchStartX + pupilHaarProperties.xPos;
-        int pupilHaarYPos = searchStartY + pupilHaarProperties.yPos;
-
-        offsetPupilHaarXPos = pupilHaarXPos -     mDetectionProperties.p.pupilOffset;
-        offsetPupilHaarYPos = pupilHaarYPos -     mDetectionProperties.p.pupilOffset;
-        offsetPupilHaarWdth = pupilHaarWdth + 2 * mDetectionProperties.p.pupilOffset;
-        offsetPupilHaarHght = pupilHaarHght + 2 * mDetectionProperties.p.pupilOffset;
+        outerAOI.xPos = innerAOI.xPos -     mDetectionProperties.p.haarOffset;
+        outerAOI.yPos = innerAOI.yPos -     mDetectionProperties.p.haarOffset;
+        outerAOI.wdth = innerAOI.wdth + 2 * mDetectionProperties.p.haarOffset;
+        outerAOI.hght = innerAOI.hght + 2 * mDetectionProperties.p.haarOffset;
 
         // Check limits
 
-        if (offsetPupilHaarWdth >= imageWdth) { offsetPupilHaarWdth = imageWdth - 1; }
-        if (offsetPupilHaarHght >= imageHght) { offsetPupilHaarHght = imageHght - 1; }
-        if (offsetPupilHaarXPos < 0) { offsetPupilHaarXPos = 0; }
-        if (offsetPupilHaarYPos < 0) { offsetPupilHaarYPos = 0; }
-        if (offsetPupilHaarXPos + offsetPupilHaarWdth >= imageWdth) { offsetPupilHaarWdth = imageWdth - offsetPupilHaarXPos - 1; }
-        if (offsetPupilHaarYPos + offsetPupilHaarHght >= imageHght) { offsetPupilHaarHght = imageHght - offsetPupilHaarYPos - 1; }
+        if (outerAOI.wdth >= imageWdth) { outerAOI.wdth = imageWdth - 1; }
+        if (outerAOI.hght >= imageHght) { outerAOI.hght = imageHght - 1; }
+        if (outerAOI.xPos < 0) { outerAOI.xPos = 0; }
+        if (outerAOI.yPos < 0) { outerAOI.yPos = 0; }
+        if (outerAOI.xPos + outerAOI.wdth >= imageWdth) { outerAOI.wdth = imageWdth - outerAOI.xPos - 1; }
+        if (outerAOI.yPos + outerAOI.hght >= imageHght) { outerAOI.hght = imageHght - outerAOI.yPos - 1; }
 
         // Crop image to outer pupil Haar region
 
-        cv::Rect pupilROI(offsetPupilHaarXPos, offsetPupilHaarYPos, offsetPupilHaarWdth, offsetPupilHaarHght);
-        cv::Mat imagePupilBGR = imageOriginalBGR(pupilROI);
+        cv::Rect outerRect(outerAOI.xPos, outerAOI.yPos, outerAOI.wdth, outerAOI.hght);
+        cv::Mat imagePupilBGR = imageOriginalBGR(outerRect);
 
         // Convert back to grayscale
 
@@ -1672,33 +1671,33 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
         ///////////////////////////////////////////////////////////////////////
         /////////////////////// CANNY EDGE DETECTION  /////////////////////////
-        ///////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////       
 
         cv::Mat imagePupilGrayBlurred;
         int cannyBlurLevel = 2 * mDetectionProperties.p.cannyBlurLevel - 1; // should be odd
         if (cannyBlurLevel > 0) { cv::GaussianBlur(imagePupilGray, imagePupilGrayBlurred, cv::Size(cannyBlurLevel, cannyBlurLevel), 0, 0);
         } else                  { imagePupilGrayBlurred = imagePupilGray; }
 
-        double xPosPredictionRelative = mDetectionProperties.v.xPosPrediction - offsetPupilHaarXPos;
-        double yPosPredictionRelative = mDetectionProperties.v.yPosPrediction - offsetPupilHaarYPos;
+        double xPosPredictionRelative = mDetectionProperties.v.xPosPrediction - outerAOI.xPos;
+        double yPosPredictionRelative = mDetectionProperties.v.yPosPrediction - outerAOI.yPos;
 
         std::vector<int> cannyEdges; // binary vector
 
         if (USE_PRIOR_INFORMATION)
         {
             std::vector<int>  imgGradient           = radialGradient(imagePupilGrayBlurred, mDetectionProperties.p.cannyKernelSize, xPosPredictionRelative, yPosPredictionRelative);
-            std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictionRelative, yPosPredictionRelative);
-            cannyEdges = hysteresisTracking(imgGradientSuppressed, offsetPupilHaarWdth, offsetPupilHaarHght, mDetectionProperties.p.cannyThresholdHigh, mDetectionProperties.p.cannyThresholdLow);
+            std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, outerAOI.wdth, outerAOI.hght, xPosPredictionRelative, yPosPredictionRelative);
+            cannyEdges = hysteresisTracking(imgGradientSuppressed, outerAOI.wdth, outerAOI.hght, mDetectionProperties.p.cannyThresholdHigh, mDetectionProperties.p.cannyThresholdLow);
         }
         else
         {
             cv::Mat imageCannyEdges;
-            cv::Canny(imagePupilGrayBlurred, imageCannyEdges, 4 * mDetectionProperties.p.cannyThresholdHigh, 4 * mDetectionProperties.p.cannyThresholdLow, 5);
-            cannyEdges = cannyConversion(imageCannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght);
+            cv::Canny(imagePupilGrayBlurred, imageCannyEdges, 30 * mDetectionProperties.p.cannyThresholdHigh, 30 * mDetectionProperties.p.cannyThresholdLow, 5);
+            cannyEdges = cannyConversion(imageCannyEdges, outerAOI.wdth, outerAOI.hght);
         }
 
         std::vector<int> edgeIndices         = getEdgeIndices(cannyEdges);
-        std::vector<int> cannyEdgesSharpened = sharpenEdges(cannyEdges, offsetPupilHaarWdth, offsetPupilHaarHght); // Morphological operation
+        std::vector<int> cannyEdgesSharpened = sharpenEdges(cannyEdges, outerAOI.wdth, outerAOI.hght); // Morphological operation
 
         //////////////////////////////////////////////////////////////////////////////
         /////////////////////// EDGE SELECTION & SEGMENTATION  ///////////////////////
@@ -1718,8 +1717,10 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
             }
         }
 
+        int arrayHeight = arrayAspectRatios.size();
+
         int arrayYPos = 0;
-        for (int y = 0; y < arrayWidth; y++)
+        for (int y = 0; y < arrayHeight; y++)
         {
             if (arrayAspectRatios[y] < mDetectionProperties.v.aspectRatioPrediction)
             {
@@ -1728,12 +1729,10 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
             }
         }
 
-        std::vector<double> v = arrayCurvatureMax;
-
         double curvatureUpperLimit = arrayCurvatureMax[arrayXPos * arrayWidth + arrayYPos] + mDetectionProperties.v.curvatureOffset;
         double curvatureLowerLimit = arrayCurvatureMin[arrayXPos * arrayWidth + arrayYPos] - mDetectionProperties.v.curvatureOffset;
 
-        std::vector<edgeProperties> vEdgePropertiesAll = edgeSegmentation(imagePupilGray, cannyEdgesSharpened, offsetPupilHaarWdth, offsetPupilHaarHght, xPosPredictionRelative, yPosPredictionRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeSegmentation(imagePupilGray, cannyEdgesSharpened, outerAOI.wdth, outerAOI.hght, xPosPredictionRelative, yPosPredictionRelative, curvatureLowerLimit, curvatureUpperLimit, USE_PRIOR_INFORMATION);
 
         ///////////////////////////////////////////////////////////////////////
         /////////////////////// EDGE CLASSIFICATION  //////////////////////////
@@ -1757,11 +1756,11 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
                 for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
                 {
                     int edgePointIndex = vEdgePropertiesAll[iEdge].pointIndices[iEdgePoint];
-                    int edgePointXPos  =  edgePointIndex % offsetPupilHaarWdth;
-                    int edgePointYPos  = (edgePointIndex - edgePointXPos) / offsetPupilHaarWdth;
+                    int edgePointXPos  =  edgePointIndex % outerAOI.wdth;
+                    int edgePointYPos  = (edgePointIndex - edgePointXPos) / outerAOI.wdth;
 
-                    double dX = mDetectionProperties.v.xPosPrediction - (edgePointXPos + offsetPupilHaarXPos);
-                    double dY = mDetectionProperties.v.yPosPrediction - (edgePointYPos + offsetPupilHaarYPos);
+                    double dX = xPosPredictionRelative - edgePointXPos;
+                    double dY = yPosPredictionRelative - edgePointYPos;
 
                     dR += sqrt(pow(dX, 2) + pow(dY, 2));
                 }
@@ -1785,7 +1784,7 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
             /////////////////////// ELLIPSE FITTING  /////////////////////////
             //////////////////////////////////////////////////////////////////
 
-            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, offsetPupilHaarWdth, mDetectionProperties, USE_PRIOR_INFORMATION); // ellipse fitting
+            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, outerAOI, mDetectionProperties, USE_PRIOR_INFORMATION); // ellipse fitting
 
             // Classify edges
 
@@ -1814,19 +1813,9 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
         // For draw functions
 
-        mDetectionPropertiesNew.m.offsetPupilHaarXPos = offsetPupilHaarXPos;
-        mDetectionPropertiesNew.m.offsetPupilHaarYPos = offsetPupilHaarYPos;
-        mDetectionPropertiesNew.m.offsetPupilHaarWdth = offsetPupilHaarWdth;
-        mDetectionPropertiesNew.m.offsetPupilHaarHght = offsetPupilHaarHght;
-
-        mDetectionPropertiesNew.m.pupilHaarXPos = pupilHaarXPos;
-        mDetectionPropertiesNew.m.pupilHaarYPos = pupilHaarYPos;
-        mDetectionPropertiesNew.m.pupilHaarWdth = pupilHaarWdth;
-        mDetectionPropertiesNew.m.pupilHaarHght = pupilHaarHght;
-
-        mDetectionPropertiesNew.m.glintXPos = glintXPos;
-        mDetectionPropertiesNew.m.glintYPos = glintYPos;
-        mDetectionPropertiesNew.m.glintSize = glintSize;
+        mDetectionPropertiesNew.m.outerAOI = outerAOI;
+        mDetectionPropertiesNew.m.innerAOI = innerAOI;
+        mDetectionPropertiesNew.m.glintAOI = glintAOI;
 
         mDetectionPropertiesNew.m.cannyEdgeIndices    = edgeIndices;
         mDetectionPropertiesNew.m.ellipseCoefficients = mEllipseProperties.coefficients;
@@ -1861,60 +1850,60 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
         mDetectionPropertiesNew.v.thresholdAspectRatioChange   = mDetectionProperties.v.thresholdAspectRatioChange   * (1 / mDetectionProperties.p.alphaMiscellaneous);
         mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionProperties.v.thresholdCircumferenceChange * (1 / mDetectionProperties.p.alphaMiscellaneous);
+        mDetectionPropertiesNew.v.thresholdDisplacementChange  = mDetectionProperties.v.thresholdDisplacementChange * (1 / mDetectionProperties.p.alphaMiscellaneous);
 
         mDetectionPropertiesNew.v.widthAverage    = mDetectionProperties.v.widthAverage + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.widthPrediction - mDetectionProperties.v.widthAverage);
         mDetectionPropertiesNew.v.widthMomentum   = mDetectionProperties.v.widthMomentum * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.widthPrediction = mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.widthAverage - mDetectionProperties.v.widthPrediction);
 
-        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarXPos + 0.5 * offsetPupilHaarWdth - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (offsetPupilHaarYPos + 0.5 * offsetPupilHaarHght - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
+        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (outerAOI.xPos + 0.5 * outerAOI.wdth - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
+        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (outerAOI.yPos + 0.5 * outerAOI.hght - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
 
         mDetectionPropertiesNew.v.xVelocity     = mDetectionProperties.v.xVelocity * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.yVelocity     = mDetectionProperties.v.yVelocity * mDetectionProperties.p.alphaMomentum;
-
-        mDetectionPropertiesNew.v.aspectRatioExact   = mDetectionProperties.v.aspectRatioExact;
-        mDetectionPropertiesNew.v.circumferenceExact = mDetectionProperties.v.circumferenceExact;
 
         mDetectionPropertiesNew.v.priorCertainty = mDetectionProperties.v.priorCertainty * mDetectionProperties.p.alphaMiscellaneous;
     }
     else // pupil detected
     {
-        mDetectionPropertiesNew.v.aspectRatioAverage    =  mDetectionProperties.v.aspectRatioAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioAverage);
-        mDetectionPropertiesNew.v.aspectRatioMomentum   = (mDetectionProperties.v.aspectRatioMomentum   + mDetectionProperties.p.alphaMomentum   * (mDetectionPropertiesNew.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioPrediction));
-        mDetectionPropertiesNew.v.aspectRatioPrediction =  mDetectionProperties.v.aspectRatioPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mDetectionProperties.v.aspectRatioPrediction) + mDetectionProperties.v.aspectRatioMomentum;
+        mDetectionPropertiesNew.v.aspectRatioExact   = mEllipseProperties.aspectRatio;
+        mDetectionPropertiesNew.v.circumferenceExact = mEllipseProperties.circumference;
 
-        mDetectionPropertiesNew.v.circumferenceAverage    =  mDetectionProperties.v.circumferenceAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.circumferencePrediction - mDetectionProperties.v.circumferenceAverage);
-        mDetectionPropertiesNew.v.circumferenceMomentum   = (mDetectionProperties.v.circumferenceMomentum   + mDetectionProperties.p.alphaMomentum   * (mDetectionPropertiesNew.v.circumferencePrediction - mDetectionProperties.v.circumferencePrediction));
+        mDetectionPropertiesNew.v.aspectRatioPrediction =  mDetectionProperties.v.aspectRatioPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mDetectionProperties.v.aspectRatioPrediction) + mDetectionProperties.v.aspectRatioMomentum;
+        mDetectionPropertiesNew.v.aspectRatioAverage    =  mDetectionProperties.v.aspectRatioAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioAverage);
+        mDetectionPropertiesNew.v.aspectRatioMomentum   = (mDetectionProperties.v.aspectRatioMomentum   + mDetectionPropertiesNew.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioPrediction) * mDetectionProperties.p.alphaMomentum;
+
         mDetectionPropertiesNew.v.circumferencePrediction =  mDetectionProperties.v.circumferencePrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.circumference - mDetectionProperties.v.circumferencePrediction) + mDetectionProperties.v.circumferenceMomentum;
+        mDetectionPropertiesNew.v.circumferenceAverage    =  mDetectionProperties.v.circumferenceAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.circumferencePrediction - mDetectionProperties.v.circumferenceAverage);
+        mDetectionPropertiesNew.v.circumferenceMomentum   = (mDetectionProperties.v.circumferenceMomentum   + mDetectionPropertiesNew.v.circumferencePrediction - mDetectionProperties.v.circumferencePrediction) * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * mDetectionProperties.p.alphaMiscellaneous;
 
-        mDetectionPropertiesNew.v.heightAverage    =  mDetectionProperties.v.heightAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.heightPrediction - mDetectionProperties.v.heightAverage);
-        mDetectionPropertiesNew.v.heightMomentum   = (mDetectionProperties.v.heightMomentum   + mDetectionProperties.p.alphaMomentum   * (mDetectionPropertiesNew.v.heightPrediction - mDetectionProperties.v.heightPrediction));
         mDetectionPropertiesNew.v.heightPrediction =  mDetectionProperties.v.heightPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.height - mDetectionProperties.v.heightPrediction) + mDetectionProperties.v.heightMomentum;
+        mDetectionPropertiesNew.v.heightAverage    =  mDetectionProperties.v.heightAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.heightPrediction - mDetectionProperties.v.heightAverage);
+        mDetectionPropertiesNew.v.heightMomentum   = (mDetectionProperties.v.heightMomentum   + mDetectionPropertiesNew.v.heightPrediction - mDetectionProperties.v.heightPrediction) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.radiusMomentum   = (mDetectionProperties.v.radiusMomentum + (mDetectionPropertiesNew.v.radiusPrediction - mDetectionProperties.v.radiusPrediction)) * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.radiusPrediction =  mDetectionProperties.v.radiusPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.radius - mDetectionProperties.v.radiusPrediction) + mDetectionProperties.v.radiusMomentum;
+        mDetectionPropertiesNew.v.radiusMomentum   = (mDetectionProperties.v.radiusMomentum + (mDetectionPropertiesNew.v.radiusPrediction - mDetectionProperties.v.radiusPrediction)) * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.searchRadius = mDetectionProperties.v.searchRadius * mDetectionProperties.p.alphaMiscellaneous;
 
         mDetectionPropertiesNew.v.thresholdAspectRatioChange   = mDetectionProperties.v.thresholdAspectRatioChange   * mDetectionProperties.p.alphaMiscellaneous;
         mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionProperties.v.thresholdCircumferenceChange * mDetectionProperties.p.alphaMiscellaneous;
+        mDetectionPropertiesNew.v.thresholdDisplacementChange  = mDetectionProperties.v.thresholdDisplacementChange  * mDetectionProperties.p.alphaMiscellaneous;
 
-        mDetectionPropertiesNew.v.widthAverage    =  mDetectionProperties.v.widthAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.widthPrediction - mDetectionProperties.v.widthAverage);
-        mDetectionPropertiesNew.v.widthMomentum   = (mDetectionProperties.v.widthMomentum   + mDetectionProperties.p.alphaMomentum   * (mDetectionPropertiesNew.v.widthPrediction - mDetectionProperties.v.widthPrediction));
         mDetectionPropertiesNew.v.widthPrediction =  mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.width - mDetectionProperties.v.widthPrediction) + mDetectionProperties.v.widthMomentum;
+        mDetectionPropertiesNew.v.widthAverage    =  mDetectionProperties.v.widthAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.widthPrediction - mDetectionProperties.v.widthAverage);
+        mDetectionPropertiesNew.v.widthMomentum   = (mDetectionProperties.v.widthMomentum   + mDetectionPropertiesNew.v.widthPrediction - mDetectionProperties.v.widthPrediction) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.xPosExact = mEllipseProperties.xPos + offsetPupilHaarXPos;
+        mDetectionPropertiesNew.v.xPosExact = mEllipseProperties.xPos + outerAOI.xPos;
+        mDetectionPropertiesNew.v.yPosExact = mEllipseProperties.yPos + outerAOI.yPos;
+
         mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.xPosExact - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.xVelocity = (mDetectionProperties.v.xVelocity + (mDetectionPropertiesNew.v.xPosPrediction - mDetectionProperties.v.xPosPrediction)) * mDetectionProperties.p.alphaMomentum;
-
-        mDetectionPropertiesNew.v.yPosExact = mEllipseProperties.yPos + offsetPupilHaarYPos;
         mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.yPosExact - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
-        mDetectionPropertiesNew.v.yVelocity = (mDetectionProperties.v.yVelocity + (mDetectionPropertiesNew.v.yPosPrediction - mDetectionProperties.v.yPosPrediction)) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.aspectRatioExact   = mEllipseProperties.aspectRatio;
-        mDetectionPropertiesNew.v.circumferenceExact = mEllipseProperties.circumference;
+        mDetectionPropertiesNew.v.xVelocity = (mDetectionProperties.v.xVelocity + mDetectionPropertiesNew.v.xPosPrediction - mDetectionProperties.v.xPosPrediction) * mDetectionProperties.p.alphaMomentum;
+        mDetectionPropertiesNew.v.yVelocity = (mDetectionProperties.v.yVelocity + mDetectionPropertiesNew.v.yPosPrediction - mDetectionProperties.v.yPosPrediction) * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.priorCertainty = mDetectionProperties.v.priorCertainty * (1 / mDetectionProperties.p.alphaMiscellaneous);
 
@@ -1936,28 +1925,28 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
             if (xPos < 0)
             {
-                imageWdth   = imageWdth + xPos;
-                xPos        = 0;
+                imageWdth = imageWdth + xPos;
+                xPos      = 0;
             }
 
             if (yPos < 0)
             {
-                imageHght   = imageHght + yPos;
-                yPos        = 0;
+                imageHght = imageHght + yPos;
+                yPos      = 0;
             }
 
             if (xPos + wdth >= imageWdth)
             {
-                int dx  = xPos + wdth - (imageWdth - 1);
-                xPos    = xPos + dx;
-                wdth    = wdth - 2 * dx;
+                int dx = xPos + wdth - (imageWdth - 1);
+                xPos   = xPos + dx;
+                wdth   = wdth - 2 * dx;
             }
 
             if (yPos + hght >= imageHght)
             {
-                int dy  = yPos + hght - (imageHght - 1);
-                yPos    = yPos + dy;
-                hght    = hght - 2 * dy;
+                int dy = yPos + hght - (imageHght - 1);
+                yPos   = yPos + dy;
+                hght   = hght - 2 * dy;
             }
 
             cv::Rect pupilROI(xPos, yPos, wdth, hght);
@@ -1971,25 +1960,30 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
 
     // Check variable limits
 
-    if (mDetectionPropertiesNew.v.searchRadius > imageWdth)
-    {   mDetectionPropertiesNew.v.searchRadius = imageWdth; }
-    else if (mDetectionPropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarWdth))
-    {        mDetectionPropertiesNew.v.searchRadius = ceil(0.5 * offsetPupilHaarWdth); }
+    if (mDetectionPropertiesNew.v.searchRadius > 0.5 * imageWdth)
+    {   mDetectionPropertiesNew.v.searchRadius = 0.5 * imageWdth; }
+    else if (mDetectionPropertiesNew.v.searchRadius < (0.5 * outerAOI.wdth))
+    {        mDetectionPropertiesNew.v.searchRadius = ceil(0.5 * outerAOI.wdth); }
 
-    if (mDetectionPropertiesNew.v.searchRadius > imageHght)
-    {   mDetectionPropertiesNew.v.searchRadius = imageHght; }
-    else if (mDetectionPropertiesNew.v.searchRadius < (0.5 * offsetPupilHaarHght))
-    {        mDetectionPropertiesNew.v.searchRadius = ceil(0.5 * offsetPupilHaarHght); }
+    if (mDetectionPropertiesNew.v.searchRadius > 0.5 * imageHght)
+    {   mDetectionPropertiesNew.v.searchRadius = 0.5 * imageHght; }
+    else if (mDetectionPropertiesNew.v.searchRadius < (0.5 * outerAOI.hght))
+    {        mDetectionPropertiesNew.v.searchRadius = ceil(0.5 * outerAOI.hght); }
+
+    if (mDetectionPropertiesNew.v.thresholdAspectRatioChange > 1.0)
+    {   mDetectionPropertiesNew.v.thresholdAspectRatioChange = 1.0; }
+    else if (mDetectionPropertiesNew.v.thresholdAspectRatioChange < mDetectionPropertiesNew.p.aspectRatioChangeThreshold)
+    {        mDetectionPropertiesNew.v.thresholdAspectRatioChange = mDetectionPropertiesNew.p.aspectRatioChangeThreshold; }
 
     if (mDetectionPropertiesNew.v.thresholdCircumferenceChange > mDetectionPropertiesNew.p.circumferenceMax)
     {   mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionPropertiesNew.p.circumferenceMax; }
     else if (mDetectionPropertiesNew.v.thresholdCircumferenceChange < mDetectionPropertiesNew.p.circumferenceChangeThreshold)
     {        mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionPropertiesNew.p.circumferenceChangeThreshold; }
 
-    if (mDetectionPropertiesNew.v.thresholdAspectRatioChange > 1.0) {
-        mDetectionPropertiesNew.v.thresholdAspectRatioChange = 1.0; }
-    else if (mDetectionPropertiesNew.v.thresholdAspectRatioChange < mDetectionPropertiesNew.p.aspectRatioChangeThreshold)
-    {        mDetectionPropertiesNew.v.thresholdAspectRatioChange = mDetectionPropertiesNew.p.aspectRatioChangeThreshold; }
+    if (mDetectionProperties.v.thresholdDisplacementChange > imageWdth)
+    {   mDetectionProperties.v.thresholdDisplacementChange = imageWdth; }
+    else if (mDetectionProperties.v.thresholdDisplacementChange < mDetectionProperties.p.displacementChangeThreshold)
+    {        mDetectionProperties.v.thresholdDisplacementChange = mDetectionProperties.p.displacementChangeThreshold; }
 
     if (mDetectionPropertiesNew.v.curvatureOffset > 180)
     {   mDetectionPropertiesNew.v.curvatureOffset = 180; }

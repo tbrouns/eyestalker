@@ -21,24 +21,16 @@ bool Parameters::ONLINE_PROCESSING;
 
 double Parameters::eyeAOIXPosFraction;
 double Parameters::eyeAOIYPosFraction;
-int    Parameters::eyeAOIHght;
-int    Parameters::eyeAOIWdth;
-int    Parameters::eyeAOIXPos;
-int    Parameters::eyeAOIYPos;
+AOIProperties Parameters::eyeAOI;
 
 double Parameters::beadAOIXPosFraction;
 double Parameters::beadAOIYPosFraction;
-int    Parameters::beadAOIHght;
-int    Parameters::beadAOIWdth;
-int    Parameters::beadAOIXPos;
-int    Parameters::beadAOIYPos;
+AOIProperties Parameters::beadAOI;
 
-int Parameters::cameraAOIHght;
-int Parameters::cameraAOIWdth;
-int Parameters::cameraAOIXPos;
-int Parameters::cameraAOIYPos;
 int Parameters::cameraXResolution;
 int Parameters::cameraYResolution;
+AOIProperties Parameters::cameraAOI;
+
 int Parameters::cannyKernelSize;
 
 double Parameters::ellipseDrawOutlineWidth;

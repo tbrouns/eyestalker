@@ -32,10 +32,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-struct haarProperties
+struct AOIProperties
 {
     int xPos;
     int yPos;
+    int wdth;
+    int hght;
 };
 
 struct edgeProperties
@@ -87,17 +89,18 @@ struct detectionParameters
     double circumferenceChangeThreshold;
     double aspectRatioChangeThreshold;
     double displacementChangeThreshold;
+    double scoreThreshold;
     int AOIXPos;
     int AOIYPos;
     int AOIWdth;
     int AOIHght;
     int cannyBlurLevel;
     int cannyKernelSize;
-    int cannyThresholdLow;
-    int cannyThresholdHigh;
+    double cannyThresholdLow;
+    double cannyThresholdHigh;
     int ellipseFitNumberMaximum;
-    int glintSize;
-    int pupilOffset;
+    int glintWdth;
+    int haarOffset;
     bool DETECTION_ON;
 };
 
@@ -123,6 +126,7 @@ struct detectionVariables
     double searchRadius;
     double thresholdAspectRatioChange;
     double thresholdCircumferenceChange;
+    double thresholdDisplacementChange;
     double priorCertainty;
     double widthAverage;
     double widthMomentum;
@@ -141,17 +145,9 @@ struct detectionMiscellaneous
 {
     bool errorDetected;
     cv::Mat imagePupil;
-    int glintSize;
-    int glintXPos;
-    int glintYPos;
-    int offsetPupilHaarWdth;
-    int offsetPupilHaarHght;
-    int offsetPupilHaarXPos;
-    int offsetPupilHaarYPos;
-    int pupilHaarHght;
-    int pupilHaarWdth;
-    int pupilHaarXPos;
-    int pupilHaarYPos;
+    AOIProperties glintAOI;
+    AOIProperties innerAOI;
+    AOIProperties outerAOI;
     std::vector<int> cannyEdgeIndices;
     std::vector<double> ellipseCoefficients;
     std::vector<edgeProperties> edgePropertiesAll;

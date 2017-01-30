@@ -112,6 +112,7 @@ public:
 
 private:
 
+    AOIProperties flashAOI;
     bool APP_EXIT;
     bool APP_RUNNING;
     bool GAIN_AUTO;
@@ -172,10 +173,6 @@ private:
     int eyeAOIWdthMin;
     int eyeImageHght;
     int eyeImageWdth;
-    int flashAOIXPos;
-    int flashAOIYPos;
-    int flashAOIWdth;
-    int flashAOIHght;
     int flashThreshold;
     int frameCount;
     int getCurrentTime();
@@ -258,6 +255,7 @@ private:
     void resetVariables();
     void detectAllFrames();
     void detectCurrentFrame(int);
+    void saveParameters(QString, QString, detectionParameters);
     void saveSettings(QString);
     void saveTrialData();
     void setFlashStandby(bool);

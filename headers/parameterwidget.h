@@ -50,11 +50,11 @@ private:
     QLabel *HaarOffsetLabel;
     QLabel *ThresholdCircumferenceLabel;
     QLabel *ThresholdAspectRatioLabel;
+    QLabel *ThresholdDisplacementLabel;
+    QLabel *ThresholdScoreLabel;
 
     QSlider *CannyBlurLevelSlider;
     QSlider *CannyKernelSizeSlider;
-    QSlider *CannyThresholdLowSlider;
-    QSlider *CannyThresholdHighSlider;
     QSlider *EllipseFitNumberMaximumSlider;
     QSlider *GlintSizeSlider;
     QSlider *HaarOffsetSlider;
@@ -63,6 +63,8 @@ private:
     SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaAverageSlider;
     SliderDouble *AlphaPredictionSlider;
+    SliderDouble *CannyThresholdLowSlider;
+    SliderDouble *CannyThresholdHighSlider;
     SliderDouble *CurvatureOffsetSlider;
     SliderDouble *EdgeLengthFractionSlider;
     SliderDouble *EllipseFitErrorMaximumSlider;
@@ -71,6 +73,8 @@ private:
     SliderDouble *AspectRatioMinSlider;
     SliderDouble *ThresholdCircumferenceSlider;
     SliderDouble *ThresholdAspectRatioSlider;
+    SliderDouble *ThresholdDisplacementSlider;
+    SliderDouble *ThresholdScoreSlider;
 
     detectionParameters mDetectionParameters;
 
@@ -84,19 +88,21 @@ private slots:
     void setAlphaPrediction         (double);
     void setCannyBlurLevel          (int);
     void setCannyKernelSize         (int);
-    void setCannyThresholdLow       (int);
-    void setCannyThresholdHigh      (int);
+    void setCannyThresholdLow       (double);
+    void setCannyThresholdHigh      (double);
     void setCurvatureOffset         (double);
-    void setEdgeLengthFraction       (double);
+    void setEdgeLengthFraction      (double);
     void setEllipseFitNumberMaximum (int);
     void setEllipseFitErrorMaximum  (double);
     void setGlintSize               (int);
-    void setCircumferenceMin   (double);
-    void setCircumferenceMax   (double);
-    void setAspectRatioMin     (double);
-    void setHaarOffset         (int);
+    void setCircumferenceMin        (double);
+    void setCircumferenceMax        (double);
+    void setAspectRatioMin          (double);
+    void setHaarOffset              (int);
     void setThresholdCircumference  (double);
     void setThresholdAspectRatio    (double);
+    void setThresholdDisplacement   (double);
+    void setThresholdScore          (double);
 
 public slots:
 };

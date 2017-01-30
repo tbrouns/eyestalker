@@ -90,10 +90,11 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.radiusMomentum   = 0;
     mDetectionVariables.radiusPrediction = 0.5 * mDetectionVariables.circumferencePrediction / M_PI;
 
-    mDetectionVariables.searchRadius = 0.5 * Parameters::eyeAOIWdth;
+    mDetectionVariables.searchRadius = 0.5 * Parameters::eyeAOI.wdth;
 
-    mDetectionVariables.thresholdCircumferenceChange = mDetectionParameters.circumferenceMax;
     mDetectionVariables.thresholdAspectRatioChange   = 1.0;
+    mDetectionVariables.thresholdCircumferenceChange = mDetectionParameters.circumferenceMax;
+    mDetectionVariables.thresholdDisplacementChange  = Parameters::eyeAOI.wdth;
 
     mDetectionVariables.widthAverage    = mDetectionVariables.circumferencePrediction / M_PI;
     mDetectionVariables.widthPrediction = mDetectionVariables.widthAverage;
@@ -101,12 +102,12 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
 
     mDetectionVariables.xPosAbsolute  = 0;
     mDetectionVariables.xPosExact     = 0;
-    mDetectionVariables.xPosPrediction = 0.5 * Parameters::eyeAOIWdth;
+    mDetectionVariables.xPosPrediction = 0.5 * Parameters::eyeAOI.wdth;
     mDetectionVariables.xVelocity     = 0;
 
     mDetectionVariables.yPosAbsolute  = 0;
     mDetectionVariables.yPosExact     = 0;
-    mDetectionVariables.yPosPrediction = 0.5 * Parameters::eyeAOIHght;
+    mDetectionVariables.yPosPrediction = 0.5 * Parameters::eyeAOI.hght;
     mDetectionVariables.yVelocity     = 0;
 
     mDetectionVariables.priorCertainty = certaintyLowerLimit;

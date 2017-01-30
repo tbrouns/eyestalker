@@ -94,15 +94,15 @@ void QImageOpenCV::resizeImage()
     }
 }
 
-void QImageOpenCV::drawAOI(QPixmap& img, int xPos, int yPos, int wdth, int hght, QColor col)
+void QImageOpenCV::drawAOI(QPixmap& img, AOIProperties mAOI, QColor col)
 {
-    if (imageWdthScaled > 0 && wdth > 0 && hght > 0)
+    if (imageWdthScaled > 0 && mAOI.wdth > 0 && mAOI.hght > 0)
     {
-        xPos = round(imageScaleFactorX * xPos);
-        wdth = round(imageScaleFactorX * wdth);
+        mAOI.xPos = round(imageScaleFactorX * mAOI.xPos);
+        mAOI.wdth = round(imageScaleFactorX * mAOI.wdth);
 
-        yPos = round(imageScaleFactorY * yPos);
-        hght = round(imageScaleFactorY * hght);
+        mAOI.yPos = round(imageScaleFactorY * mAOI.yPos);
+        mAOI.hght = round(imageScaleFactorY * mAOI.hght);
 
         QPainter painter(&img);
 
@@ -110,13 +110,13 @@ void QImageOpenCV::drawAOI(QPixmap& img, int xPos, int yPos, int wdth, int hght,
 
         painter.setPen(QPen(col, round(lineWidth)));
 
-        painter.drawLine(QPoint(xPos, yPos),        QPoint(xPos + wdth, yPos));
-        painter.drawLine(QPoint(xPos, yPos + hght), QPoint(xPos + wdth, yPos + hght));
+        painter.drawLine(QPoint(mAOI.xPos, mAOI.yPos),             QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos));
+        painter.drawLine(QPoint(mAOI.xPos, mAOI.yPos + mAOI.hght), QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos + mAOI.hght));
 
         painter.setPen(QPen(col, round(lineWidth)));
 
-        painter.drawLine(QPoint(xPos,        yPos), QPoint(xPos,        yPos + hght));
-        painter.drawLine(QPoint(xPos + wdth, yPos), QPoint(xPos + wdth, yPos + hght));
+        painter.drawLine(QPoint(mAOI.xPos,             mAOI.yPos), QPoint(mAOI.xPos,             mAOI.yPos + mAOI.hght));
+        painter.drawLine(QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos), QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos + mAOI.hght));
     }
 }
 
@@ -127,9 +127,9 @@ void QImageOpenCV::setImage()
         if (imageWdthScaled > 0)
         {
             QPixmap imageEdited = imageScaled;
-            drawAOI(imageEdited,   eyeXPosAOI,   eyeYPosAOI,   eyeWdthAOI,   eyeHghtAOI, QColor(255,   0,   0));
-            drawAOI(imageEdited, flashXPosAOI, flashYPosAOI, flashWdthAOI, flashHghtAOI, QColor(  0,   0, 255));
-            drawAOI(imageEdited,  beadXPosAOI,  beadYPosAOI,  beadWdthAOI,  beadHghtAOI, QColor(  0, 255,   0));
+            drawAOI(imageEdited,   eyeAOI, QColor(255,   0,   0));
+            drawAOI(imageEdited, flashAOI, QColor(  0,   0, 255));
+            drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0));
             this->setPixmap(imageEdited);
         }
     }
@@ -161,46 +161,39 @@ void QImageOpenCV::setFindingCamera()
     this->setPixmap(pic);
 }
 
-void QImageOpenCV::setAOIEye(int x, int y, int w, int h)
+void QImageOpenCV::setAOIEye(AOIProperties eyeAOINew)
 {
-    eyeXPosAOI = x;
-    eyeYPosAOI = y;
-    eyeWdthAOI = w;
-    eyeHghtAOI = h;
+    eyeAOI = eyeAOINew;
 }
 
-void QImageOpenCV::setAOIBead(int x, int y, int w, int h)
+void QImageOpenCV::setAOIBead(AOIProperties beadAOINew)
 {
-    beadXPosAOI = x;
-    beadYPosAOI = y;
-    beadWdthAOI = w;
-    beadHghtAOI = h;
+    beadAOI = beadAOINew;
 }
 
-void QImageOpenCV::setAOIFlash(int x, int y, int w, int h)
+void QImageOpenCV::setAOIFlash(AOIProperties flashAOINew)
 {
-    flashXPosAOI = x - Parameters::cameraAOIXPos;
-    flashYPosAOI = y - Parameters::cameraAOIYPos;
-    flashWdthAOI = w;
-    flashHghtAOI = h;
+    flashAOI = flashAOINew;
+    flashAOI.xPos = flashAOI.xPos - Parameters::cameraAOI.xPos;
+    flashAOI.yPos = flashAOI.xPos - Parameters::cameraAOI.yPos;
 
-    if (flashXPosAOI < 0)
+    if (flashAOI.xPos < 0)
     {
-        if (flashXPosAOI + flashWdthAOI < 0) { flashWdthAOI = 0; }
+        if (flashAOI.xPos + flashAOI.wdth < 0) { flashAOI.wdth = 0; }
         else
         {
-            flashWdthAOI = flashXPosAOI + flashWdthAOI;
-            flashXPosAOI = 0;
+            flashAOI.wdth = flashAOI.xPos + flashAOI.wdth;
+            flashAOI.xPos = 0;
         }
     }
 
-    if (flashYPosAOI < 0)
+    if (flashAOI.yPos < 0)
     {
-        if (flashYPosAOI + flashHghtAOI < 0) { flashHghtAOI = 0; }
+        if (flashAOI.yPos + flashAOI.hght < 0) { flashAOI.hght = 0; }
         else
         {
-            flashHghtAOI = flashYPosAOI + flashHghtAOI;
-            flashYPosAOI = 0;
+            flashAOI.hght = flashAOI.yPos + flashAOI.hght;
+            flashAOI.yPos = 0;
         }
     }
 }
@@ -267,27 +260,27 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
 
                 double mouseXPos = (event->x()) - imageScaledXOffset;
 
-                Parameters::eyeAOIXPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::eyeAOIWdth);
+                Parameters::eyeAOI.xPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::eyeAOI.wdth);
 
-                if (Parameters::eyeAOIXPos + Parameters::eyeAOIWdth >= imageWdth)
-                {   Parameters::eyeAOIXPos = imageWdth - Parameters::eyeAOIWdth; }
-                else if (Parameters::eyeAOIXPos < 0)
-                {        Parameters::eyeAOIXPos = 0; }
+                if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth >= imageWdth)
+                {   Parameters::eyeAOI.xPos = imageWdth - Parameters::eyeAOI.wdth; }
+                else if (Parameters::eyeAOI.xPos < 0)
+                {        Parameters::eyeAOI.xPos = 0; }
 
-                Parameters::eyeAOIXPosFraction = Parameters::eyeAOIXPos / (double) imageWdth;
+                Parameters::eyeAOIXPosFraction = Parameters::eyeAOI.xPos / (double) imageWdth;
 
                 double mouseYPos = (event->y()) - imageScaledYOffset;
 
-                Parameters::eyeAOIYPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::eyeAOIHght);
+                Parameters::eyeAOI.yPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::eyeAOI.hght);
 
-                if (Parameters::eyeAOIYPos + Parameters::eyeAOIHght >= imageHght)
-                {   Parameters::eyeAOIYPos = imageHght - Parameters::eyeAOIHght; }
-                else if (Parameters::eyeAOIYPos < 0)
-                {        Parameters::eyeAOIYPos = 0; }
+                if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght >= imageHght)
+                {   Parameters::eyeAOI.yPos = imageHght - Parameters::eyeAOI.hght; }
+                else if (Parameters::eyeAOI.yPos < 0)
+                {        Parameters::eyeAOI.yPos = 0; }
 
-                Parameters::eyeAOIYPosFraction = Parameters::eyeAOIYPos / (double) imageHght;
+                Parameters::eyeAOIYPosFraction = Parameters::eyeAOI.yPos / (double) imageHght;
 
-                setAOIEye(Parameters::eyeAOIXPos, Parameters::eyeAOIYPos, Parameters::eyeAOIWdth, Parameters::eyeAOIHght);
+                setAOIEye(Parameters::eyeAOI);
                 setImage();
             }
 
@@ -299,27 +292,27 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
 
                 double mouseXPos = (event->x()) - imageScaledXOffset;
 
-                Parameters::beadAOIXPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::beadAOIWdth);
+                Parameters::beadAOI.xPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::beadAOI.wdth);
 
-                if (Parameters::beadAOIXPos + Parameters::beadAOIWdth >= imageWdth)
-                {   Parameters::beadAOIXPos = imageWdth - Parameters::beadAOIWdth; }
-                else if (Parameters::beadAOIXPos < 0)
-                {        Parameters::beadAOIXPos = 0; }
+                if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth >= imageWdth)
+                {   Parameters::beadAOI.xPos = imageWdth - Parameters::beadAOI.wdth; }
+                else if (Parameters::beadAOI.xPos < 0)
+                {        Parameters::beadAOI.xPos = 0; }
 
-                Parameters::beadAOIXPosFraction = Parameters::beadAOIXPos / (double) imageWdth;
+                Parameters::beadAOIXPosFraction = Parameters::beadAOI.xPos / (double) imageWdth;
 
                 double mouseYPos = (event->y()) - imageScaledYOffset;
 
-                Parameters::beadAOIYPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::beadAOIHght);
+                Parameters::beadAOI.yPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::beadAOI.hght);
 
-                if (Parameters::beadAOIYPos + Parameters::beadAOIHght >= imageHght)
-                {   Parameters::beadAOIYPos = imageHght - Parameters::beadAOIHght; }
-                else if (Parameters::beadAOIYPos < 0)
-                {        Parameters::beadAOIYPos = 0; }
+                if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght >= imageHght)
+                {   Parameters::beadAOI.yPos = imageHght - Parameters::beadAOI.hght; }
+                else if (Parameters::beadAOI.yPos < 0)
+                {        Parameters::beadAOI.yPos = 0; }
 
-                Parameters::beadAOIYPosFraction = Parameters::beadAOIYPos / (double) imageHght;
+                Parameters::beadAOIYPosFraction = Parameters::beadAOI.yPos / (double) imageHght;
 
-                setAOIEye(Parameters::beadAOIXPos, Parameters::beadAOIYPos, Parameters::beadAOIWdth, Parameters::beadAOIHght);
+                setAOIEye(Parameters::beadAOI);
                 setImage();
             }
 
@@ -336,8 +329,8 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
             double mouseXPos = (event->x()) - imageScaledXOffset;
             double mouseYPos = (event->y()) - imageScaledYOffset;
 
-            double XPos = mouseXPos * (Parameters::eyeAOIWdth / (double) imageWdthScaled);
-            double YPos = mouseYPos * (Parameters::eyeAOIHght / (double) imageHghtScaled);
+            double XPos = mouseXPos * (Parameters::eyeAOI.wdth / (double) imageWdthScaled);
+            double YPos = mouseYPos * (Parameters::eyeAOI.hght / (double) imageHghtScaled);
 
             emit imageMouseClick(XPos, YPos);
         }

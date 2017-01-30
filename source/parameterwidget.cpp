@@ -52,20 +52,21 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CannyThresholdLowTextBox->setText("<b>Low threshold:</b>");
 
     CannyThresholdLowLabel  = new QLabel;
-    CannyThresholdLowSlider = new QSlider;
-    CannyThresholdLowSlider->setRange(0, 300);
+    CannyThresholdLowSlider = new SliderDouble;
+    CannyThresholdLowSlider->setPrecision(1);
+    CannyThresholdLowSlider->setDoubleRange(0, 50);
     CannyThresholdLowSlider->setOrientation(Qt::Horizontal);
-    CannyThresholdLowSlider->setSingleStep(1);
-    QObject::connect(CannyThresholdLowSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdLow(int)));
+    QObject::connect(CannyThresholdLowSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCannyThresholdLow(double)));
 
     QLabel *CannyThresholdHighTextBox = new QLabel;
     CannyThresholdHighTextBox->setText("<b>High threshold:</b>");
 
     CannyThresholdHighLabel  = new QLabel;
-    CannyThresholdHighSlider = new QSlider;
-    CannyThresholdHighSlider->setRange(0, 300);
+    CannyThresholdHighSlider = new SliderDouble;
+    CannyThresholdHighSlider->setPrecision(1);
+    CannyThresholdHighSlider->setDoubleRange(0, 50);
     CannyThresholdHighSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CannyThresholdHighSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyThresholdHigh(int)));
+    QObject::connect(CannyThresholdHighSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCannyThresholdHigh(double)));
 
     QLabel *CannyBlurLevelTextBox = new QLabel;
     CannyBlurLevelTextBox->setText("<b>Blur level:</b>");
@@ -139,17 +140,27 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdParametersTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *ThresholdCircumferenceTextBox = new QLabel;
-    ThresholdCircumferenceTextBox->setText("<b>Circumference threshold:</b>");
+    ThresholdCircumferenceTextBox->setText("<b>Circumference:</b>");
 
     QLabel *ThresholdAspectRatioTextBox = new QLabel;
-    ThresholdAspectRatioTextBox->setText("<b>Aspect ratio threshold:</b>");
+    ThresholdAspectRatioTextBox->setText("<b>Aspect ratio:</b>");
+
+    QLabel *ThresholdDisplacementTextBox = new QLabel;
+    ThresholdDisplacementTextBox->setText("<b>Displacement:</b>");
 
     ThresholdCircumferenceLabel  = new QLabel;
     ThresholdCircumferenceSlider = new SliderDouble;
     ThresholdCircumferenceSlider->setPrecision(1);
-    ThresholdCircumferenceSlider->setDoubleRange(0, 50);
+    ThresholdCircumferenceSlider->setDoubleRange(0, 25);
     ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
+
+    ThresholdDisplacementLabel  = new QLabel;
+    ThresholdDisplacementSlider = new SliderDouble;
+    ThresholdDisplacementSlider->setPrecision(1);
+    ThresholdDisplacementSlider->setDoubleRange(0, 25);
+    ThresholdDisplacementSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(ThresholdDisplacementSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdDisplacement(double)));
 
     ThresholdAspectRatioLabel  = new QLabel;
     ThresholdAspectRatioSlider = new SliderDouble;
@@ -188,9 +199,20 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CurvatureOffsetLabel  = new QLabel;
     CurvatureOffsetSlider = new SliderDouble;
     CurvatureOffsetSlider->setPrecision(1);
-    CurvatureOffsetSlider->setDoubleRange(0, 180);
+    CurvatureOffsetSlider->setDoubleRange(0, 25);
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
+
+    QLabel *ThresholdScoreTextBox = new QLabel;
+    ThresholdScoreTextBox->setText("<b>Score threshold:</b>");
+
+    ThresholdScoreLabel  = new QLabel;
+    ThresholdScoreSlider = new SliderDouble;
+    ThresholdScoreSlider->setPrecision(2);
+    ThresholdScoreSlider->setDoubleRange(0, 0.5);
+    ThresholdScoreSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(ThresholdScoreSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScore(double)));
+
 
     QLabel *EdgeLengthFractionTextBox = new QLabel;
     EdgeLengthFractionTextBox->setText("<b>Edge minimum length:");
@@ -250,15 +272,17 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(AlphaMomentumTextBox,            13, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaMiscellaneousTextBox,       14, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(ThresholdCircumferenceTextBox,   16, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdAspectRatioTextBox,     17, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdDisplacementTextBox,    16, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdCircumferenceTextBox,   17, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdAspectRatioTextBox,     18, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(HaarOffsetTextBox,               19, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(GlintSizeTextBox,                20, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(HaarOffsetTextBox,               20, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GlintSizeTextBox,                21, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CurvatureOffsetTextBox,          22, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EdgeLengthFractionTextBox,       23, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EllipseFitNumberMaximumTextBox,  24, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EllipseFitErrorMaximumTextBox,   25, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreTextBox,           23, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EdgeLengthFractionTextBox,       24, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EllipseFitNumberMaximumTextBox,  25, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EllipseFitErrorMaximumTextBox,   26, 0, 1, 1, Qt::AlignRight);
 
     MainLayout->addWidget(TitleLimitTextBox,                0, 1, 1, 1, Qt::AlignCenter);
     MainLayout->addWidget(CircumferenceMaxSlider,           1, 1);
@@ -275,15 +299,17 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(AlphaMomentumSlider,             13, 1);
     MainLayout->addWidget(AlphaMiscellaneousSlider,        14, 1);
     MainLayout->addWidget(TitleChangeTextBox,              15, 1, 1, 1, Qt::AlignCenter);
-    MainLayout->addWidget(ThresholdCircumferenceSlider,    16, 1);
-    MainLayout->addWidget(ThresholdAspectRatioSlider,      17, 1);
-    MainLayout->addWidget(TitleMiscTextBox,                18, 1, 1, 1, Qt::AlignCenter);
-    MainLayout->addWidget(HaarOffsetSlider,                19, 1);
-    MainLayout->addWidget(GlintSizeSlider,                 20, 1);
+    MainLayout->addWidget(ThresholdDisplacementSlider,     16, 1);
+    MainLayout->addWidget(ThresholdCircumferenceSlider,    17, 1);
+    MainLayout->addWidget(ThresholdAspectRatioSlider,      18, 1);
+    MainLayout->addWidget(TitleMiscTextBox,                19, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(HaarOffsetSlider,                20, 1);
+    MainLayout->addWidget(GlintSizeSlider,                 21, 1);
     MainLayout->addWidget(CurvatureOffsetSlider,           22, 1);
-    MainLayout->addWidget(EdgeLengthFractionSlider,        23, 1);
-    MainLayout->addWidget(EllipseFitNumberMaximumSlider,   24, 1);
-    MainLayout->addWidget(EllipseFitErrorMaximumSlider,    25, 1);
+    MainLayout->addWidget(ThresholdScoreSlider,            23, 1);
+    MainLayout->addWidget(EdgeLengthFractionSlider,        24, 1);
+    MainLayout->addWidget(EllipseFitNumberMaximumSlider,   25, 1);
+    MainLayout->addWidget(EllipseFitErrorMaximumSlider,    26, 1);
 
     MainLayout->addWidget(CircumferenceMaxLabel,         1, 2);
     MainLayout->addWidget(CircumferenceMinLabel,         2, 2);
@@ -299,15 +325,17 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(AlphaMomentumLabel,            13, 2);
     MainLayout->addWidget(AlphaMiscellaneousLabel,       14, 2);
 
-    MainLayout->addWidget(ThresholdCircumferenceLabel,   16, 2);
-    MainLayout->addWidget(ThresholdAspectRatioLabel,     17, 2);
+    MainLayout->addWidget(ThresholdDisplacementLabel,    16, 2);
+    MainLayout->addWidget(ThresholdCircumferenceLabel,   17, 2);
+    MainLayout->addWidget(ThresholdAspectRatioLabel,     18, 2);
 
-    MainLayout->addWidget(HaarOffsetLabel,               19, 2);
-    MainLayout->addWidget(GlintSizeLabel,                20, 2);
+    MainLayout->addWidget(HaarOffsetLabel,               20, 2);
+    MainLayout->addWidget(GlintSizeLabel,                21, 2);
     MainLayout->addWidget(CurvatureOffsetLabel,          22, 2);
-    MainLayout->addWidget(EdgeLengthFractionLabel,       23, 2);
-    MainLayout->addWidget(EllipseFitNumberMaximumLabel,  24, 2);
-    MainLayout->addWidget(EllipseFitErrorMaximumLabel,   25, 2);
+    MainLayout->addWidget(ThresholdScoreLabel,           23, 2);
+    MainLayout->addWidget(EdgeLengthFractionLabel,       24, 2);
+    MainLayout->addWidget(EllipseFitNumberMaximumLabel,  25, 2);
+    MainLayout->addWidget(EllipseFitErrorMaximumLabel,   26, 2);
 
     MainLayout->setColumnStretch(0,1);
     MainLayout->setColumnStretch(1,3);
@@ -344,20 +372,20 @@ void ParameterWidget::setStructure(detectionParameters mEyePropertiesParametersN
 
 void ParameterWidget::reset()
 {
-    CircumferenceMinSlider->setDoubleValue(mDetectionParameters.circumferenceMin);
-    CircumferenceMinLabel ->setText(QString::number(mDetectionParameters.circumferenceMin, 'f', 1));
-
     CircumferenceMaxSlider->setDoubleValue(mDetectionParameters.circumferenceMax);
     CircumferenceMaxLabel ->setText(QString::number(mDetectionParameters.circumferenceMax, 'f', 1));
+
+    CircumferenceMinSlider->setDoubleValue(mDetectionParameters.circumferenceMin);
+    CircumferenceMinLabel ->setText(QString::number(mDetectionParameters.circumferenceMin, 'f', 1));
 
     AspectRatioMinSlider->setDoubleValue(mDetectionParameters.aspectRatioMin);
     AspectRatioMinLabel ->setText(QString::number(mDetectionParameters.aspectRatioMin, 'f', 2));
 
-    CannyThresholdLowSlider->setValue(mDetectionParameters.cannyThresholdLow);
-    CannyThresholdLowLabel ->setText(QString::number(mDetectionParameters.cannyThresholdLow));
+    CannyThresholdHighSlider->setDoubleValue(mDetectionParameters.cannyThresholdHigh);
+    CannyThresholdHighLabel ->setText(QString::number(mDetectionParameters.cannyThresholdHigh, 'f', 1));
 
-    CannyThresholdHighSlider->setValue(mDetectionParameters.cannyThresholdHigh);
-    CannyThresholdHighLabel ->setText(QString::number(mDetectionParameters.cannyThresholdHigh));
+    CannyThresholdLowSlider->setDoubleValue(mDetectionParameters.cannyThresholdLow);
+    CannyThresholdLowLabel ->setText(QString::number(mDetectionParameters.cannyThresholdLow, 'f', 1));
 
     CannyBlurLevelSlider->setValue(mDetectionParameters.cannyBlurLevel);
     CannyBlurLevelLabel ->setText(QString::number(mDetectionParameters.cannyBlurLevel));
@@ -381,11 +409,17 @@ void ParameterWidget::reset()
     ThresholdAspectRatioSlider->setDoubleValue(mDetectionParameters.aspectRatioChangeThreshold);
     ThresholdAspectRatioLabel ->setText(QString::number(mDetectionParameters.aspectRatioChangeThreshold, 'f', 2));
 
-    HaarOffsetSlider->setValue(mDetectionParameters.pupilOffset);
-    HaarOffsetLabel ->setText(QString::number(mDetectionParameters.pupilOffset));
+    ThresholdDisplacementSlider->setDoubleValue(mDetectionParameters.displacementChangeThreshold);
+    ThresholdDisplacementLabel ->setText(QString::number(mDetectionParameters.displacementChangeThreshold, 'f', 1));
 
-    GlintSizeSlider->setValue(round(0.5 * mDetectionParameters.glintSize));
-    GlintSizeLabel->setText(QString::number(mDetectionParameters.glintSize));
+    ThresholdScoreSlider->setDoubleValue(mDetectionParameters.scoreThreshold);
+    ThresholdScoreLabel ->setText(QString::number(mDetectionParameters.scoreThreshold, 'f', 2));
+
+    HaarOffsetSlider->setValue(mDetectionParameters.haarOffset);
+    HaarOffsetLabel ->setText(QString::number(mDetectionParameters.haarOffset));
+
+    GlintSizeSlider->setValue(round(0.5 * mDetectionParameters.glintWdth));
+    GlintSizeLabel->setText(QString::number(mDetectionParameters.glintWdth));
 
     CurvatureOffsetSlider->setDoubleValue(mDetectionParameters.curvatureOffset);
     CurvatureOffsetLabel ->setText(QString::number(mDetectionParameters.curvatureOffset, 'f', 1));
@@ -434,27 +468,27 @@ void ParameterWidget::setEdgeLengthFraction(double value)
     EdgeLengthFractionLabel->setText(QString::number(value, 'f', 2));
 }
 
-void ParameterWidget::setCannyThresholdLow(int value)
+void ParameterWidget::setCannyThresholdLow(double value)
 {
     if (value > mDetectionParameters.cannyThresholdHigh)
     {
-        CannyThresholdHighSlider->setValue(value);
+        CannyThresholdHighSlider->setDoubleValue(value);
     }
 
     mDetectionParameters.cannyThresholdLow = value;
-    CannyThresholdLowLabel->setText(QString::number(value));
+    CannyThresholdLowLabel->setText(QString::number(value, 'f', 1));
 
 }
 
-void ParameterWidget::setCannyThresholdHigh(int value)
+void ParameterWidget::setCannyThresholdHigh(double value)
 {
     if (value < mDetectionParameters.cannyThresholdLow)
     {
-        CannyThresholdLowSlider->setValue(value);
+        CannyThresholdLowSlider->setDoubleValue(value);
     }
 
     mDetectionParameters.cannyThresholdHigh = value;
-    CannyThresholdHighLabel->setText(QString::number(value));
+    CannyThresholdHighLabel->setText(QString::number(value, 'f', 1));
 }
 
 void ParameterWidget::setCannyKernelSize(int value)
@@ -506,16 +540,28 @@ void ParameterWidget::setThresholdAspectRatio(double value)
     ThresholdAspectRatioLabel->setText(QString::number(value, 'f', 2));
 }
 
+void ParameterWidget::setThresholdDisplacement(double value)
+{
+    mDetectionParameters.displacementChangeThreshold = value;
+    ThresholdDisplacementLabel->setText(QString::number(value, 'f', 1));
+}
+
+void ParameterWidget::setThresholdScore(double value)
+{
+    mDetectionParameters.scoreThreshold = value;
+    ThresholdScoreLabel->setText(QString::number(value, 'f', 2));
+}
+
 void ParameterWidget::setHaarOffset(int value)
 {
-    mDetectionParameters.pupilOffset = value;
+    mDetectionParameters.haarOffset = value;
     HaarOffsetLabel->setText(QString::number(value));
 }
 
 void ParameterWidget::setGlintSize(int value)
 {
     int newValue = 2 * value;
-    mDetectionParameters.glintSize = newValue;
+    mDetectionParameters.glintWdth = newValue;
     GlintSizeLabel->setText(QString::number(newValue));
 }
 

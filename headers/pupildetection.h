@@ -39,6 +39,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstring> // used for saving images
 #include <fstream>
 #include <iostream>

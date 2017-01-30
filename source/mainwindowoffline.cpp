@@ -198,12 +198,12 @@ void MainWindow::updateImageRaw(int imgIndex) // for signal from qimageopencv
         cv::Mat eyeImageRaw = cv::imread(imagePath.str(), CV_LOAD_IMAGE_COLOR);
         CamQImage->loadImage(eyeImageRaw);
         { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-            Parameters::cameraAOIWdth = eyeImageRaw.cols;
-            Parameters::cameraAOIHght = eyeImageRaw.rows;
+            Parameters::cameraAOI.wdth = eyeImageRaw.cols;
+            Parameters::cameraAOI.hght = eyeImageRaw.rows;
             updateEyeAOIx();
             updateEyeAOIy();
-            CamQImage->setAOIEye ( Parameters::eyeAOIXPos,  Parameters::eyeAOIYPos,  Parameters::eyeAOIWdth,  Parameters::eyeAOIHght);
-            CamQImage->setAOIBead(Parameters::beadAOIXPos, Parameters::beadAOIYPos, Parameters::beadAOIWdth, Parameters::beadAOIHght);
+            CamQImage->setAOIEye (Parameters::eyeAOI);
+            CamQImage->setAOIBead(Parameters::beadAOI);
         }
         CamQImage->setImage();
     } else { CamQImage->clearImage(); }
@@ -312,21 +312,21 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         cameraAOIXPos = imageRaw.cols;
         cameraAOIYPos = imageRaw.rows;
 
-        Parameters::cameraAOIWdth = cameraAOIXPos;
-        Parameters::cameraAOIHght = cameraAOIYPos;
+        Parameters::cameraAOI.wdth = cameraAOIXPos;
+        Parameters::cameraAOI.hght = cameraAOIYPos;
 
         updateEyeAOIx();
         updateEyeAOIy();
 
-        mDetectionPropertiesEye.p.AOIXPos = Parameters::eyeAOIXPos;
-        mDetectionPropertiesEye.p.AOIYPos = Parameters::eyeAOIYPos;
-        mDetectionPropertiesEye.p.AOIWdth = Parameters::eyeAOIWdth;
-        mDetectionPropertiesEye.p.AOIHght = Parameters::eyeAOIHght;
+        mDetectionPropertiesEye.p.AOIXPos = Parameters::eyeAOI.xPos;
+        mDetectionPropertiesEye.p.AOIYPos = Parameters::eyeAOI.yPos;
+        mDetectionPropertiesEye.p.AOIWdth = Parameters::eyeAOI.wdth;
+        mDetectionPropertiesEye.p.AOIHght = Parameters::eyeAOI.hght;
 
-        mDetectionPropertiesBead.p.AOIXPos = Parameters::beadAOIXPos;
-        mDetectionPropertiesBead.p.AOIYPos = Parameters::beadAOIYPos;
-        mDetectionPropertiesBead.p.AOIWdth = Parameters::beadAOIWdth;
-        mDetectionPropertiesBead.p.AOIHght = Parameters::beadAOIHght;
+        mDetectionPropertiesBead.p.AOIXPos = Parameters::beadAOI.xPos;
+        mDetectionPropertiesBead.p.AOIYPos = Parameters::beadAOI.yPos;
+        mDetectionPropertiesBead.p.AOIWdth = Parameters::beadAOI.wdth;
+        mDetectionPropertiesBead.p.AOIHght = Parameters::beadAOI.hght;
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();

@@ -60,10 +60,10 @@ public:
     void setFindingCamera();
 
     void setAOIError();
-    void setAOIBead (int x, int y, int w, int h);
-    void setAOIEye  (int x, int y, int w, int h);
-    void setAOIFlash(int x, int y, int w, int h);
-    void drawAOI(QPixmap &img, int x0, int y0, int W, int H, QColor col);
+    void setAOIBead (AOIProperties beadAOINew);
+    void setAOIEye  (AOIProperties eyeAOINew);
+    void setAOIFlash(AOIProperties flashAOINew);
+    void drawAOI(QPixmap &img, AOIProperties mAOI, QColor col);
 
 
     void setSize(int, int);
@@ -74,18 +74,11 @@ private:
     double aspectRatio;
     double imageScaleFactorX;
     double imageScaleFactorY;
-    int beadHghtAOI;
-    int beadWdthAOI;
-    int beadXPosAOI;
-    int beadYPosAOI;
-    int eyeHghtAOI;
-    int eyeWdthAOI;
-    int eyeXPosAOI;
-    int eyeYPosAOI;
-    int flashHghtAOI;
-    int flashWdthAOI;
-    int flashXPosAOI;
-    int flashYPosAOI;
+
+    AOIProperties beadAOI;
+    AOIProperties eyeAOI;
+    AOIProperties flashAOI;
+
     int imageHght;
     int imageHghtScaled;
     int imageWdthScaled;
