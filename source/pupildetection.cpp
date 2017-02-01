@@ -331,7 +331,7 @@ inline int calculateDirection(double x, double y)
     return dir;
 }
 
-std::vector<int> findGradientDirection(AOIProperties mAOI, double pupilXCentre, double pupilYCentre)
+std::vector<int> getRadialDirections(AOIProperties mAOI, double pupilXCentre, double pupilYCentre)
 {
     std::vector<int> directionVector(mAOI.wdth * mAOI.hght);
 
@@ -352,7 +352,7 @@ std::vector<int> findGradientDirection(AOIProperties mAOI, double pupilXCentre, 
     return directionVector;
 }
 
-std::vector<int> radialGradient(const cv::Mat& img, const std::vector<int>& gradientDirections, int kernelSize)
+std::vector<int> getRadialGradient(const cv::Mat& img, const std::vector<int>& radialDirections, int kernelSize)
 {
     std::vector<int> dX = {  1,  1,  0, -1, -1, -1,  0,  1};
     std::vector<int> dY = {  0,  1,  1,  1,  0, -1, -1, -1};
@@ -371,7 +371,7 @@ std::vector<int> radialGradient(const cv::Mat& img, const std::vector<int>& grad
         {
             int centreIndex = width * y + x;
 
-            int direction = gradientDirections[centreIndex]; // direction index of gradient
+            int direction = radialDirections[centreIndex]; // direction index of gradient
 
             int dx = dX[direction];
             int dy = dY[direction];
@@ -390,6 +390,43 @@ std::vector<int> radialGradient(const cv::Mat& img, const std::vector<int>& grad
     }
 
     return gradientVector;
+}
+
+std::vector<int> getGradientDirections(const cv::Mat& img, const std::vector<int>& radialGradient, int kernelSize, double thresholdLow)
+{
+    uchar *ptr = img.data;
+    int width  = img.cols;
+    int height = img.rows;
+
+    std::vector<int> directionVector(width * height);
+
+    int kernelRadius = (kernelSize - 1) / 2;
+
+    for (int y = kernelRadius; y < height - kernelRadius; y++)
+    {
+        for (int x = kernelRadius; x < width - kernelRadius; x++)
+        {
+            int centreIndex = width * y + x;
+
+            if (radialGradient[centreIndex] >= thresholdLow)
+            {
+                int neighbourXPosPositive = width * y + x + kernelRadius;
+                int neighbourXPosNegative = neighbourXPosPositive - 2 * kernelRadius;
+
+                int neighbourYPosPositive = width * (y + kernelRadius) + x;
+                int neighbourYPosNegative = neighbourYPosPositive - 2 * width * kernelRadius;
+
+                double dx = ptr[neighbourXPosPositive] - ptr[neighbourXPosNegative];
+                double dy = ptr[neighbourYPosNegative] - ptr[neighbourYPosPositive];
+
+                int dir = calculateDirection(dx, dy);
+
+                directionVector[centreIndex] = dir; // direction index of gradient
+            }
+        }
+    }
+
+    return directionVector;
 }
 
 std::vector<int> nonMaximumSuppresion(const std::vector<int>& gradient, const std::vector<int>& gradientDirections, AOIProperties mAOI, double thresholdLow)
@@ -417,7 +454,7 @@ std::vector<int> nonMaximumSuppresion(const std::vector<int>& gradient, const st
                 int neighbourIndexPositive = mAOI.wdth * (y + dy) + (x + dx);
                 int neighbourIndexNegative = mAOI.wdth * (y - dy) + (x - dx);
 
-                if (gradientValue < gradient[neighbourIndexPositive] || gradientValue < gradient[neighbourIndexNegative])
+                if (gradientValue < gradient[neighbourIndexPositive] || gradientValue <= gradient[neighbourIndexNegative]) // if gradients are equal, then keep inner edge point
                 {
                     gradientSuppressed[centreIndex] = 0;
                 }
@@ -498,7 +535,7 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
             {
                 for (int m = 0; m < 4; m++)
                 {
-                    int numberOfFilledPixels = 0;
+                    int numFilledPixels = 0;
 
                     // check combination of two neighbouring pixels in 4-connected environment
 
@@ -518,11 +555,11 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
 
                         if (binaryImageVector[iNeighbour] == 1) // check if neighbour is filled
                         {
-                            numberOfFilledPixels++;
+                            numFilledPixels++;
                         }
                     }
 
-                    if (numberOfFilledPixels == 2) // if two neighbouring pixels in 4-connected environment are filled ...
+                    if (numFilledPixels == 2) // if two neighbouring pixels in 4-connected environment are filled ...
                     {
                         int q = 2 * m + 1;
 
@@ -531,9 +568,9 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
                         int iOpposite = mAOI.wdth * yOpposite + xOpposite;
 
                         if
-                                (xOpposite < 0 || xOpposite >= mAOI.wdth  || // ... AND opposite pixel is out-of-bounds
+                                (xOpposite < 0 || xOpposite >= mAOI.wdth || // ... AND opposite pixel is out-of-bounds
                                  yOpposite < 0 || yOpposite >= mAOI.hght ||
-                                 binaryImageVector[iOpposite] ==  0       || // ... OR unfilled ...
+                                 binaryImageVector[iOpposite] ==  0      || // ... OR unfilled ...
                                  binaryImageVector[iOpposite] == -1)
                         {
                             binaryImageVector[iCentre] = -1; // ... THEN remove pixel from edge
@@ -562,12 +599,12 @@ std::vector<int> cannyConversion(const cv::Mat& img, AOIProperties mAOI)
     return binaryImageVectorRaw;
 }
 
-std::vector<int> getEdgeIndices(const std::vector<int>& binaryImageVector)
+std::vector<int> getEdgeIndices(const std::vector<int>& binaryImageVector, int tag)
 {
     int AOIArea = binaryImageVector.size();
     std::vector<int> cannyEdgeIndices;
     for (int iEdgePoint = 0; iEdgePoint < AOIArea; iEdgePoint++)
-    { if (binaryImageVector[iEdgePoint] == 1) { cannyEdgeIndices.push_back(iEdgePoint); }}
+    { if (binaryImageVector[iEdgePoint] == tag) { cannyEdgeIndices.push_back(iEdgePoint); }}
     return cannyEdgeIndices;
 }
 
@@ -698,9 +735,13 @@ inline int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, i
 
             if (cannyEdgeVector[neighbourIndex] == 2) // if neighbouring point is filled ...
             {
-                edgePointNew = neighbourIndex; // edge point to-be-checked
-                edgePoints.push_back(edgePointNew);
-                break;
+                std::vector<int>::iterator itr = find(edgePoints.begin(), edgePoints.end(), neighbourIndex); // check if index has already been stored
+                if (itr == edgePoints.end())
+                {
+                    edgePointNew = neighbourIndex; // edge point to-be-checked
+                    edgePoints.push_back(edgePointNew);
+                    break;
+                }
             }
         }
     }
@@ -758,7 +799,7 @@ inline int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, i
     return startIndex;
 }
 
-inline void findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
+inline int findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
 {
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
@@ -767,6 +808,7 @@ inline void findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI
 
     std::vector<int> edgePointsOld = {startIndex};
 
+    int centreIndex;
     int numEdgePoints;
 
     do
@@ -777,12 +819,12 @@ inline void findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI
 
         for (int iEdgePoint = 0; iEdgePoint < numEdgePoints; iEdgePoint++) // loop through all newly added unchecked edge points
         {
-            int centreIndex = edgePointsOld[iEdgePoint]; // index of current edge point
+            centreIndex = edgePointsOld[iEdgePoint]; // index of current edge point
 
             int centreXPos = centreIndex % mAOI.wdth;
             int centreYPos = (centreIndex - centreXPos) / mAOI.wdth;
 
-            bool NEW_EDGE_POINT_FOUND = false;
+            int nConnections = 0;
 
             for (int m = 0; m < 8; m++) // loop through 8-connected environment of the current edge point
             {
@@ -793,17 +835,20 @@ inline void findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI
 
                 int neighbourIndex = mAOI.wdth * neighbourYPos + neighbourXPos;
 
-                if (cannyEdgeVector[neighbourIndex] == 1) // if neighbouring point is filled ...
+                int neighbourTag = cannyEdgeVector[neighbourIndex];
+
+                if (neighbourTag == 1) // if neighbouring point is filled ...
                 {
                     cannyEdgeVector[neighbourIndex] = 2; // ... then tag it
                     edgePointsNew.push_back(neighbourIndex); // edge points to-be-checked
-                    NEW_EDGE_POINT_FOUND = true;
+                    nConnections++;
                 }
+                else if (neighbourTag == 2) { nConnections++; }
             }
 
-            if (!NEW_EDGE_POINT_FOUND || iEdgePoint == 0)
+            if (nConnections == 1) // start or end of edge
             {
-                int edgePointNew = connectEdges(cannyEdgeVector, mAOI, centreIndex); // Add additional point to the start or end of edge
+                int edgePointNew = connectEdges(cannyEdgeVector, mAOI, centreIndex); // connect possible edge terminals
                 if (centreIndex != edgePointNew) { edgePointsNew.push_back(edgePointNew); }
             }
         }
@@ -813,9 +858,11 @@ inline void findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI
         edgePointsNew.clear();
 
     } while (numEdgePoints > 0);
+
+    return centreIndex; // return last point
 }
 
-inline void constructGraphTree(std::vector<vertexProperties>& verticesAll, std::vector<branchProperties>& branchesAll, std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int pointIndexStart)
+inline void constructGraphTree(std::vector<vertexProperties>& vVertexProperties, std::vector<branchProperties>& vBranchProperties, std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int pointIndexStart)
 {
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
@@ -823,6 +870,28 @@ inline void constructGraphTree(std::vector<vertexProperties>& verticesAll, std::
     vertexProperties vertexStart; // first vertex
     vertexStart.pointIndex = pointIndexStart;
     vertexStart.index      = 0;
+
+    // Find all branches connected to start vertex
+
+    int centreXPos =  vertexStart.pointIndex % mAOI.wdth;
+    int centreYPos = (vertexStart.pointIndex - centreXPos) / mAOI.wdth;
+
+    for (int m = 0; m < 8; m++) // loop through 8-connected environment of the vertex
+    {
+        int neighbourXPos = centreXPos + dX[m];
+        int neighbourYPos = centreYPos + dY[m];
+
+        if (neighbourXPos < 0 || neighbourXPos >= mAOI.wdth || neighbourYPos < 0 || neighbourYPos >= mAOI.hght) { continue; } // neighbour is out-of-bounds
+
+        int neighbourIndex = mAOI.wdth * neighbourYPos + neighbourXPos;
+
+        if (cannyEdgeVector[neighbourIndex] == 2) // if neighbouring point is filled ...
+        {
+            cannyEdgeVector[neighbourIndex] = 3; // ... then tag it
+            vertexStart.connectedPoints.push_back(neighbourIndex);
+        }
+    }
+
     std::vector<vertexProperties> verticesOld = {vertexStart};
 
     int branchNumber = 0;
@@ -839,93 +908,82 @@ inline void constructGraphTree(std::vector<vertexProperties>& verticesAll, std::
         for (int iVertex = 0; iVertex < numVertices; iVertex++)
         {
             vertexProperties vertexCurrent = verticesOld[iVertex]; // run through all found vertices
-
-            // Find all branches connected to current vertex
-
-            int centreXPos =  vertexCurrent.pointIndex % mAOI.wdth;
-            int centreYPos = (vertexCurrent.pointIndex - centreXPos) / mAOI.wdth;
-
-            std::vector<int> edgePointIndicesStart;
-
-            for (int m = 0; m < 8; m++) // loop through 8-connected environment of the vertex
-            {
-                int neighbourXPos = centreXPos + dX[m];
-                int neighbourYPos = centreYPos + dY[m];
-
-                if (neighbourXPos < 0 || neighbourXPos >= mAOI.wdth || neighbourYPos < 0 || neighbourYPos >= mAOI.hght) { continue; } // neighbour is out-of-bounds
-
-                int neighbourIndex = mAOI.wdth * neighbourYPos + neighbourXPos;
-
-                if (cannyEdgeVector[neighbourIndex] == 2) // if neighbouring point is filled ...
-                {
-                    cannyEdgeVector[neighbourIndex] = 3; // ... then tag it
-                    edgePointIndicesStart.push_back(neighbourIndex);
-                }
-            }
+            cannyEdgeVector[vertexCurrent.pointIndex] = 3; // tag vertex
 
             // Loop through all found branches (if any) to find all edge points belonging to each branch
 
-            int numEdges = edgePointIndicesStart.size();
+            int numEdges = vertexCurrent.connectedPoints.size();
 
-            for (int iEdge = 0; iEdge < numEdges; iEdge++)
+            for (int iEdge = 0; iEdge < numEdges || branchNumber == 0; iEdge++)
             {
                 branchProperties branchNew;
+                if (branchNumber == 0) { branchNew.pointIndices.push_back(vertexCurrent.pointIndex); } // first vertex should be included in first branch
 
-                int edgePointIndexOld = edgePointIndicesStart[iEdge];
-
-                while(true) // keep going until vertex is encountered
+                if (numEdges > 0)
                 {
-                    std::vector<int> edgePointIndicesNew;
+                    int edgePointIndexOld = vertexCurrent.connectedPoints[iEdge];
+                    branchNew.pointIndices.push_back(edgePointIndexOld);
 
-                    int centreIndex = edgePointIndexOld;
-                    int centreXPos  = centreIndex % mAOI.wdth;
-                    int centreYPos  = (centreIndex - centreXPos) / mAOI.wdth;
-
-                    int neighbourIndex;
-
-                    for (int m = 0; m < 8; m++) // loop through 8-connected environment of the current edge point
+                    while(true) // keep going until vertex is encountered
                     {
-                        int neighbourXPos = centreXPos + dX[m];
-                        int neighbourYPos = centreYPos + dY[m];
+                        std::vector<int> edgePointsNew;
 
-                        if (neighbourXPos < 0 || neighbourXPos >= mAOI.wdth || neighbourYPos < 0 || neighbourYPos >= mAOI.hght) { continue; } // neighbour is out-of-bounds
+                        int centreIndex = edgePointIndexOld;
+                        int centreXPos  = centreIndex % mAOI.wdth;
+                        int centreYPos  = (centreIndex - centreXPos) / mAOI.wdth;
 
-                        neighbourIndex = mAOI.wdth * neighbourYPos + neighbourXPos;
-
-                        if (cannyEdgeVector[neighbourIndex] == 2) // if neighbouring point was tagged previously ...
+                        for (int m = 0; m < 8; m++) // loop through 8-connected environment of the current edge point
                         {
-                            edgePointIndicesNew.push_back(neighbourIndex);
+                            int neighbourXPos = centreXPos + dX[m];
+                            int neighbourYPos = centreYPos + dY[m];
+
+                            if (neighbourXPos < 0 || neighbourXPos >= mAOI.wdth || neighbourYPos < 0 || neighbourYPos >= mAOI.hght) { continue; } // neighbour is out-of-bounds
+
+                            int neighbourIndex = mAOI.wdth * neighbourYPos + neighbourXPos;
+
+                            if (cannyEdgeVector[neighbourIndex] == 2) // if neighbouring point was tagged previously ...
+                            {
+                                cannyEdgeVector[neighbourIndex] = 3; // ... give it a new tag
+                                edgePointsNew.push_back(neighbourIndex);
+                            }
                         }
-                    }
 
-                    int numEdgePoints = edgePointIndicesNew.size();
+                        int numEdgePoints = edgePointsNew.size();
 
-                    if (numEdgePoints == 1) // edge continues
-                    {
-                        cannyEdgeVector[neighbourIndex] = 3; // ... give it a new tag
-                        edgePointIndexOld = edgePointIndicesNew[0];
-                        branchNew.pointIndices.push_back(edgePointIndexOld);
-                        edgePointIndicesNew.clear();
-                    }
-                    else // new vertex found
-                    {
-                        vertexProperties vertexNew;
-                        vertexNew.connections.push_back(branchNumber); // add current branch to new vertex connections
-                        verticesNew.push_back(vertexNew); // new vertices to be checked
-                        break;
+                        if (numEdgePoints == 1) // edge continues
+                        {
+                            edgePointIndexOld = edgePointsNew[0]; // update index
+                            branchNew.pointIndices.push_back(edgePointIndexOld); // check new index
+                            edgePointsNew.clear();
+                        }
+                        else // new vertex found
+                        {
+                            vertexProperties vertexNew;
+                            vertexNew.pointIndex = centreIndex;
+                            vertexNew.connectedBranches.push_back(branchNumber); // add current branch to new vertex connections
+                            vertexNew.connectedPoints = edgePointsNew;
+                            verticesNew.push_back(vertexNew); // new vertices to be checked
+                            break;
+                        }
                     }
                 }
 
-                vertexCurrent.connections.push_back(branchNumber); // add new found branches
+                vertexCurrent.connectedBranches.push_back(branchNumber); // add new found branches
 
-                branchNew.length = branchNew.pointIndices.size();
-                branchNew.index  = branchNumber;
-                branchesAll.push_back(branchNew); // record all branches
+                int branchLength = branchNew.pointIndices.size();
+
+                if (branchLength > 0)
+                {
+                    branchNew.length = branchLength;
+                    branchNew.index  = branchNumber;
+                    vBranchProperties.push_back(branchNew); // record all branches
+                }
+
                 branchNumber++;
             }
 
             vertexCurrent.index = vertexNumber;
-            verticesAll.push_back(vertexCurrent); // record all vertices
+            vVertexProperties.push_back(vertexCurrent); // record all vertices
             vertexNumber++;
         }
 
@@ -936,22 +994,20 @@ inline void constructGraphTree(std::vector<vertexProperties>& verticesAll, std::
 
     // Find vertices that branches are connected to
 
-    numVertices = verticesAll.size();
+    numVertices = vVertexProperties.size();
 
     for (int iVertex = 0; iVertex < numVertices; iVertex++)
     {
-        std::vector<int> vertexConnections = verticesAll[iVertex].connections;
+        std::vector<int> vertexConnections = vVertexProperties[iVertex].connectedBranches;
 
-        int numConnections = vertexConnections.size();
-
-        for (int iEdge = 0; iEdge < numConnections; iEdge++)
+        for (int iEdge = 0, numConnections = vertexConnections.size(); iEdge < numConnections; iEdge++)
         {
-            branchesAll[vertexConnections[iEdge]].connections.push_back(iVertex);
+            vBranchProperties[vertexConnections[iEdge]].connectedVertices.push_back(iVertex);
         }
     }
 }
 
-inline std::vector<int> maxPath(const std::vector<std::vector<int>>& pathAll, const std::vector<branchProperties>& branchesAll)
+inline std::vector<int> maxPath(const std::vector<std::vector<int>>& pathAll, const std::vector<branchProperties>& vBranchProperties)
 {
     int numPaths = pathAll.size();
     std::vector<int> pathLengths(numPaths);
@@ -964,7 +1020,7 @@ inline std::vector<int> maxPath(const std::vector<std::vector<int>>& pathAll, co
 
         for (int iBranch = 0; iBranch < numPathBranches; iBranch++)
         {
-            lengthTotal += branchesAll[pathCurrent[iBranch]].length;
+            lengthTotal += vBranchProperties[pathCurrent[iBranch]].length;
         }
 
         pathLengths[iPath] = lengthTotal;
@@ -976,33 +1032,35 @@ inline std::vector<int> maxPath(const std::vector<std::vector<int>>& pathAll, co
 
 void findLongestPath(std::vector<int>& allPoints, std::vector<int>& pathPoints, std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int edgePointStart)
 {
-    std::vector<branchProperties> branchesAll;
-    std::vector<vertexProperties> verticesAll;
+    std::vector<branchProperties> vBranchProperties;
+    std::vector<vertexProperties> vVertexProperties;
 
     // Find all vertices and all connected branches (i.e. obtain graph tree)
 
-    constructGraphTree(verticesAll, branchesAll, cannyEdgeVector, mAOI, edgePointStart);
+    constructGraphTree(vVertexProperties, vBranchProperties, cannyEdgeVector, mAOI, edgePointStart);
 
-    int numBranchesAll = branchesAll.size();
-    int numVerticesAll = verticesAll.size();
+    int numvBranchProperties = vBranchProperties.size();
+    int numvVertexProperties = vVertexProperties.size();
 
     // Find longest path in edge collection
 
-    std::vector<std::vector<int>> pathAll(numVerticesAll);
+    std::vector<std::vector<int>> pathAll(numvVertexProperties);
 
-    for (int iVertex = 0; iVertex < numVerticesAll; iVertex++) // loop through all vertices
+    for (int iVertex = 0; iVertex < numvVertexProperties; iVertex++) // loop through all vertices
     {
-        vertexProperties vertexStart = verticesAll[iVertex]; // first vertex
+        vertexProperties vertexStart = vVertexProperties[iVertex]; // starting vertex
+
+        if (vertexStart.connectedBranches.size() > 1) { continue; } // only start with terminal vertices
 
         std::vector<std::vector<int>> pathAllCurrent; // record all paths for current starting vertex
 
-        std::vector<bool> branchFlagsAll(numBranchesAll,true);  // record if branches should be included again. Don't include terminals more than once
+        std::vector<bool> branchFlagsAll(numvBranchProperties, true);  // record if branches should be included again. Don't include terminals more than once
 
         while(true) // check all paths for current starting vertex
         {
             vertexProperties vertexNew = vertexStart;
 
-            std::vector<bool> branchFlags(numBranchesAll,true); // no branch should be included twice
+            std::vector<bool> branchFlags(numvBranchProperties, true); // no branch should be included twice
 
             std::vector<int> pathNew; // new path for current vertex
 
@@ -1010,14 +1068,14 @@ void findLongestPath(std::vector<int>& allPoints, std::vector<int>& pathPoints, 
 
             while(PATH_CONTINUES) // while path continues
             {
-                int numConnections = vertexNew.connections.size();
+                int numConnections = vertexNew.connectedBranches.size();
 
                 int branchNumber;
                 PATH_CONTINUES = false;
 
                 for (int iEdge = 0; iEdge < numConnections; iEdge++) // find first new branch that should still be included in path
                 {
-                    branchNumber = vertexNew.connections[iEdge];
+                    branchNumber = vertexNew.connectedBranches[iEdge];
 
                     if (branchFlagsAll[branchNumber] && branchFlags[branchNumber]) // branch should still be included
                     {
@@ -1028,19 +1086,17 @@ void findLongestPath(std::vector<int>& allPoints, std::vector<int>& pathPoints, 
                     }
                 }
 
-                if (PATH_CONTINUES)
+                if (PATH_CONTINUES) // Get new vertex
                 {
-                    // New vertex
+                    std::vector<int> connectedVertices = vBranchProperties[branchNumber].connectedVertices; // get the vertices the branch is connected to (usually 2)
 
-                    std::vector<int> connectedVertices = branchesAll[branchNumber].connections; // get the two vertices the branch is connected to
-
-                    for (int jVertex = 0; jVertex < 2; jVertex++) // find next vertex
+                    for (int jVertex = 0, vSize = connectedVertices.size(); jVertex < vSize; jVertex++) // find next vertex
                     {
                         int vertexIndex = connectedVertices[jVertex];
 
-                        if (vertexIndex != vertexNew.index)
+                        if (vertexIndex != vertexNew.index) // don't include current vertex
                         {
-                            vertexNew = verticesAll[vertexIndex];
+                            vertexNew = vVertexProperties[vertexIndex];
                             break;
                         }
                     }
@@ -1057,27 +1113,100 @@ void findLongestPath(std::vector<int>& allPoints, std::vector<int>& pathPoints, 
 
         // Find longest path for current starting vertex
 
-        pathAll[iVertex] = maxPath(pathAllCurrent,branchesAll); // record longest path
+        pathAll[iVertex] = maxPath(pathAllCurrent, vBranchProperties); // record longest path
     }
 
     // Longest path overall
 
-    std::vector<int> pathBranchIndices = maxPath(pathAll,branchesAll);
+    std::vector<int> pathBranchIndices = maxPath(pathAll, vBranchProperties);
     int numBranchesPath = pathBranchIndices.size();
 
-    // Combine all edge point indices of longest path
+    // Grab branches for path
+
+    std::vector<branchProperties> vBranchPropertiesNew(numBranchesPath);
 
     for (int iBranch = 0; iBranch < numBranchesPath; iBranch++)
     {
-        int branchIndex = pathBranchIndices[iBranch];
-        pathPoints.insert(std::end(pathPoints), std::begin(branchesAll[branchIndex].pointIndices), std::end(branchesAll[branchIndex].pointIndices));
+        vBranchPropertiesNew[iBranch] = vBranchProperties[pathBranchIndices[iBranch]];
+    }
+
+    // Make sure edges are properly aligned
+
+    // Get start and end indices
+
+    std::vector<int> indicesStart(numBranchesPath);
+    std::vector<int> indicesEnd  (numBranchesPath);
+
+    for (int iBranch = 0; iBranch < numBranchesPath; iBranch++)
+    {
+        branchProperties mBranchProperties = vBranchPropertiesNew[iBranch];
+        indicesStart[iBranch] = mBranchProperties.pointIndices[0];
+        indicesEnd  [iBranch] = mBranchProperties.pointIndices.back();
+    }
+
+    // Connect start and end terminals
+
+    std::vector<int> dZ(8);
+    dZ[0] = -1;
+    dZ[1] = -mAOI.wdth - 1;
+    dZ[2] = -mAOI.wdth;
+    dZ[3] = -mAOI.wdth + 1;
+    dZ[4] =  1;
+    dZ[5] =  mAOI.wdth + 1;
+    dZ[6] =  mAOI.wdth;
+    dZ[7] =  mAOI.wdth - 1;
+
+    std::vector<bool> edgeReversals(numBranchesPath, false);
+
+    for (int iBranch = 0; iBranch < numBranchesPath - 1; iBranch++) // Do alignment
+    {
+        int indexStart = indicesStart[iBranch + 1];
+        int indexEnd   = indicesEnd  [iBranch];
+
+        bool EDGE_CONNECTED = false;
+
+        while (!EDGE_CONNECTED)
+        {
+            for (int m = 0; m < 8; m++)
+            {
+                if (indexStart == indexEnd + dZ[m]) { EDGE_CONNECTED = true; break; }
+            }
+
+            if (!EDGE_CONNECTED && !edgeReversals[iBranch])
+            {
+                indexStart = indicesStart[iBranch];
+                indicesStart [iBranch] = indexEnd;
+                indicesEnd   [iBranch] = indexStart;
+                edgeReversals[iBranch] = true;
+            } else { break; } // error occurred
+        }
+    }
+
+    // Reverse edges if needed
+
+    for (int iBranch = 0; iBranch < numBranchesPath; iBranch++)
+    {
+        if (edgeReversals[iBranch])
+        {
+            std::reverse(vBranchPropertiesNew[iBranch].pointIndices.begin(), vBranchPropertiesNew[iBranch].pointIndices.end());
+        }
+    }
+
+    // Combine all edge point indices of longest path
+
+    // All path points
+
+    for (int iBranch = 0; iBranch < numBranchesPath; iBranch++)
+    {
+         branchProperties mBranchProperties = vBranchPropertiesNew[iBranch];
+         pathPoints.insert(std::end(pathPoints), std::begin(mBranchProperties.pointIndices), std::end(mBranchProperties.pointIndices));
     }
 
     // All edge points
 
-    for (int iBranch = 0; iBranch < numBranchesAll; iBranch++)
+    for (int iBranch = 0; iBranch < numvBranchProperties; iBranch++)
     {
-        allPoints.insert(std::end(allPoints), std::begin(branchesAll[iBranch].pointIndices), std::end(branchesAll[iBranch].pointIndices));
+        allPoints.insert(std::end(allPoints), std::begin(vBranchProperties[iBranch].pointIndices), std::end(vBranchProperties[iBranch].pointIndices));
     }
 }
 
@@ -1091,8 +1220,7 @@ std::vector<edgeProperties> edgeSelection(std::vector<int>& cannyEdgeVector, AOI
     while(true)
     {
         if (!findEdge (cannyEdgeVector, mAOI, startIndex, pupilXCentre, pupilYCentre, USE_PRIOR_INFORMATION)) { break; } // no (more) edges found
-        findEdgePoints(cannyEdgeVector, mAOI, startIndex); // tag all desired edges
-        startIndices.push_back(startIndex);
+        startIndices.push_back(findEdgePoints(cannyEdgeVector, mAOI, startIndex)); // tag all desired edges
     }
 
     int numEdges = startIndices.size();
@@ -1138,9 +1266,9 @@ std::vector<double> calculateCurvatures(std::vector<double>& edgeXNormals, std::
     int numPos = 0;
     int numNeg = 0;
 
-    std::vector<double> edgeCurvatures;
-
     int edgeLength = edgeXNormals.size();
+
+    std::vector<double> edgeCurvatures(edgeLength);
 
     for (int iEdgePoint = curvatureWindowLength; iEdgePoint < edgeLength - curvatureWindowLength; iEdgePoint++)
     {
@@ -1270,9 +1398,11 @@ std::vector<double> findEdgeIntensities(const cv::Mat& img, const std::vector<in
 
 void calculateCurvatureRange(edgeProperties& mEdgeProperties)
 {
+    // Calculate min, max and mean curvature
+
     double curvatureAvg = 0;
-    double curvatureMax;
-    double curvatureMin;
+    double curvatureMax = 0;
+    double curvatureMin = 0;
 
     std::vector<double> edgeCurvaturesNew;
 
@@ -1294,26 +1424,43 @@ void calculateCurvatureRange(edgeProperties& mEdgeProperties)
         curvatureMax = *std::max_element(std::begin(edgeCurvaturesNew), std::end(edgeCurvaturesNew));
         curvatureMin = *std::min_element(std::begin(edgeCurvaturesNew), std::end(edgeCurvaturesNew));
     }
-    else
-    {
-        curvatureAvg = 360;
-        curvatureMax = 360;
-        curvatureMin = 360;
-    }
+    else { curvatureAvg = 360; curvatureMax = 360; curvatureMin = 360; }
 
     mEdgeProperties.curvatureAvg = curvatureAvg;
     mEdgeProperties.curvatureMax = curvatureMax;
     mEdgeProperties.curvatureMin = curvatureMin;
 }
 
+double calculateEdgeRadius(const edgeProperties& mEdgeProperties, AOIProperties mAOI, double xCentre, double yCentre)
+{
+    // calculate distance between each edge point and expected pupil centre
+
+    double dR = 0;
+    int edgeSize = mEdgeProperties.size;
+
+    for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
+    {
+        int edgePointIndex = mEdgeProperties.pointIndices[iEdgePoint];
+        int edgePointXPos  =  edgePointIndex % mAOI.wdth;
+        int edgePointYPos  = (edgePointIndex - edgePointXPos) / mAOI.wdth;
+
+        double dX = xCentre - edgePointXPos;
+        double dY = yCentre - edgePointYPos;
+
+        dR += sqrt(pow(dX, 2) + pow(dY, 2));
+    }
+
+    return (dR / edgeSize); // average radius
+}
+
 void restoreEdgePoints(edgeProperties& mEdgeProperties, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
 {
+    // Add additional adjacent indices that were removed by morphological operation
+
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
 
     int edgeLength = mEdgeProperties.length;
-
-    // add additional adjacent indices that were removed by morphological operation
 
     for (int iEdgePoint = 0; iEdgePoint < edgeLength; iEdgePoint++)
     {
@@ -1333,7 +1480,7 @@ void restoreEdgePoints(edgeProperties& mEdgeProperties, std::vector<int>& cannyE
 
             if (cannyEdgeVector[neighbourIndex] == -1) // if neighbouring point was canny edge point that was removed by morphological operation then ...
             {
-                cannyEdgeVector[neighbourIndex] = 4; // ... tag it and ...
+                cannyEdgeVector[neighbourIndex] = 5; // ... tag it and ...
                 mEdgeProperties.pointIndices.push_back(neighbourIndex); // ... add it to the (partial) edge
             }
         }
@@ -1783,16 +1930,53 @@ ellipseProperties findBestEllipseFit(const std::vector<edgeProperties>& vEdgePro
     return mEllipseProperties;
 }
 
+void checkVariableLimits(detectionProperties& mDetectionProperties, int imgWdth, int imgHght, AOIProperties mAOI)
+{
+    if (mDetectionProperties.v.searchRadius > 0.5 * imgWdth)
+    {   mDetectionProperties.v.searchRadius = 0.5 * imgWdth; }
+    else if (mDetectionProperties.v.searchRadius < (0.5 * mAOI.wdth))
+    {        mDetectionProperties.v.searchRadius = ceil(0.5 * mAOI.wdth); }
+
+    if (mDetectionProperties.v.searchRadius > 0.5 * imgHght)
+    {   mDetectionProperties.v.searchRadius = 0.5 * imgHght; }
+    else if (mDetectionProperties.v.searchRadius < (0.5 * mAOI.hght))
+    {        mDetectionProperties.v.searchRadius = ceil(0.5 * mAOI.hght); }
+
+    if (mDetectionProperties.v.thresholdAspectRatioChange > 1.0)
+    {   mDetectionProperties.v.thresholdAspectRatioChange = 1.0; }
+    else if (mDetectionProperties.v.thresholdAspectRatioChange < mDetectionProperties.p.aspectRatioChangeThreshold)
+    {        mDetectionProperties.v.thresholdAspectRatioChange = mDetectionProperties.p.aspectRatioChangeThreshold; }
+
+    if (mDetectionProperties.v.thresholdCircumferenceChange > mDetectionProperties.p.circumferenceMax)
+    {   mDetectionProperties.v.thresholdCircumferenceChange = mDetectionProperties.p.circumferenceMax; }
+    else if (mDetectionProperties.v.thresholdCircumferenceChange < mDetectionProperties.p.circumferenceChangeThreshold)
+    {        mDetectionProperties.v.thresholdCircumferenceChange = mDetectionProperties.p.circumferenceChangeThreshold; }
+
+    if (mDetectionProperties.v.thresholdDisplacementChange > imgWdth)
+    {   mDetectionProperties.v.thresholdDisplacementChange = imgWdth; }
+    else if (mDetectionProperties.v.thresholdDisplacementChange < mDetectionProperties.p.displacementChangeThreshold)
+    {        mDetectionProperties.v.thresholdDisplacementChange = mDetectionProperties.p.displacementChangeThreshold; }
+
+    if (mDetectionProperties.v.curvatureOffset > 180)
+    {   mDetectionProperties.v.curvatureOffset = 180; }
+    else if (mDetectionProperties.v.curvatureOffset < mDetectionProperties.p.curvatureOffset)
+    {        mDetectionProperties.v.curvatureOffset = mDetectionProperties.p.curvatureOffset; }
+
+    if (mDetectionProperties.v.priorCertainty > certaintyUpperLimit)
+    {   mDetectionProperties.v.priorCertainty = certaintyUpperLimit; }
+    else if (mDetectionProperties.v.priorCertainty < certaintyLowerLimit)
+    {        mDetectionProperties.v.priorCertainty = certaintyLowerLimit; }
+}
+
 detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionProperties mDetectionProperties)
 {
     // Define some variables
 
     detectionProperties mDetectionPropertiesNew = mDetectionProperties; // new properties for new frame
-    std::vector<edgeProperties> vEdgePropertiesNew;
-    ellipseProperties mEllipseProperties;
-
-    mEllipseProperties.pupilDetected        = false;
     mDetectionPropertiesNew.m.errorDetected = false;
+
+    ellipseProperties mEllipseProperties;
+    mEllipseProperties.pupilDetected        = false;
 
     // Define search area
 
@@ -1828,35 +2012,13 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
     if (innerAOI.wdth > searchAOI.wdth) { innerAOI.wdth = searchAOI.wdth; }
     if (innerAOI.hght > searchAOI.hght) { innerAOI.hght = searchAOI.hght; }
 
-    AOIProperties outerAOI;
-    outerAOI.xPos = 0;
-    outerAOI.yPos = 0;
-    outerAOI.wdth = 0;
-    outerAOI.hght = 0;
+    AOIProperties outerAOI = mDetectionProperties.m.outerAOI;
 
     if (innerAOI.wdth > 0 && innerAOI.hght > 0)
     {
         // Needed for offline mode when threshold is too low
 
-        if (mDetectionProperties.v.thresholdDisplacementChange > imageWdth)
-        {   mDetectionProperties.v.thresholdDisplacementChange = imageWdth; }
-        else if (mDetectionProperties.v.thresholdDisplacementChange < mDetectionProperties.p.displacementChangeThreshold)
-        {        mDetectionProperties.v.thresholdDisplacementChange = mDetectionProperties.p.displacementChangeThreshold; }
-
-        if (mDetectionProperties.v.thresholdCircumferenceChange > mDetectionProperties.p.circumferenceMax)
-        {   mDetectionProperties.v.thresholdCircumferenceChange = mDetectionProperties.p.circumferenceMax; }
-        else if (mDetectionProperties.v.thresholdCircumferenceChange < mDetectionProperties.p.circumferenceChangeThreshold)
-        {        mDetectionProperties.v.thresholdCircumferenceChange = mDetectionProperties.p.circumferenceChangeThreshold; }
-
-        if (mDetectionProperties.v.thresholdAspectRatioChange > 1.0)
-        {   mDetectionProperties.v.thresholdAspectRatioChange = 1.0; }
-        else if (mDetectionProperties.v.thresholdAspectRatioChange < mDetectionProperties.p.aspectRatioChangeThreshold)
-        {        mDetectionProperties.v.thresholdAspectRatioChange = mDetectionProperties.p.aspectRatioChangeThreshold; }
-
-        if (mDetectionProperties.v.curvatureOffset > 180)
-        {   mDetectionProperties.v.curvatureOffset = 180; }
-        else if (mDetectionProperties.v.curvatureOffset < mDetectionProperties.p.curvatureOffset)
-        {        mDetectionProperties.v.curvatureOffset = mDetectionProperties.p.curvatureOffset; }
+        checkVariableLimits(mDetectionProperties, imageWdth, imageHght, outerAOI);
 
         // Check if prior pupil information should be used
 
@@ -1922,28 +2084,36 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         double xPosPredictionRelative = mDetectionProperties.v.xPosPrediction - outerAOI.xPos;
         double yPosPredictionRelative = mDetectionProperties.v.yPosPrediction - outerAOI.yPos;
 
-        std::vector<int> cannyEdges; // binary vector
+        // binary vector
 
-        if (USE_PRIOR_INFORMATION)
-        {
-            std::vector<int>  dirGradient           = findGradientDirection(outerAOI, xPosPredictionRelative, yPosPredictionRelative);
-            std::vector<int>  imgGradient           = radialGradient(imageAOIGrayBlurred, dirGradient, mDetectionProperties.p.cannyKernelSize);
-            std::vector<int>  imgGradientSuppressed = nonMaximumSuppresion(imgGradient, dirGradient, outerAOI, mDetectionProperties.p.cannyThresholdLow);
-            cannyEdges = hysteresisTracking(imgGradientSuppressed, outerAOI, mDetectionProperties.p.cannyThresholdHigh, mDetectionProperties.p.cannyThresholdLow);
-        }
-        else
-        {
-            cv::Mat imageCannyEdges;
-            cv::Canny(imageAOIGrayBlurred, imageCannyEdges, 30 * mDetectionProperties.p.cannyThresholdHigh, 30 * mDetectionProperties.p.cannyThresholdLow, 5);
-            cannyEdges = cannyConversion(imageCannyEdges, outerAOI);
-        }
+        cv::Mat imageCannyEdges;
+        cv::Canny(imageAOIGrayBlurred, imageCannyEdges, 30 * mDetectionProperties.p.cannyThresholdHigh, 30 * mDetectionProperties.p.cannyThresholdLow, 5);
+        std::vector<int> cannyEdges = cannyConversion(imageCannyEdges, outerAOI);
 
         std::vector<int> cannyEdgesSharpened = sharpenEdges(cannyEdges, outerAOI); // Morphological operation
-        std::vector<int> edgeIndices         = getEdgeIndices(cannyEdges);
 
-        //////////////////////////////////////////////////////////////////////////////
-        /////////////////////// EDGE SELECTION & SEGMENTATION  ///////////////////////
-        //////////////////////////////////////////////////////////////////////////////
+        std::vector<int> edgeIndices = getEdgeIndices(cannyEdgesSharpened, 1);
+
+        /////////////////////////////////////////////////////////////////////////////
+        //////////////////////////// EDGE SELECTION   ///////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////
+
+        std::vector<edgeProperties> vEdgePropertiesAll = edgeSelection(cannyEdgesSharpened, outerAOI, xPosPredictionRelative, yPosPredictionRelative, USE_PRIOR_INFORMATION);
+        std::vector<edgeProperties> vEdgePropertiesNew;
+
+        for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++) // ignore short edges
+        {
+            edgeProperties mEdgeProperties = vEdgePropertiesAll[iEdge];
+            int edgeLength = mEdgeProperties.length;
+            if (edgeLength > curvatureWindowLength) { vEdgePropertiesNew.push_back(mEdgeProperties); }
+        }
+
+        vEdgePropertiesAll = vEdgePropertiesNew;
+        vEdgePropertiesNew.clear();
+
+        /////////////////////////////////////////////////////////////////////////////
+        //////////////////////////// EDGE SEGMENTATION   ////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////
 
         // Calculate curvature limits
 
@@ -1974,25 +2144,11 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         double curvatureUpperLimit = arrayCurvatureMax[arrayXPos * arrayWidth + arrayYPos] + mDetectionProperties.v.curvatureOffset;
         double curvatureLowerLimit = arrayCurvatureMin[arrayXPos * arrayWidth + arrayYPos] - mDetectionProperties.v.curvatureOffset;
 
-        std::vector<edgeProperties> vEdgePropertiesAll = edgeSelection(cannyEdgesSharpened, outerAOI, xPosPredictionRelative, yPosPredictionRelative, USE_PRIOR_INFORMATION);
+        // Do segmentation
 
-        int numEdges = vEdgePropertiesAll.size();
-        std::vector<edgeProperties> vEdgePropertiesNew;
-
-        for (int iEdge = 0; iEdge < numEdges; iEdge++) // ignore short edges
+        for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
         {
             edgeProperties mEdgeProperties = vEdgePropertiesAll[iEdge];
-            int edgeLength = mEdgeProperties.length;
-            if (edgeLength > curvatureWindowLength) { vEdgePropertiesNew.push_back(mEdgeProperties); }
-        }
-
-        vEdgePropertiesAll.clear();
-
-        int numEdgesNew = vEdgePropertiesNew.size();
-
-        for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
-        {
-            edgeProperties mEdgeProperties = vEdgePropertiesNew[iEdge];
 
             int edgeLength = mEdgeProperties.length;
 
@@ -2012,75 +2168,68 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
             int numEdgesTemp = vEdgePropertiesTemp.size();
             for (int jEdge = 0; jEdge < numEdgesTemp; jEdge++) { restoreEdgePoints(vEdgePropertiesTemp[jEdge], cannyEdgesSharpened, outerAOI); }
 
-            vEdgePropertiesAll.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end()); // record edges
+            vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end()); // record edges
         }
 
-        // Remove short edges
+        vEdgePropertiesAll = vEdgePropertiesNew;
+        vEdgePropertiesNew.clear();
 
         ///////////////////////////////////////////////////////////////////////
         /////////////////////// EDGE CLASSIFICATION  //////////////////////////
         ///////////////////////////////////////////////////////////////////////
 
-        int numEdgesTotal = vEdgePropertiesAll.size();
+        // Calculate some edge properties
 
-        if (numEdgesTotal > 0) // THRESHOLD: ignore empty edge collections
+        for (int iEdge = 0, jEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
         {
-            for (int iEdge = 0; iEdge < numEdgesTotal; iEdge++) // initialize edges
+            edgeProperties mEdgeProperties = vEdgePropertiesAll[iEdge];
+            int edgeLength = mEdgeProperties.length;
+
+            if (edgeLength > curvatureWindowLength) // ignore short edges
             {
-                vEdgePropertiesAll[iEdge].flag  = 0;
-                vEdgePropertiesAll[iEdge].index = iEdge;
+                mEdgeProperties.intensityAvg = calculateMean(mEdgeProperties.intensities);
+                mEdgeProperties.radius       = calculateEdgeRadius(mEdgeProperties, outerAOI, xPosPredictionRelative, yPosPredictionRelative);
+                mEdgeProperties.index        = jEdge;
+                mEdgeProperties.tag          = 0;
+                calculateCurvatureRange(mEdgeProperties);
+                vEdgePropertiesNew.push_back(mEdgeProperties);
+                jEdge++;
             }
+        }
 
-            for (int iEdge = 0; iEdge < numEdgesTotal; iEdge++) // calculate distance between each edge point and expected pupil centre
-            {
-                double dR = 0;
-                int edgeSize = vEdgePropertiesAll[iEdge].size;
+        vEdgePropertiesAll = vEdgePropertiesNew;
+        vEdgePropertiesNew.clear();
 
-                for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
-                {
-                    int edgePointIndex = vEdgePropertiesAll[iEdge].pointIndices[iEdgePoint];
-                    int edgePointXPos  =  edgePointIndex % outerAOI.wdth;
-                    int edgePointYPos  = (edgePointIndex - edgePointXPos) / outerAOI.wdth;
+        // Do classification
 
-                    double dX = xPosPredictionRelative - edgePointXPos;
-                    double dY = yPosPredictionRelative - edgePointYPos;
-
-                    dR += sqrt(pow(dX, 2) + pow(dY, 2));
-                }
-
-                vEdgePropertiesAll[iEdge].radius = dR / edgeSize; // average radius
-            }
-
+        if (vEdgePropertiesAll.size() > 0) // ignore empty edge collections
+        {
             mDetectionProperties.v.edgeCurvaturePrediction = 0.5 * (curvatureUpperLimit + curvatureLowerLimit);
 
             std::vector<int> acceptedEdges = edgeClassification(mDetectionProperties, vEdgePropertiesAll, USE_PRIOR_INFORMATION);
-            int numEdges = acceptedEdges.size();
 
-            for (int iEdge = 0; iEdge < numEdges; iEdge++) // grab accepted edges
+            for (int iEdge = 0, numEdges = acceptedEdges.size(); iEdge < numEdges; iEdge++) // grab accepted edges
             {
                 int jEdge = acceptedEdges[iEdge];
-                vEdgePropertiesAll[jEdge].flag = 1; // tag it
+                vEdgePropertiesAll[jEdge].tag = 1; // new tag
                 vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
             }
+
+            vEdgePropertiesAll = vEdgePropertiesNew;
+            vEdgePropertiesNew.clear();
 
             //////////////////////////////////////////////////////////////////
             /////////////////////// ELLIPSE FITTING  /////////////////////////
             //////////////////////////////////////////////////////////////////
 
-            auto t1 = std::chrono::high_resolution_clock::now();
-            mEllipseProperties = findBestEllipseFit(vEdgePropertiesNew, outerAOI, mDetectionProperties, USE_PRIOR_INFORMATION); // ellipse fitting
-            auto t2 = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
-            std::cout << fp_ms.count() << std::endl;
+            mEllipseProperties = findBestEllipseFit(vEdgePropertiesAll, outerAOI, mDetectionProperties, USE_PRIOR_INFORMATION); // ellipse fitting
 
             // Classify edges
 
-            int numEdgesNew = mEllipseProperties.edgeIndices.size();
-
-            for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
+            for (int iEdge = 0, numEdges = mEllipseProperties.edgeIndices.size(); iEdge < numEdges; iEdge++)
             {
                 int jEdge = mEllipseProperties.edgeIndices[iEdge];
-                vEdgePropertiesAll[jEdge].flag = 2;
+                vEdgePropertiesAll[jEdge].tag = 2;
             }
         }
 
@@ -2245,42 +2394,7 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         }
     }
 
-    // Check variable limits
-
-    if (mDetectionPropertiesNew.v.searchRadius > 0.5 * imageWdth)
-    {   mDetectionPropertiesNew.v.searchRadius = 0.5 * imageWdth; }
-    else if (mDetectionPropertiesNew.v.searchRadius < (0.5 * outerAOI.wdth))
-    {        mDetectionPropertiesNew.v.searchRadius = ceil(0.5 * outerAOI.wdth); }
-
-    if (mDetectionPropertiesNew.v.searchRadius > 0.5 * imageHght)
-    {   mDetectionPropertiesNew.v.searchRadius = 0.5 * imageHght; }
-    else if (mDetectionPropertiesNew.v.searchRadius < (0.5 * outerAOI.hght))
-    {        mDetectionPropertiesNew.v.searchRadius = ceil(0.5 * outerAOI.hght); }
-
-    if (mDetectionPropertiesNew.v.thresholdAspectRatioChange > 1.0)
-    {   mDetectionPropertiesNew.v.thresholdAspectRatioChange = 1.0; }
-    else if (mDetectionPropertiesNew.v.thresholdAspectRatioChange < mDetectionPropertiesNew.p.aspectRatioChangeThreshold)
-    {        mDetectionPropertiesNew.v.thresholdAspectRatioChange = mDetectionPropertiesNew.p.aspectRatioChangeThreshold; }
-
-    if (mDetectionPropertiesNew.v.thresholdCircumferenceChange > mDetectionPropertiesNew.p.circumferenceMax)
-    {   mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionPropertiesNew.p.circumferenceMax; }
-    else if (mDetectionPropertiesNew.v.thresholdCircumferenceChange < mDetectionPropertiesNew.p.circumferenceChangeThreshold)
-    {        mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionPropertiesNew.p.circumferenceChangeThreshold; }
-
-    if (mDetectionProperties.v.thresholdDisplacementChange > imageWdth)
-    {   mDetectionProperties.v.thresholdDisplacementChange = imageWdth; }
-    else if (mDetectionProperties.v.thresholdDisplacementChange < mDetectionProperties.p.displacementChangeThreshold)
-    {        mDetectionProperties.v.thresholdDisplacementChange = mDetectionProperties.p.displacementChangeThreshold; }
-
-    if (mDetectionPropertiesNew.v.curvatureOffset > 180)
-    {   mDetectionPropertiesNew.v.curvatureOffset = 180; }
-    else if (mDetectionPropertiesNew.v.curvatureOffset < mDetectionPropertiesNew.p.curvatureOffset)
-    {        mDetectionPropertiesNew.v.curvatureOffset = mDetectionPropertiesNew.p.curvatureOffset; }
-
-    if (mDetectionPropertiesNew.v.priorCertainty > certaintyUpperLimit)
-    {   mDetectionPropertiesNew.v.priorCertainty = certaintyUpperLimit; }
-    else if (mDetectionPropertiesNew.v.priorCertainty < certaintyLowerLimit)
-    {        mDetectionPropertiesNew.v.priorCertainty = certaintyLowerLimit; }
+    checkVariableLimits(mDetectionPropertiesNew, imageWdth, imageHght, outerAOI);
 
     return mDetectionPropertiesNew;
 }

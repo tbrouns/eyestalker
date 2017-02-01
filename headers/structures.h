@@ -50,7 +50,7 @@ struct edgeProperties
     int index;
     int length;
     int size;
-    int flag;
+    int tag;
     std::vector<int> pointIndices;
     std::vector<double> curvatures;
     std::vector<double> intensities;
@@ -167,14 +167,15 @@ struct vertexProperties
 {
     int index;
     int pointIndex;
-    std::vector<int> connections;
+    std::vector<int> connectedBranches;
+    std::vector<int> connectedPoints;
 };
 
 struct branchProperties
 {
     int index;
     std::vector<int> pointIndices;
-    std::vector<int> connections;
+    std::vector<int> connectedVertices;
     int length;
 };
 
