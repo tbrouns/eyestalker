@@ -45,13 +45,15 @@ struct edgeProperties
     double curvatureMax;
     double curvatureMin;
     double curvatureAvg;
-    double intensity;
+    double intensityAvg;
     double radius;
     int index;
     int length;
     int size;
     int flag;
     std::vector<int> pointIndices;
+    std::vector<double> curvatures;
+    std::vector<double> intensities;
 };
 
 struct ellipseProperties
@@ -158,6 +160,22 @@ struct detectionProperties
     detectionParameters     p;
     detectionVariables      v;
     detectionMiscellaneous  m;
+};
+
+
+struct vertexProperties
+{
+    int index;
+    int pointIndex;
+    std::vector<int> connections;
+};
+
+struct branchProperties
+{
+    int index;
+    std::vector<int> pointIndices;
+    std::vector<int> connections;
+    int length;
 };
 
 struct imageInfo
