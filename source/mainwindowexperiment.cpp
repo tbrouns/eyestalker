@@ -140,7 +140,7 @@ void MainWindow::saveTrialData()
         file << std::fixed;
         file << std::setprecision(3);
 
-        for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].pupilDetected << delimiter; }
+        for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].PUPIL_DETECTED << delimiter; }
         for (int i = 0; i < frameCount; i++) { file << timeStamps[i] << delimiter; } // saving ALL timestamps allows for accurate frame-rate calculation during data processing
 
         if (SAVE_POSITION)

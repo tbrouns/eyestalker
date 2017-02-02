@@ -1127,7 +1127,7 @@ void MainWindow::updateCameraImage()
 
                 if (eyeAOITemp.wdth >= eyeAOIWdthMin && eyeAOITemp.hght >= eyeAOIHghtMin)
                 {
-                    if (!mDetectionPropertiesEyeTemp.m.errorDetected)
+                    if (!mDetectionPropertiesEyeTemp.m.ERROR_DETECTED)
                     {
                         cv::Mat imageProcessed = imageOriginal.clone();
                         drawAll(imageProcessed, mDetectionPropertiesEyeTemp);

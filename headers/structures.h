@@ -44,8 +44,9 @@ struct edgeProperties
 {
     double curvatureMax;
     double curvatureMin;
-    double curvatureAvg;
-    double intensityAvg;
+    double curvature;
+    double intensity;
+    double gradient;
     double radius;
     int index;
     int length;
@@ -58,17 +59,17 @@ struct edgeProperties
 
 struct ellipseProperties
 {
-    bool pupilDetected;
+    bool PUPIL_DETECTED;
     double fitError;
     double circumference;
     double aspectRatio;
-    double intensity;
     double radius;
     double xPos;
     double yPos;
     double width;
     double height;
     int edgeLength;
+    int tag;
     std::vector<double> coefficients;
     std::vector<int> edgeIndices;
 
@@ -108,7 +109,7 @@ struct detectionParameters
 
 struct detectionVariables
 {
-    bool pupilDetected;
+    bool PUPIL_DETECTED;
     double aspectRatioAverage;
     double aspectRatioExact;
     double aspectRatioMomentum;
@@ -145,7 +146,7 @@ struct detectionVariables
 
 struct detectionMiscellaneous
 {
-    bool errorDetected;
+    bool ERROR_DETECTED;
     cv::Mat imagePupil;
     AOIProperties glintAOI;
     AOIProperties innerAOI;
@@ -153,6 +154,7 @@ struct detectionMiscellaneous
     std::vector<int> cannyEdgeIndices;
     std::vector<double> ellipseCoefficients;
     std::vector<edgeProperties> edgePropertiesAll;
+    std::vector<ellipseProperties> ellipsePropertiesAll;
 };
 
 struct detectionProperties

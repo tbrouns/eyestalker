@@ -25,10 +25,12 @@ QT       += core gui
 CONFIG += c++11
 
 unix {
-QMAKE_CXXFLAGS += -fopenmp
-QMAKE_LFLAGS += -fopenmp
 
-QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
+QMAKE_CXXFLAGS += -O3
+QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS   += -fopenmp
+QMAKE_LFLAGS   += -Wl,-rpath,"'\$$ORIGIN'"
 
 # LibUSB
  INCLUDEPATH += /usr/local/include/libusb-1.0/

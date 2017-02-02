@@ -54,7 +54,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CannyThresholdLowLabel  = new QLabel;
     CannyThresholdLowSlider = new SliderDouble;
     CannyThresholdLowSlider->setPrecision(1);
-    CannyThresholdLowSlider->setDoubleRange(0, 50);
+    CannyThresholdLowSlider->setDoubleRange(0, 1000);
     CannyThresholdLowSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CannyThresholdLowSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCannyThresholdLow(double)));
 
@@ -64,7 +64,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CannyThresholdHighLabel  = new QLabel;
     CannyThresholdHighSlider = new SliderDouble;
     CannyThresholdHighSlider->setPrecision(1);
-    CannyThresholdHighSlider->setDoubleRange(0, 50);
+    CannyThresholdHighSlider->setDoubleRange(0, 1000);
     CannyThresholdHighSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CannyThresholdHighSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCannyThresholdHigh(double)));
 

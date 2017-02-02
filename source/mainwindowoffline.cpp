@@ -484,7 +484,7 @@ void MainWindow::onSaveTrialData()
 
         // write data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].pupilDetected << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].PUPIL_DETECTED << delimiter; }
         if (timeMatrix.size() > 0) { for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2] << delimiter; } }
 
         if (SAVE_POSITION)
@@ -526,15 +526,41 @@ void MainWindow::onSaveTrialData()
         for (int i = 0; i < imageTotalOffline; i++)
         {
             int numEdges = vDetectionMiscellaneousEye[i].edgePropertiesAll.size();
-
-            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].tag         << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].tag          << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureMax << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureMin << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureAvg << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvature    << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].length       << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].size         << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].radius       << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].intensityAvg << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].intensity    << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].gradient     << delimiter; }
+            file << "\n";
+        }
+
+        file.close();
+    }
+
+    { // save ellipse data
+
+        std::stringstream filename;
+        filename << dataDirectoryOffline.toStdString()
+                 << "/trial_"
+                 << trialIndexOffline
+                 << "/fit_data.dat";
+
+        std::ofstream file;
+        file.open(filename.str());
+
+        for (int i = 0; i < imageTotalOffline; i++)
+        {
+            int numFits = vDetectionMiscellaneousEye[i].ellipsePropertiesAll.size();
+            for (int j = 0; j < numFits; j++) { file << vDetectionMiscellaneousEye[i].ellipsePropertiesAll[j].tag           << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDetectionMiscellaneousEye[i].ellipsePropertiesAll[j].xPos          << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDetectionMiscellaneousEye[i].ellipsePropertiesAll[j].yPos          << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDetectionMiscellaneousEye[i].ellipsePropertiesAll[j].circumference << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDetectionMiscellaneousEye[i].ellipsePropertiesAll[j].aspectRatio   << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDetectionMiscellaneousEye[i].ellipsePropertiesAll[j].fitError      << delimiter; }
             file << "\n";
         }
 
@@ -556,7 +582,7 @@ void MainWindow::onSaveTrialData()
 
         for (int i = 0; i < imageTotalOffline; i++)
         {
-            if (vDetectionVariablesEye[i + 1].pupilDetected)
+            if (vDetectionVariablesEye[i + 1].PUPIL_DETECTED)
             {
                 std::stringstream filename;
                 filename << dataDirectoryOffline.toStdString()

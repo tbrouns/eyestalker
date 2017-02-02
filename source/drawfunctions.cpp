@@ -167,7 +167,7 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
 
         if (Parameters::drawFlags.elps)
         {
-            if (mDetectionProperties.v.pupilDetected)
+            if (mDetectionProperties.v.PUPIL_DETECTED)
             {
                 drawEllipse(I, mDetectionProperties.m.ellipseCoefficients, mDetectionProperties.m.outerAOI, white);
                 drawEllipseCross(I, mDetectionProperties.v.xPosExact, mDetectionProperties.v.yPosExact, Parameters::ellipseDrawCrossSize, white);

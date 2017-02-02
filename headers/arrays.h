@@ -24,8 +24,8 @@ const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                              0.75,  // Alpha prediction
                                                 4,  // Canny blur level
                                                 5,  // Canny kernel size
-                                             10.0,  // Canny threshold low
-                                             20.0,  // Canny threshold high
+                                            300.0,  // Canny threshold low
+                                            600.0,  // Canny threshold high
                                                15,  // Curvature offset
                                              0.60,  // Edge length fraction
                                                 3,  // Ellipse fit number maximum
@@ -34,7 +34,7 @@ const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                               320,  // Circumference max
                                                60,  // Circumference min
                                               0.4,  // Aspect ratio min
-                                               25,  // Haar offset
+                                               15,  // Haar offset
                                                15,  // Circumference change threshold
                                              0.12,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
@@ -46,8 +46,8 @@ const std::vector<double> parametersBead = {0.005,  // Alpha average
                                              0.75,  // Alpha prediction
                                                 4,  // Canny blur level
                                                 3,  // Canny kernel size
-                                             10.0,  // Canny threshold low
-                                             20.0,  // Canny threshold high
+                                            300.0,  // Canny threshold low
+                                            600.0,  // Canny threshold high
                                                15,  // Curvature offset
                                              0.60,  // Edge length fraction
                                                 3,  // Ellipse fit number maximum
@@ -56,7 +56,7 @@ const std::vector<double> parametersBead = {0.005,  // Alpha average
                                               130,  // Circumference max
                                                90,  // Circumference min
                                               0.8,  // Aspect ratio min
-                                               15,  // Haar offset
+                                               10,  // Haar offset
                                                 5,  // Circumference change threshold
                                              0.05,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
