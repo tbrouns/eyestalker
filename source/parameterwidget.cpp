@@ -94,43 +94,43 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     LearningRatesTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *AlphaAverageTextBox       = new QLabel;
-    QLabel *AlphaPredictionTextBox    = new QLabel;
-    QLabel *AlphaMiscellaneousTextBox = new QLabel;
+    QLabel *AlphaPositionTextBox    = new QLabel;
+    QLabel *AlphaFeaturesTextBox = new QLabel;
     QLabel *AlphaMomentumTextBox      = new QLabel;
 
     AlphaAverageTextBox      ->setText("<b>Average:</b>");
-    AlphaPredictionTextBox   ->setText("<b>Prediction:</b>");
-    AlphaMiscellaneousTextBox->setText("<b>Miscellaneous:</b>");
+    AlphaPositionTextBox   ->setText("<b>Prediction:</b>");
+    AlphaFeaturesTextBox->setText("<b>Miscellaneous:</b>");
     AlphaMomentumTextBox     ->setText("<b>Momentum:</b>");
 
     AlphaAverageLabel       = new QLabel;
-    AlphaPredictionLabel    = new QLabel;
-    AlphaMiscellaneousLabel = new QLabel;
+    AlphaPositionLabel    = new QLabel;
+    AlphaFeaturesLabel = new QLabel;
     AlphaMomentumLabel      = new QLabel;
 
     AlphaAverageSlider       = new SliderDouble;
-    AlphaPredictionSlider    = new SliderDouble;
-    AlphaMiscellaneousSlider = new SliderDouble;
+    AlphaPositionSlider    = new SliderDouble;
+    AlphaFeaturesSlider = new SliderDouble;
     AlphaMomentumSlider      = new SliderDouble;
 
     AlphaAverageSlider      ->setPrecision(3);
-    AlphaPredictionSlider   ->setPrecision(2);
-    AlphaMiscellaneousSlider->setPrecision(2);
+    AlphaPositionSlider   ->setPrecision(2);
+    AlphaFeaturesSlider->setPrecision(2);
     AlphaMomentumSlider     ->setPrecision(2);
 
     AlphaAverageSlider      ->setDoubleRange(0, 0.1);
-    AlphaPredictionSlider   ->setDoubleRange(0, 1.0);
-    AlphaMiscellaneousSlider->setDoubleRange(0, 1.0);
+    AlphaPositionSlider   ->setDoubleRange(0, 1.0);
+    AlphaFeaturesSlider->setDoubleRange(0, 1.0);
     AlphaMomentumSlider     ->setDoubleRange(0, 1.0);
 
     AlphaAverageSlider      ->setOrientation(Qt::Horizontal);
-    AlphaPredictionSlider   ->setOrientation(Qt::Horizontal);
-    AlphaMiscellaneousSlider->setOrientation(Qt::Horizontal);
+    AlphaPositionSlider   ->setOrientation(Qt::Horizontal);
+    AlphaFeaturesSlider->setOrientation(Qt::Horizontal);
     AlphaMomentumSlider     ->setOrientation(Qt::Horizontal);
 
     QObject::connect(AlphaAverageSlider,       SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaAverage(double)));
-    QObject::connect(AlphaPredictionSlider,    SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPrediction(double)));
-    QObject::connect(AlphaMiscellaneousSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMiscellaneous(double)));
+    QObject::connect(AlphaPositionSlider,    SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPosition(double)));
+    QObject::connect(AlphaFeaturesSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaFeatures(double)));
     QObject::connect(AlphaMomentumSlider,      SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMomentum(double)));
 
     // Threshold parameters
@@ -267,22 +267,22 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CannyKernelSizeTextBox,           8, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CannyBlurLevelTextBox,            9, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(AlphaPredictionTextBox,          11, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AlphaAverageTextBox,             12, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AlphaMomentumTextBox,            13, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AlphaMiscellaneousTextBox,       14, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AlphaPositionTextBox,             11, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AlphaAverageTextBox,              12, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AlphaMomentumTextBox,             13, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AlphaFeaturesTextBox,             14, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(ThresholdDisplacementTextBox,    16, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdCircumferenceTextBox,   17, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdAspectRatioTextBox,     18, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdDisplacementTextBox,     16, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdCircumferenceTextBox,    17, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdAspectRatioTextBox,      18, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(HaarOffsetTextBox,               20, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(GlintSizeTextBox,                21, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CurvatureOffsetTextBox,          22, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreTextBox,           23, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EdgeLengthFractionTextBox,       24, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EllipseFitNumberMaximumTextBox,  25, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EllipseFitErrorMaximumTextBox,   26, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(HaarOffsetTextBox,                20, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GlintSizeTextBox,                 21, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CurvatureOffsetTextBox,           22, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreTextBox,            23, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EdgeLengthFractionTextBox,        24, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EllipseFitNumberMaximumTextBox,   25, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(EllipseFitErrorMaximumTextBox,    26, 0, 1, 1, Qt::AlignRight);
 
     MainLayout->addWidget(TitleLimitTextBox,                0, 1, 1, 1, Qt::AlignCenter);
     MainLayout->addWidget(CircumferenceMaxSlider,           1, 1);
@@ -294,10 +294,10 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CannyKernelSizeSlider,            8, 1);
     MainLayout->addWidget(CannyBlurLevelSlider,             9, 1);
     MainLayout->addWidget(TitleLearnTextBox,               10, 1, 1, 1, Qt::AlignCenter);
-    MainLayout->addWidget(AlphaPredictionSlider,           11, 1);
+    MainLayout->addWidget(AlphaPositionSlider,             11, 1);
     MainLayout->addWidget(AlphaAverageSlider,              12, 1);
     MainLayout->addWidget(AlphaMomentumSlider,             13, 1);
-    MainLayout->addWidget(AlphaMiscellaneousSlider,        14, 1);
+    MainLayout->addWidget(AlphaFeaturesSlider,             14, 1);
     MainLayout->addWidget(TitleChangeTextBox,              15, 1, 1, 1, Qt::AlignCenter);
     MainLayout->addWidget(ThresholdDisplacementSlider,     16, 1);
     MainLayout->addWidget(ThresholdCircumferenceSlider,    17, 1);
@@ -320,10 +320,10 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CannyKernelSizeLabel,          8, 2);
     MainLayout->addWidget(CannyBlurLevelLabel,           9, 2);
 
-    MainLayout->addWidget(AlphaPredictionLabel,          11, 2);
+    MainLayout->addWidget(AlphaPositionLabel,            11, 2);
     MainLayout->addWidget(AlphaAverageLabel,             12, 2);
     MainLayout->addWidget(AlphaMomentumLabel,            13, 2);
-    MainLayout->addWidget(AlphaMiscellaneousLabel,       14, 2);
+    MainLayout->addWidget(AlphaFeaturesLabel,            14, 2);
 
     MainLayout->addWidget(ThresholdDisplacementLabel,    16, 2);
     MainLayout->addWidget(ThresholdCircumferenceLabel,   17, 2);
@@ -394,13 +394,13 @@ void ParameterWidget::reset()
     CannyKernelSizeLabel ->setText(QString::number(mDetectionParameters.cannyKernelSize));
 
     AlphaAverageSlider      ->setDoubleValue(mDetectionParameters.alphaAverage);
-    AlphaPredictionSlider   ->setDoubleValue(mDetectionParameters.alphaPrediction);
-    AlphaMiscellaneousSlider->setDoubleValue(mDetectionParameters.alphaMiscellaneous);
+    AlphaPositionSlider   ->setDoubleValue(mDetectionParameters.alphaPosition);
+    AlphaFeaturesSlider->setDoubleValue(mDetectionParameters.alphaFeatures);
     AlphaMomentumSlider     ->setDoubleValue(mDetectionParameters.alphaMomentum);
 
     AlphaAverageLabel      ->setText(QString::number(mDetectionParameters.alphaAverage, 'f', 3));
-    AlphaPredictionLabel   ->setText(QString::number(mDetectionParameters.alphaPrediction, 'f', 2));
-    AlphaMiscellaneousLabel->setText(QString::number(mDetectionParameters.alphaMiscellaneous, 'f', 2));
+    AlphaPositionLabel   ->setText(QString::number(mDetectionParameters.alphaPosition, 'f', 2));
+    AlphaFeaturesLabel->setText(QString::number(mDetectionParameters.alphaFeatures, 'f', 2));
     AlphaMomentumLabel     ->setText(QString::number(mDetectionParameters.alphaMomentum, 'f', 2));
 
     ThresholdCircumferenceSlider->setDoubleValue(mDetectionParameters.circumferenceChangeThreshold);
@@ -510,16 +510,16 @@ void ParameterWidget::setAlphaAverage(double value)
     AlphaAverageLabel->setText(QString::number(value, 'f', 3));
 }
 
-void ParameterWidget::setAlphaPrediction(double value)
+void ParameterWidget::setAlphaPosition(double value)
 {
-    mDetectionParameters.alphaPrediction = value;
-    AlphaPredictionLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.alphaPosition = value;
+    AlphaPositionLabel->setText(QString::number(value, 'f', 2));
 }
 
-void ParameterWidget::setAlphaMiscellaneous(double value)
+void ParameterWidget::setAlphaFeatures(double value)
 {
-    mDetectionParameters.alphaMiscellaneous = value;
-    AlphaMiscellaneousLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.alphaFeatures = value;
+    AlphaFeaturesLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setAlphaMomentum(double value)

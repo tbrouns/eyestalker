@@ -83,10 +83,10 @@ struct detectionParameters
 {
     detectionParameters(): DETECTION_ON(false) { }
 
-    double alphaMiscellaneous;
+    double alphaFeatures;
     double alphaMomentum;
     double alphaAverage;
-    double alphaPrediction;
+    double alphaPosition;
     double curvatureOffset;
     double edgeLengthFraction;
     double ellipseFitErrorMaximum;

@@ -606,10 +606,7 @@ int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int star
 
                 int pointValue = cannyEdgeVector[edgePointIndex];
 
-                if (pointValue == 1 || pointValue == 2)
-                {
-                    return neighbourIndex;
-                }
+                if (pointValue == 1 || pointValue == 2) { return neighbourIndex; } // make the connection
             }
         }
     }
@@ -2197,81 +2194,81 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
     {
         mDetectionPropertiesNew.v.aspectRatioAverage    = mDetectionProperties.v.aspectRatioAverage + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioAverage);
         mDetectionPropertiesNew.v.aspectRatioMomentum   = mDetectionProperties.v.aspectRatioMomentum * mDetectionProperties.p.alphaMomentum;
-        mDetectionPropertiesNew.v.aspectRatioPrediction = mDetectionProperties.v.aspectRatioPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.aspectRatioAverage - mDetectionProperties.v.aspectRatioPrediction);
+        mDetectionPropertiesNew.v.aspectRatioPrediction = mDetectionProperties.v.aspectRatioPrediction + mDetectionProperties.p.alphaFeatures * (mDetectionPropertiesNew.v.aspectRatioAverage - mDetectionProperties.v.aspectRatioPrediction);
 
         mDetectionPropertiesNew.v.circumferenceAverage    = mDetectionProperties.v.circumferenceAverage + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.circumferencePrediction - mDetectionProperties.v.circumferenceAverage);
         mDetectionPropertiesNew.v.circumferenceMomentum   = mDetectionProperties.v.circumferenceMomentum * mDetectionProperties.p.alphaMomentum;
-        mDetectionPropertiesNew.v.circumferencePrediction = mDetectionProperties.v.circumferencePrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.circumferenceAverage - mDetectionProperties.v.circumferencePrediction);
+        mDetectionPropertiesNew.v.circumferencePrediction = mDetectionProperties.v.circumferencePrediction + mDetectionProperties.p.alphaFeatures * (mDetectionPropertiesNew.v.circumferenceAverage - mDetectionProperties.v.circumferencePrediction);
 
-        mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * (1 / mDetectionProperties.p.alphaMiscellaneous);
+        mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * (1 / mDetectionProperties.p.alphaFeatures);
 
         mDetectionPropertiesNew.v.heightAverage    = mDetectionProperties.v.heightAverage + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.heightPrediction - mDetectionProperties.v.heightAverage);
         mDetectionPropertiesNew.v.heightMomentum   = mDetectionProperties.v.heightMomentum * mDetectionProperties.p.alphaMomentum;
-        mDetectionPropertiesNew.v.heightPrediction = mDetectionProperties.v.heightPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.heightAverage - mDetectionProperties.v.heightPrediction);
+        mDetectionPropertiesNew.v.heightPrediction = mDetectionProperties.v.heightPrediction + mDetectionProperties.p.alphaFeatures * (mDetectionPropertiesNew.v.heightAverage - mDetectionProperties.v.heightPrediction);
 
         mDetectionPropertiesNew.v.radiusMomentum   = mDetectionProperties.v.radiusMomentum * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.radiusPrediction = mDetectionProperties.v.circumferencePrediction / (2 * M_PI);
 
-        mDetectionPropertiesNew.v.searchRadius = mDetectionProperties.v.searchRadius * (1 / mDetectionProperties.p.alphaMiscellaneous);
+        mDetectionPropertiesNew.v.searchRadius = mDetectionProperties.v.searchRadius * (1 / mDetectionProperties.p.alphaPosition);
 
-        mDetectionPropertiesNew.v.thresholdAspectRatioChange   = mDetectionProperties.v.thresholdAspectRatioChange   * (1 / mDetectionProperties.p.alphaMiscellaneous);
-        mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionProperties.v.thresholdCircumferenceChange * (1 / mDetectionProperties.p.alphaMiscellaneous);
-        mDetectionPropertiesNew.v.thresholdDisplacementChange  = mDetectionProperties.v.thresholdDisplacementChange * (1 / mDetectionProperties.p.alphaMiscellaneous);
+        mDetectionPropertiesNew.v.thresholdAspectRatioChange   = mDetectionProperties.v.thresholdAspectRatioChange   * (1 / mDetectionProperties.p.alphaFeatures);
+        mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionProperties.v.thresholdCircumferenceChange * (1 / mDetectionProperties.p.alphaFeatures);
+        mDetectionPropertiesNew.v.thresholdDisplacementChange  = mDetectionProperties.v.thresholdDisplacementChange  * (1 / mDetectionProperties.p.alphaPosition);
 
         mDetectionPropertiesNew.v.widthAverage    = mDetectionProperties.v.widthAverage + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.widthPrediction - mDetectionProperties.v.widthAverage);
         mDetectionPropertiesNew.v.widthMomentum   = mDetectionProperties.v.widthMomentum * mDetectionProperties.p.alphaMomentum;
-        mDetectionPropertiesNew.v.widthPrediction = mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.widthAverage - mDetectionProperties.v.widthPrediction);
+        mDetectionPropertiesNew.v.widthPrediction = mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaFeatures * (mDetectionPropertiesNew.v.widthAverage - mDetectionProperties.v.widthPrediction);
 
-        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (outerAOI.xPos + 0.5 * outerAOI.wdth - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (outerAOI.yPos + 0.5 * outerAOI.hght - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
+        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPosition * (outerAOI.xPos + 0.5 * outerAOI.wdth - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
+        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPosition * (outerAOI.yPos + 0.5 * outerAOI.hght - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
 
         mDetectionPropertiesNew.v.xVelocity     = mDetectionProperties.v.xVelocity * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.yVelocity     = mDetectionProperties.v.yVelocity * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.priorCertainty = mDetectionProperties.v.priorCertainty * mDetectionProperties.p.alphaMiscellaneous;
+        mDetectionPropertiesNew.v.priorCertainty = mDetectionProperties.v.priorCertainty * mDetectionProperties.p.alphaFeatures;
     }
     else // pupil detected
     {
         mDetectionPropertiesNew.v.aspectRatioExact   = mEllipseProperties.aspectRatio;
         mDetectionPropertiesNew.v.circumferenceExact = mEllipseProperties.circumference;
 
-        mDetectionPropertiesNew.v.aspectRatioPrediction =  mDetectionProperties.v.aspectRatioPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.aspectRatio - mDetectionProperties.v.aspectRatioPrediction) + mDetectionProperties.v.aspectRatioMomentum;
+        mDetectionPropertiesNew.v.aspectRatioPrediction =  mDetectionProperties.v.aspectRatioPrediction + mDetectionProperties.p.alphaFeatures * (mEllipseProperties.aspectRatio - mDetectionProperties.v.aspectRatioPrediction) + mDetectionProperties.v.aspectRatioMomentum;
         mDetectionPropertiesNew.v.aspectRatioAverage    =  mDetectionProperties.v.aspectRatioAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioAverage);
         mDetectionPropertiesNew.v.aspectRatioMomentum   = (mDetectionProperties.v.aspectRatioMomentum   + mDetectionPropertiesNew.v.aspectRatioPrediction - mDetectionProperties.v.aspectRatioPrediction) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.circumferencePrediction =  mDetectionProperties.v.circumferencePrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.circumference - mDetectionProperties.v.circumferencePrediction) + mDetectionProperties.v.circumferenceMomentum;
+        mDetectionPropertiesNew.v.circumferencePrediction =  mDetectionProperties.v.circumferencePrediction + mDetectionProperties.p.alphaFeatures * (mEllipseProperties.circumference - mDetectionProperties.v.circumferencePrediction) + mDetectionProperties.v.circumferenceMomentum;
         mDetectionPropertiesNew.v.circumferenceAverage    =  mDetectionProperties.v.circumferenceAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.circumferencePrediction - mDetectionProperties.v.circumferenceAverage);
         mDetectionPropertiesNew.v.circumferenceMomentum   = (mDetectionProperties.v.circumferenceMomentum   + mDetectionPropertiesNew.v.circumferencePrediction - mDetectionProperties.v.circumferencePrediction) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * mDetectionProperties.p.alphaMiscellaneous;
+        mDetectionPropertiesNew.v.curvatureOffset = mDetectionProperties.v.curvatureOffset * mDetectionProperties.p.alphaFeatures;
 
-        mDetectionPropertiesNew.v.heightPrediction =  mDetectionProperties.v.heightPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.height - mDetectionProperties.v.heightPrediction) + mDetectionProperties.v.heightMomentum;
+        mDetectionPropertiesNew.v.heightPrediction =  mDetectionProperties.v.heightPrediction + mDetectionProperties.p.alphaFeatures * (mEllipseProperties.height - mDetectionProperties.v.heightPrediction) + mDetectionProperties.v.heightMomentum;
         mDetectionPropertiesNew.v.heightAverage    =  mDetectionProperties.v.heightAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.heightPrediction - mDetectionProperties.v.heightAverage);
         mDetectionPropertiesNew.v.heightMomentum   = (mDetectionProperties.v.heightMomentum   + mDetectionPropertiesNew.v.heightPrediction - mDetectionProperties.v.heightPrediction) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.radiusPrediction =  mDetectionProperties.v.radiusPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.radius - mDetectionProperties.v.radiusPrediction) + mDetectionProperties.v.radiusMomentum;
+        mDetectionPropertiesNew.v.radiusPrediction =  mDetectionProperties.v.radiusPrediction + mDetectionProperties.p.alphaFeatures * (mEllipseProperties.radius - mDetectionProperties.v.radiusPrediction) + mDetectionProperties.v.radiusMomentum;
         mDetectionPropertiesNew.v.radiusMomentum   = (mDetectionProperties.v.radiusMomentum + (mDetectionPropertiesNew.v.radiusPrediction - mDetectionProperties.v.radiusPrediction)) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.searchRadius = mDetectionProperties.v.searchRadius * mDetectionProperties.p.alphaMiscellaneous;
+        mDetectionPropertiesNew.v.searchRadius = mDetectionProperties.v.searchRadius * mDetectionProperties.p.alphaPosition;
 
-        mDetectionPropertiesNew.v.thresholdAspectRatioChange   = mDetectionProperties.v.thresholdAspectRatioChange   * mDetectionProperties.p.alphaMiscellaneous;
-        mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionProperties.v.thresholdCircumferenceChange * mDetectionProperties.p.alphaMiscellaneous;
-        mDetectionPropertiesNew.v.thresholdDisplacementChange  = mDetectionProperties.v.thresholdDisplacementChange  * mDetectionProperties.p.alphaMiscellaneous;
+        mDetectionPropertiesNew.v.thresholdAspectRatioChange   = mDetectionProperties.v.thresholdAspectRatioChange   * mDetectionProperties.p.alphaFeatures;
+        mDetectionPropertiesNew.v.thresholdCircumferenceChange = mDetectionProperties.v.thresholdCircumferenceChange * mDetectionProperties.p.alphaFeatures;
+        mDetectionPropertiesNew.v.thresholdDisplacementChange  = mDetectionProperties.v.thresholdDisplacementChange  * mDetectionProperties.p.alphaPosition;
 
-        mDetectionPropertiesNew.v.widthPrediction =  mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaPrediction * (mEllipseProperties.width - mDetectionProperties.v.widthPrediction) + mDetectionProperties.v.widthMomentum;
+        mDetectionPropertiesNew.v.widthPrediction =  mDetectionProperties.v.widthPrediction + mDetectionProperties.p.alphaFeatures * (mEllipseProperties.width - mDetectionProperties.v.widthPrediction) + mDetectionProperties.v.widthMomentum;
         mDetectionPropertiesNew.v.widthAverage    =  mDetectionProperties.v.widthAverage    + mDetectionProperties.p.alphaAverage    * (mDetectionProperties.v.widthPrediction - mDetectionProperties.v.widthAverage);
         mDetectionPropertiesNew.v.widthMomentum   = (mDetectionProperties.v.widthMomentum   + mDetectionPropertiesNew.v.widthPrediction - mDetectionProperties.v.widthPrediction) * mDetectionProperties.p.alphaMomentum;
 
         mDetectionPropertiesNew.v.xPosExact = mEllipseProperties.xPos + outerAOI.xPos;
         mDetectionPropertiesNew.v.yPosExact = mEllipseProperties.yPos + outerAOI.yPos;
 
-        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.xPosExact - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
-        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPrediction * (mDetectionPropertiesNew.v.yPosExact - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
+        mDetectionPropertiesNew.v.xPosPrediction = mDetectionProperties.v.xPosPrediction + mDetectionProperties.p.alphaPosition * (mDetectionPropertiesNew.v.xPosExact - mDetectionProperties.v.xPosPrediction) + mDetectionProperties.v.xVelocity;
+        mDetectionPropertiesNew.v.yPosPrediction = mDetectionProperties.v.yPosPrediction + mDetectionProperties.p.alphaPosition * (mDetectionPropertiesNew.v.yPosExact - mDetectionProperties.v.yPosPrediction) + mDetectionProperties.v.yVelocity;
 
         mDetectionPropertiesNew.v.xVelocity = (mDetectionProperties.v.xVelocity + mDetectionPropertiesNew.v.xPosPrediction - mDetectionProperties.v.xPosPrediction) * mDetectionProperties.p.alphaMomentum;
         mDetectionPropertiesNew.v.yVelocity = (mDetectionProperties.v.yVelocity + mDetectionPropertiesNew.v.yPosPrediction - mDetectionProperties.v.yPosPrediction) * mDetectionProperties.p.alphaMomentum;
 
-        mDetectionPropertiesNew.v.priorCertainty = mDetectionProperties.v.priorCertainty * (1 / mDetectionProperties.p.alphaMiscellaneous);
+        mDetectionPropertiesNew.v.priorCertainty = mDetectionProperties.v.priorCertainty * (1 / mDetectionProperties.p.alphaFeatures);
 
         // Grab pupil image
 

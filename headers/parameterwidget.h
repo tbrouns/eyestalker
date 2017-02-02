@@ -31,10 +31,10 @@ public:
 
 private:
 
-    QLabel *AlphaMiscellaneousLabel;
+    QLabel *AlphaFeaturesLabel;
     QLabel *AlphaMomentumLabel;
     QLabel *AlphaAverageLabel;
-    QLabel *AlphaPredictionLabel;
+    QLabel *AlphaPositionLabel;
     QLabel *CannyBlurLevelLabel;
     QLabel *CannyKernelSizeLabel;
     QLabel *CannyThresholdLowLabel;
@@ -59,10 +59,10 @@ private:
     QSlider *GlintSizeSlider;
     QSlider *HaarOffsetSlider;
 
-    SliderDouble *AlphaMiscellaneousSlider;
+    SliderDouble *AlphaFeaturesSlider;
     SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaAverageSlider;
-    SliderDouble *AlphaPredictionSlider;
+    SliderDouble *AlphaPositionSlider;
     SliderDouble *CannyThresholdLowSlider;
     SliderDouble *CannyThresholdHighSlider;
     SliderDouble *CurvatureOffsetSlider;
@@ -82,10 +82,10 @@ signals:
 
 private slots:
 
-    void setAlphaMiscellaneous      (double);
+    void setAlphaFeatures      (double);
     void setAlphaMomentum           (double);
     void setAlphaAverage            (double);
-    void setAlphaPrediction         (double);
+    void setAlphaPosition         (double);
     void setCannyBlurLevel          (int);
     void setCannyKernelSize         (int);
     void setCannyThresholdLow       (double);

@@ -68,9 +68,9 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
 
     detectionParameters mDetectionParameters;
     mDetectionParameters.alphaAverage                       = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
-    mDetectionParameters.alphaMiscellaneous                 = settings.value(prefix + "AlphaMiscellaneous",              parameters[1]).toDouble();
+    mDetectionParameters.alphaFeatures                 = settings.value(prefix + "alphaFeatures",              parameters[1]).toDouble();
     mDetectionParameters.alphaMomentum                      = settings.value(prefix + "AlphaMomentum",                   parameters[2]).toDouble();
-    mDetectionParameters.alphaPrediction                    = settings.value(prefix + "AlphaPrediction",                 parameters[3]).toDouble();
+    mDetectionParameters.alphaPosition                    = settings.value(prefix + "AlphaPosition",                 parameters[3]).toDouble();
     mDetectionParameters.cannyBlurLevel                     = settings.value(prefix + "CannyBlurLevel",                  parameters[4]).toInt();
     mDetectionParameters.cannyKernelSize                    = settings.value(prefix + "CannyKernelSize",                 parameters[5]).toInt();
     mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               parameters[6]).toDouble();
@@ -83,7 +83,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
     mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
     mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
-    mDetectionParameters.haarOffset                        = settings.value(prefix + "HaarOffset",                       parameters[16]).toInt();
+    mDetectionParameters.haarOffset                         = settings.value(prefix + "HaarOffset",                       parameters[16]).toInt();
     mDetectionParameters.circumferenceChangeThreshold       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
     mDetectionParameters.aspectRatioChangeThreshold         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.displacementChangeThreshold        = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
@@ -140,9 +140,9 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     QSettings settings(filename, QSettings::IniFormat);
 
     settings.setValue(prefix + "AlphaAverage",                   mDetectionParameters.alphaAverage);
-    settings.setValue(prefix + "AlphaMiscellaneous",             mDetectionParameters.alphaMiscellaneous);
+    settings.setValue(prefix + "alphaFeatures",             mDetectionParameters.alphaFeatures);
     settings.setValue(prefix + "AlphaMomentum",                  mDetectionParameters.alphaMomentum);
-    settings.setValue(prefix + "AlphaPrediction",                mDetectionParameters.alphaPrediction);
+    settings.setValue(prefix + "AlphaPosition",                mDetectionParameters.alphaPosition);
     settings.setValue(prefix + "CannyBlurLevel",                 mDetectionParameters.cannyBlurLevel);
     settings.setValue(prefix + "CannyKernelSize",                mDetectionParameters.cannyKernelSize);
     settings.setValue(prefix + "CannyThresholdLow",              mDetectionParameters.cannyThresholdLow);
