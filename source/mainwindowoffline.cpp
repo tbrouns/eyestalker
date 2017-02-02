@@ -531,7 +531,6 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvatureMin << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvature    << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].length       << delimiter; }
-            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].size         << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].radius       << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].intensity    << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].gradient     << delimiter; }

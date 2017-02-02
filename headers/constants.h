@@ -49,7 +49,9 @@ const double pupilImageFactor = 1.15;
 
 // Edge processing
 
+const int lengthWindowLength    = 5;
 const int curvatureWindowLength = 5; // window length for curvature
+const int minimumEdgeLength     = 5;
 const int edgeIntensitiesPositionOffset = 2;
 
 // Edge classification

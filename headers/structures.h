@@ -53,8 +53,12 @@ struct edgeProperties
     int size;
     int tag;
     std::vector<int> pointIndices;
+    std::vector<int> gradients;
+    std::vector<int> intensities;
+    std::vector<double> radii;
     std::vector<double> curvatures;
-    std::vector<double> intensities;
+    std::vector<double> xnormals;
+    std::vector<double> ynormals;
 };
 
 struct ellipseProperties
@@ -93,6 +97,7 @@ struct detectionParameters
     double aspectRatioChangeThreshold;
     double displacementChangeThreshold;
     double scoreThreshold;
+    double scoreThresholdPoints;
     int AOIXPos;
     int AOIYPos;
     int AOIWdth;

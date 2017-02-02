@@ -29,9 +29,12 @@ void MainWindow::startTrialRecording()
 
         emit stopTimer();
 
-        TRIAL_RECORDING = true;
+        // start recording
 
+        TRIAL_RECORDING = true;
         mUEyeOpencvCam.startRecording();
+
+        // get start times
 
         absoluteTime = startTime;
         relativeTime = 0;
@@ -41,12 +44,16 @@ void MainWindow::startTrialRecording()
 
         trialTimeLength = (TrialTimeLengthLineEdit->text()).toInt();
 
+
         frameCount = 0;
+
+        // preallocate vector space for data
 
         vDetectionVariablesEye.resize(trialFrameTotal);
         vDetectionVariablesBead.resize(trialFrameTotal);
+        timeStamps.resize(trialFrameTotal, 0);
 
-        timeStamps.assign(trialFrameTotal, 0);
+        // create directories if necessary
 
         if (SAVE_EYE_IMAGE)
         {

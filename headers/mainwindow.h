@@ -25,7 +25,7 @@
 #include "headers/confirmationwindow.h"
 #include "headers/constants.h"
 #include "headers/drawfunctions.h"
-#include "headers/pupildetection.h"
+#include "headers/eyestalker.h"
 #include "headers/parameters.h"
 #include "headers/parameterwidget.h"
 #include "headers/sliderdouble.h"

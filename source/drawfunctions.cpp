@@ -61,13 +61,13 @@ void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesA
 
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        int edgeSize = vEdgePropertiesAll[iEdge].size;
+        int edgeSize = vEdgePropertiesAll[iEdge].pointIndices.size();
 
         cv::Vec3b colour;
 
         if      (vEdgePropertiesAll[iEdge].tag == 2) { colour = primaryColour;   }
         else if (vEdgePropertiesAll[iEdge].tag == 1) { colour = secondaryColour; }
-        else                                          { colour = tertiaryColour;  }
+        else                                         { colour = tertiaryColour;  }
 
         for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
         {
@@ -160,7 +160,7 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
         if (Parameters::drawFlags.edge)
         {
             drawEdges  (I, mDetectionProperties.m.cannyEdgeIndices,  mDetectionProperties.m.outerAOI, red);
-//            drawOutline(I, mDetectionProperties.m.edgePropertiesAll, mDetectionProperties.m.outerAOI, green, yellow, orange);
+            drawOutline(I, mDetectionProperties.m.edgePropertiesAll, mDetectionProperties.m.outerAOI, green, yellow, orange);
         }
 
         drawEllipseCross(I, mDetectionProperties.v.xPosPrediction, mDetectionProperties.v.yPosPrediction, Parameters::ellipseDrawCrossSize, cyan);

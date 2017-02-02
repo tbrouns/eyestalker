@@ -105,7 +105,6 @@ LIBS += C://libs//UEye//Lib//ueye_tools_64.lib
 SOURCES += main.cpp\
         mainwindow.cpp \
     source/drawfunctions.cpp \
-    source/pupildetection.cpp \
     source/mainwindowexperiment.cpp \
     source/mainwindowparameters.cpp \
     source/mainwindowoffline.cpp \
@@ -115,13 +114,13 @@ SOURCES += main.cpp\
     source/ueyeopencv.cpp \
     source/confirmationwindow.cpp \
     source/parameterwidget.cpp \
-    source/variablewidget.cpp
+    source/variablewidget.cpp \
+    source/eyestalker.cpp
 
 HEADERS  += \
     headers/confirmationwindow.h \
     headers/constants.h \
     headers/drawfunctions.h \
-    headers/pupildetection.h \
     headers/mainwindow.h \
     headers/parameters.h \
     headers/qimageopencv.h \
@@ -130,7 +129,8 @@ HEADERS  += \
     headers/ueyeopencv.h \
     headers/parameterwidget.h \
     headers/variablewidget.h \
-    headers/arrays.h
+    headers/arrays.h \
+    headers/eyestalker.h
 
 RESOURCES += \
     resources/qdarkstyle/style.qrc
