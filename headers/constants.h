@@ -55,6 +55,7 @@ const double scoreFactorRadius        = 0.67;
 const double scoreFactorCurvature     = 0.05;
 const double scoreFactorCircumference = 0.81;
 const double scoreFactorIntensity     = 0.55;
+const double scoreFactorGradient      = 0.00; // needs to be measured still
 
 const double scoreThreshold = 0.3324;
 
