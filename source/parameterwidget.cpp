@@ -93,45 +93,45 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     LearningRatesTextBox->setText("<b>Learning rates</b>");
     LearningRatesTextBox->setAlignment(Qt::AlignCenter);
 
-    QLabel *AlphaAverageTextBox       = new QLabel;
-    QLabel *AlphaPositionTextBox    = new QLabel;
+    QLabel *AlphaAverageTextBox  = new QLabel;
+    QLabel *AlphaPositionTextBox = new QLabel;
     QLabel *AlphaFeaturesTextBox = new QLabel;
-    QLabel *AlphaMomentumTextBox      = new QLabel;
+    QLabel *AlphaMomentumTextBox = new QLabel;
 
-    AlphaAverageTextBox      ->setText("<b>Average:</b>");
-    AlphaPositionTextBox   ->setText("<b>Prediction:</b>");
-    AlphaFeaturesTextBox->setText("<b>Miscellaneous:</b>");
-    AlphaMomentumTextBox     ->setText("<b>Momentum:</b>");
+    AlphaAverageTextBox ->setText("<b>Averages:</b>");
+    AlphaPositionTextBox->setText("<b>Position:</b>");
+    AlphaFeaturesTextBox->setText("<b>Features:</b>");
+    AlphaMomentumTextBox->setText("<b>Momentum:</b>");
 
-    AlphaAverageLabel       = new QLabel;
-    AlphaPositionLabel    = new QLabel;
+    AlphaAverageLabel  = new QLabel;
+    AlphaPositionLabel = new QLabel;
     AlphaFeaturesLabel = new QLabel;
-    AlphaMomentumLabel      = new QLabel;
+    AlphaMomentumLabel = new QLabel;
 
-    AlphaAverageSlider       = new SliderDouble;
-    AlphaPositionSlider    = new SliderDouble;
+    AlphaAverageSlider  = new SliderDouble;
+    AlphaPositionSlider = new SliderDouble;
     AlphaFeaturesSlider = new SliderDouble;
-    AlphaMomentumSlider      = new SliderDouble;
+    AlphaMomentumSlider = new SliderDouble;
 
-    AlphaAverageSlider      ->setPrecision(3);
-    AlphaPositionSlider   ->setPrecision(2);
+    AlphaAverageSlider ->setPrecision(3);
+    AlphaPositionSlider->setPrecision(2);
     AlphaFeaturesSlider->setPrecision(2);
-    AlphaMomentumSlider     ->setPrecision(2);
+    AlphaMomentumSlider->setPrecision(2);
 
-    AlphaAverageSlider      ->setDoubleRange(0, 0.1);
-    AlphaPositionSlider   ->setDoubleRange(0, 1.0);
+    AlphaAverageSlider ->setDoubleRange(0, 0.1);
+    AlphaPositionSlider->setDoubleRange(0, 1.0);
     AlphaFeaturesSlider->setDoubleRange(0, 1.0);
-    AlphaMomentumSlider     ->setDoubleRange(0, 1.0);
+    AlphaMomentumSlider->setDoubleRange(0, 1.0);
 
-    AlphaAverageSlider      ->setOrientation(Qt::Horizontal);
-    AlphaPositionSlider   ->setOrientation(Qt::Horizontal);
+    AlphaAverageSlider ->setOrientation(Qt::Horizontal);
+    AlphaPositionSlider->setOrientation(Qt::Horizontal);
     AlphaFeaturesSlider->setOrientation(Qt::Horizontal);
-    AlphaMomentumSlider     ->setOrientation(Qt::Horizontal);
+    AlphaMomentumSlider->setOrientation(Qt::Horizontal);
 
-    QObject::connect(AlphaAverageSlider,       SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaAverage(double)));
-    QObject::connect(AlphaPositionSlider,    SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPosition(double)));
+    QObject::connect(AlphaAverageSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaAverage(double)));
+    QObject::connect(AlphaPositionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPosition(double)));
     QObject::connect(AlphaFeaturesSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaFeatures(double)));
-    QObject::connect(AlphaMomentumSlider,      SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMomentum(double)));
+    QObject::connect(AlphaMomentumSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaMomentum(double)));
 
     // Threshold parameters
 
@@ -393,24 +393,24 @@ void ParameterWidget::reset()
     CannyKernelSizeSlider->setValue(ceil(0.5 * mDetectionParameters.cannyKernelSize));
     CannyKernelSizeLabel ->setText(QString::number(mDetectionParameters.cannyKernelSize));
 
-    AlphaAverageSlider      ->setDoubleValue(mDetectionParameters.alphaAverage);
-    AlphaPositionSlider   ->setDoubleValue(mDetectionParameters.alphaPosition);
+    AlphaAverageSlider ->setDoubleValue(mDetectionParameters.alphaAverage);
+    AlphaPositionSlider->setDoubleValue(mDetectionParameters.alphaPosition);
     AlphaFeaturesSlider->setDoubleValue(mDetectionParameters.alphaFeatures);
-    AlphaMomentumSlider     ->setDoubleValue(mDetectionParameters.alphaMomentum);
+    AlphaMomentumSlider->setDoubleValue(mDetectionParameters.alphaMomentum);
 
-    AlphaAverageLabel      ->setText(QString::number(mDetectionParameters.alphaAverage, 'f', 3));
-    AlphaPositionLabel   ->setText(QString::number(mDetectionParameters.alphaPosition, 'f', 2));
+    AlphaAverageLabel ->setText(QString::number(mDetectionParameters.alphaAverage, 'f', 3));
+    AlphaPositionLabel->setText(QString::number(mDetectionParameters.alphaPosition, 'f', 2));
     AlphaFeaturesLabel->setText(QString::number(mDetectionParameters.alphaFeatures, 'f', 2));
-    AlphaMomentumLabel     ->setText(QString::number(mDetectionParameters.alphaMomentum, 'f', 2));
+    AlphaMomentumLabel->setText(QString::number(mDetectionParameters.alphaMomentum, 'f', 2));
 
-    ThresholdCircumferenceSlider->setDoubleValue(mDetectionParameters.circumferenceChangeThreshold);
-    ThresholdCircumferenceLabel ->setText(QString::number(mDetectionParameters.circumferenceChangeThreshold, 'f', 1));
+    ThresholdCircumferenceSlider->setDoubleValue(mDetectionParameters.changeThresholdCircumference);
+    ThresholdCircumferenceLabel ->setText(QString::number(mDetectionParameters.changeThresholdCircumference, 'f', 1));
 
-    ThresholdAspectRatioSlider->setDoubleValue(mDetectionParameters.aspectRatioChangeThreshold);
-    ThresholdAspectRatioLabel ->setText(QString::number(mDetectionParameters.aspectRatioChangeThreshold, 'f', 2));
+    ThresholdAspectRatioSlider->setDoubleValue(mDetectionParameters.changeThresholdAspectRatio);
+    ThresholdAspectRatioLabel ->setText(QString::number(mDetectionParameters.changeThresholdAspectRatio, 'f', 2));
 
-    ThresholdDisplacementSlider->setDoubleValue(mDetectionParameters.displacementChangeThreshold);
-    ThresholdDisplacementLabel ->setText(QString::number(mDetectionParameters.displacementChangeThreshold, 'f', 1));
+    ThresholdDisplacementSlider->setDoubleValue(mDetectionParameters.changeThresholdPosition);
+    ThresholdDisplacementLabel ->setText(QString::number(mDetectionParameters.changeThresholdPosition, 'f', 1));
 
     ThresholdScoreSlider->setDoubleValue(mDetectionParameters.scoreThreshold);
     ThresholdScoreLabel ->setText(QString::number(mDetectionParameters.scoreThreshold, 'f', 2));
@@ -530,19 +530,19 @@ void ParameterWidget::setAlphaMomentum(double value)
 
 void ParameterWidget::setThresholdCircumference(double value)
 {
-    mDetectionParameters.circumferenceChangeThreshold = value;
+    mDetectionParameters.changeThresholdCircumference = value;
     ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 1));
 }
 
 void ParameterWidget::setThresholdAspectRatio(double value)
 {
-    mDetectionParameters.aspectRatioChangeThreshold = value;
+    mDetectionParameters.changeThresholdAspectRatio = value;
     ThresholdAspectRatioLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setThresholdDisplacement(double value)
 {
-    mDetectionParameters.displacementChangeThreshold = value;
+    mDetectionParameters.changeThresholdPosition = value;
     ThresholdDisplacementLabel->setText(QString::number(value, 'f', 1));
 }
 

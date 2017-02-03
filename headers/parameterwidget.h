@@ -82,10 +82,10 @@ signals:
 
 private slots:
 
-    void setAlphaFeatures      (double);
+    void setAlphaFeatures           (double);
     void setAlphaMomentum           (double);
     void setAlphaAverage            (double);
-    void setAlphaPosition         (double);
+    void setAlphaPosition           (double);
     void setCannyBlurLevel          (int);
     void setCannyKernelSize         (int);
     void setCannyThresholdLow       (double);

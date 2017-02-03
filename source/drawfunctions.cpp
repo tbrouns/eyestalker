@@ -163,14 +163,14 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
             drawOutline(I, mDetectionProperties.m.edgePropertiesAll, mDetectionProperties.m.outerAOI, green, yellow, orange);
         }
 
-        drawEllipseCross(I, mDetectionProperties.v.xPosPrediction, mDetectionProperties.v.yPosPrediction, Parameters::ellipseDrawCrossSize, cyan);
+        drawEllipseCross(I, mDetectionProperties.v.predictionXPos, mDetectionProperties.v.predictionYPos, Parameters::ellipseDrawCrossSize, cyan);
 
         if (Parameters::drawFlags.elps)
         {
             if (mDetectionProperties.v.PUPIL_DETECTED)
             {
                 drawEllipse(I, mDetectionProperties.m.ellipseCoefficients, mDetectionProperties.m.outerAOI, white);
-                drawEllipseCross(I, mDetectionProperties.v.xPosExact, mDetectionProperties.v.yPosExact, Parameters::ellipseDrawCrossSize, white);
+                drawEllipseCross(I, mDetectionProperties.v.exactXPos, mDetectionProperties.v.exactYPos, Parameters::ellipseDrawCrossSize, white);
             }
         }
 

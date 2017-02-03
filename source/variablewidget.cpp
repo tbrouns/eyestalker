@@ -64,53 +64,55 @@ detectionVariables VariableWidget::getStructure()
 
 void VariableWidget::setWidgets(const detectionVariables& mDetectionVariables)
 {
-    CircumferenceSlider->setDoubleValue(mDetectionVariables.circumferencePrediction);
-    CircumferenceLabel->setText(QString::number(mDetectionVariables.circumferencePrediction, 'f', 1));
+    CircumferenceSlider->setDoubleValue(mDetectionVariables.predictionCircumference);
+    CircumferenceLabel->setText(QString::number(mDetectionVariables.predictionCircumference, 'f', 1));
 
-    AspectRatioSlider->setDoubleValue(mDetectionVariables.aspectRatioPrediction);
-    AspectRatioLabel->setText(QString::number(mDetectionVariables.aspectRatioPrediction, 'f', 2));
+    AspectRatioSlider->setDoubleValue(mDetectionVariables.predictionAspectRatio);
+    AspectRatioLabel->setText(QString::number(mDetectionVariables.predictionAspectRatio, 'f', 2));
 }
 
 void VariableWidget::resetStructure(const detectionParameters& mDetectionParameters)
 {
-    mDetectionVariables.aspectRatioAverage    = 1.0;
-    mDetectionVariables.aspectRatioExact      = 0.0;
-    mDetectionVariables.aspectRatioMomentum   = 0.0;
-    mDetectionVariables.aspectRatioPrediction = 1.0;
+    mDetectionVariables.averageAspectRatio   = 0.9; // close to perfect circle
+    mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin);
+    mDetectionVariables.averageWidth         = mDetectionVariables.predictionCircumference / M_PI;
+    mDetectionVariables.averageHeight        = mDetectionVariables.predictionCircumference / M_PI;
+    mDetectionVariables.averageIntensity     = 255;
 
-    mDetectionVariables.circumferenceAverage    = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin);
-    mDetectionVariables.circumferenceExact      = 0;
-    mDetectionVariables.circumferenceMomentum   = 0;
-    mDetectionVariables.circumferencePrediction = mDetectionVariables.circumferenceAverage;
+    mDetectionVariables.exactAspectRatio   = 0;
+    mDetectionVariables.exactCircumference = 0;
+    mDetectionVariables.exactXPos          = 0;
+    mDetectionVariables.exactYPos          = 0;
 
-    mDetectionVariables.heightAverage    = mDetectionVariables.circumferencePrediction / M_PI;
-    mDetectionVariables.heightPrediction = mDetectionVariables.heightAverage;
-    mDetectionVariables.heightMomentum   = 0;
+    mDetectionVariables.predictionAspectRatio   = mDetectionVariables.averageAspectRatio;
+    mDetectionVariables.predictionCircumference = mDetectionVariables.averageCircumference;
+    mDetectionVariables.predictionWidth         = mDetectionVariables.averageWidth;
+    mDetectionVariables.predictionHeight        = mDetectionVariables.averageHeight;
+    mDetectionVariables.predictionXPos          = 0.5 * Parameters::eyeAOI.wdth; // centre of image
+    mDetectionVariables.predictionYPos          = 0.5 * Parameters::eyeAOI.hght;
 
-    mDetectionVariables.radiusMomentum   = 0;
-    mDetectionVariables.radiusPrediction = 0.5 * mDetectionVariables.circumferencePrediction / M_PI;
+    mDetectionVariables.momentumAspectRatio   = 0;
+    mDetectionVariables.momentumCircumference = 0;
+    mDetectionVariables.momentumWidth         = 0;
+    mDetectionVariables.momentumHeight        = 0;
+    mDetectionVariables.momentumXPos          = 0;
+    mDetectionVariables.momentumYPos          = 0;
 
-    mDetectionVariables.searchRadius = 0.5 * Parameters::eyeAOI.wdth;
+    mDetectionVariables.absoluteXPos  = 0;
+    mDetectionVariables.absoluteYPos  = 0;
 
-    mDetectionVariables.thresholdAspectRatioChange   = 1.0;
-    mDetectionVariables.thresholdCircumferenceChange = mDetectionParameters.circumferenceMax;
-    mDetectionVariables.thresholdDisplacementChange  = Parameters::eyeAOI.wdth;
+    int imgSize;
+    if (Parameters::eyeAOI.wdth > Parameters::eyeAOI.hght) { imgSize = Parameters::eyeAOI.wdth; }
+    else                                                   { imgSize = Parameters::eyeAOI.hght; }
 
-    mDetectionVariables.widthAverage    = mDetectionVariables.circumferencePrediction / M_PI;
-    mDetectionVariables.widthPrediction = mDetectionVariables.widthAverage;
-    mDetectionVariables.widthMomentum   = 0;
+    mDetectionVariables.changeThresholdAspectRatio   = 1.0;
+    mDetectionVariables.changeThresholdCircumference = mDetectionParameters.circumferenceMax;
+    mDetectionVariables.changeThresholdPosition      = imgSize;
+    mDetectionVariables.searchRadius                 = imgSize;
+    mDetectionVariables.curvatureOffset              = 180;
 
-    mDetectionVariables.xPosAbsolute  = 0;
-    mDetectionVariables.xPosExact     = 0;
-    mDetectionVariables.xPosPrediction = 0.5 * Parameters::eyeAOI.wdth;
-    mDetectionVariables.xVelocity     = 0;
-
-    mDetectionVariables.yPosAbsolute  = 0;
-    mDetectionVariables.yPosExact     = 0;
-    mDetectionVariables.yPosPrediction = 0.5 * Parameters::eyeAOI.hght;
-    mDetectionVariables.yVelocity     = 0;
-
-    mDetectionVariables.priorCertainty = certaintyLowerLimit;
+    mDetectionVariables.certaintyPosition = 0;
+    mDetectionVariables.certaintyFeatures = 0;
 
     setWidgets(mDetectionVariables);
 }
@@ -119,7 +121,7 @@ void VariableWidget::setCircumference(double value)
 {
     if (!Parameters::ONLINE_PROCESSING)
     {
-        mDetectionVariables.circumferencePrediction = value;
+        mDetectionVariables.predictionCircumference = value;
         CircumferenceLabel->setText(QString::number(value, 'f', 1));
     }
 }
@@ -128,7 +130,7 @@ void VariableWidget::setAspectRatio(double value)
 {
     if (!Parameters::ONLINE_PROCESSING)
     {
-        mDetectionVariables.aspectRatioPrediction = value;
+        mDetectionVariables.predictionAspectRatio = value;
         AspectRatioLabel->setText(QString::number(value, 'f', 2));
     }
 }

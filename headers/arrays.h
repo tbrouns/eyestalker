@@ -18,10 +18,10 @@
 
 #include <vector>
 
-const std::vector<double> parametersEye  = {0.005,  // Alpha average
-                                             0.75,  // Alpha miscellaneous
-                                             0.10,  // Alpha momentum
-                                             0.75,  // Alpha prediction
+const std::vector<double> parametersEye  =  {0.05,  // Alpha average
+                                             0.75,  // Alpha features
+                                             0.50,  // Alpha momentum
+                                             0.75,  // Alpha position
                                                 4,  // Canny blur level
                                                 5,  // Canny kernel size
                                             300.0,  // Canny threshold low
@@ -40,9 +40,9 @@ const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                                10,  // Displacement change threshold
                                             0.30};  // Score threshold
 
-const std::vector<double> parametersBead = {0.005,  // Alpha average
+const std::vector<double> parametersBead =  {0.05,  // Alpha average
                                              0.75,  // Alpha miscellaneous
-                                             0.10,  // Alpha momentum
+                                             0.50,  // Alpha momentum
                                              0.75,  // Alpha prediction
                                                 4,  // Canny blur level
                                                 3,  // Canny kernel size

@@ -33,16 +33,11 @@ const double fitErrorFraction = 0.05;
 
 // Parameter limits
 
-const double certaintyLowerLimit = 1.0;
-const double certaintyUpperLimit = 4.0;
-const double certaintyThreshold  = 2.5;
-
 const int cameraFrameRateUpperLimit = 500;
 
 // Other
 
 const bool DETECT_BEAD      = false;
-const bool SAVE_PUPIL_IMAGE = false;
 
 const double pupilHaarReductionFactor = 0.75;
 const double pupilImageFactor = 1.15;

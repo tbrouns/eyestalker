@@ -152,18 +152,18 @@ void MainWindow::saveTrialData()
 
         if (SAVE_POSITION)
         {
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].xPosAbsolute  << delimiter; }
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].yPosAbsolute  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].absoluteXPos  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].absoluteYPos  << delimiter; }
         }
 
         if (SAVE_CIRCUMFERENCE)
         {
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].circumferenceExact << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].exactCircumference << delimiter; }
         }
 
         if (SAVE_ASPECT_RATIO)
         {
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].aspectRatioExact << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].exactAspectRatio << delimiter; }
         }
 
         file.close();

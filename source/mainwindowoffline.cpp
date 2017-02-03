@@ -359,8 +359,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     // Get pupil coords in screen coords
 
-    mDetectionPropertiesNewEye.v.xPosAbsolute = mDetectionPropertiesNewEye.v.xPosExact + cameraAOIXPos;
-    mDetectionPropertiesNewEye.v.yPosAbsolute = mDetectionPropertiesNewEye.v.yPosExact + cameraAOIYPos;
+    mDetectionPropertiesNewEye.v.absoluteXPos = mDetectionPropertiesNewEye.v.exactXPos + cameraAOIXPos;
+    mDetectionPropertiesNewEye.v.absoluteYPos = mDetectionPropertiesNewEye.v.exactYPos + cameraAOIYPos;
 
     // Record pupil positions
 
@@ -489,24 +489,24 @@ void MainWindow::onSaveTrialData()
 
         if (SAVE_POSITION)
         {
-            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].xPosAbsolute  << delimiter; }
-            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].yPosAbsolute  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].absoluteXPos  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].absoluteYPos  << delimiter; }
         }
 
         if (SAVE_CIRCUMFERENCE)
         {
-            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].circumferenceExact << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].exactCircumference << delimiter; }
         }
 
         if (SAVE_ASPECT_RATIO)
         {
-            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].aspectRatioExact << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].exactAspectRatio << delimiter; }
         }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].xPosPrediction          << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].yPosPrediction          << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].circumferencePrediction << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].aspectRatioPrediction   << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionXPos          << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionYPos          << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionCircumference << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionAspectRatio   << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].detectionDuration       << delimiter; }
 
         file.close();
@@ -564,40 +564,6 @@ void MainWindow::onSaveTrialData()
         }
 
         file.close();
-    }
-
-    if (SAVE_PUPIL_IMAGE)
-    {
-        std::stringstream directoryName;
-        directoryName << dataDirectoryOffline.toStdString()
-                      << "/trial_"
-                      << trialIndexOffline
-                      << "/pupil";
-
-        if (!boost::filesystem::exists(directoryName.str()))
-        {
-            boost::filesystem::create_directory(directoryName.str().c_str());
-        }
-
-        for (int i = 0; i < imageTotalOffline; i++)
-        {
-            if (vDetectionVariablesEye[i + 1].PUPIL_DETECTED)
-            {
-                std::stringstream filename;
-                filename << dataDirectoryOffline.toStdString()
-                         << "/trial_"
-                         << trialIndexOffline
-                         << "/pupil/"
-                         << i
-                         << ".png";
-
-                std::vector<int> compression_params;
-                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-                compression_params.push_back(0);
-
-                cv::imwrite(filename.str(), vDetectionMiscellaneousEye[i].imagePupil, compression_params);
-            }
-        }
     }
 }
 

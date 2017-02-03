@@ -1011,8 +1011,8 @@ void MainWindow::pupilTracking()
             {
                 mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal, mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
 
-                mDetectionPropertiesEyeTemp.v.xPosAbsolute = mDetectionPropertiesEyeTemp.v.xPosExact + cameraAOIXPos;
-                mDetectionPropertiesEyeTemp.v.yPosAbsolute = mDetectionPropertiesEyeTemp.v.yPosExact + cameraAOIYPos;
+                mDetectionPropertiesEyeTemp.v.absoluteXPos = mDetectionPropertiesEyeTemp.v.exactXPos + cameraAOIXPos;
+                mDetectionPropertiesEyeTemp.v.absoluteYPos = mDetectionPropertiesEyeTemp.v.exactYPos + cameraAOIYPos;
 
                 vDetectionVariablesEye[frameCount] = mDetectionPropertiesEyeTemp.v;
 
@@ -1391,11 +1391,11 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
     {
         detectionParameters mDetectionParametersEye = mParameterWidgetEye->getStructure();
 
-        int pupilHaarWdth       = round(mDetectionVariablesEye.circumferencePrediction / M_PI);
+        int pupilHaarWdth       = round(mDetectionVariablesEye.predictionCircumference / M_PI);
         int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mDetectionParametersEye.haarOffset * 2);
 
         mDetectionVariablesEye.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);
-        mDetectionVariablesEye.xPosPrediction = xPos;
-        mDetectionVariablesEye.yPosPrediction = yPos;
+        mDetectionVariablesEye.predictionXPos = xPos;
+        mDetectionVariablesEye.predictionYPos = yPos;
     }
 }
