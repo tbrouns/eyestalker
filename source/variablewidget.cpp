@@ -79,6 +79,8 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.averageHeight        = mDetectionVariables.predictionCircumference / M_PI;
     mDetectionVariables.averageIntensity     = 255;
 
+    mDetectionVariables.offsetCircumference = 0.5 * (mDetectionParameters.circumferenceMax - mDetectionParameters.circumferenceMin);
+
     mDetectionVariables.exactAspectRatio   = 0;
     mDetectionVariables.exactCircumference = 0;
     mDetectionVariables.exactXPos          = 0;
@@ -98,8 +100,8 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.momentumXPos          = 0;
     mDetectionVariables.momentumYPos          = 0;
 
-    mDetectionVariables.absoluteXPos  = 0;
-    mDetectionVariables.absoluteYPos  = 0;
+    mDetectionVariables.absoluteXPos = 0;
+    mDetectionVariables.absoluteYPos = 0;
 
     int imgSize;
     if (Parameters::eyeAOI.wdth > Parameters::eyeAOI.hght) { imgSize = Parameters::eyeAOI.wdth; }
@@ -108,8 +110,6 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.changeThresholdAspectRatio   = 1.0;
     mDetectionVariables.changeThresholdCircumference = mDetectionParameters.circumferenceMax;
     mDetectionVariables.changeThresholdPosition      = imgSize;
-    mDetectionVariables.searchRadius                 = imgSize;
-    mDetectionVariables.curvatureOffset              = 180;
 
     mDetectionVariables.certaintyPosition = 0;
     mDetectionVariables.certaintyFeatures = 0;

@@ -33,7 +33,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     // Pupil aspect ratio
 
     QLabel *AspectRatioMinTextBox = new QLabel;
-    AspectRatioMinTextBox->setText("<b>Aspect ratio minimum:</b>");
+    AspectRatioMinTextBox->setText("<b>Aspect ratio min:</b>");
 
     AspectRatioMinLabel  = new QLabel;
     AspectRatioMinSlider = new SliderDouble;

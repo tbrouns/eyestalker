@@ -59,4 +59,15 @@ const double scoreFactorGradient      = 0.00; // needs to be measured still
 
 const double scoreThreshold = 0.3324;
 
+// Functions
+
+const double slopeRadius        = 0.05;
+const double slopeCurvature     = 0.05;
+const double slopeIntensity     = 0.10;
+const double slopeCertainty     = 20.0;
+const double slopeCircumference = 0.10;
+
+const double offsetIntensity     = 25;
+const double offsetCircumference = 75;
+
 #endif

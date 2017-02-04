@@ -88,6 +88,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.changeThresholdAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.changeThresholdPosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
     mDetectionParameters.scoreThreshold                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
+    mDetectionParameters.circumferenceOffset                = settings.value(prefix + "CircumferenceOffset",             parameters[21]).toDouble();
 
     return mDetectionParameters;
 }
@@ -146,6 +147,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CannyKernelSize",                mDetectionParameters.cannyKernelSize);
     settings.setValue(prefix + "CannyThresholdLow",              mDetectionParameters.cannyThresholdLow);
     settings.setValue(prefix + "CannyThresholdHigh",             mDetectionParameters.cannyThresholdHigh);
+    settings.setValue(prefix + "CircumferenceOffset",            mDetectionParameters.circumferenceOffset);
     settings.setValue(prefix + "CircumferenceMax",               mDetectionParameters.circumferenceMax);
     settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.circumferenceMin);
     settings.setValue(prefix + "CurvatureOffset",                mDetectionParameters.curvatureOffset);

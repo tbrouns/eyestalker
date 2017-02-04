@@ -357,19 +357,25 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     cv::imwrite(imagePath.str(), imageProcessed);
 
-    // Get pupil coords in screen coords
-
-    mDetectionPropertiesNewEye.v.absoluteXPos = mDetectionPropertiesNewEye.v.exactXPos + cameraAOIXPos;
-    mDetectionPropertiesNewEye.v.absoluteYPos = mDetectionPropertiesNewEye.v.exactYPos + cameraAOIYPos;
-
     // Record pupil positions
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+
+        // Get pupil coords in screen coords
+
+        mDetectionPropertiesNewEye.v.absoluteXPos = mDetectionPropertiesNewEye.v.exactXPos + cameraAOIXPos;
+        mDetectionPropertiesNewEye.v.absoluteYPos = mDetectionPropertiesNewEye.v.exactYPos + cameraAOIYPos;
+
+        // Save pupil data
+
         vDetectionVariablesEye[imageIndex + 1] = mDetectionPropertiesNewEye.v;
         vDetectionMiscellaneousEye[imageIndex] = mDetectionPropertiesNewEye.m;
 
-        if (mParameterWidgetBead->getState())
+        if (mParameterWidgetBead->getState()) // Save bead data
         {
+            mDetectionPropertiesNewBead.v.absoluteXPos = mDetectionPropertiesNewBead.v.exactXPos + cameraAOIXPos;
+            mDetectionPropertiesNewBead.v.absoluteYPos = mDetectionPropertiesNewBead.v.exactYPos + cameraAOIYPos;
+
             vDetectionVariablesBead[imageIndex + 1] = mDetectionPropertiesNewBead.v;
         }
     }
@@ -484,7 +490,7 @@ void MainWindow::onSaveTrialData()
 
         // write data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].PUPIL_DETECTED << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].DETECTED << delimiter; }
         if (timeMatrix.size() > 0) { for (int i = 0; i < imageTotalOffline; i++) { file << timeMatrix[trialIndexOffline][i + 2] << delimiter; } }
 
         if (SAVE_POSITION)
@@ -503,10 +509,19 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].exactAspectRatio << delimiter; }
         }
 
+        if (mParameterWidgetBead->getState())
+        {
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i + 1].DETECTED       << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesBead[i + 1].absoluteXPos  << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesBead[i + 1].absoluteYPos  << delimiter; }
+        }
+
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionXPos          << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionYPos          << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionCircumference << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictionAspectRatio   << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].averageIntensity        << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].averageGradient         << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].detectionDuration       << delimiter; }
 
         file.close();
@@ -532,6 +547,7 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].curvature    << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].length       << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].radius       << delimiter; }
+            for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].radiusVar    << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].intensity    << delimiter; }
             for (int j = 0; j < numEdges; j++) { file << vDetectionMiscellaneousEye[i].edgePropertiesAll[j].gradient     << delimiter; }
             file << "\n";

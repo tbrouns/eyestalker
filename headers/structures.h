@@ -48,6 +48,7 @@ struct edgeProperties
     double intensity;
     double gradient;
     double radius;
+    double radiusVar;
     int index;
     int length;
     int size;
@@ -63,7 +64,7 @@ struct edgeProperties
 
 struct ellipseProperties
 {
-    bool PUPIL_DETECTED;
+    bool DETECTED;
     double fitError;
     double circumference;
     double aspectRatio;
@@ -93,6 +94,7 @@ struct detectionParameters
     double ellipseFitErrorMaximum;
     double circumferenceMax;
     double circumferenceMin;
+    double circumferenceOffset;
     double aspectRatioMin;
     double changeThresholdCircumference;
     double changeThresholdAspectRatio;
@@ -115,7 +117,7 @@ struct detectionParameters
 
 struct detectionVariables
 {
-    bool PUPIL_DETECTED;
+    bool DETECTED;
     double absoluteXPos;
     double absoluteYPos;
     double averageAspectRatio;
@@ -123,12 +125,13 @@ struct detectionVariables
     double averageHeight;
     double averageWidth;
     double averageIntensity;
+    double averageGradient;
     double certaintyFeatures;
     double certaintyPosition;
     double changeThresholdAspectRatio;
     double changeThresholdCircumference;
     double changeThresholdPosition;
-    double curvatureOffset;
+    double offsetCircumference;
     double detectionDuration;
     double exactAspectRatio;
     double exactCircumference;
@@ -146,7 +149,8 @@ struct detectionVariables
     double predictionWidth;
     double predictionXPos;
     double predictionYPos;
-    double searchRadius;
+    double predictionXPosRelative;
+    double predictionYPosRelative;
 };
 
 struct detectionMiscellaneous

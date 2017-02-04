@@ -55,7 +55,7 @@ void drawEdges(cv::Mat& I, const std::vector<int>& edgeIndices, AOIProperties mA
     }
 }
 
-void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesAll, AOIProperties mAOI, const cv::Vec3b& primaryColour, const cv::Vec3b& secondaryColour, const cv::Vec3b&  tertiaryColour)
+void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesAll, AOIProperties mAOI, const cv::Vec3b& colour_1, const cv::Vec3b& colour_2, const cv::Vec3b&  colour_3)
 {
     int numEdges = vEdgePropertiesAll.size();
 
@@ -65,9 +65,9 @@ void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesA
 
         cv::Vec3b colour;
 
-        if      (vEdgePropertiesAll[iEdge].tag == 2) { colour = primaryColour;   }
-        else if (vEdgePropertiesAll[iEdge].tag == 1) { colour = secondaryColour; }
-        else                                         { colour = tertiaryColour;  }
+        if      (vEdgePropertiesAll[iEdge].tag == 2) { colour = colour_1; }
+        else if (vEdgePropertiesAll[iEdge].tag == 1) { colour = colour_2; }
+        else                                         { colour = colour_3; }
 
         for (int iEdgePoint = 0; iEdgePoint < edgeSize; iEdgePoint++)
         {
@@ -167,7 +167,7 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
 
         if (Parameters::drawFlags.elps)
         {
-            if (mDetectionProperties.v.PUPIL_DETECTED)
+            if (mDetectionProperties.v.DETECTED)
             {
                 drawEllipse(I, mDetectionProperties.m.ellipseCoefficients, mDetectionProperties.m.outerAOI, white);
                 drawEllipseCross(I, mDetectionProperties.v.exactXPos, mDetectionProperties.v.exactYPos, Parameters::ellipseDrawCrossSize, white);

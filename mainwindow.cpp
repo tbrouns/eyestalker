@@ -1389,12 +1389,6 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOI.wdth && yPos > 0 && yPos < Parameters::eyeAOI.hght)
     {
-        detectionParameters mDetectionParametersEye = mParameterWidgetEye->getStructure();
-
-        int pupilHaarWdth       = round(mDetectionVariablesEye.predictionCircumference / M_PI);
-        int pupilHaarWdthOffset = pupilHaarWdth + round(pupilHaarWdth * mDetectionParametersEye.haarOffset * 2);
-
-        mDetectionVariablesEye.searchRadius  = ceil(0.5 * pupilHaarWdthOffset);
         mDetectionVariablesEye.predictionXPos = xPos;
         mDetectionVariablesEye.predictionYPos = yPos;
     }

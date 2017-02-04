@@ -26,19 +26,20 @@ const std::vector<double> parametersEye  =  {0.05,  // Alpha average
                                                 5,  // Canny kernel size
                                             300.0,  // Canny threshold low
                                             600.0,  // Canny threshold high
-                                               25,  // Curvature offset
-                                             0.60,  // Edge length fraction
+                                               15,  // Curvature offset
+                                             0.40,  // Edge length fraction
                                                 3,  // Ellipse fit number maximum
-                                               80,  // Ellipse fit error maximum
+                                              120,  // Ellipse fit error maximum
                                                12,  // Glint size
                                               320,  // Circumference max
                                                60,  // Circumference min
                                               0.4,  // Aspect ratio min
-                                               15,  // Haar offset
+                                               20,  // Haar offset
                                                15,  // Circumference change threshold
                                              0.12,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
-                                            0.30};  // Score threshold
+                                             0.30,  // Score threshold
+                                               40}; // Circumference offset
 
 const std::vector<double> parametersBead =  {0.05,  // Alpha average
                                              0.75,  // Alpha miscellaneous
@@ -60,7 +61,8 @@ const std::vector<double> parametersBead =  {0.05,  // Alpha average
                                                 5,  // Circumference change threshold
                                              0.05,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
-                                            0.30};  // Score threshold
+                                             0.30,  // Score threshold
+                                               40}; // Circumference offset
 
 const std::vector<double> arrayCircumferences = {60,65.918,71.837,77.755,83.673,89.592,95.51,101.43,107.35,113.27,119.18,125.1,131.02,136.94,142.86,148.78,154.69,160.61,166.53,172.45,178.37,184.29,190.2,196.12,202.04,207.96,213.88,219.8,225.71,231.63,237.55,243.47,249.39,255.31,261.22,267.14,273.06,278.98,284.9,290.82,296.73,302.65,308.57,314.49,320.41,326.33,332.24,338.16,344.08,350};
 const std::vector<double> arrayAspectRatios   = {0.4,0.41224,0.42449,0.43673,0.44898,0.46122,0.47347,0.48571,0.49796,0.5102,0.52245,0.53469,0.54694,0.55918,0.57143,0.58367,0.59592,0.60816,0.62041,0.63265,0.6449,0.65714,0.66939,0.68163,0.69388,0.70612,0.71837,0.73061,0.74286,0.7551,0.76735,0.77959,0.79184,0.80408,0.81633,0.82857,0.84082,0.85306,0.86531,0.87755,0.8898,0.90204,0.91429,0.92653,0.93878,0.95102,0.96327,0.97551,0.98776,1};
