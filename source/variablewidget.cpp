@@ -77,7 +77,7 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin);
     mDetectionVariables.averageWidth         = mDetectionVariables.predictionCircumference / M_PI;
     mDetectionVariables.averageHeight        = mDetectionVariables.predictionCircumference / M_PI;
-    mDetectionVariables.averageIntensity     = 255;
+    mDetectionVariables.averageIntensity     = 60;
 
     mDetectionVariables.offsetCircumference = 0.5 * (mDetectionParameters.circumferenceMax - mDetectionParameters.circumferenceMin);
 

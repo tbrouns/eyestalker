@@ -151,183 +151,170 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
     return glintAOI;
 }
 
-AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties innerAOI, AOIProperties glintAOI)
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties innerAOI, AOIProperties glintAOI, int haarOffset)
 {
-    int stepSize = 2;
+    int stepSize = 1;
 
     innerAOI.xPos = 0;
     innerAOI.yPos = 0;
     
-    double minPupilIntensity = std::numeric_limits<double>::max(); // set to maximum
+    int innerArea = (innerAOI.wdth - 1) * (innerAOI.hght - 1);
     
-    int innerAOIArea = (innerAOI.wdth - 1) * (innerAOI.hght - 1);
-    
-    for (int y = 0; y < searchAOI.hght - innerAOI.hght; y = y + stepSize)
+    int wdth = searchAOI.wdth - innerAOI.wdth;
+    int hght = searchAOI.hght - innerAOI.hght;
+
+    double pixelWdth = wdth;
+    double pixelHght = hght;
+    int pixelTotal = ceil(pixelWdth / stepSize) * ceil(pixelHght / stepSize);
+
+    std::vector<double> intensities(pixelTotal);
+    std::vector<double>   contrasts(pixelTotal);
+
+    for (int iRow = 0, k = 0; iRow < hght; iRow = iRow + stepSize)
     {
-        for (int x = 0; x < searchAOI.wdth - innerAOI.wdth; x = x + stepSize)
+        for (int iCol = 0; iCol < wdth; iCol = iCol + stepSize)
         {
             // vertices of inner square
             
-            int topLeftX = x;
-            int topLeftY = y;
+            int xTopLeft = iCol;
+            int yTopLeft = iRow;
             
-            int backRightX = topLeftX + (innerAOI.wdth  - 1);
-            int backRightY = topLeftY + (innerAOI.hght - 1);
+            int xBtmRght = xTopLeft + innerAOI.wdth - 1;
+            int yBtmRght = yTopLeft + innerAOI.hght - 1;
             
-            int topLeftIndex  = searchAOI.wdth * topLeftY + topLeftX;
-            int topRghtIndex  = topLeftIndex + (innerAOI.wdth  - 1);
-            int backLeftIndex = topLeftIndex + (innerAOI.hght - 1) * searchAOI.wdth;
-            int backRghtIndex = topRghtIndex + backLeftIndex - topLeftIndex;
+            int iTopLeft = searchAOI.wdth * yTopLeft + xTopLeft;
+            int iTopRght = searchAOI.wdth * yTopLeft + xBtmRght;
+            int iBtmLeft = searchAOI.wdth * yBtmRght + xTopLeft;
+            int iBtmRght = searchAOI.wdth * yBtmRght + xBtmRght;
             
             // calculate glint intensity
             
             double glintIntensity = 0.0;
             double glintArea = 0.0;
             
-            bool glintWithinHaarDetector = false; // flag for glint overlap
+            bool GLINT_OVERLAP = false; // flag for glint overlap
             
-            std::vector<int> z(4);
-            z[0] = 0;
-            z[1] = 0;
-            z[2] = glintAOI.wdth;
-            z[3] = glintAOI.wdth;
+            int xTopLeftGlint = glintAOI.xPos;
+            int yTopLeftGlint = glintAOI.yPos;
+            int xBtmRghtGlint = glintAOI.xPos + glintAOI.wdth - 1;
+            int yBtmRghtGlint = glintAOI.yPos + glintAOI.hght - 1;
+
+            std::vector<int> X(2);
+            X[0] = xTopLeftGlint;
+            X[1] = xBtmRghtGlint;
+
+            std::vector<int> Y(2);
+            Y[0] = yTopLeftGlint;
+            Y[1] = yBtmRghtGlint;
             
             // check if glint overlaps with Haar detector
-            
-            for (int m = 0; m < 4; m++)
+
+            for (int i = 0; i < 2; i++)
             {
-                int n = (m + 1) % 4;
-                
-                if (glintAOI.xPos + z[m] >= topLeftX && glintAOI.xPos + z[m] <= backRightX)
+                for (int j = 0; j < 2; j++)
                 {
-                    if (glintAOI.yPos + z[n] >= topLeftY && glintAOI.yPos + z[n] <= backRightY)
-                    {
-                        glintWithinHaarDetector = true;
-                        break;
-                    }
+                    if
+                            (X[i] > xTopLeft &&
+                             X[i] < xBtmRght &&
+                             Y[j] > yTopLeft &&
+                             Y[j] < yBtmRght) { GLINT_OVERLAP = true; }
                 }
             }
-            
-            if (glintWithinHaarDetector) // if yes, check how much it overlaps
+
+            if (GLINT_OVERLAP) // if yes, check how much it overlaps
             {
-                bool glintOverlapsLeftEdge   = false;
-                bool glintOverlapsRightEdge  = false;
-                bool glintOverlapsTopEdge    = false;
-                bool glintOverlapsBottomEdge = false;
-                
-                if (glintAOI.xPos < topLeftX)
-                {
-                    glintOverlapsLeftEdge = true;
-                }
-                else if (glintAOI.xPos + glintAOI.wdth > backRightX)
-                {
-                    glintOverlapsRightEdge = true;
-                }
-                
-                if (glintAOI.yPos < topLeftY)
-                {
-                    glintOverlapsTopEdge = true;
-                }
-                else if (glintAOI.yPos + glintAOI.wdth > backRightY)
-                {
-                    glintOverlapsBottomEdge = true;
-                }
-                
+                // Check overlap with edges
+
+                if      (xTopLeftGlint < xTopLeft) { xTopLeftGlint = xTopLeft; } // left edge
+                else if (xBtmRghtGlint > xBtmRght) { xBtmRghtGlint = xBtmRght; } // right edge
+                if      (yTopLeftGlint < yTopLeft) { yTopLeftGlint = yTopLeft; } // top edge
+                else if (yBtmRghtGlint > yBtmRght) { yBtmRghtGlint = yBtmRght; } // bottom edge
+
                 // coordinates of corners of glint square
-                int glintTopLeftIndex  = searchAOI.wdth *  glintAOI.yPos + glintAOI.xPos;
-                int glintTopRghtIndex  = searchAOI.wdth *  glintAOI.yPos + glintAOI.xPos  + glintAOI.wdth;
-                int glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
-                int glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                
-                // check if glint square overlaps with edge or corner of pupil square
-                
-                // check edge overlap
-                
-                if (!glintOverlapsLeftEdge && !glintOverlapsRightEdge && glintOverlapsTopEdge) // top edge
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos;
-                    glintTopRghtIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos + glintAOI.wdth;
-                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                
-                if (!glintOverlapsLeftEdge && !glintOverlapsRightEdge && glintOverlapsBottomEdge) // bottom edge
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
-                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
-                    glintBackLeftIndex = searchAOI.wdth * backRightY + glintAOI.xPos;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                
-                if (glintOverlapsLeftEdge && !glintOverlapsTopEdge && !glintOverlapsBottomEdge) // left edge
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + topLeftX;
-                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
-                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + topLeftX;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                if (glintOverlapsRightEdge && !glintOverlapsTopEdge && !glintOverlapsBottomEdge) // right edge
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
-                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + backRightX;
-                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                // check corner overlap
-                
-                if (glintOverlapsLeftEdge && glintOverlapsTopEdge) // top left corner
-                {
-                    glintTopLeftIndex  = topLeftIndex;
-                    glintTopRghtIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos + glintAOI.wdth;
-                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + topLeftX;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                if (glintOverlapsRightEdge && glintOverlapsTopEdge) // top right corner
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * topLeftY + glintAOI.xPos;
-                    glintTopRghtIndex  = topRghtIndex ;
-                    glintBackLeftIndex = searchAOI.wdth * (glintAOI.yPos + glintAOI.wdth) + glintAOI.xPos;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                if (glintOverlapsLeftEdge && glintOverlapsBottomEdge) // bottom left corner
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + topLeftX;
-                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos + glintAOI.wdth;
-                    glintBackLeftIndex = backLeftIndex;
-                    glintBackRghtIndex = glintTopRghtIndex + glintBackLeftIndex - glintTopLeftIndex;
-                }
-                
-                if (glintOverlapsRightEdge && glintOverlapsBottomEdge) // bottom right corner
-                {
-                    glintTopLeftIndex  = searchAOI.wdth * glintAOI.yPos + glintAOI.xPos;
-                    glintTopRghtIndex  = searchAOI.wdth * glintAOI.yPos + backRightX;
-                    glintBackLeftIndex = searchAOI.wdth * backRightY + glintAOI.xPos;
-                    glintBackRghtIndex = backRghtIndex;
-                }
+
+                int iTopLeftGlint = searchAOI.wdth * yTopLeftGlint + xTopLeftGlint;
+                int iTopRghtGlint = searchAOI.wdth * yTopLeftGlint + xBtmRghtGlint;
+                int iBtmLeftGlint = searchAOI.wdth * yBtmRghtGlint + xTopLeftGlint;
+                int iBtmRghtGlint = searchAOI.wdth * yBtmRghtGlint + xBtmRghtGlint;
                 
                 // calculate area and intensity of glint
-                glintIntensity = I[glintBackRghtIndex] - I[glintBackLeftIndex] - I[glintTopRghtIndex] + I[glintTopLeftIndex];
-                glintArea      = (glintTopRghtIndex - glintTopLeftIndex) * ((glintBackLeftIndex - glintTopLeftIndex) / searchAOI.wdth);
+
+                glintIntensity = I[iBtmRghtGlint] - I[iBtmLeftGlint] - I[iTopRghtGlint] + I[iTopLeftGlint];
+
+                int glintWdth = xBtmRghtGlint - xTopLeftGlint;
+                int glintHght = yBtmRghtGlint - yTopLeftGlint;
+                glintArea = glintWdth * glintHght;
             }
             
-            // calculate average pupil intensity, adjusting for glint
+            // calculate average pupil intensity
             
-            double pupilIntensity = ((I[backRghtIndex] - I[backLeftIndex] - I[topRghtIndex] + I[topLeftIndex]) - glintIntensity) / (innerAOIArea - glintArea);
-            
-            if (pupilIntensity < minPupilIntensity)
-            {
-                innerAOI.xPos = topLeftX;
-                innerAOI.yPos = topLeftY;
-                minPupilIntensity = pupilIntensity;
-            }
+            int xTopLeftOuter = xTopLeft - haarOffset;
+            int yTopLeftOuter = yTopLeft - haarOffset;
+            int xBtmRghtOuter = xBtmRght + haarOffset;
+            int yBtmRghtOuter = yBtmRght + haarOffset;
+
+            if (xTopLeftOuter <  0) { xTopLeftOuter = 0; }
+            if (yTopLeftOuter <  0) { yTopLeftOuter = 0; }
+            if (xBtmRghtOuter >= searchAOI.wdth) { xBtmRghtOuter = searchAOI.wdth - 1; }
+            if (yBtmRghtOuter >= searchAOI.hght) { yBtmRghtOuter = searchAOI.hght - 1; }
+
+            int outerWdth = xBtmRghtOuter - xTopLeftOuter;
+            int outerHght = yBtmRghtOuter - yTopLeftOuter;
+            int outerArea = outerWdth * outerHght;
+
+            int iTopLeftOuter = searchAOI.wdth * yTopLeftOuter + xTopLeftOuter;
+            int iTopRghtOuter = searchAOI.wdth * yTopLeftOuter + xBtmRghtOuter;
+            int iBtmLeftOuter = searchAOI.wdth * yBtmRghtOuter + xTopLeftOuter;
+            int iBtmRghtOuter = searchAOI.wdth * yBtmRghtOuter + xBtmRghtOuter;
+
+            double intensityInner = I[iBtmRght]      - I[iBtmLeft]      - I[iTopRght]      + I[iTopLeft];
+            double intensityOuter = I[iBtmRghtOuter] - I[iBtmLeftOuter] - I[iTopRghtOuter] + I[iTopLeftOuter];
+
+            intensityOuter = intensityOuter - intensityInner;
+            intensityInner = intensityInner - glintIntensity; // adjust for glint
+
+            intensityOuter = intensityOuter / (outerArea - innerArea); // calculate mean pixel brightness
+            intensityInner = intensityInner / (innerArea - glintArea);
+
+            intensities[k] = intensityInner;
+            contrasts[k]   = intensityOuter / intensityInner;
+            k++;
         }
     }
+
+    // Determine most likely pupil position
+
+    double intensityMin  = *std::min_element(std::begin(intensities), std::end(intensities));
+    double intensityMean = calculateMean(intensities);
+
+    double contrastMax  = *std::max_element(std::begin(contrasts), std::end(contrasts));
+    double contrastMean = calculateMean(contrasts);
+
+    double intensitySlope  = 1 / (intensityMin - intensityMean);
+    double intensityOffset = -intensitySlope * intensityMean;
+
+    double contrastSlope  = 1 / (contrastMax - contrastMean);
+    double contrastOffset = -contrastSlope * contrastMean;
+
+    int centreIndex = 0;
+    double scoreMaximum = 0;
+    for (int iPixel = 0; iPixel < pixelTotal; iPixel++)
+    {
+        double intensityScore = intensitySlope * intensities[iPixel] + intensityOffset;
+        double  contrastScore =  contrastSlope *   contrasts[iPixel] +  contrastOffset;
+
+        double score = intensityScore + contrastScore;
+
+
+        if (score > scoreMaximum)
+        {
+            centreIndex = iPixel * stepSize;
+            scoreMaximum = score;
+        }
+    }
+
+    innerAOI.xPos =  centreIndex % wdth;
+    innerAOI.yPos = (centreIndex - innerAOI.xPos) / hght;
 
     return innerAOI;
 }
@@ -1581,6 +1568,7 @@ std::vector<int> edgeClassification(detectionProperties mDetectionProperties, co
     int numEdges    = vEdgePropertiesAll.size();
     if (numEdgesMax > numEdges) { numEdgesMax = numEdges; }
 
+
     // Classify edges based on score
 
     std::vector<double> totalScores(numEdges);
@@ -1624,7 +1612,10 @@ std::vector<int> edgeClassification(detectionProperties mDetectionProperties, co
         double factor = scoreFactorIntensity + USE_PRIOR_POSITION * scoreFactorRadius + USE_PRIOR_FEATURES * (scoreFactorCurvature + scoreFactorCircumference);
         factor = factor / norm; // equal 1 if all priors are active
 
-        if (totalScores[iEdge] >= factor * mDetectionProperties.p.scoreThreshold) { pupilEdges.push_back(iEdge); }
+        if ((!USE_PRIOR_POSITION && !USE_PRIOR_FEATURES) || totalScores[iEdge] >= factor * mDetectionProperties.p.scoreThreshold)
+        {
+            pupilEdges.push_back(iEdge);
+        }
     }
 
     int numEdgesNew = pupilEdges.size();
@@ -2111,7 +2102,7 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         glintAOI.xPos = searchAOI.xPos + glintAOI.xPos;
         glintAOI.yPos = searchAOI.yPos + glintAOI.yPos;
 
-        innerAOI      = detectPupilApprox(integralImage, searchAOI, innerAOI, glintAOI);
+        innerAOI      = detectPupilApprox(integralImage, searchAOI, innerAOI, glintAOI, mDetectionProperties.p.haarOffset);
         innerAOI.xPos = searchAOI.xPos + innerAOI.xPos;
         innerAOI.yPos = searchAOI.yPos + innerAOI.yPos;
 
@@ -2450,8 +2441,8 @@ detectionProperties pupilDetection(const cv::Mat& imageOriginalBGR, detectionPro
         mDetectionPropertiesNew.v.certaintyPosition = 1 / (1 + exp(-slopeCertainty * (mDetectionPropertiesNew.v.certaintyPosition - 0.5)));
         mDetectionPropertiesNew.v.certaintyFeatures = 1 / (1 + exp(-slopeCertainty * (mDetectionPropertiesNew.v.certaintyFeatures - 0.5)));
 
-        double curvatureOffsetMax = 0.5 * (mDetectionProperties.p.circumferenceMax - mDetectionProperties.p.circumferenceMin);
-        mDetectionPropertiesNew.v.offsetCircumference = mDetectionPropertiesNew.v.offsetCircumference + (curvatureOffsetMax - mDetectionPropertiesNew.v.offsetCircumference) * mDetectionProperties.p.alphaAverage;
+        double circumferenceOffsetMax = 0.5 * (mDetectionProperties.p.circumferenceMax - mDetectionProperties.p.circumferenceMin);
+        mDetectionPropertiesNew.v.offsetCircumference = mDetectionPropertiesNew.v.offsetCircumference + (circumferenceOffsetMax - mDetectionPropertiesNew.v.offsetCircumference) * mDetectionProperties.p.alphaAverage;
     }
     else // pupil detected
     {
