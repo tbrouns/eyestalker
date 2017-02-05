@@ -47,7 +47,6 @@ private:
     QLabel *CircumferenceMinLabel;
     QLabel *CircumferenceMaxLabel;
     QLabel *AspectRatioMinLabel;
-    QLabel *HaarOffsetLabel;
     QLabel *ThresholdCircumferenceLabel;
     QLabel *ThresholdAspectRatioLabel;
     QLabel *ThresholdDisplacementLabel;
@@ -57,7 +56,6 @@ private:
     QSlider *CannyKernelSizeSlider;
     QSlider *EllipseFitNumberMaximumSlider;
     QSlider *GlintSizeSlider;
-    QSlider *HaarOffsetSlider;
 
     SliderDouble *AlphaFeaturesSlider;
     SliderDouble *AlphaMomentumSlider;
@@ -98,7 +96,6 @@ private slots:
     void setCircumferenceMin        (double);
     void setCircumferenceMax        (double);
     void setAspectRatioMin          (double);
-    void setHaarOffset              (int);
     void setThresholdCircumference  (double);
     void setThresholdAspectRatio    (double);
     void setThresholdDisplacement   (double);

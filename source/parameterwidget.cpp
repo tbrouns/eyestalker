@@ -175,15 +175,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MiscParametersTextBox->setText("<b>Miscellaneous</b>");
     MiscParametersTextBox->setAlignment(Qt::AlignCenter);
 
-    QLabel *HaarOffsetTextBox = new QLabel;
-    HaarOffsetTextBox->setText("<b>Haar-offset:</b>");
-
-    HaarOffsetLabel  = new QLabel;
-    HaarOffsetSlider = new QSlider;
-    HaarOffsetSlider->setRange(0, 50);
-    HaarOffsetSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(HaarOffsetSlider, SIGNAL(valueChanged(int)), this, SLOT(setHaarOffset(int)));
-
     QLabel *GlintSizeTextBox = new QLabel;
     GlintSizeTextBox->setText("<b>Glint size:</b>");
 
@@ -276,7 +267,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdCircumferenceTextBox,    17, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdAspectRatioTextBox,      18, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(HaarOffsetTextBox,                20, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(GlintSizeTextBox,                 21, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CurvatureOffsetTextBox,           22, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdScoreTextBox,            23, 0, 1, 1, Qt::AlignRight);
@@ -303,7 +293,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdCircumferenceSlider,    17, 1);
     MainLayout->addWidget(ThresholdAspectRatioSlider,      18, 1);
     MainLayout->addWidget(TitleMiscTextBox,                19, 1, 1, 1, Qt::AlignCenter);
-    MainLayout->addWidget(HaarOffsetSlider,                20, 1);
     MainLayout->addWidget(GlintSizeSlider,                 21, 1);
     MainLayout->addWidget(CurvatureOffsetSlider,           22, 1);
     MainLayout->addWidget(ThresholdScoreSlider,            23, 1);
@@ -329,7 +318,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdCircumferenceLabel,   17, 2);
     MainLayout->addWidget(ThresholdAspectRatioLabel,     18, 2);
 
-    MainLayout->addWidget(HaarOffsetLabel,               20, 2);
     MainLayout->addWidget(GlintSizeLabel,                21, 2);
     MainLayout->addWidget(CurvatureOffsetLabel,          22, 2);
     MainLayout->addWidget(ThresholdScoreLabel,           23, 2);
@@ -414,9 +402,6 @@ void ParameterWidget::reset()
 
     ThresholdScoreSlider->setDoubleValue(mDetectionParameters.scoreThreshold);
     ThresholdScoreLabel ->setText(QString::number(mDetectionParameters.scoreThreshold, 'f', 2));
-
-    HaarOffsetSlider->setValue(mDetectionParameters.haarOffset);
-    HaarOffsetLabel ->setText(QString::number(mDetectionParameters.haarOffset));
 
     GlintSizeSlider->setValue(round(0.5 * mDetectionParameters.glintWdth));
     GlintSizeLabel->setText(QString::number(mDetectionParameters.glintWdth));
@@ -550,12 +535,6 @@ void ParameterWidget::setThresholdScore(double value)
 {
     mDetectionParameters.scoreThreshold = value;
     ThresholdScoreLabel->setText(QString::number(value, 'f', 2));
-}
-
-void ParameterWidget::setHaarOffset(int value)
-{
-    mDetectionParameters.haarOffset = value;
-    HaarOffsetLabel->setText(QString::number(value));
 }
 
 void ParameterWidget::setGlintSize(int value)

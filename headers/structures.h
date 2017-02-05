@@ -111,7 +111,6 @@ struct detectionParameters
     double cannyThresholdHigh;
     int ellipseFitNumberMaximum;
     int glintWdth;
-    int haarOffset;
     bool DETECTION_ON;
 };
 

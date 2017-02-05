@@ -83,7 +83,6 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
     mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
     mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
-    mDetectionParameters.haarOffset                         = settings.value(prefix + "HaarOffset",                      parameters[16]).toInt();
     mDetectionParameters.changeThresholdCircumference       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
     mDetectionParameters.changeThresholdAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.changeThresholdPosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
@@ -155,7 +154,6 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "EllipseFitErrorMaximum",         mDetectionParameters.ellipseFitErrorMaximum);
     settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
     settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);
-    settings.setValue(prefix + "HaarOffset",                     mDetectionParameters.haarOffset);
     settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.changeThresholdCircumference);
     settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.changeThresholdAspectRatio);
     settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.changeThresholdPosition);

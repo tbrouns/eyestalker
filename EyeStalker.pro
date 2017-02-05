@@ -26,11 +26,18 @@ CONFIG += c++11
 
 unix {
 
+# optimization
+
 QMAKE_CXXFLAGS += -O3
 QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS   += -fopenmp
+
+# default
+
 QMAKE_LFLAGS   += -Wl,-rpath,"'\$$ORIGIN'"
+
+# libraries
 
 # LibUSB
  INCLUDEPATH += /usr/local/include/libusb-1.0/

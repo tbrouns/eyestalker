@@ -34,7 +34,7 @@ const std::vector<double> parametersEye  =  {0.05,  // Alpha average
                                               320,  // Circumference max
                                                60,  // Circumference min
                                               0.4,  // Aspect ratio min
-                                               20,  // Haar offset
+                                               20,  // Haar offset (no longer used)
                                                15,  // Circumference change threshold
                                              0.12,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold

@@ -39,7 +39,6 @@ const int cameraFrameRateUpperLimit = 500;
 
 const bool DETECT_BEAD      = false;
 
-const double pupilHaarReductionFactor = 0.75;
 const double pupilImageFactor = 1.15;
 
 // Edge processing
