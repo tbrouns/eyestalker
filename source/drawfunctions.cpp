@@ -15,30 +15,35 @@
 
 #include "headers/drawfunctions.h"
 
-void drawAOI(cv::Mat& I, AOIProperties mAOI, cv::Vec3b col)
+void drawAOI(cv::Mat& I, const AOIProperties &mAOI, const cv::Vec3b &col)
 {
     int imgWdth = I.cols;
     int imgHght = I.rows;
 
-    if (mAOI.xPos < 0) { mAOI.xPos = 0; }
-    if (mAOI.yPos < 0) { mAOI.yPos = 0; }
-    if (mAOI.xPos + mAOI.wdth >= imgWdth) { mAOI.wdth = imgWdth - mAOI.xPos - 1; }
-    if (mAOI.yPos + mAOI.hght >= imgHght) { mAOI.hght = imgHght - mAOI.yPos - 1; }
+    int AOIXPos = mAOI.xPos;
+    int AOIYPos = mAOI.yPos;
+    int AOIWdth = mAOI.wdth;
+    int AOIHght = mAOI.hght;
 
-    for (int x = mAOI.xPos; x < mAOI.xPos + mAOI.wdth; x++) // left to right
+    if (AOIXPos < 0) { AOIXPos = 0; }
+    if (AOIYPos < 0) { AOIYPos = 0; }
+    if (AOIXPos + AOIWdth >= imgWdth) { AOIWdth = imgWdth - AOIXPos - 1; }
+    if (AOIYPos + AOIHght >= imgHght) { AOIHght = imgHght - AOIYPos - 1; }
+
+    for (int x = AOIXPos; x < AOIXPos + AOIWdth; x++) // left to right
     {
-        I.at<cv::Vec3b>(mAOI.yPos,             x) = col; // top
-        I.at<cv::Vec3b>(mAOI.yPos + mAOI.hght, x) = col; // bottom
+        I.at<cv::Vec3b>(AOIYPos,           x) = col; // top
+        I.at<cv::Vec3b>(AOIYPos + AOIHght, x) = col; // bottom
     }
 
-    for (int y = mAOI.yPos; y < mAOI.yPos + mAOI.hght; y++) // top to bottom
+    for (int y = AOIYPos; y < AOIYPos + AOIHght; y++) // top to bottom
     {
-        I.at<cv::Vec3b>(y, mAOI.xPos)             = col; // left
-        I.at<cv::Vec3b>(y, mAOI.xPos + mAOI.wdth) = col; // right
+        I.at<cv::Vec3b>(y, AOIXPos)           = col; // left
+        I.at<cv::Vec3b>(y, AOIXPos + AOIWdth) = col; // right
     }
 }
 
-void drawEdges(cv::Mat& I, const std::vector<int>& edgeIndices, AOIProperties mAOI, const cv::Vec3b& col)
+void drawEdges(cv::Mat& I, const AOIProperties& mAOI, const cv::Vec3b& col, const std::vector<int>& edgeIndices)
 {
     int numEdgePoints = edgeIndices.size();
 
@@ -55,7 +60,7 @@ void drawEdges(cv::Mat& I, const std::vector<int>& edgeIndices, AOIProperties mA
     }
 }
 
-void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesAll, AOIProperties mAOI, const cv::Vec3b& colour_1, const cv::Vec3b& colour_2, const cv::Vec3b&  colour_3)
+void drawOutline(cv::Mat& I, const AOIProperties& mAOI, const cv::Vec3b& colour_1, const cv::Vec3b& colour_2, const cv::Vec3b&  colour_3, const std::vector<edgeProperties>& vEdgePropertiesAll)
 {
     int numEdges = vEdgePropertiesAll.size();
 
@@ -84,7 +89,7 @@ void drawOutline(cv::Mat& I, const std::vector<edgeProperties>& vEdgePropertiesA
     }
 }
 
-void drawEllipse(cv::Mat& I, const std::vector<double>& c, AOIProperties mAOI, const cv::Vec3b& col)
+void drawEllipse(cv::Mat& I, const AOIProperties& mAOI, const cv::Vec3b& col, const std::vector<double>& c)
 {
     int c_size = c.size();
 
@@ -110,35 +115,38 @@ void drawEllipse(cv::Mat& I, const std::vector<double>& c, AOIProperties mAOI, c
     }
 }
 
-void drawEllipseCross(cv::Mat& I, double cx, double cy, int ellipseDrawCrossSize, const cv::Vec3b& col)
+void drawCross(cv::Mat& I, double crossX, double crossY, int ellipseDrawCrossSize, const cv::Vec3b& col)
 {
     int wdth = I.cols;
     int hght = I.rows;
 
-    for (int x = round(cx) - ellipseDrawCrossSize; x <= round(cx) + ellipseDrawCrossSize; x++)
+    if (crossX >= 0 && crossX < wdth && crossY >= 0 && crossY < hght)
     {
-        int X = x;
-        int Y = round(cy);
-
-        if (X >= 0 && X < wdth)
+        for (int x = crossX - ellipseDrawCrossSize; x <= crossX + ellipseDrawCrossSize; x++)
         {
-            I.at<cv::Vec3b>(Y, X) = col;
+            int X = x;
+            int Y = crossY;
+
+            if (X >= 0 && X < wdth)
+            {
+                I.at<cv::Vec3b>(Y, X) = col;
+            }
         }
-    }
 
-    for (int y = round(cy) - ellipseDrawCrossSize; y <= round(cy) + ellipseDrawCrossSize; y++)
-    {
-        int X = round(cx);
-        int Y = y;
-
-        if (Y >= 0 && Y < hght)
+        for (int y = crossY - ellipseDrawCrossSize; y <= crossY + ellipseDrawCrossSize; y++)
         {
-            I.at<cv::Vec3b>(Y, X) = col;
+            int X = crossX;
+            int Y = y;
+
+            if (Y >= 0 && Y < hght)
+            {
+                I.at<cv::Vec3b>(Y, X) = col;
+            }
         }
     }
 }
 
-void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
+void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
 {
     cv::Vec3b blue  (255,   0,   0);
     cv::Vec3b green (  0, 255,   0);
@@ -152,25 +160,25 @@ void drawAll(cv::Mat &I, detectionProperties mDetectionProperties)
     {
         if (Parameters::drawFlags.haar)
         {
-            drawAOI(I, mDetectionProperties.m.outerAOI, blue);
-            drawAOI(I, mDetectionProperties.m.innerAOI, blue);
-            drawAOI(I, mDetectionProperties.m.glintAOI, blue);
+            drawAOI(I, mDrawVariables.outerAOI, blue);
+            drawAOI(I, mDrawVariables.innerAOI, blue);
+            drawAOI(I, mDrawVariables.glintAOI, blue);
         }
 
         if (Parameters::drawFlags.edge)
         {
-            drawEdges  (I, mDetectionProperties.m.cannyEdgeIndices,  mDetectionProperties.m.outerAOI, red);
-            drawOutline(I, mDetectionProperties.m.edgePropertiesAll, mDetectionProperties.m.outerAOI, green, yellow, orange);
+            drawEdges  (I, mDrawVariables.outerAOI, red, mDrawVariables.cannyEdgeIndices);
+            drawOutline(I, mDrawVariables.outerAOI, green, yellow, orange, mDrawVariables.edgePropertiesAll);
         }
 
-        drawEllipseCross(I, mDetectionProperties.v.predictionXPos, mDetectionProperties.v.predictionYPos, Parameters::ellipseDrawCrossSize, cyan);
+        drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
 
         if (Parameters::drawFlags.elps)
         {
-            if (mDetectionProperties.v.DETECTED)
+            if (mDrawVariables.DETECTED)
             {
-                drawEllipse(I, mDetectionProperties.m.ellipseCoefficients, mDetectionProperties.m.outerAOI, white);
-                drawEllipseCross(I, mDetectionProperties.v.exactXPos, mDetectionProperties.v.exactYPos, Parameters::ellipseDrawCrossSize, white);
+                drawEllipse(I, mDrawVariables.outerAOI, white, mDrawVariables.ellipseCoefficients);
+                drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, white);
             }
         }
 

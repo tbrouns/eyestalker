@@ -17,7 +17,7 @@ class VariableWidget : public QWidget
 
 public:
 
-    void setWidgets(const detectionVariables&);
+    void setWidgets(const dataVariables&);
     detectionVariables getStructure();
     void resetStructure(const detectionParameters&);
 

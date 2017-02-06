@@ -127,8 +127,7 @@ private:
     bool SAVE_POSITION;
     bool SAVE_EYE_IMAGE;
     char currentDate[80];
-    cv::Mat imageCamera;
-    cv::Mat offlineRawEyeImage;
+
     double cameraAOIFractionHghtDefaultLeft;
     double cameraAOIFractionWdthDefaultLeft;
     double cameraAOIFractionXPosDefaultLeft;
@@ -150,8 +149,6 @@ private:
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime;       // in ms
     std::vector<std::vector<double>> timeMatrix;
-    detectionMiscellaneous mDetectionMiscellaneousEye;
-    detectionMiscellaneous mDetectionMiscellaneousBead;
     detectionVariables mDetectionVariablesEye;
     detectionVariables mDetectionVariablesBead;
     int cameraAOIHghtMax;
@@ -213,22 +210,12 @@ private:
     QSpinBox *OfflineTrialSpinBox;
     QSpinBox *TrialIndexSpinBox;
     QString dataDirectoryOffline;
-    QString editSubjectName;
-    QString subjectIdentifier;
+
     QString LastUsedSettingsFileName;
     QTabWidget *MainTabWidget;
     QTimer *UpdateCameraImageTimer;
     QWidget *CameraParametersWidget;
-    QWidget *OfflineModeMainWidget;
-    QWidget *OfflineModeHeaderWidget;
-    SliderDouble *CameraExposureSlider;
-    SliderDouble *CameraFrameRateSlider;
-    SliderDouble *CamEyeAOIHghtSlider;
-    SliderDouble *CamEyeAOIWdthSlider;
-    SliderDouble *CamEyeAOIXPosSlider;
-    SliderDouble *CamEyeAOIYPosSlider;
-    SliderDouble *EyeHghtROISlider;
-    SliderDouble *EyeWdthROISlider;
+
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
     std::condition_variable cvOffline;
@@ -237,38 +224,97 @@ private:
     std::mutex saveMutex;
     std::string dataDirectory;
     std::string dataFilename;
-    std::vector<double> timeStamps;
-    std::vector<detectionMiscellaneous> vDetectionMiscellaneousEye;
-    std::vector<detectionVariables> vDetectionVariablesBead;
-    std::vector<detectionVariables> vDetectionVariablesEye;
-    UEyeOpencvCam mUEyeOpencvCam;
-    unsigned long long absoluteTime; // in units of 0.1 microseconds
-    unsigned long long startTime;
-    void countNumTrials();
-    void countNumImages();
-    void findCamera();
-    void getCameraParameters();
-    detectionParameters loadParameters(QString, QString, std::vector<double> parameters);
-    void loadSettings(QString);
-    void msWait(int ms);
-    void pupilTracking();
-    void resetVariables();
-    void detectAllFrames();
-    void detectCurrentFrame(int);
-    void saveParameters(QString, QString, detectionParameters);
-    void saveSettings(QString);
-    void saveTrialData();
-    void setFlashStandby(bool);
-    void setParameterWidgets();
-    void setVariableWidgets(const detectionVariables &mDetectionVariablesEye);
-    void setupOfflineSession();
-    void startTrialRecording();
+
+    // Interface
+
+    QString subjectIdentifier;
+
+    // AOIs
+
+    SliderDouble *CamEyeAOIHghtSlider;
+    SliderDouble *CamEyeAOIWdthSlider;
+    SliderDouble *CamEyeAOIXPosSlider;
+    SliderDouble *CamEyeAOIYPosSlider;
+
+    SliderDouble *EyeHghtAOISlider;
+    SliderDouble *EyeWdthAOISlider;
+
     void updateCamAOIx();
     void updateCamAOIy();
     void updateEyeAOIx();
     void updateEyeAOIy();
+
+    // Camera interface
+
+    SliderDouble *CameraExposureSlider;
+    SliderDouble *CameraFrameRateSlider;
+
+    // Camera functions and variables
+
+    cv::Mat imageCamera;
+
+    UEyeOpencvCam mUEyeOpencvCam;
+
+    void findCamera();
+    void getCameraParameters();
+
+    // Structures
+
+    std::vector<detectionVariables> vDetectionVariablesBead;
+    std::vector<detectionVariables> vDetectionVariablesEye;
+    std::vector<dataVariables> vDataVariables;
+    std::vector<dataVariables> vDataVariablesBead;
+    drawVariables mDrawVariables;
+    dataVariables mDataVariables;
+    drawVariables mDrawVariablesBead;
+    dataVariables mDataVariablesBead;
+
+    // Saving and loading settings
+
+    detectionParameters loadParameters(QString, QString, std::vector<double> parameters);
+    void saveParameters(QString, QString, detectionParameters);
+    void loadSettings(QString);
+    void saveSettings(QString);
+
+    // Setting parameters
+
+    void setParameterWidgets();
+    void setVariableWidgets(const detectionVariables &mDetectionVariablesEye);
+    void resetVariables();
+
+    // Threads
+
+    void pupilTracking();
+
+    // Experimental
+
+    unsigned long long absoluteTime; // in units of 0.1 microseconds
+    unsigned long long startTime;
+
+    void startTrialRecording();
+    void saveTrialData();
+    void setFlashStandby(bool);
+
+    // Offline interface
+
+    QWidget *OfflineModeMainWidget;
+    QWidget *OfflineModeHeaderWidget;
+
+    // Offline functions and variables
+
+    void countNumTrials();
+    void countNumImages();
+
+    void setupOfflineSession();
     void updateOfflineTrial();
-    void writeToFile(std::ofstream& file, const std::vector<bool>&, const std::vector<double>&, std::string);
+
+    void detectCurrentFrame(int);
+    void detectAllFrames();
+
+
+    // General
+
+    void msWait(int ms);
 
 protected:
 
@@ -299,7 +345,7 @@ private slots:
     void onSaveTrialData();
     void onSetOfflineImage(int);
     void onSetOfflineMode(int);
-    void onSetTrialIndexOffline(int);
+    void onSetTrialOffline(int);
     void onDirectorySelect();
     void onSetAOIEyeLeft();
     void onSetAOIEyeRght();

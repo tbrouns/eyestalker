@@ -30,7 +30,7 @@ void MainWindow::loadSettings(QString filename)
     dataFilename                    = settings.value("DataFilename",                "experiment_data").toString().toStdString();
     trialIndexOffline               = settings.value("trialIndexOffline",           0).toInt();
     imageTotalOffline               = settings.value("imageTotalOffline",           0).toInt();
-    editSubjectName                 = settings.value("SubjectName",                 "").toString();
+    subjectIdentifier               = settings.value("SubjectName",                 "").toString();
     eyeAOIHghtFraction              = settings.value("AOIHghtFraction",             1.0).toDouble();
     eyeAOIWdthFraction              = settings.value("AOIWdthFraction",             1.0).toDouble();
     beadAOIHghtFraction             = settings.value("AOIBeadHghtFraction",         0.3).toDouble();
@@ -69,7 +69,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     detectionParameters mDetectionParameters;
     mDetectionParameters.alphaAverage                       = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
     mDetectionParameters.alphaFeatures                      = settings.value(prefix + "AlphaFeatures",                   parameters[1]).toDouble();
-    mDetectionParameters.alphaMomentum                      = settings.value(prefix + "AlphaMomentum",                   parameters[2]).toDouble();
+    mDetectionParameters.alphaCertainty                     = settings.value(prefix + "AlphaCertainty",                  parameters[2]).toDouble();
     mDetectionParameters.alphaPosition                      = settings.value(prefix + "AlphaPosition",                   parameters[3]).toDouble();
     mDetectionParameters.cannyBlurLevel                     = settings.value(prefix + "CannyBlurLevel",                  parameters[4]).toInt();
     mDetectionParameters.cannyKernelSize                    = settings.value(prefix + "CannyKernelSize",                 parameters[5]).toInt();
@@ -83,11 +83,11 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
     mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
     mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
+    mDetectionParameters.circumferenceOffset                = settings.value(prefix + "CircumferenceOffset",             parameters[16]).toDouble();
     mDetectionParameters.changeThresholdCircumference       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
     mDetectionParameters.changeThresholdAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.changeThresholdPosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
     mDetectionParameters.scoreThreshold                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
-    mDetectionParameters.circumferenceOffset                = settings.value(prefix + "CircumferenceOffset",             parameters[21]).toDouble();
 
     return mDetectionParameters;
 }
@@ -140,8 +140,8 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
 
     settings.setValue(prefix + "AlphaAverage",                   mDetectionParameters.alphaAverage);
     settings.setValue(prefix + "AlphaFeatures",                  mDetectionParameters.alphaFeatures);
-    settings.setValue(prefix + "AlphaMomentum",                  mDetectionParameters.alphaMomentum);
     settings.setValue(prefix + "AlphaPosition",                  mDetectionParameters.alphaPosition);
+    settings.setValue(prefix + "AlphaCertainty",                 mDetectionParameters.alphaCertainty);
     settings.setValue(prefix + "CannyBlurLevel",                 mDetectionParameters.cannyBlurLevel);
     settings.setValue(prefix + "CannyKernelSize",                mDetectionParameters.cannyKernelSize);
     settings.setValue(prefix + "CannyThresholdLow",              mDetectionParameters.cannyThresholdLow);

@@ -31,47 +31,47 @@ public:
 
 private:
 
-    QLabel *AlphaFeaturesLabel;
-    QLabel *AlphaMomentumLabel;
     QLabel *AlphaAverageLabel;
-    QLabel *AlphaPositionLabel;
-    QLabel *CannyBlurLevelLabel;
-    QLabel *CannyKernelSizeLabel;
-    QLabel *CannyThresholdLowLabel;
-    QLabel *CannyThresholdHighLabel;
-    QLabel *CurvatureOffsetLabel;
-    QLabel *EdgeLengthFractionLabel;
-    QLabel *EllipseFitNumberMaximumLabel;
-    QLabel *EllipseFitErrorMaximumLabel;
-    QLabel *GlintSizeLabel;
-    QLabel *CircumferenceMinLabel;
-    QLabel *CircumferenceMaxLabel;
-    QLabel *AspectRatioMinLabel;
-    QLabel *ThresholdCircumferenceLabel;
-    QLabel *ThresholdAspectRatioLabel;
-    QLabel *ThresholdDisplacementLabel;
-    QLabel *ThresholdScoreLabel;
-
-    QSlider *CannyBlurLevelSlider;
-    QSlider *CannyKernelSizeSlider;
-    QSlider *EllipseFitNumberMaximumSlider;
-    QSlider *GlintSizeSlider;
-
-    SliderDouble *AlphaFeaturesSlider;
-    SliderDouble *AlphaMomentumSlider;
     SliderDouble *AlphaAverageSlider;
+    QLabel *AlphaCertaintyLabel;
+    SliderDouble *AlphaCertaintySlider;
+    QLabel *AlphaFeaturesLabel;
+    SliderDouble *AlphaFeaturesSlider;
+    QLabel *AlphaPositionLabel;
     SliderDouble *AlphaPositionSlider;
-    SliderDouble *CannyThresholdLowSlider;
-    SliderDouble *CannyThresholdHighSlider;
-    SliderDouble *CurvatureOffsetSlider;
-    SliderDouble *EdgeLengthFractionSlider;
-    SliderDouble *EllipseFitErrorMaximumSlider;
-    SliderDouble *CircumferenceMinSlider;
-    SliderDouble *CircumferenceMaxSlider;
+    QLabel *AspectRatioMinLabel;
     SliderDouble *AspectRatioMinSlider;
-    SliderDouble *ThresholdCircumferenceSlider;
+    QLabel *CannyBlurLevelLabel;
+    QSlider *CannyBlurLevelSlider;
+    QLabel *CannyKernelSizeLabel;
+    QSlider *CannyKernelSizeSlider;
+    QLabel *CannyThresholdHighLabel;
+    SliderDouble *CannyThresholdHighSlider;
+    QLabel *CannyThresholdLowLabel;
+    SliderDouble *CannyThresholdLowSlider;
+    QLabel *CircumferenceMaxLabel;
+    SliderDouble *CircumferenceMaxSlider;
+    QLabel *CircumferenceMinLabel;
+    SliderDouble *CircumferenceMinSlider;
+    QLabel *CircumferenceOffsetLabel;
+    SliderDouble *CircumferenceOffsetSlider;
+    QLabel *CurvatureOffsetLabel;
+    SliderDouble *CurvatureOffsetSlider;
+    QLabel *EdgeLengthFractionLabel;
+    SliderDouble *EdgeLengthFractionSlider;
+    QLabel *EllipseFitErrorMaximumLabel;
+    SliderDouble *EllipseFitErrorMaximumSlider;
+    QLabel *EllipseFitNumberMaximumLabel;
+    QSlider *EllipseFitNumberMaximumSlider;
+    QLabel *GlintSizeLabel;
+    QSlider *GlintSizeSlider;
+    QLabel *ThresholdAspectRatioLabel;
     SliderDouble *ThresholdAspectRatioSlider;
+    QLabel *ThresholdCircumferenceLabel;
+    SliderDouble *ThresholdCircumferenceSlider;
+    QLabel *ThresholdDisplacementLabel;
     SliderDouble *ThresholdDisplacementSlider;
+    QLabel *ThresholdScoreLabel;
     SliderDouble *ThresholdScoreSlider;
 
     detectionParameters mDetectionParameters;
@@ -81,9 +81,9 @@ signals:
 private slots:
 
     void setAlphaFeatures           (double);
-    void setAlphaMomentum           (double);
     void setAlphaAverage            (double);
     void setAlphaPosition           (double);
+    void setAlphaCertainty          (double);
     void setCannyBlurLevel          (int);
     void setCannyKernelSize         (int);
     void setCannyThresholdLow       (double);
@@ -95,6 +95,7 @@ private slots:
     void setGlintSize               (int);
     void setCircumferenceMin        (double);
     void setCircumferenceMax        (double);
+    void setCircumferenceOffset     (double);
     void setAspectRatioMin          (double);
     void setThresholdCircumference  (double);
     void setThresholdAspectRatio    (double);

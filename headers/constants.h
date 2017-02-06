@@ -26,20 +26,11 @@
 
 // Parameter initial values
 
-const double aspectRatioMinIni = 0.4;
-const double aspectRatioIni    = 0.9;
-
-const double fitErrorFraction = 0.05;
-
-// Parameter limits
-
-const int cameraFrameRateUpperLimit = 500;
+const double initialAspectRatio = 0.9;
+const double initialIntensity   = 60;
+const double fitErrorFraction   = 0.05;
 
 // Other
-
-const bool DETECT_BEAD      = false;
-
-const double pupilImageFactor = 1.15;
 
 // Edge processing
 
@@ -56,17 +47,12 @@ const double scoreFactorCircumference = 0.81;
 const double scoreFactorIntensity     = 0.55;
 const double scoreFactorGradient      = 0.00; // needs to be measured still
 
-const double scoreThreshold = 0.3324;
-
 // Functions
 
-const double slopeRadius        = 0.05;
-const double slopeCurvature     = 0.05;
-const double slopeIntensity     = 0.10;
-const double slopeCertainty     = 20.0;
-const double slopeCircumference = 0.10;
+const double certaintyAsymptoteX = 0.50;
+const double certaintyAsymptoteY = 0.99;
 
-const double offsetIntensity     = 25;
-const double offsetCircumference = 75;
+const double certaintyLatency = 10.0; // turn into adjustable parameter.
+
 
 #endif

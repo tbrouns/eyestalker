@@ -13,8 +13,8 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#ifndef PUPILDETECTION
-#define PUPILDETECTION
+#ifndef EYESTALKER
+#define EYESTALKER
 
 // Files
 
@@ -48,14 +48,8 @@
 #include <string>
 #include <vector>
 
-/// general functions
-
-double calculateMean(const std::vector<double>&);
-
-/// eye-tracking functions
-
-detectionProperties pupilDetection(const cv::Mat&, detectionProperties);
+detectionProperties eyeStalker(const cv::Mat&, detectionProperties&, dataVariables &mDataVariables, drawVariables&);
 double flashDetection(const cv::Mat&);
 
-#endif // PUPILDETECTION
+#endif // EYESTALKER
 

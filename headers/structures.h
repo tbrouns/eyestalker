@@ -66,6 +66,8 @@ struct ellipseProperties
 {
     bool DETECTED;
     double fitError;
+    double intensity;
+    double gradient;
     double circumference;
     double aspectRatio;
     double radius;
@@ -85,7 +87,6 @@ struct detectionParameters
     detectionParameters(): DETECTION_ON(false) { }
 
     double alphaFeatures;
-    double alphaMomentum;
     double alphaAverage;
     double alphaPosition;
     double alphaCertainty;
@@ -116,59 +117,70 @@ struct detectionParameters
 
 struct detectionVariables
 {
-    bool DETECTED;
-    double absoluteXPos;
-    double absoluteYPos;
     double averageAspectRatio;
     double averageCircumference;
     double averageHeight;
     double averageWidth;
     double averageIntensity;
     double averageGradient;
+    double certaintyAverage;
     double certaintyFeatures;
     double certaintyPosition;
     double changeThresholdAspectRatio;
     double changeThresholdCircumference;
     double changeThresholdPosition;
     double offsetCircumference;
-    double detectionDuration;
-    double exactAspectRatio;
-    double exactCircumference;
-    double exactXPos;
-    double exactYPos;
     double momentumAspectRatio;
     double momentumCircumference;
     double momentumHeight;
     double momentumWidth;
     double momentumXPos;
     double momentumYPos;
-    double predictionAspectRatio;
-    double predictionCircumference;
-    double predictionHeight;
-    double predictionWidth;
-    double predictionXPos;
-    double predictionYPos;
-    double predictionXPosRelative;
-    double predictionYPosRelative;
+    double predictedAspectRatio;
+    double predictedCircumference;
+    double predictedHeight;
+    double predictedWidth;
+    double predictedXPos;
+    double predictedYPos;
+    double predictedXPosRelative;
+    double predictedYPosRelative;
+    double predictedCurvature;
 };
 
-struct detectionMiscellaneous
+struct dataVariables
 {
-    bool ERROR_DETECTED;
+    bool DETECTED;
+    double absoluteXPos;
+    double absoluteYPos;
+    std::vector<edgeProperties> edgeData;
+    std::vector<ellipseProperties> ellipseData;
+    double duration;
+    double exactAspectRatio;
+    double exactCircumference;
+    double exactXPos;
+    double exactYPos;
+    double timestamp;
+};
+
+struct drawVariables
+{
+    bool DETECTED;
+    int exactXPos;
+    int exactYPos;
+    int predictedXPos;
+    int predictedYPos;
     AOIProperties glintAOI;
     AOIProperties innerAOI;
     AOIProperties outerAOI;
     std::vector<int> cannyEdgeIndices;
     std::vector<double> ellipseCoefficients;
     std::vector<edgeProperties> edgePropertiesAll;
-    std::vector<ellipseProperties> ellipsePropertiesAll;
 };
 
 struct detectionProperties
 {
     detectionParameters     p;
     detectionVariables      v;
-    detectionMiscellaneous  m;
 };
 
 

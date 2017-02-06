@@ -49,9 +49,11 @@ void MainWindow::startTrialRecording()
 
         // preallocate vector space for data
 
+        vDataVariables.resize(trialFrameTotal);
+        vDataVariablesBead.resize(trialFrameTotal);
+
         vDetectionVariablesEye.resize(trialFrameTotal);
         vDetectionVariablesBead.resize(trialFrameTotal);
-        timeStamps.resize(trialFrameTotal, 0);
 
         // create directories if necessary
 
@@ -76,7 +78,6 @@ void MainWindow::startTrialRecording()
             }
 
             directoryName << "/trial_" << trialIndex;
-
             if (!boost::filesystem::exists(directoryName.str()))
             {
                 boost::filesystem::create_directory(directoryName.str().c_str());
@@ -96,22 +97,6 @@ void MainWindow::startTrialRecording()
         ConfirmationWindow mConfirmationWindow(text, false);
         mConfirmationWindow.setWindowTitle("Warning");
         mConfirmationWindow.exec();
-    }
-}
-
-void MainWindow::writeToFile(std::ofstream& file, const std::vector<bool>& vFlags, const std::vector<double>& v, std::string delimiter)
-{
-    int paddingTotal = 0;
-
-    for (int i = 0, vSize = v.size(); i < vSize; i++) // write data
-    {
-        if (vFlags[i]) { file << v[i] << delimiter; }
-        else           { paddingTotal++; }
-    }
-
-    for (int i = 0; i < paddingTotal; i++) // write padding of zeroes
-    {
-        file << 0 << delimiter;
     }
 }
 
@@ -147,23 +132,23 @@ void MainWindow::saveTrialData()
         file << std::fixed;
         file << std::setprecision(3);
 
-        for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].DETECTED << delimiter; }
-        for (int i = 0; i < frameCount; i++) { file << timeStamps[i] << delimiter; } // saving ALL timestamps allows for accurate frame-rate calculation during data processing
+        for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].DETECTED  << delimiter; }
+        for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].timestamp << delimiter; } // saving ALL timestamps allows for accurate frame-rate calculation during data processing
 
         if (SAVE_POSITION)
         {
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].absoluteXPos  << delimiter; }
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].absoluteYPos  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].absoluteXPos  << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].absoluteYPos  << delimiter; }
         }
 
         if (SAVE_CIRCUMFERENCE)
         {
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].exactCircumference << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].exactCircumference << delimiter; }
         }
 
         if (SAVE_ASPECT_RATIO)
         {
-            for (int i = 0; i < frameCount; i++) { file << vDetectionVariablesEye[i].exactAspectRatio << delimiter; }
+            for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].exactAspectRatio << delimiter; }
         }
 
         file.close();
@@ -192,7 +177,7 @@ void MainWindow::saveTrialData()
         file << std::fixed;
         file << std::setprecision(3);
 
-        for (int i = 0; i < frameCount; i++) { file << timeStamps[i] << delimiter; }
+        for (int i = 0; i < frameCount; i++) { file << vDataVariables[i].timestamp << delimiter; }
         
         file.close();
     }

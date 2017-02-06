@@ -17,9 +17,11 @@
 #include "parameters.h"
 #include "structures.h"
 
-void drawEdges(cv::Mat&, const std::vector<int>&, AOIProperties mAOI, const cv::Vec3b&);
-void drawOutline(cv::Mat&, const std::vector<std::vector<int>>&, AOIProperties mAOI, const cv::Vec3b&, const cv::Vec3b&, const cv::Vec3b&);
-void drawEllipse(cv::Mat&, const std::vector<double>&, AOIProperties mAOI, const cv::Vec3b&);
-void drawEllipseCross(cv::Mat&, double, double, const cv::Vec3b&);
-void drawAll(cv::Mat&, detectionProperties);
-void drawAOI(cv::Mat&, AOIProperties, cv::Vec3b);
+#include <iostream>
+
+void drawEdges  (cv::Mat&, const AOIProperties&, const cv::Vec3b&, const std::vector<int>&);
+void drawOutline(cv::Mat&, const AOIProperties&, const cv::Vec3b&, const std::vector<std::vector<int>>&);
+void drawEllipse(cv::Mat&, const AOIProperties&, const cv::Vec3b&, const cv::Vec3b&, const cv::Vec3b&, const std::vector<double>&);
+void drawAOI    (cv::Mat&, const AOIProperties&, const cv::Vec3b&);
+void drawAll    (cv::Mat&, const drawVariables&);
+void drawCross  (cv::Mat&, double, double, const cv::Vec3b&);

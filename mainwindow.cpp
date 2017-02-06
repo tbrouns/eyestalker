@@ -157,20 +157,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Eye AOI sliders
 
-    EyeWdthROISlider = new SliderDouble;
-    EyeWdthROISlider->setPrecision(2);
-    EyeWdthROISlider->setDoubleRange(0, 1.0);
-    EyeWdthROISlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EyeWdthROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeAOIWdth(double)));
+    EyeWdthAOISlider = new SliderDouble;
+    EyeWdthAOISlider->setPrecision(2);
+    EyeWdthAOISlider->setDoubleRange(0, 1.0);
+    EyeWdthAOISlider->setOrientation(Qt::Horizontal);
+    QObject::connect(EyeWdthAOISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeAOIWdth(double)));
 
-    EyeHghtROISlider = new SliderDouble;
-    EyeHghtROISlider->setPrecision(2);
-    EyeHghtROISlider->setDoubleRange(0, 1.0);
-    EyeHghtROISlider->setOrientation(Qt::Vertical);
-    QObject::connect(EyeHghtROISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeAOIHght(double)));
+    EyeHghtAOISlider = new SliderDouble;
+    EyeHghtAOISlider->setPrecision(2);
+    EyeHghtAOISlider->setDoubleRange(0, 1.0);
+    EyeHghtAOISlider->setOrientation(Qt::Vertical);
+    QObject::connect(EyeHghtAOISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEyeAOIHght(double)));
 
-    EyeWdthROISlider->setDoubleValue(eyeAOIWdthFraction);
-    EyeHghtROISlider->setDoubleValue(eyeAOIHghtFraction);
+    EyeWdthAOISlider->setDoubleValue(eyeAOIWdthFraction);
+    EyeHghtAOISlider->setDoubleValue(eyeAOIHghtFraction);
 
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(onCropAOI()));
@@ -326,7 +326,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineTrialSlider->setValue(0);
     OfflineTrialSlider->setOrientation(Qt::Horizontal);
 
-    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(onSetTrialIndexOffline(int)));
+    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(onSetTrialOffline(int)));
 
     QObject::connect( OfflineTrialSlider, SIGNAL(valueChanged(int)), OfflineTrialSpinBox, SLOT(setValue(int)));
     QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)),  OfflineTrialSlider, SLOT(setValue(int)));
@@ -355,9 +355,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraOutputLayout->addWidget(CamQImage, 1, 2, Qt::AlignCenter);
     CameraOutputLayout->addWidget(CamEyeAOIWdthSlider, 2, 2);
     CameraOutputLayout->addWidget(CamEyeAOIHghtSlider, 1, 3);
-    CameraOutputLayout->addWidget(EyeHghtROISlider, 1, 5);
+    CameraOutputLayout->addWidget(EyeHghtAOISlider, 1, 5);
     CameraOutputLayout->addWidget(EyeQImage, 1, 4, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(EyeWdthROISlider, 2, 4);
+    CameraOutputLayout->addWidget(EyeWdthAOISlider, 2, 4);
     CameraOutputLayout->addLayout(OptionsLayout, 4, 2);
     CameraOutputLayout->addLayout(EyeDetectionsLayout, 3, 2);
     CameraOutputLayout->addLayout(DrawFunctionsLayout, 3, 4, Qt::AlignCenter);
@@ -404,7 +404,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraFrameRateDesiredTextBox->setText("<b>Desired frame-rate (Hz): </b>");
 
     CameraFrameRateDesiredSpinBox = new QSpinBox;
-    CameraFrameRateDesiredSpinBox->setRange(0, cameraFrameRateUpperLimit);
+    CameraFrameRateDesiredSpinBox->setRange(0, 500);
     CameraFrameRateDesiredSpinBox->setValue(cameraFrameRateDesired);
     CameraFrameRateDesiredSpinBox->setAlignment(Qt::AlignRight);
 
@@ -866,6 +866,9 @@ void MainWindow::pupilTracking()
     {
         detectionProperties mDetectionPropertiesEyeTemp;
 
+        dataVariables mDataVariablesTemp;
+        drawVariables mDrawVariablesTemp;
+
         AOIProperties flashAOITemp;
 
         flashAOITemp.xPos = 0;
@@ -1002,27 +1005,26 @@ void MainWindow::pupilTracking()
                     FlashThresholdSlider->setMinimum(flashMinIntensity);
                 }
 
-                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal, mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
+                mDetectionPropertiesEyeTemp = eyeStalker(imageOriginal, mDetectionPropertiesEyeTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
             }
         }
         else // Trial recording
         {
             if (!SAVE_EYE_IMAGE)
             {
-                mDetectionPropertiesEyeTemp = pupilDetection(imageOriginal, mDetectionPropertiesEyeTemp); // Pupil tracking algorithm
 
-                mDetectionPropertiesEyeTemp.v.absoluteXPos = mDetectionPropertiesEyeTemp.v.exactXPos + cameraAOIXPos;
-                mDetectionPropertiesEyeTemp.v.absoluteYPos = mDetectionPropertiesEyeTemp.v.exactYPos + cameraAOIYPos;
+                mDetectionPropertiesEyeTemp = eyeStalker(imageOriginal, mDetectionPropertiesEyeTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
 
-                vDetectionVariablesEye[frameCount] = mDetectionPropertiesEyeTemp.v;
-
-                timeStamps[frameCount] = relativeTime; // save time stamps
+                mDataVariablesTemp.absoluteXPos = mDataVariablesTemp.exactXPos + cameraAOIXPos;
+                mDataVariablesTemp.absoluteYPos = mDataVariablesTemp.exactYPos + cameraAOIYPos;
+                mDataVariablesTemp.timestamp    = relativeTime; // save time stamps
+                vDataVariables[frameCount]  = mDataVariablesTemp;
 
                 frameCount++;
             }
             else
             {
-                timeStamps[frameCount] = relativeTime; // save time stamps
+                vDataVariables[frameCount].timestamp = relativeTime; // save time stamps
 
                 // Saving camera frame
 
@@ -1063,8 +1065,9 @@ void MainWindow::pupilTracking()
         {
             std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-            mDetectionVariablesEye     = mDetectionPropertiesEyeTemp.v;
-            mDetectionMiscellaneousEye = mDetectionPropertiesEyeTemp.m;
+            mDetectionVariablesEye = mDetectionPropertiesEyeTemp.v;
+            mDrawVariables         = mDrawVariablesTemp;
+            mDataVariablesTemp         = mDataVariablesTemp;
         }
     }
 
@@ -1097,6 +1100,8 @@ void MainWindow::updateCameraImage()
             if (Parameters::CAMERA_RUNNING)
             {
                 detectionProperties mDetectionPropertiesEyeTemp;
+                drawVariables mDrawVariablesTemp;
+                dataVariables mDataVariablesTemp;
 
                 cv::Mat imageOriginal;
 
@@ -1110,7 +1115,8 @@ void MainWindow::updateCameraImage()
                         imageOriginal = imageCamera.clone();
 
                         mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
-                        mDetectionPropertiesEyeTemp.m = mDetectionMiscellaneousEye;
+                        mDrawVariablesTemp = mDrawVariables;
+                        mDataVariablesTemp = mDataVariables;
 
                          eyeAOITemp = Parameters::eyeAOI;
                         beadAOITemp = Parameters::beadAOI;
@@ -1127,20 +1133,14 @@ void MainWindow::updateCameraImage()
 
                 if (eyeAOITemp.wdth >= eyeAOIWdthMin && eyeAOITemp.hght >= eyeAOIHghtMin)
                 {
-                    if (!mDetectionPropertiesEyeTemp.m.ERROR_DETECTED)
-                    {
-                        cv::Mat imageProcessed = imageOriginal.clone();
-                        drawAll(imageProcessed, mDetectionPropertiesEyeTemp);
-                        EyeQImage->loadImage(imageProcessed);
-                        EyeQImage->setImage();
-                    }
+                    cv::Mat imageProcessed = imageOriginal.clone();
+                    drawAll(imageProcessed, mDrawVariablesTemp);
+                    EyeQImage->loadImage(imageProcessed);
+                    EyeQImage->setImage();
                 }
-                else
-                {
-                    EyeQImage->setAOIError();
-                }
+                else { EyeQImage->setAOIError(); }
 
-                mVariableWidgetEye->setWidgets(mDetectionPropertiesEyeTemp.v); // update sliders
+                mVariableWidgetEye->setWidgets(mDataVariablesTemp); // update sliders
 
                 if (CameraHardwareGainAutoCheckBox->checkState())
                 {
@@ -1389,7 +1389,7 @@ void MainWindow::setPupilPosition(double xPos, double yPos)
 
     if (xPos > 0 && xPos < Parameters::eyeAOI.wdth && yPos > 0 && yPos < Parameters::eyeAOI.hght)
     {
-        mDetectionVariablesEye.predictionXPos = xPos;
-        mDetectionVariablesEye.predictionYPos = yPos;
+        mDetectionVariablesEye.predictedXPos = xPos;
+        mDetectionVariablesEye.predictedYPos = yPos;
     }
 }
