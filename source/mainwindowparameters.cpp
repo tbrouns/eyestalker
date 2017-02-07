@@ -67,7 +67,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     QSettings settings(filename, QSettings::IniFormat);
 
     detectionParameters mDetectionParameters;
-    mDetectionParameters.alphaAverage                       = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
+    mDetectionParameters.alphaAverages                       = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
     mDetectionParameters.alphaFeatures                      = settings.value(prefix + "AlphaFeatures",                   parameters[1]).toDouble();
     mDetectionParameters.alphaCertainty                     = settings.value(prefix + "AlphaCertainty",                  parameters[2]).toDouble();
     mDetectionParameters.alphaPosition                      = settings.value(prefix + "AlphaPosition",                   parameters[3]).toDouble();
@@ -138,7 +138,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
 {
     QSettings settings(filename, QSettings::IniFormat);
 
-    settings.setValue(prefix + "AlphaAverage",                   mDetectionParameters.alphaAverage);
+    settings.setValue(prefix + "AlphaAverage",                   mDetectionParameters.alphaAverages);
     settings.setValue(prefix + "AlphaFeatures",                  mDetectionParameters.alphaFeatures);
     settings.setValue(prefix + "AlphaPosition",                  mDetectionParameters.alphaPosition);
     settings.setValue(prefix + "AlphaCertainty",                 mDetectionParameters.alphaCertainty);

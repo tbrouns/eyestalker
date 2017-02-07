@@ -88,10 +88,11 @@ void MainWindow::countNumImages()
 
 void MainWindow::onLoadSession()
 {
-    dataDirectoryOffline = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    QString dataDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
     if (!dataDirectoryOffline.isEmpty())
     {
+        dataDirectoryOffline = dataDirectoryTemp;
         timeMatrix.clear();
         setupOfflineSession();
     }

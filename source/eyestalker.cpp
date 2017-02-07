@@ -1823,8 +1823,14 @@ std::vector<ellipseProperties> getEllipseFits(const std::vector<edgeProperties>&
             int combiWdth = XPosMax - XPosMin;
             int combiHght = YPosMax - YPosMin;
 
-            if (combiWdth * M_PI > mDetectionProperties.p.circumferenceMax || combiHght * M_PI > mDetectionProperties.p.circumferenceMax) { continue; } // no large ellipse
-            if (combiWdth * M_PI < mDetectionProperties.p.circumferenceMin && combiHght * M_PI < mDetectionProperties.p.circumferenceMin) { continue; } // no small ellipse
+            double circumferenceUpperLimit = mDetectionProperties.v.averageCircumference * mDetectionProperties.v.offsetCircumference;
+            double circumferenceLowerLimit = mDetectionProperties.v.averageCircumference / mDetectionProperties.v.offsetCircumference;
+
+            if (circumferenceUpperLimit > mDetectionProperties.p.circumferenceMax) { circumferenceUpperLimit = mDetectionProperties.p.circumferenceMax; }
+            if (circumferenceLowerLimit < mDetectionProperties.p.circumferenceMin) { circumferenceLowerLimit = mDetectionProperties.p.circumferenceMin; }
+
+            if (combiWdth * M_PI > circumferenceUpperLimit || combiHght * M_PI > circumferenceUpperLimit) { continue; } // no large ellipse
+            if (combiWdth * M_PI < circumferenceLowerLimit && combiHght * M_PI < circumferenceLowerLimit) { continue; } // no small ellipse
 
             // Fit ellipse
 
@@ -1833,12 +1839,6 @@ std::vector<ellipseProperties> getEllipseFits(const std::vector<edgeProperties>&
             if (!mEllipsePropertiesNew.DETECTED) { continue; } // error
 
             // Size and shape filters
-
-            double circumferenceUpperLimit = mDetectionProperties.v.averageCircumference * mDetectionProperties.v.offsetCircumference;
-            double circumferenceLowerLimit = mDetectionProperties.v.averageCircumference / mDetectionProperties.v.offsetCircumference;
-
-            if (circumferenceUpperLimit > mDetectionProperties.p.circumferenceMax) { circumferenceUpperLimit = mDetectionProperties.p.circumferenceMax; }
-            if (circumferenceLowerLimit < mDetectionProperties.p.circumferenceMin) { circumferenceLowerLimit = mDetectionProperties.p.circumferenceMin; }
 
             if (mEllipsePropertiesNew.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
             if (mEllipsePropertiesNew.circumference < circumferenceLowerLimit) { continue; } // no small ellipse
@@ -1980,8 +1980,8 @@ void checkVariableLimits(detectionProperties& mDetectionProperties)
     if      (mDetectionProperties.v.certaintyFeatures < -1.0) { mDetectionProperties.v.certaintyFeatures = -1.0; }
     else if (mDetectionProperties.v.certaintyFeatures >  1.0) { mDetectionProperties.v.certaintyFeatures =  1.0; }
 
-    if      (mDetectionProperties.v.certaintyAverage  < -1.0) { mDetectionProperties.v.certaintyAverage  = -1.0; }
-    else if (mDetectionProperties.v.certaintyAverage  >  1.0) { mDetectionProperties.v.certaintyAverage  =  1.0; }
+    if      (mDetectionProperties.v.certaintyAverages  < -1.0) { mDetectionProperties.v.certaintyAverages  = -1.0; }
+    else if (mDetectionProperties.v.certaintyAverages  >  1.0) { mDetectionProperties.v.certaintyAverages  =  1.0; }
 }
 
 detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionProperties& mDetectionProperties, dataVariables& mDataVariables, drawVariables& mDrawVariables)
@@ -2024,8 +2024,9 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
     bool USE_PRIOR_POSITION = false;
     bool USE_PRIOR_FEATURES = false;
 
-    if (mDetectionProperties.v.certaintyPosition >= 0.0) { USE_PRIOR_POSITION = true; }
-    if (mDetectionProperties.v.certaintyFeatures >= 0.0) { USE_PRIOR_FEATURES = true; }
+    if      (mDetectionProperties.v.certaintyPosition >= 0.0) { USE_PRIOR_POSITION = true; }
+    if      (mDetectionProperties.v.certaintyFeatures >= 0.0) { USE_PRIOR_FEATURES = true; }
+    else if (mDetectionProperties.v.certaintyAverages >= 0.0) { USE_PRIOR_FEATURES = true; }
 
     // Convert to grayscale
 
@@ -2179,8 +2180,16 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
             mEdgeProperties.xnormals   = edgeXNormals;
             mEdgeProperties.ynormals   = edgeYNormals;
 
-            std::vector<edgeProperties> vEdgePropertiesTemp = edgeSegmentationCurvature(mEdgeProperties, curvatureLowerLimit, curvatureUpperLimit);
-            vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end());
+            if (USE_PRIOR_FEATURES) // Prior circumference and aspect ratio is required
+            {
+                std::vector<edgeProperties> vEdgePropertiesTemp = edgeSegmentationCurvature(mEdgeProperties, curvatureLowerLimit, curvatureUpperLimit);
+                vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end());
+            }
+            else
+            {
+                vEdgePropertiesNew.push_back(mEdgeProperties);
+            }
+
         }
 
         vEdgePropertiesAll = vEdgePropertiesNew;
@@ -2221,17 +2230,17 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
     //////////////////////// EDGE TERMINAL FILTER   ////////////////////////
     ////////////////////////////////////////////////////////////////////////
 
-//    { std::vector<edgeProperties> vEdgePropertiesNew;
+    //    { std::vector<edgeProperties> vEdgePropertiesNew;
 
-//        for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
-//        {
-//            edgeProperties mEdgeProperties    = vEdgePropertiesAll[iEdge];
-//            edgeProperties mEdgePropertiesNew = edgeTerminalFilter(mEdgeProperties, mDetectionProperties.p.scoreThresholdPoints);
-//            vEdgePropertiesNew.push_back(mEdgePropertiesNew);
-//        }
+    //        for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
+    //        {
+    //            edgeProperties mEdgeProperties    = vEdgePropertiesAll[iEdge];
+    //            edgeProperties mEdgePropertiesNew = edgeTerminalFilter(mEdgeProperties, mDetectionProperties.p.scoreThresholdPoints);
+    //            vEdgePropertiesNew.push_back(mEdgePropertiesNew);
+    //        }
 
-//        vEdgePropertiesAll = vEdgePropertiesNew;
-//    }
+    //        vEdgePropertiesAll = vEdgePropertiesNew;
+    //    }
 
     ///////////////////////////////////////////////////////////////////////////
     ////////////////////////// EDGE CLASSIFICATION  ///////////////////////////
@@ -2368,7 +2377,7 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
 
     double certaintyFactorPosition = 1 - 1 / (1 + exp(-certaintyLatency * mDetectionPropertiesNew.v.certaintyPosition));
     double certaintyFactorFeatures = 1 - 1 / (1 + exp(-certaintyLatency * mDetectionPropertiesNew.v.certaintyFeatures));
-    double certaintyFactorAverage  = 1 - 1 / (1 + exp(-certaintyLatency * mDetectionPropertiesNew.v.certaintyAverage));
+    double certaintyFactorAverage  = 1 - 1 / (1 + exp(-certaintyLatency * mDetectionPropertiesNew.v.certaintyAverages));
 
     // Calculate new threshold limits. Thresholds are harsher with higher certainties (= lower certainty factors)
 
@@ -2404,13 +2413,13 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
 
         // Averages should decay to initial values
 
-        mDetectionPropertiesNew.v.averageAspectRatio   = mDetectionProperties.v.averageAspectRatio   + mDetectionProperties.p.alphaAverage * certaintyFactorAverage * (meanAspectRatio   - mDetectionProperties.v.averageAspectRatio);
-        mDetectionPropertiesNew.v.averageCircumference = mDetectionProperties.v.averageCircumference + mDetectionProperties.p.alphaAverage * certaintyFactorAverage * (meanCircumference - mDetectionProperties.v.averageCircumference);
-        mDetectionPropertiesNew.v.averageWidth         = mDetectionProperties.v.averageWidth         + mDetectionProperties.p.alphaAverage * certaintyFactorAverage * (meanWidth         - mDetectionProperties.v.averageWidth);
-        mDetectionPropertiesNew.v.averageHeight        = mDetectionProperties.v.averageHeight        + mDetectionProperties.p.alphaAverage * certaintyFactorAverage * (meanHeight        - mDetectionProperties.v.averageHeight);
+        mDetectionPropertiesNew.v.averageAspectRatio   = mDetectionProperties.v.averageAspectRatio   + mDetectionProperties.p.alphaAverages * certaintyFactorAverage * (meanAspectRatio   - mDetectionProperties.v.averageAspectRatio);
+        mDetectionPropertiesNew.v.averageCircumference = mDetectionProperties.v.averageCircumference + mDetectionProperties.p.alphaAverages * certaintyFactorAverage * (meanCircumference - mDetectionProperties.v.averageCircumference);
+        mDetectionPropertiesNew.v.averageWidth         = mDetectionProperties.v.averageWidth         + mDetectionProperties.p.alphaAverages * certaintyFactorAverage * (meanWidth         - mDetectionProperties.v.averageWidth);
+        mDetectionPropertiesNew.v.averageHeight        = mDetectionProperties.v.averageHeight        + mDetectionProperties.p.alphaAverages * certaintyFactorAverage * (meanHeight        - mDetectionProperties.v.averageHeight);
 
-        mDetectionPropertiesNew.v.averageIntensity = mDetectionProperties.v.averageIntensity + mDetectionProperties.p.alphaAverage * (meanIntensity - mDetectionProperties.v.averageIntensity);
-        mDetectionPropertiesNew.v.averageGradient  = mDetectionProperties.v.averageGradient  + mDetectionProperties.p.alphaAverage * (meanGradient  - mDetectionProperties.v.averageGradient);
+        mDetectionPropertiesNew.v.averageIntensity = mDetectionProperties.v.averageIntensity + mDetectionProperties.p.alphaAverages * (meanIntensity - mDetectionProperties.v.averageIntensity);
+        mDetectionPropertiesNew.v.averageGradient  = mDetectionProperties.v.averageGradient  + mDetectionProperties.p.alphaAverages * (meanGradient  - mDetectionProperties.v.averageGradient);
 
         // Feature predicteds should decay to average terms. Certainty term gives some latency.
 
@@ -2422,7 +2431,7 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
         // Position predicteds should decay to approximate detection position. Certainty term gives some latency.
 
         mDetectionPropertiesNew.v.predictedXPos = mDetectionProperties.v.predictedXPos + mDetectionProperties.p.alphaPosition * certaintyFactorPosition * (innerAOI.xPos + 0.5 * innerAOI.wdth - mDetectionProperties.v.predictedXPos + mDetectionProperties.v.momentumXPos);
-        mDetectionPropertiesNew.v.predictedYPos = mDetectionProperties.v.predictedYPos + mDetectionProperties.p.alphaPosition * certaintyFactorPosition * (innerAOI.xPos + 0.5 * innerAOI.wdth - mDetectionProperties.v.predictedYPos + mDetectionProperties.v.momentumYPos);
+        mDetectionPropertiesNew.v.predictedYPos = mDetectionProperties.v.predictedYPos + mDetectionProperties.p.alphaPosition * certaintyFactorPosition * (innerAOI.yPos + 0.5 * innerAOI.hght - mDetectionProperties.v.predictedYPos + mDetectionProperties.v.momentumYPos);
 
         // Momentum terms should decay to zero
 
@@ -2438,7 +2447,7 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
 
         mDetectionPropertiesNew.v.certaintyPosition = mDetectionProperties.v.certaintyPosition - mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaPosition;
         mDetectionPropertiesNew.v.certaintyFeatures = mDetectionProperties.v.certaintyFeatures - mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaFeatures;
-        mDetectionPropertiesNew.v.certaintyAverage  = mDetectionProperties.v.certaintyAverage  - mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaAverage;
+        mDetectionPropertiesNew.v.certaintyAverages  = mDetectionProperties.v.certaintyAverages  - mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaAverages;
     }
     else // pupil detected
     {
@@ -2479,13 +2488,13 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
 
         // Averages
 
-        mDetectionPropertiesNew.v.averageAspectRatio   = mDetectionProperties.v.averageAspectRatio   + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.predictedAspectRatio   - mDetectionProperties.v.averageAspectRatio);
-        mDetectionPropertiesNew.v.averageCircumference = mDetectionProperties.v.averageCircumference + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.predictedCircumference - mDetectionProperties.v.averageCircumference);
-        mDetectionPropertiesNew.v.averageWidth         = mDetectionProperties.v.averageWidth         + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.predictedWidth         - mDetectionProperties.v.averageWidth);
-        mDetectionPropertiesNew.v.averageHeight        = mDetectionProperties.v.averageHeight        + mDetectionProperties.p.alphaAverage * (mDetectionProperties.v.predictedHeight        - mDetectionProperties.v.averageHeight);
+        mDetectionPropertiesNew.v.averageAspectRatio   = mDetectionProperties.v.averageAspectRatio   + mDetectionProperties.p.alphaAverages * (mDetectionProperties.v.predictedAspectRatio   - mDetectionProperties.v.averageAspectRatio);
+        mDetectionPropertiesNew.v.averageCircumference = mDetectionProperties.v.averageCircumference + mDetectionProperties.p.alphaAverages * (mDetectionProperties.v.predictedCircumference - mDetectionProperties.v.averageCircumference);
+        mDetectionPropertiesNew.v.averageWidth         = mDetectionProperties.v.averageWidth         + mDetectionProperties.p.alphaAverages * (mDetectionProperties.v.predictedWidth         - mDetectionProperties.v.averageWidth);
+        mDetectionPropertiesNew.v.averageHeight        = mDetectionProperties.v.averageHeight        + mDetectionProperties.p.alphaAverages * (mDetectionProperties.v.predictedHeight        - mDetectionProperties.v.averageHeight);
 
-        mDetectionPropertiesNew.v.averageIntensity = mDetectionProperties.v.averageIntensity + mDetectionProperties.p.alphaAverage * (mEllipseProperties.intensity - mDetectionProperties.v.averageIntensity);
-        mDetectionPropertiesNew.v.averageGradient  = mDetectionProperties.v.averageGradient  + mDetectionProperties.p.alphaAverage * (mEllipseProperties.gradient  - mDetectionProperties.v.averageGradient);
+        mDetectionPropertiesNew.v.averageIntensity = mDetectionProperties.v.averageIntensity + mDetectionProperties.p.alphaAverages * (mEllipseProperties.intensity - mDetectionProperties.v.averageIntensity);
+        mDetectionPropertiesNew.v.averageGradient  = mDetectionProperties.v.averageGradient  + mDetectionProperties.p.alphaAverages * (mEllipseProperties.gradient  - mDetectionProperties.v.averageGradient);
 
         // Momentum
 
@@ -2508,7 +2517,7 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
 
         mDetectionPropertiesNew.v.certaintyPosition = mDetectionProperties.v.certaintyPosition + certaintyPosition * mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaPosition;
         mDetectionPropertiesNew.v.certaintyFeatures = mDetectionProperties.v.certaintyFeatures + certaintyFeatures * mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaFeatures;
-        mDetectionPropertiesNew.v.certaintyAverage  = mDetectionProperties.v.certaintyAverage  + certaintyFeatures * mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaAverage;
+        mDetectionPropertiesNew.v.certaintyAverages = mDetectionProperties.v.certaintyAverages + certaintyFeatures * mDetectionProperties.p.alphaCertainty * mDetectionProperties.p.alphaAverages;
     }
 
     // For drawing
@@ -2525,6 +2534,7 @@ detectionProperties eyeStalker(const cv::Mat& imageOriginalBGR, detectionPropert
     mDrawVariables.predictedYPos = round(mDetectionProperties.v.predictedYPos);
 
     mDrawVariables.cannyEdgeIndices    = edgeIndices;
+    mDrawVariables.edgeData            = vEdgePropertiesAll;
     mDrawVariables.ellipseCoefficients = mEllipseProperties.coefficients;
 
     // END

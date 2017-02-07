@@ -33,7 +33,7 @@ const std::vector<double> parametersEye  =  {0.05,  // Alpha average
                                                12,  // Glint size
                                               320,  // Circumference max
                                                60,  // Circumference min
-                                              0.6,  // Aspect ratio min
+                                              0.4,  // Aspect ratio min
                                              1.10,  // Circumference offset
                                                15,  // Circumference change threshold
                                              0.12,  // Aspect ratio change threshold

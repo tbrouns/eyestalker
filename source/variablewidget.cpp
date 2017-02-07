@@ -73,10 +73,12 @@ void VariableWidget::setWidgets(const dataVariables& mDataVariables)
 
 void VariableWidget::resetStructure(const detectionParameters& mDetectionParameters)
 {
+    // Reset all variables
+
     mDetectionVariables.averageAspectRatio   = initialAspectRatio; // close to perfect circle
-    mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin);
-    mDetectionVariables.averageWidth         = mDetectionVariables.predictedCircumference / M_PI;
-    mDetectionVariables.averageHeight        = mDetectionVariables.predictedCircumference / M_PI;
+    mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin); // calculate first
+    mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
+    mDetectionVariables.averageHeight        = mDetectionVariables.averageCircumference / M_PI;
     mDetectionVariables.averageIntensity     = initialIntensity;
     mDetectionVariables.averageGradient      = 0;
 
@@ -86,6 +88,7 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
     mDetectionVariables.predictedXPos          = 0.5 * Parameters::eyeAOI.wdth; // centre of image
     mDetectionVariables.predictedYPos          = 0.5 * Parameters::eyeAOI.hght;
+    mDetectionVariables.predictedCurvature     = 0;
 
     mDetectionVariables.momentumAspectRatio   = 0;
     mDetectionVariables.momentumCircumference = 0;
@@ -104,8 +107,9 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
 
     mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
 
-    mDetectionVariables.certaintyPosition = -1.0;
+    mDetectionVariables.certaintyAverages  = -1.0;
     mDetectionVariables.certaintyFeatures = -1.0;
+    mDetectionVariables.certaintyPosition = -1.0;
 }
 
 void VariableWidget::setCircumference(double value)

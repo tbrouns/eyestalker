@@ -87,7 +87,7 @@ struct detectionParameters
     detectionParameters(): DETECTION_ON(false) { }
 
     double alphaFeatures;
-    double alphaAverage;
+    double alphaAverages;
     double alphaPosition;
     double alphaCertainty;
     double curvatureOffset;
@@ -123,7 +123,7 @@ struct detectionVariables
     double averageWidth;
     double averageIntensity;
     double averageGradient;
-    double certaintyAverage;
+    double certaintyAverages;
     double certaintyFeatures;
     double certaintyPosition;
     double changeThresholdAspectRatio;
@@ -174,7 +174,7 @@ struct drawVariables
     AOIProperties outerAOI;
     std::vector<int> cannyEdgeIndices;
     std::vector<double> ellipseCoefficients;
-    std::vector<edgeProperties> edgePropertiesAll;
+    std::vector<edgeProperties> edgeData;
 };
 
 struct detectionProperties

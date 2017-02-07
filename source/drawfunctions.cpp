@@ -168,7 +168,7 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
         if (Parameters::drawFlags.edge)
         {
             drawEdges  (I, mDrawVariables.outerAOI, red, mDrawVariables.cannyEdgeIndices);
-            drawOutline(I, mDrawVariables.outerAOI, green, yellow, orange, mDrawVariables.edgePropertiesAll);
+            drawOutline(I, mDrawVariables.outerAOI, green, yellow, orange, mDrawVariables.edgeData);
         }
 
         drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
