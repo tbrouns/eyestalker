@@ -90,7 +90,7 @@ void MainWindow::onLoadSession()
 {
     QString dataDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
-    if (!dataDirectoryOffline.isEmpty())
+    if (!dataDirectoryTemp.isEmpty())
     {
         dataDirectoryOffline = dataDirectoryTemp;
         timeMatrix.clear();
@@ -334,7 +334,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     auto t1 = std::chrono::high_resolution_clock::now();
     detectionProperties mDetectionPropertiesEyeNew = eyeStalker(imageRaw, mDetectionPropertiesEye, mDataVariables, mDrawVariables);
     auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> fp_ms = t2 - t1; 
+    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
     // Save data
 

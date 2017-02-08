@@ -129,7 +129,7 @@ void QImageOpenCV::setImage()
             QPixmap imageEdited = imageScaled;
             drawAOI(imageEdited,   eyeAOI, QColor(255,   0,   0));
             drawAOI(imageEdited, flashAOI, QColor(  0,   0, 255));
-            drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0));
+//            drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0));
             this->setPixmap(imageEdited);
         }
     }
@@ -312,7 +312,7 @@ void QImageOpenCV::mousePressEvent(QMouseEvent *event)
 
                 Parameters::beadAOIYPosFraction = Parameters::beadAOI.yPos / (double) imageHght;
 
-                setAOIEye(Parameters::beadAOI);
+                setAOIBead(Parameters::beadAOI);
                 setImage();
             }
 
