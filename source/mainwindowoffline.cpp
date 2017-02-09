@@ -581,7 +581,7 @@ void MainWindow::onCombineData()
     dataFilename = (DataFilenameLineEdit->text()).toStdString();
     std::stringstream fileNameWriteSS;
     fileNameWriteSS << dataDirectoryOffline.toStdString()
-                    << "/"
+                    << "/../"
                     << dataFilename
                     << ".dat";
 
