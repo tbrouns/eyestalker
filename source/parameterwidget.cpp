@@ -103,15 +103,15 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     LearningRatesTextBox->setText("<b>Learning rates</b>");
     LearningRatesTextBox->setAlignment(Qt::AlignCenter);
 
-    QLabel *alphaAveragesTextBox  = new QLabel;
-    alphaAveragesTextBox->setText("<b>Averages:</b>");
+    QLabel *AlphaAveragesTextBox  = new QLabel;
+    AlphaAveragesTextBox->setText("<b>Averages:</b>");
 
-    alphaAveragesLabel  = new QLabel;
-    alphaAveragesSlider = new SliderDouble;
-    alphaAveragesSlider->setPrecision(3);
-    alphaAveragesSlider->setDoubleRange(0, 0.1);
-    alphaAveragesSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(alphaAveragesSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setalphaAverages(double)));
+    AlphaAveragesLabel  = new QLabel;
+    AlphaAveragesSlider = new SliderDouble;
+    AlphaAveragesSlider->setPrecision(3);
+    AlphaAveragesSlider->setDoubleRange(0, 0.1);
+    AlphaAveragesSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(AlphaAveragesSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaAverages(double)));
 
     QLabel *AlphaPositionTextBox = new QLabel;
     AlphaPositionTextBox->setText("<b>Position:</b>");
@@ -271,7 +271,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CannyKernelSizeTextBox,           8, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CannyBlurLevelTextBox,            9, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(alphaAveragesTextBox,              11, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AlphaAveragesTextBox,              11, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaPositionTextBox,             12, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaFeaturesTextBox,             13, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaCertaintyTextBox,            15, 0, 1, 1, Qt::AlignRight);
@@ -305,7 +305,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     MainLayout->addWidget(TitleLearnTextBox,               10, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(alphaAveragesSlider,              11, 1);
+    MainLayout->addWidget(AlphaAveragesSlider,             11, 1);
     MainLayout->addWidget(AlphaPositionSlider,             12, 1);
     MainLayout->addWidget(AlphaFeaturesSlider,             13, 1);
     MainLayout->addWidget(AlphaCertaintySlider,            15, 1);
@@ -337,7 +337,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CannyKernelSizeLabel,          8, 2);
     MainLayout->addWidget(CannyBlurLevelLabel,           9, 2);
 
-    MainLayout->addWidget(alphaAveragesLabel,             11, 2);
+    MainLayout->addWidget(AlphaAveragesLabel,             11, 2);
     MainLayout->addWidget(AlphaPositionLabel,            12, 2);
     MainLayout->addWidget(AlphaFeaturesLabel,            13, 2);
     MainLayout->addWidget(AlphaCertaintyLabel,           15, 2);
@@ -418,8 +418,8 @@ void ParameterWidget::reset()
 
     // Learning rates
 
-    alphaAveragesSlider->setDoubleValue(mDetectionParameters.alphaAverages);
-    alphaAveragesLabel ->setText(QString::number(mDetectionParameters.alphaAverages, 'f', 3));
+    AlphaAveragesSlider->setDoubleValue(mDetectionParameters.alphaAverages);
+    AlphaAveragesLabel ->setText(QString::number(mDetectionParameters.alphaAverages, 'f', 3));
 
     AlphaPositionSlider->setDoubleValue(mDetectionParameters.alphaPosition);
     AlphaPositionLabel ->setText(QString::number(mDetectionParameters.alphaPosition, 'f', 2));
@@ -538,10 +538,10 @@ void ParameterWidget::setCannyBlurLevel(int value)
     CannyBlurLevelLabel->setText(QString::number(value));
 }
 
-void ParameterWidget::setalphaAverages(double value)
+void ParameterWidget::setAlphaAverages(double value)
 {
     mDetectionParameters.alphaAverages = value;
-    alphaAveragesLabel->setText(QString::number(value, 'f', 3));
+    AlphaAveragesLabel->setText(QString::number(value, 'f', 3));
 }
 
 void ParameterWidget::setAlphaPosition(double value)

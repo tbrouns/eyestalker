@@ -19,7 +19,7 @@ public:
 
     void setWidgets(const dataVariables&);
     detectionVariables getStructure();
-    void resetStructure(const detectionParameters&);
+    void resetStructure(const detectionParameters&, const AOIProperties &mAOI);
 
     explicit VariableWidget(QWidget *parent = 0);
     ~VariableWidget();

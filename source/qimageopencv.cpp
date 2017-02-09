@@ -30,6 +30,8 @@ QImageOpenCV::QImageOpenCV(int type, QWidget *parent) : QLabel(parent)
     backgroundColour = QColor( 48,  47,  47);
     textColour       = QColor(177, 177, 177);
 
+    SHOW_BEAD_AOI = false;
+
     this->setLineWidth(2);
     this->setAlignment(Qt::AlignCenter);
     this->setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -129,7 +131,12 @@ void QImageOpenCV::setImage()
             QPixmap imageEdited = imageScaled;
             drawAOI(imageEdited,   eyeAOI, QColor(255,   0,   0));
             drawAOI(imageEdited, flashAOI, QColor(  0,   0, 255));
-//            drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0));
+
+            if (SHOW_BEAD_AOI)
+            {
+                drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0));
+            }
+
             this->setPixmap(imageEdited);
         }
     }
@@ -198,7 +205,11 @@ void QImageOpenCV::setAOIFlash(AOIProperties flashAOINew)
     }
 }
 
-
+void QImageOpenCV::showAOIBead(bool state)
+{
+    SHOW_BEAD_AOI = state;
+    this->setImage();
+}
 
 void QImageOpenCV::setAOIError()
 {

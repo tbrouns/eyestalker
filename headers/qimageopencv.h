@@ -65,11 +65,14 @@ public:
     void setAOIFlash(AOIProperties flashAOINew);
     void drawAOI(QPixmap &img, AOIProperties mAOI, QColor col);
 
+    void showAOIBead(bool);
 
     void setSize(int, int);
     void setSpinner();
 
 private:
+
+    bool SHOW_BEAD_AOI;
 
     double aspectRatio;
     double imageScaleFactorX;

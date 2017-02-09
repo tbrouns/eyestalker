@@ -102,10 +102,6 @@ struct detectionParameters
     double changeThresholdPosition;
     double scoreThreshold;
     double scoreThresholdPoints;
-    int AOIXPos;
-    int AOIYPos;
-    int AOIWdth;
-    int AOIHght;
     int cannyBlurLevel;
     int cannyKernelSize;
     double cannyThresholdLow;

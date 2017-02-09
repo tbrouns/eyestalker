@@ -26,11 +26,6 @@ CONFIG += c++11
 
 unix {
 
-# debug
-
-#QMAKE_CXXFLAGS += -D_GLIBCXX_DEBUG
-#QMAKE_CXXFLAGS += -D_GLIBCXX_DEBUG_PEDANTIC
-
 # optimization
 
 QMAKE_CXXFLAGS += -O3

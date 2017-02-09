@@ -18,7 +18,7 @@
 
 #include <vector>
 
-const std::vector<double> parametersEye  =  {0.05,  // Alpha average
+const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                              0.75,  // Alpha features
                                              0.10,  // Alpha certainty
                                              0.75,  // Alpha position
@@ -40,7 +40,7 @@ const std::vector<double> parametersEye  =  {0.05,  // Alpha average
                                                10,  // Displacement change threshold
                                              0.30}; // Score threshold
 
-const std::vector<double> parametersBead =  {0.05,  // Alpha average
+const std::vector<double> parametersBead = {0.005,  // Alpha average
                                              0.75,  // Alpha miscellaneous
                                              0.10,  // Alpha certainty
                                              0.75,  // Alpha predicted

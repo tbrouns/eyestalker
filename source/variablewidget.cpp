@@ -71,7 +71,7 @@ void VariableWidget::setWidgets(const dataVariables& mDataVariables)
     AspectRatioLabel->setText(QString::number(mDataVariables.exactAspectRatio, 'f', 2));
 }
 
-void VariableWidget::resetStructure(const detectionParameters& mDetectionParameters)
+void VariableWidget::resetStructure(const detectionParameters& mDetectionParameters, const AOIProperties& mAOI)
 {
     // Reset all variables
 
@@ -86,8 +86,8 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.predictedCircumference = mDetectionVariables.averageCircumference;
     mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
     mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
-    mDetectionVariables.predictedXPos          = 0.5 * Parameters::eyeAOI.wdth; // centre of image
-    mDetectionVariables.predictedYPos          = 0.5 * Parameters::eyeAOI.hght;
+    mDetectionVariables.predictedXPos          = 0.5 * mAOI.wdth; // centre of image
+    mDetectionVariables.predictedYPos          = 0.5 * mAOI.hght;
     mDetectionVariables.predictedCurvature     = 0;
 
     mDetectionVariables.momentumAspectRatio   = 0;
@@ -97,17 +97,17 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     mDetectionVariables.momentumXPos          = 0;
     mDetectionVariables.momentumYPos          = 0;
 
-    int imgSize;
-    if (Parameters::eyeAOI.wdth > Parameters::eyeAOI.hght) { imgSize = Parameters::eyeAOI.wdth; }
-    else                                                   { imgSize = Parameters::eyeAOI.hght; }
+    int AOISize;
+    if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
+    else                       { AOISize = mAOI.hght; }
 
     mDetectionVariables.changeThresholdAspectRatio   = 1.0;
     mDetectionVariables.changeThresholdCircumference = mDetectionParameters.circumferenceMax;
-    mDetectionVariables.changeThresholdPosition      = imgSize;
+    mDetectionVariables.changeThresholdPosition      = AOISize;
 
     mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
 
-    mDetectionVariables.certaintyAverages  = -1.0;
+    mDetectionVariables.certaintyAverages = -1.0;
     mDetectionVariables.certaintyFeatures = -1.0;
     mDetectionVariables.certaintyPosition = -1.0;
 }

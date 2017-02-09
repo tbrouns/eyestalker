@@ -159,8 +159,8 @@ void MainWindow::onSetTrialOffline(int index)
         vDetectionVariablesEye.resize(imageTotalOffline + 1);
         vDetectionVariablesBead.resize(imageTotalOffline + 1);
 
-        mVariableWidgetEye ->resetStructure(mParameterWidgetEye ->getStructure());
-        mVariableWidgetBead->resetStructure(mParameterWidgetBead->getStructure());
+        mVariableWidgetEye ->resetStructure(mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+        mVariableWidgetBead->resetStructure(mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 
         vDetectionVariablesEye[0]  = mVariableWidgetEye ->getStructure();
         vDetectionVariablesBead[0] = mVariableWidgetBead->getStructure();
@@ -303,6 +303,9 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     detectionProperties mDetectionPropertiesEye;
     detectionProperties mDetectionPropertiesBead;
 
+    AOIProperties AOIEyeTemp;
+    AOIProperties AOIBeadTemp;
+
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
         mDetectionPropertiesEye.v = vDetectionVariablesEye[imageIndex];
@@ -311,36 +314,29 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         mDetectionPropertiesBead.v = vDetectionVariablesBead[imageIndex];
         mDetectionPropertiesBead.p = mParameterWidgetBead->getStructure();
 
-        cameraAOIXPos = imageRaw.cols;
-        cameraAOIYPos = imageRaw.rows;
+        cameraAOIXPos = Parameters::cameraAOI.xPos;
+        cameraAOIYPos = Parameters::cameraAOI.yPos;
 
-        Parameters::cameraAOI.wdth = cameraAOIXPos;
-        Parameters::cameraAOI.hght = cameraAOIYPos;
+        Parameters::cameraAOI.wdth = imageRaw.cols;
+        Parameters::cameraAOI.hght = imageRaw.rows;
 
         updateEyeAOIx();
         updateEyeAOIy();
 
-        mDetectionPropertiesEye.p.AOIXPos = Parameters::eyeAOI.xPos;
-        mDetectionPropertiesEye.p.AOIYPos = Parameters::eyeAOI.yPos;
-        mDetectionPropertiesEye.p.AOIWdth = Parameters::eyeAOI.wdth;
-        mDetectionPropertiesEye.p.AOIHght = Parameters::eyeAOI.hght;
-
-        mDetectionPropertiesBead.p.AOIXPos = Parameters::beadAOI.xPos;
-        mDetectionPropertiesBead.p.AOIYPos = Parameters::beadAOI.yPos;
-        mDetectionPropertiesBead.p.AOIWdth = Parameters::beadAOI.wdth;
-        mDetectionPropertiesBead.p.AOIHght = Parameters::beadAOI.hght;
+        AOIEyeTemp  = Parameters::eyeAOI;
+        AOIBeadTemp = Parameters::beadAOI;
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    detectionProperties mDetectionPropertiesEyeNew = eyeStalker(imageRaw, mDetectionPropertiesEye, mDataVariables, mDrawVariables);
+    detectionProperties mDetectionPropertiesEyeNew = eyeStalker(imageRaw, AOIEyeTemp, mDetectionPropertiesEye, mDataVariables, mDrawVariables);
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
     // Save data
 
     mDataVariables.duration     = fp_ms.count();
-    mDataVariables.absoluteXPos = mDataVariables.exactXPos + cameraAOIXPos;
-    mDataVariables.absoluteYPos = mDataVariables.exactYPos + cameraAOIYPos;
+    mDataVariables.absoluteXPos = mDataVariables.exactXPos + AOIEyeTemp.xPos + cameraAOIXPos;
+    mDataVariables.absoluteYPos = mDataVariables.exactYPos + AOIEyeTemp.yPos + cameraAOIYPos;
     vDataVariables[imageIndex]  = mDataVariables;
 
     cv::Mat imageProcessed = imageRaw.clone();
@@ -350,9 +346,9 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     if (mParameterWidgetBead->getState())
     {
-        mDetectionPropertiesBeadNew = eyeStalker(imageRaw, mDetectionPropertiesBead, mDataVariablesBead, mDrawVariablesBead);
-        mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos + cameraAOIXPos;
-        mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos + cameraAOIYPos;
+        mDetectionPropertiesBeadNew = eyeStalker(imageRaw, AOIBeadTemp, mDetectionPropertiesBead, mDataVariablesBead, mDrawVariablesBead);
+        mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos + AOIBeadTemp.xPos + cameraAOIXPos;
+        mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos + AOIBeadTemp.yPos + cameraAOIYPos;
         vDataVariablesBead[imageIndex]  = mDataVariablesBead;
         drawAll(imageProcessed, mDrawVariablesBead);
     }
@@ -519,7 +515,7 @@ void MainWindow::onSaveTrialData()
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCurvature     << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].averageIntensity       << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].averageGradient        << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration              << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
 
         file.close();
     }

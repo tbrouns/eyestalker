@@ -31,8 +31,8 @@ public:
 
 private:
 
-    QLabel *alphaAveragesLabel;
-    SliderDouble *alphaAveragesSlider;
+    QLabel *AlphaAveragesLabel;
+    SliderDouble *AlphaAveragesSlider;
     QLabel *AlphaCertaintyLabel;
     SliderDouble *AlphaCertaintySlider;
     QLabel *AlphaFeaturesLabel;
@@ -81,7 +81,7 @@ signals:
 private slots:
 
     void setAlphaFeatures           (double);
-    void setalphaAverages            (double);
+    void setAlphaAverages            (double);
     void setAlphaPosition           (double);
     void setAlphaCertainty          (double);
     void setCannyBlurLevel          (int);

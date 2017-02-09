@@ -225,6 +225,11 @@ private:
     std::string dataDirectory;
     std::string dataFilename;
 
+    // Options menu
+
+    QCheckBox* BeadDetectionCheckBox;
+    QCheckBox *RealTimeEyeTrackingCheckBox;
+
     // Interface
 
     QString subjectIdentifier;
@@ -243,6 +248,10 @@ private:
     void updateCamAOIy();
     void updateEyeAOIx();
     void updateEyeAOIy();
+
+    // AOI Flash
+
+    bool checkFlashAOI(AOIProperties&, const AOIProperties&, const AOIProperties&);
 
     // Camera interface
 

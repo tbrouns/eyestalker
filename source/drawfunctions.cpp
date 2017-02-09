@@ -25,6 +25,7 @@ void drawAOI(cv::Mat& I, const AOIProperties &mAOI, const cv::Vec3b &col)
     int AOIWdth = mAOI.wdth;
     int AOIHght = mAOI.hght;
 
+    if (AOIXPos >= imgWdth || AOIYPos >= imgHght || AOIWdth <= 0 || AOIHght <= 0) { return; }
     if (AOIXPos < 0) { AOIXPos = 0; }
     if (AOIYPos < 0) { AOIYPos = 0; }
     if (AOIXPos + AOIWdth >= imgWdth) { AOIWdth = imgWdth - AOIXPos - 1; }

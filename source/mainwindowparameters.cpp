@@ -33,7 +33,7 @@ void MainWindow::loadSettings(QString filename)
     subjectIdentifier               = settings.value("SubjectName",                 "").toString();
     eyeAOIHghtFraction              = settings.value("AOIHghtFraction",             1.0).toDouble();
     eyeAOIWdthFraction              = settings.value("AOIWdthFraction",             1.0).toDouble();
-    beadAOIHghtFraction             = settings.value("AOIBeadHghtFraction",         0.3).toDouble();
+    beadAOIHghtFraction             = settings.value("AOIBeadHghtFraction",         0.6).toDouble();
     beadAOIWdthFraction             = settings.value("AOIBeadWdthFraction",         0.3).toDouble();
     flashThreshold                  = settings.value("FlashThreshold",              230).toInt();
     GAIN_AUTO                       = settings.value("GainAuto",                    true).toBool();
@@ -46,20 +46,26 @@ void MainWindow::loadSettings(QString filename)
     flashAOI.wdth                   = settings.value("FlashAOIWdth",                60).toInt();
     flashAOI.xPos                   = settings.value("FlashAOIXPos",                227).toInt();
     flashAOI.yPos                   = settings.value("FlashAOIYPos",                500).toInt();
-    SAVE_ASPECT_RATIO               = settings.value("SaveAspectRatio",             false).toBool();
-    SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           false).toBool();
+    SAVE_ASPECT_RATIO               = settings.value("SaveAspectRatio",             true).toBool();
+    SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           true).toBool();
     SAVE_POSITION                   = settings.value("SavePosition",                true).toBool();
     SAVE_EYE_IMAGE                  = settings.value("SaveEyeImage",                true).toBool();
     subjectIdentifier               = settings.value("SubjectIdentifier",           "").toString();
     trialTimeLength                 = settings.value("TrialTimeLength",             1500).toInt();
 
+    cameraAOIWdthMax = Parameters::cameraXResolution / (double) cameraSubSamplingFactor; // maximum possible AOI size
+    cameraAOIHghtMax = Parameters::cameraYResolution / (double) cameraSubSamplingFactor;
+
+    updateCamAOIx();
+    updateCamAOIy();
+
     detectionParameters mDetectionParametersEye  = loadParameters(filename, "Eye",  parametersEye);
     mParameterWidgetEye ->setStructure(mDetectionParametersEye);
-    mVariableWidgetEye->resetStructure(mDetectionParametersEye);
+    mVariableWidgetEye->resetStructure(mDetectionParametersEye, Parameters::eyeAOI);
 
     detectionParameters mDetectionParametersBead = loadParameters(filename, "Bead", parametersBead);
     mParameterWidgetBead ->setStructure(mDetectionParametersBead);
-    mVariableWidgetBead->resetStructure(mDetectionParametersBead);
+    mVariableWidgetBead->resetStructure(mDetectionParametersBead, Parameters::beadAOI);
 }
 
 detectionParameters MainWindow::loadParameters(QString filename, QString prefix, std::vector<double> parameters)
@@ -171,36 +177,56 @@ void MainWindow::onResetParameters()
     QString filename = "";
     loadSettings(filename);
     mParameterWidgetEye->reset();
-    mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure());
+    mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure(), Parameters::eyeAOI);
 }
 
 void MainWindow::startRecordingManual()
 {
-    if (!FLASH_STANDBY) { startTrialRecording(); }
+    if (!TRIAL_RECORDING && !PROCESSING_ALL_TRIALS && !PROCESSING_ALL_IMAGES)
+    {
+        if (!FLASH_STANDBY) { startTrialRecording(); }
+    }
 }
 
 void MainWindow::setBeadDetection(int state)
 {
-    int index = 2 + (int) Parameters::ONLINE_PROCESSING;
-
-    if (state)
+    if (!TRIAL_RECORDING && !PROCESSING_ALL_TRIALS && !PROCESSING_ALL_IMAGES)
     {
-        MainTabWidget->setUpdatesEnabled(false);
-        MainTabWidget->insertTab(index, BeadTrackingScrollArea, tr("Bead-tracking"));
-        MainTabWidget->setUpdatesEnabled(true);
-        mParameterWidgetBead->setState(true);
+        int index = 2 + (int) Parameters::ONLINE_PROCESSING;
+
+        if (state)
+        {
+            MainTabWidget->setUpdatesEnabled(false);
+            MainTabWidget->insertTab(index, BeadTrackingScrollArea, tr("Bead-tracking"));
+            MainTabWidget->setUpdatesEnabled(true);
+        }
+        else
+        {
+            MainTabWidget->removeTab(index);
+        }
+
+        mParameterWidgetBead->setState(state);
+
+        CamQImage->showAOIBead(state);
+        CamQImage->setImage();
     }
     else
     {
-        MainTabWidget->removeTab(index);
-        mParameterWidgetBead->setState(false);
+        BeadDetectionCheckBox->setChecked(false);
     }
 }
 
 void MainWindow::onSetRealTime(int state)
 {
-    if (state) { SAVE_EYE_IMAGE = false; }
-    else       { SAVE_EYE_IMAGE = true;  }
+    if (Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
+    {
+        if (state) { SAVE_EYE_IMAGE = false; }
+        else       { SAVE_EYE_IMAGE = true;  }
+    }
+    else
+    {
+        RealTimeEyeTrackingCheckBox->setChecked(false);
+    }
 }
 
 void MainWindow::setFlashStandby(bool flag)
@@ -211,7 +237,7 @@ void MainWindow::setFlashStandby(bool flag)
 
 void MainWindow::onFlashStandbySlider(int val)
 {
-    if (Parameters::CAMERA_RUNNING)
+    if (Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
     {
         if (val == 0)
         {
@@ -268,7 +294,6 @@ void MainWindow::onResetFlashIntensity()
     FlashThresholdSlider->setValue(0);
 }
 
-
 void MainWindow::setCameraPixelClock(int value)
 {
     cameraPixelClock = value;
@@ -322,16 +347,9 @@ void MainWindow::setCameraGainBoost(int state)
 
 void MainWindow::setCameraAutoGain(int state)
 {
-    if (state)
-    {
-        GAIN_AUTO = true;
-        mUEyeOpencvCam.setAutoGain(true);
-    }
-    else
-    {
-        GAIN_AUTO = false;
-        mUEyeOpencvCam.setAutoGain(false);
-    }
+    GAIN_AUTO = true;
+    if (state) { mUEyeOpencvCam.setAutoGain(GAIN_AUTO); }
+    else       { mUEyeOpencvCam.setAutoGain(GAIN_AUTO); }
 }
 
 void MainWindow::setCameraHardwareGain(int val)
