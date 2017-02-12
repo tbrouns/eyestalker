@@ -180,13 +180,7 @@ void MainWindow::onResetParameters()
     mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure(), Parameters::eyeAOI);
 }
 
-void MainWindow::startRecordingManual()
-{
-    if (!TRIAL_RECORDING && !PROCESSING_ALL_TRIALS && !PROCESSING_ALL_IMAGES)
-    {
-        if (!FLASH_STANDBY) { startTrialRecording(); }
-    }
-}
+
 
 void MainWindow::setBeadDetection(int state)
 {
@@ -229,63 +223,8 @@ void MainWindow::onSetRealTime(int state)
     }
 }
 
-void MainWindow::setFlashStandby(bool flag)
-{
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-    FLASH_STANDBY = flag;
-}
 
-void MainWindow::onFlashStandbySlider(int val)
-{
-    if (Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
-    {
-        if (val == 0)
-        {
-            setFlashStandby(false);
-            FlashStandbyLabel->setText("<font color='red'><b>OFF</b></font>");
 
-            if (CameraHardwareGainAutoCheckBox->isChecked())
-            {
-                mUEyeOpencvCam.setAutoGain(true);
-            }
-        }
-        else
-        {
-            dataFilename = (DataFilenameLineEdit->text()).toStdString();
-
-            std::stringstream filename;
-            filename << dataDirectory
-                     << "/"
-                     << dataFilename
-                     << ".dat";
-
-            if (boost::filesystem::exists(filename.str()))
-            {
-                QString text = "The file <b>" + QString::fromStdString(dataFilename) + ".dat</b> already exists in <b>" + QString::fromStdString(dataDirectory) + "/</b>. Do you wish to add data to the end of this file?";
-                ConfirmationWindow mConfirmationWindow(text);
-                mConfirmationWindow.setWindowTitle("Please select option");
-
-                if(mConfirmationWindow.exec() == QDialog::Rejected)
-                {
-                    FlashStandbySlider->setValue(0);
-                    return;
-                }
-            }
-
-            setFlashStandby(true);
-            FlashStandbyLabel->setText("<font color='green'><b>ON</b></font>");
-
-            if (CameraHardwareGainAutoCheckBox->isChecked())
-            {
-                mUEyeOpencvCam.setAutoGain(false);
-            }
-        }
-    }
-    else
-    {
-        FlashStandbySlider->setValue(0);
-    }
-}
 
 void MainWindow::onResetFlashIntensity()
 {

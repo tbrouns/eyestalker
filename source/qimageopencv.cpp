@@ -231,6 +231,8 @@ void QImageOpenCV::setAOIError()
     this->setPixmap(pic);
 }
 
+
+
 void QImageOpenCV::setSpinner()
 {
     QPixmap pic(widgetWdth, widgetHght);

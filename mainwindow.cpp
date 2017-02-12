@@ -168,6 +168,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(onCropAOI()));
 
+    // Qwt plot
+
+    mQwtPlotWidget = new QwtPlotWidget;
+    mQwtPlotWidget->setWidth(350);
+    mQwtPlotWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    mQwtPlotWidget->setVisible(false);
+    QObject::connect(this, SIGNAL(showPlot()), this, SLOT(plotTrialData()));
+
     /////////////////// Draw checkboxes ///////////////////////
 
     QLabel *HaarTextBox = new QLabel;
@@ -345,15 +353,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CameraOutputLayout->addWidget(CamEyeAOIXPosSlider, 0, 2);
     CameraOutputLayout->addWidget(CamEyeAOIYPosSlider, 1, 1);
-    CameraOutputLayout->addWidget(CamQImage, 1, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(CamQImage,           1, 2, Qt::AlignCenter);
     CameraOutputLayout->addWidget(CamEyeAOIWdthSlider, 2, 2);
     CameraOutputLayout->addWidget(CamEyeAOIHghtSlider, 1, 3);
-    CameraOutputLayout->addWidget(EyeHghtAOISlider, 1, 5);
-    CameraOutputLayout->addWidget(EyeQImage, 1, 4, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(EyeWdthAOISlider, 2, 4);
-    CameraOutputLayout->addLayout(OptionsLayout, 4, 2);
+    CameraOutputLayout->addWidget(EyeHghtAOISlider,    1, 5);
+    CameraOutputLayout->addWidget(EyeQImage,           1, 4, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(mQwtPlotWidget,      0, 4, 3, 2);
+    CameraOutputLayout->addWidget(EyeWdthAOISlider,    2, 4);
+    CameraOutputLayout->addLayout(OptionsLayout,       4, 2);
     CameraOutputLayout->addLayout(EyeDetectionsLayout, 3, 2);
     CameraOutputLayout->addLayout(DrawFunctionsLayout, 3, 4, Qt::AlignCenter);
+
+
+
 
     CameraOutputLayout->setColumnStretch(0, 1);
     CameraOutputLayout->setColumnStretch(6, 1);
@@ -854,7 +866,13 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::pupilTracking()
-{
+{   
+    mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure(), Parameters::eyeAOI);
+    mDetectionVariablesEye = mVariableWidgetEye->getStructure();
+
+    mVariableWidgetBead->resetStructure(mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+    mDetectionVariablesBead = mVariableWidgetBead->getStructure();
+
     while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
         detectionProperties mDetectionPropertiesEyeTemp;
@@ -867,7 +885,6 @@ void MainWindow::pupilTracking()
         AOIProperties AOIEyeTemp;
 
         imageInfo mImageInfo = mUEyeOpencvCam.getFrame(); // get new frame from camera
-
         cv::Mat imageOriginal = mImageInfo.image;
         absoluteTime = mImageInfo.time; // Get frame timestamp
 
@@ -984,6 +1001,7 @@ void MainWindow::pupilTracking()
                 trialIndex++;
                 TrialIndexSpinBox->setValue(trialIndex);
                 TRIAL_RECORDING = false;
+                if (!SAVE_EYE_IMAGE) { emit showPlot(); }
                 emit startTimer(round(1000 / guiUpdateFrequency));
             }
         }
@@ -1046,9 +1064,9 @@ void MainWindow::updateCameraImage()
                         mDrawVariablesTemp = mDrawVariables;
                         mDataVariablesTemp = mDataVariables;
 
-                         eyeAOITemp = Parameters::eyeAOI;
-                        beadAOITemp = Parameters::beadAOI;
-                       AOIFlashTemp = flashAOI;
+                        eyeAOITemp   = Parameters::eyeAOI;
+                        beadAOITemp  = Parameters::beadAOI;
+                        AOIFlashTemp = flashAOI;
 
                     } else { return; }
                 }

@@ -31,6 +31,7 @@
 #include "headers/sliderdouble.h"
 #include "headers/structures.h"
 #include "headers/qimageopencv.h"
+#include "headers/qwtplotwidget.h"
 #include "headers/ueyeopencv.h"
 #include "headers/variablewidget.h"
 
@@ -225,6 +226,10 @@ private:
     std::string dataDirectory;
     std::string dataFilename;
 
+    // Qwt plotting
+
+    QwtPlotWidget* mQwtPlotWidget;
+
     // Options menu
 
     QCheckBox* BeadDetectionCheckBox;
@@ -285,12 +290,6 @@ private:
     void loadSettings(QString);
     void saveSettings(QString);
 
-    // Setting parameters
-
-    void setParameterWidgets();
-    void setVariableWidgets(const detectionVariables &mDetectionVariablesEye);
-    void resetVariables();
-
     // Threads
 
     void pupilTracking();
@@ -302,7 +301,6 @@ private:
 
     void startTrialRecording();
     void saveTrialData();
-    void setFlashStandby(bool);
 
     // Offline interface
 
@@ -333,6 +331,8 @@ signals:
 
     void startTimer(int);
     void stopTimer();
+
+    void showPlot();
 
 public slots:
 
@@ -383,6 +383,7 @@ private slots:
     void setFlashAOIYPos(int);
     void setFlashThreshold(int);
     void setPupilPosition(double, double);
+    void plotTrialData();
     void onSetRealTime(int);
     void setSaveDataAspectRatio(int);
     void setSaveDataCircumference(int);

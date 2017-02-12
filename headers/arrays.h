@@ -19,7 +19,7 @@
 #include <vector>
 
 const std::vector<double> parametersEye  = {0.005,  // Alpha average
-                                             0.75,  // Alpha features
+                                             0.20,  // Alpha features
                                              0.10,  // Alpha certainty
                                              0.75,  // Alpha position
                                                 4,  // Canny blur level
@@ -34,7 +34,7 @@ const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                               320,  // Circumference max
                                                60,  // Circumference min
                                               0.4,  // Aspect ratio min
-                                             1.10,  // Circumference offset
+                                             1.20,  // Circumference offset
                                                15,  // Circumference change threshold
                                              0.12,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
@@ -56,7 +56,7 @@ const std::vector<double> parametersBead = {0.005,  // Alpha average
                                               130,  // Circumference max
                                                90,  // Circumference min
                                               0.8,  // Aspect ratio min
-                                             1.05,  // Circumference offset
+                                             1.10,  // Circumference offset
                                                 5,  // Circumference change threshold
                                              0.05,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold

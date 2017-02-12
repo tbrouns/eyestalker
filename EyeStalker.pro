@@ -13,14 +13,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-QT       += core gui
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = EyeStalker
 TEMPLATE = app
 
-QT       += core gui
+QT += core gui
 
 CONFIG += c++11
 
@@ -28,42 +28,42 @@ unix {
 
 # optimization
 
-QMAKE_CXXFLAGS += -O3
-QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
+#QMAKE_CXXFLAGS += -O3
+#QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS   += -fopenmp
 
 # default
 
-QMAKE_LFLAGS   += -Wl,-rpath,"'\$$ORIGIN'"
+QMAKE_LFLAGS += -Wl,-rpath,"'\$$ORIGIN'"
 
 # libraries
 
 # LibUSB
- INCLUDEPATH += /usr/local/include/libusb-1.0/
- LIBS += -L/usr/local/lib -lusb-1.0
+INCLUDEPATH += /usr/local/include/libusb-1.0/
+LIBS        += -L/usr/local/lib -lusb-1.0
 
 # OpenCV
 INCLUDEPATH += "/usr/local/include/opencv2"
-LIBS += `pkg-config --cflags --libs opencv`
+LIBS        += `pkg-config --cflags --libs opencv`
 
 # Eigen
 INCLUDEPATH += "/usr/local/include/eigen3"
 
 # Boost
-LIBS += -L$$PWD/../../../../usr/local/lib/ -lboost_filesystem -lboost_system
+LIBS        += -L$$PWD/../../../../usr/local/lib/ -lboost_filesystem -lboost_system
 INCLUDEPATH += $$PWD/../../../../usr/local/include
-DEPENDPATH += $$PWD/../../../../usr/local/include
+DEPENDPATH  += $$PWD/../../../../usr/local/include
 
 # Qwt
-LIBS += -L$$PWD/../../../../usr/local/qwt-6.1.3/lib/ -lqwt
+LIBS        += -L$$PWD/../../../../usr/local/qwt-6.1.3/lib/ -lqwt
 INCLUDEPATH += $$PWD/../../../../usr/local/qwt-6.1.3/include
-DEPENDPATH += $$PWD/../../../../usr/local/qwt-6.1.3/include
+DEPENDPATH  += $$PWD/../../../../usr/local/qwt-6.1.3/include
 
 # UEye
-LIBS += -L$$PWD/../../../../../usr/lib/ -lueye_api
+LIBS        += -L$$PWD/../../../../../usr/lib/ -lueye_api
 INCLUDEPATH += $$PWD/../../../../../usr/include
-DEPENDPATH += $$PWD/../../../../../usr/include
+DEPENDPATH  += $$PWD/../../../../../usr/include
 }
 
 win32 {
@@ -103,10 +103,10 @@ LIBS += -L$$PWD/../../../../libs/boost/stage/lib/ -lboost_system-mgw49-mt-d-1_62
 
 # UEye
 INCLUDEPATH += C://libs//UEye//include
-LIBS += C://libs//UEye//Lib//uEye_api.lib
-LIBS += C://libs//UEye//Lib//uEye_api_64.lib
-LIBS += C://libs//UEye//Lib//uEye_tools.lib
-LIBS += C://libs//UEye//Lib//ueye_tools_64.lib
+LIBS        += C://libs//UEye//Lib//uEye_api.lib
+LIBS        += C://libs//UEye//Lib//uEye_api_64.lib
+LIBS        += C://libs//UEye//Lib//uEye_tools.lib
+LIBS        += C://libs//UEye//Lib//ueye_tools_64.lib
 }
 
 SOURCES += main.cpp\
@@ -122,7 +122,8 @@ SOURCES += main.cpp\
     source/confirmationwindow.cpp \
     source/parameterwidget.cpp \
     source/variablewidget.cpp \
-    source/eyestalker.cpp
+    source/eyestalker.cpp \
+    headers/qwtplotwidget.cpp
 
 HEADERS  += \
     headers/confirmationwindow.h \
@@ -137,7 +138,8 @@ HEADERS  += \
     headers/parameterwidget.h \
     headers/variablewidget.h \
     headers/arrays.h \
-    headers/eyestalker.h
+    headers/eyestalker.h \
+    headers/qwtplotwidget.h
 
 RESOURCES += \
     resources/qdarkstyle/style.qrc
