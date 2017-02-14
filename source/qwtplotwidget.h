@@ -1,7 +1,7 @@
 #ifndef QWTPLOTWIDGET_H
 #define QWTPLOTWIDGET_H
 
-#include <headers/parameters.h>
+#include "parameters.h"
 
 // Qt
 

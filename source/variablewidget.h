@@ -7,9 +7,9 @@
 #include <QObject>
 #include <QWidget>
 
-#include "headers/structures.h"
-#include "headers/sliderdouble.h"
-#include "headers/parameters.h"
+#include "structures.h"
+#include "sliderdouble.h"
+#include "parameters.h"
 
 class VariableWidget : public QWidget
 {

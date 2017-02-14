@@ -13,7 +13,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#include "headers/qimageopencv.h"
+#include "qimageopencv.h"
 
 QImageOpenCV::QImageOpenCV(int type, QWidget *parent) : QLabel(parent)
 {    

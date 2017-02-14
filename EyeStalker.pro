@@ -20,16 +20,14 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = EyeStalker
 TEMPLATE = app
 
-QT += core gui
-
 CONFIG += c++11
 
 unix {
 
 # optimization
 
-#QMAKE_CXXFLAGS += -O3
-#QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
+QMAKE_CXXFLAGS += -O3
+QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS   += -fopenmp
 
@@ -109,8 +107,8 @@ LIBS        += C://libs//UEye//Lib//uEye_tools.lib
 LIBS        += C://libs//UEye//Lib//ueye_tools_64.lib
 }
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
+SOURCES += source/main.cpp\
+        source/mainwindow.cpp \
     source/drawfunctions.cpp \
     source/mainwindowexperiment.cpp \
     source/mainwindowparameters.cpp \
@@ -123,23 +121,23 @@ SOURCES += main.cpp\
     source/parameterwidget.cpp \
     source/variablewidget.cpp \
     source/eyestalker.cpp \
-    headers/qwtplotwidget.cpp
+    source/qwtplotwidget.cpp
 
 HEADERS  += \
-    headers/confirmationwindow.h \
-    headers/constants.h \
-    headers/drawfunctions.h \
-    headers/mainwindow.h \
-    headers/parameters.h \
-    headers/qimageopencv.h \
-    headers/sliderdouble.h \
-    headers/structures.h \
-    headers/ueyeopencv.h \
-    headers/parameterwidget.h \
-    headers/variablewidget.h \
-    headers/arrays.h \
-    headers/eyestalker.h \
-    headers/qwtplotwidget.h
+    source/confirmationwindow.h \
+    source/constants.h \
+    source/drawfunctions.h \
+    source/mainwindow.h \
+    source/parameters.h \
+    source/qimageopencv.h \
+    source/sliderdouble.h \
+    source/structures.h \
+    source/ueyeopencv.h \
+    source/parameterwidget.h \
+    source/variablewidget.h \
+    source/arrays.h \
+    source/eyestalker.h \
+    source/qwtplotwidget.h
 
 RESOURCES += \
     resources/qdarkstyle/style.qrc

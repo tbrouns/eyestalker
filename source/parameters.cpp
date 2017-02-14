@@ -13,7 +13,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#include "headers/parameters.h"
+#include "parameters.h"
 
 bool Parameters::CAMERA_READY;
 bool Parameters::CAMERA_RUNNING;

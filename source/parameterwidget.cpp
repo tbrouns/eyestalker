@@ -1,4 +1,4 @@
-#include "headers/parameterwidget.h"
+#include "parameterwidget.h"
 
 ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 {

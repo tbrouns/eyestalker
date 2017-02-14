@@ -10,9 +10,9 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "headers/constants.h"
-#include "headers/structures.h"
-#include "headers/sliderdouble.h"
+#include "constants.h"
+#include "structures.h"
+#include "sliderdouble.h"
 
 class ParameterWidget : public QWidget
 {

@@ -16,7 +16,7 @@
 #ifndef QIMAGEOPENCV_H
 #define QIMAGEOPENCV_H
 
-#include <headers/parameters.h>
+#include "parameters.h"
 
 #include <iostream>     // std::ofstream
 #include <mutex>

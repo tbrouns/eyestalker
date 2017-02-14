@@ -166,19 +166,12 @@ struct drawVariables
     int predictedXPos;
     int predictedYPos;
     AOIProperties glintAOI;
-    AOIProperties innerAOI;
-    AOIProperties outerAOI;
+    AOIProperties haarAOI;
+    AOIProperties cannyAOI;
     std::vector<int> cannyEdgeIndices;
     std::vector<double> ellipseCoefficients;
     std::vector<edgeProperties> edgeData;
 };
-
-struct detectionProperties
-{
-    detectionParameters     p;
-    detectionVariables      v;
-};
-
 
 struct vertexProperties
 {

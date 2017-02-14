@@ -13,7 +13,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#include "headers/drawfunctions.h"
+#include "drawfunctions.h"
 
 void drawAOI(cv::Mat& I, const AOIProperties &mAOI, const cv::Vec3b &col)
 {
@@ -161,15 +161,15 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
     {
         if (Parameters::drawFlags.haar)
         {
-            drawAOI(I, mDrawVariables.outerAOI, blue);
-            drawAOI(I, mDrawVariables.innerAOI, blue);
+            drawAOI(I, mDrawVariables.cannyAOI, blue);
+            drawAOI(I, mDrawVariables.haarAOI, blue);
             drawAOI(I, mDrawVariables.glintAOI, blue);
         }
 
         if (Parameters::drawFlags.edge)
         {
-            drawEdges  (I, mDrawVariables.outerAOI, red, mDrawVariables.cannyEdgeIndices);
-            drawOutline(I, mDrawVariables.outerAOI, green, yellow, orange, mDrawVariables.edgeData);
+            drawEdges  (I, mDrawVariables.cannyAOI, red, mDrawVariables.cannyEdgeIndices);
+            drawOutline(I, mDrawVariables.cannyAOI, green, yellow, orange, mDrawVariables.edgeData);
         }
 
         drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
@@ -178,7 +178,7 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
         {
             if (mDrawVariables.DETECTED)
             {
-                drawEllipse(I, mDrawVariables.outerAOI, white, mDrawVariables.ellipseCoefficients);
+                drawEllipse(I, mDrawVariables.cannyAOI, white, mDrawVariables.ellipseCoefficients);
                 drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, white);
             }
         }

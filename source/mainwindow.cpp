@@ -13,10 +13,45 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#include "headers/mainwindow.h"
+#include "mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+    // Other algorithms
+
+    // Pupil labs
+
+    props.intensity_range = 15;
+    props.blur_size = 5;
+    props.canny_treshold = 300;
+    props.canny_ration = 2;
+    props.canny_aperture = 5;
+    props.pupil_size_max = 120;
+    props.pupil_size_min = 20;
+    props.strong_perimeter_ratio_range_min = 0.6;
+    props.strong_perimeter_ratio_range_max = 1.1;
+    props.strong_area_ratio_range_min = 0.8;
+    props.strong_area_ratio_range_max = 1.1;
+    props.contour_size_min = 5;
+    props.ellipse_roundness_ratio = 0.09;
+    props.initial_ellipse_fit_treshhold = 4.3;
+    props.final_perimeter_ratio_range_min = 0.5;
+    props.final_perimeter_ratio_range_max = 1.0;
+    props.ellipse_true_support_min_dist = 3.0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // Get current date
 
     time_t rawtime;
@@ -875,7 +910,8 @@ void MainWindow::pupilTracking()
 
     while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
-        detectionProperties mDetectionPropertiesEyeTemp;
+        detectionVariables mDetectionVariablesTemp;
+        detectionParameters mDetectionParametersTemp;
 
         dataVariables mDataVariablesTemp;
         drawVariables mDrawVariablesTemp;
@@ -899,8 +935,8 @@ void MainWindow::pupilTracking()
 
             imageCamera = imageOriginal.clone();
 
-            mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
-            mDetectionPropertiesEyeTemp.p = mParameterWidgetEye->getStructure();
+            mDetectionVariablesTemp  = mDetectionVariablesEye;
+            mDetectionParametersTemp = mParameterWidgetEye->getStructure();
 
             AOIFlashTemp  = flashAOI;
             AOICameraTemp = Parameters::cameraAOI;
@@ -935,10 +971,10 @@ void MainWindow::pupilTracking()
 
             if (FLASH_STANDBY)
             {
-                mVariableWidgetEye->resetStructure(mDetectionPropertiesEyeTemp.p, AOIEyeTemp);
-
                 if (avgIntensity > flashThreshold)
                 {
+                    mVariableWidgetEye->resetStructure(mDetectionParametersTemp, AOIEyeTemp);
+                    mDetectionVariablesTemp = mVariableWidgetEye->getStructure();
                     startTime = mImageInfo.time;
                     startTrialRecording();
                 }
@@ -951,20 +987,18 @@ void MainWindow::pupilTracking()
                     FlashThresholdSlider->setMinimum(flashMinIntensity);
                 }
 
-                mDetectionPropertiesEyeTemp = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionPropertiesEyeTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
+                mDetectionVariablesTemp = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesTemp, mDetectionParametersTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
             }
         }
         else // Trial recording
         {
             if (!SAVE_EYE_IMAGE)
             {
-                mDetectionPropertiesEyeTemp = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionPropertiesEyeTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
-
+                mDetectionVariablesTemp         = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesTemp, mDetectionParametersTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
                 mDataVariablesTemp.absoluteXPos = mDataVariablesTemp.exactXPos + AOIEyeTemp.xPos + AOICameraTemp.xPos;
                 mDataVariablesTemp.absoluteYPos = mDataVariablesTemp.exactYPos + AOIEyeTemp.yPos + AOICameraTemp.yPos;
                 mDataVariablesTemp.timestamp    = relativeTime; // save time stamps
-                vDataVariables[frameCount]  = mDataVariablesTemp;
-
+                vDataVariables[frameCount]      = mDataVariablesTemp;
                 frameCount++;
             }
             else
@@ -1011,7 +1045,7 @@ void MainWindow::pupilTracking()
         {
             std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-            mDetectionVariablesEye = mDetectionPropertiesEyeTemp.v;
+            mDetectionVariablesEye = mDetectionVariablesTemp;
             mDrawVariables         = mDrawVariablesTemp;
             mDataVariables         = mDataVariablesTemp;
         }
@@ -1045,7 +1079,6 @@ void MainWindow::updateCameraImage()
         {
             if (Parameters::CAMERA_RUNNING)
             {
-                detectionProperties mDetectionPropertiesEyeTemp;
                 drawVariables mDrawVariablesTemp;
                 dataVariables mDataVariablesTemp;
 
@@ -1060,7 +1093,6 @@ void MainWindow::updateCameraImage()
                     {
                         imageOriginal = imageCamera.clone();
 
-                        mDetectionPropertiesEyeTemp.v = mDetectionVariablesEye;
                         mDrawVariablesTemp = mDrawVariables;
                         mDataVariablesTemp = mDataVariables;
 

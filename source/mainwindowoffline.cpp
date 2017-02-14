@@ -13,7 +13,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-#include "headers/mainwindow.h"
+#include "mainwindow.h"
 
 void MainWindow::startOfflineSession()
 {
@@ -152,7 +152,10 @@ void MainWindow::onSetTrialOffline(int index)
     countNumImages();
 
     if (imageTotalOffline > 0)
-    {
+    {        
+        vDataVariablesPL.resize(imageTotalOffline);
+        vDataVariablesEC.resize(imageTotalOffline);
+
         vDataVariables.resize(imageTotalOffline);
         vDataVariablesBead.resize(imageTotalOffline);
 
@@ -300,19 +303,22 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     int cameraAOIXPos;
     int cameraAOIYPos;
 
-    detectionProperties mDetectionPropertiesEye;
-    detectionProperties mDetectionPropertiesBead;
+    detectionVariables mDetectionVariablesEye;
+    detectionVariables mDetectionVariablesBead;
+
+    detectionParameters mDetectionParametersEye;
+    detectionParameters mDetectionParametersBead;
 
     AOIProperties AOIEyeTemp;
     AOIProperties AOIBeadTemp;
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-        mDetectionPropertiesEye.v = vDetectionVariablesEye[imageIndex];
-        mDetectionPropertiesEye.p = mParameterWidgetEye->getStructure();
+        mDetectionVariablesEye  = vDetectionVariablesEye[imageIndex];
+        mDetectionParametersEye = mParameterWidgetEye->getStructure();
 
-        mDetectionPropertiesBead.v = vDetectionVariablesBead[imageIndex];
-        mDetectionPropertiesBead.p = mParameterWidgetBead->getStructure();
+        mDetectionVariablesBead = vDetectionVariablesBead[imageIndex];
+        mDetectionParametersBead = mParameterWidgetBead->getStructure();
 
         cameraAOIXPos = Parameters::cameraAOI.xPos;
         cameraAOIYPos = Parameters::cameraAOI.yPos;
@@ -328,7 +334,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    detectionProperties mDetectionPropertiesEyeNew = eyeStalker(imageRaw, AOIEyeTemp, mDetectionPropertiesEye, mDataVariables, mDrawVariables);
+    detectionVariables mDetectioVariablesEyeNew = eyeStalker(imageRaw, AOIEyeTemp, mDetectionVariablesEye, mDetectionParametersEye, mDataVariables, mDrawVariables);
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
@@ -342,11 +348,11 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     cv::Mat imageProcessed = imageRaw.clone();
     drawAll(imageProcessed, mDrawVariables);
 
-    detectionProperties mDetectionPropertiesBeadNew;
+    detectionVariables mDetectionVariablesBeadNew;
 
     if (mParameterWidgetBead->getState())
     {
-        mDetectionPropertiesBeadNew = eyeStalker(imageRaw, AOIBeadTemp, mDetectionPropertiesBead, mDataVariablesBead, mDrawVariablesBead);
+        mDetectionVariablesBeadNew      = eyeStalker(imageRaw, AOIBeadTemp, mDetectionVariablesBead, mDetectionParametersBead, mDataVariablesBead, mDrawVariablesBead);
         mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos + AOIBeadTemp.xPos + cameraAOIXPos;
         mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos + AOIBeadTemp.yPos + cameraAOIYPos;
         vDataVariablesBead[imageIndex]  = mDataVariablesBead;
@@ -368,9 +374,68 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     // Record variables for next frame(s)
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-        vDetectionVariablesEye[imageIndex + 1] = mDetectionPropertiesEyeNew.v;
-        if (mParameterWidgetBead->getState()) { vDetectionVariablesBead[imageIndex + 1] = mDetectionPropertiesBeadNew.v; }
+        vDetectionVariablesEye[imageIndex + 1] = mDetectioVariablesEyeNew;
+        if (mParameterWidgetBead->getState()) { vDetectionVariablesBead[imageIndex + 1] = mDetectionVariablesBeadNew; }
     }
+
+    // Do detection with other algorithms
+
+    // PupilLabs
+
+    {
+        cv::Mat imageNew;
+        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
+        cv::Mat imageDebug;
+        cv::Mat imageColor = imageRaw.clone();
+        cv::Rect roi(Parameters::eyeAOI.xPos, Parameters::eyeAOI.yPos, Parameters::eyeAOI.wdth, Parameters::eyeAOI.hght);
+
+        t1 = std::chrono::high_resolution_clock::now();
+        mDetector2DResult = mDetector2D.detect(props, imageNew, imageColor, imageDebug, roi, false, false, false);
+        t2 = std::chrono::high_resolution_clock::now();
+        fp_ms = t2 - t1;
+
+//        // Save image
+
+//        std::stringstream imagePath;
+//        imagePath << dataDirectoryOffline.toStdString()
+//                  << "/trial_"
+//                  << trialIndexOffline
+//                  << "/processed/"
+//                  << imageIndex
+//                  << ".png";
+
+//        cv::imwrite(imagePath.str(), imageColor);
+
+    }
+
+    Detector2DResult mDetector2DResultNew = *mDetector2DResult;
+
+    dataVariables mDataVariablesPL;
+    mDataVariablesPL.timestamp = mDetector2DResultNew.confidence;
+    mDataVariablesPL.exactXPos = mDetector2DResultNew.ellipse.center[0];
+    mDataVariablesPL.exactYPos = mDetector2DResultNew.ellipse.center[1];
+    mDataVariablesPL.duration  = fp_ms.count();
+    vDataVariablesPL[imageIndex] = mDataVariablesPL;
+
+    // ExCuSe
+
+    {
+        cv::Mat imageNew;
+        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
+        cv::Mat imageThreshold = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
+        cv::Mat imageEdges     = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
+        t1 = std::chrono::high_resolution_clock::now();
+        detectedEllipse = run(&imageNew, &imageThreshold, &imageEdges, false);
+        t2 = std::chrono::high_resolution_clock::now();
+        fp_ms = t2 - t1;
+    }
+
+    dataVariables mDataVariablesEC;
+    mDataVariablesEC.exactXPos = detectedEllipse.center.x;
+    mDataVariablesEC.exactYPos = detectedEllipse.center.y;
+    mDataVariablesEC.duration  = fp_ms.count();
+    vDataVariablesEC[imageIndex] = mDataVariablesEC;
+
 }
 
 void MainWindow::onDetectCurrentFrame()
@@ -574,6 +639,42 @@ void MainWindow::onSaveTrialData()
 
         file.close();
     }
+
+    // Save data from all algorithms
+
+    { // save pupil data
+
+        std::stringstream filename;
+        filename << dataDirectoryOffline.toStdString()
+                 << "/trial_"
+                 << trialIndexOffline
+                 << "/tracking_data_all.dat";
+
+        std::ofstream file;
+        file.open(filename.str(), std::ios::trunc); // open file and remove any existing data
+
+        file << imageTotalOffline << ";";  // data samples
+
+        file << std::fixed;
+        file << std::setprecision(3);
+
+        // write data
+
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].DETECTED << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactXPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactYPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].timestamp << delimiter; } // confidence
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactXPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactYPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].duration << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactXPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactYPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].duration << delimiter; }
+
+        file.close();
+    }
+
 }
 
 void MainWindow::onCombineData()

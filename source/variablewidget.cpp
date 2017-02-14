@@ -1,4 +1,4 @@
-#include "headers/variablewidget.h"
+#include "variablewidget.h"
 
 VariableWidget::VariableWidget(QWidget *parent) : QWidget(parent)
 {

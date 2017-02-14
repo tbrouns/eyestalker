@@ -48,7 +48,7 @@
 #include <string>
 #include <vector>
 
-detectionProperties eyeStalker(const cv::Mat&, const AOIProperties&, detectionProperties&, dataVariables&, drawVariables&);
+detectionVariables eyeStalker(const cv::Mat&, const AOIProperties&, detectionVariables&, const detectionParameters&, dataVariables&, drawVariables&);
 double flashDetection(const cv::Mat&);
 
 #endif // EYESTALKER
