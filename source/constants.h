@@ -27,7 +27,9 @@
 // Parameter initial values
 
 const double initialAspectRatio = 0.9;
-const double initialIntensity   = 60;
+const double initialCurvature   =  30;
+const double initialIntensity   =  60;
+
 const double fitErrorFraction   = 0.05;
 
 // Other
@@ -54,5 +56,6 @@ const double certaintyAsymptoteY = 0.99;
 
 const double certaintyLatency = 10.0; // turn into adjustable parameter.
 
+const double certaintyOffset = 0.1;
 
 #endif

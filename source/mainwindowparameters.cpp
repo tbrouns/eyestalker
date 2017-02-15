@@ -90,10 +90,11 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
     mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
     mDetectionParameters.circumferenceOffset                = settings.value(prefix + "CircumferenceOffset",             parameters[16]).toDouble();
-    mDetectionParameters.changeThresholdCircumference       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
-    mDetectionParameters.changeThresholdAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
-    mDetectionParameters.changeThresholdPosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
+    mDetectionParameters.thresholdChangeCircumference       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
+    mDetectionParameters.thresholdChangeAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
+    mDetectionParameters.thresholdChangePosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
     mDetectionParameters.scoreThreshold                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
+    mDetectionParameters.scoreThresholdDiff                 = settings.value(prefix + "ScoreThresholdDiff",              parameters[21]).toDouble();
 
     return mDetectionParameters;
 }
@@ -160,10 +161,11 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "EllipseFitErrorMaximum",         mDetectionParameters.ellipseFitErrorMaximum);
     settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
     settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);
-    settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.changeThresholdCircumference);
-    settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.changeThresholdAspectRatio);
-    settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.changeThresholdPosition);
+    settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.thresholdChangeCircumference);
+    settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.thresholdChangeAspectRatio);
+    settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.thresholdChangePosition);
     settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.scoreThreshold);
+    settings.setValue(prefix + "ScoreThresholdDiff",             mDetectionParameters.scoreThresholdDiff);
 }
 
 void MainWindow::onResetParameters()
@@ -220,9 +222,6 @@ void MainWindow::onSetRealTime(int state)
         RealTimeEyeTrackingCheckBox->setChecked(false);
     }
 }
-
-
-
 
 void MainWindow::onResetFlashIntensity()
 {

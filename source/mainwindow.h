@@ -35,10 +35,10 @@
 #include "ueyeopencv.h"
 #include "variablewidget.h"
 
-// Other algorithm
+// Other algorithms
 
-#include "../ExCuSe/source/algo.h"
-#include "../PupilLabs/pupil-0.8.7-w/pupil_src/capture/pupil_detectors/detect_2d.hpp"
+//#include "../ExCuSe/source/algo.h"
+//#include "../PupilLabs/pupil-0.8.7-w/pupil_src/capture/pupil_detectors/detect_2d.hpp"
 
 // Standard Template
 
@@ -59,6 +59,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/range/iterator_range.hpp>
 
 // OpenCV
 
@@ -118,17 +119,16 @@ public:
 
 private:
 
-    // Other algorithms
+//    // Other algorithms
 
-    Detector2DProperties props;
-    Detector2D mDetector2D;
-    std::shared_ptr<Detector2DResult> mDetector2DResult;
+//    Detector2DProperties props;
+//    Detector2D mDetector2D;
+//    std::shared_ptr<Detector2DResult> mDetector2DResult;
 
-    std::vector<dataVariables> vDataVariablesPL;
-    std::vector<dataVariables> vDataVariablesEC;
+//    std::vector<dataVariables> vDataVariablesPL;
+//    std::vector<dataVariables> vDataVariablesEC;
 
-
-    cv::RotatedRect detectedEllipse;
+//    cv::RotatedRect detectedEllipse;
 
 
 
@@ -366,6 +366,7 @@ private slots:
     void onCropAOI();
     void onDetectAllFrames();
     void onDetectAllTrials();
+    void onDetectAllExperiments();
     void onDetectCurrentFrame();
     void onDialogueOpen();
     void onFlashStandbySlider(int);

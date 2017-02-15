@@ -21,23 +21,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Pupil labs
 
-    props.intensity_range = 15;
-    props.blur_size = 5;
-    props.canny_treshold = 300;
-    props.canny_ration = 2;
-    props.canny_aperture = 5;
-    props.pupil_size_max = 120;
-    props.pupil_size_min = 20;
-    props.strong_perimeter_ratio_range_min = 0.6;
-    props.strong_perimeter_ratio_range_max = 1.1;
-    props.strong_area_ratio_range_min = 0.8;
-    props.strong_area_ratio_range_max = 1.1;
-    props.contour_size_min = 5;
-    props.ellipse_roundness_ratio = 0.09;
-    props.initial_ellipse_fit_treshhold = 4.3;
-    props.final_perimeter_ratio_range_min = 0.5;
-    props.final_perimeter_ratio_range_max = 1.0;
-    props.ellipse_true_support_min_dist = 3.0;
+//    props.intensity_range = 15;
+//    props.blur_size = 5;
+//    props.canny_treshold = 300;
+//    props.canny_ration = 2;
+//    props.canny_aperture = 5;
+//    props.pupil_size_max = 120;
+//    props.pupil_size_min = 20;
+//    props.strong_perimeter_ratio_range_min = 0.6;
+//    props.strong_perimeter_ratio_range_max = 1.1;
+//    props.strong_area_ratio_range_min = 0.8;
+//    props.strong_area_ratio_range_max = 1.1;
+//    props.contour_size_min = 5;
+//    props.ellipse_roundness_ratio = 0.09;
+//    props.initial_ellipse_fit_treshhold = 4.3;
+//    props.final_perimeter_ratio_range_min = 0.5;
+//    props.final_perimeter_ratio_range_max = 1.0;
+//    props.ellipse_true_support_min_dist = 3.0;
 
 
 
@@ -315,17 +315,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton *OfflineNextImageButton = new QPushButton(">");
     QObject::connect(OfflineNextImageButton, SIGNAL(clicked(bool)), this, SLOT(onImageNext()));
 
-    QLabel *OfflinePupilDetectionTextBox = new QLabel;
-    OfflinePupilDetectionTextBox->setText("<b>Detect pupil: </b> ");
+    QLabel *OfflineDetectionTextBox = new QLabel;
+    OfflineDetectionTextBox->setText("<b>Detect pupil in:</b>");
 
-    QPushButton *OfflinePupilDetectionOneButton = new QPushButton("Current");
-    QObject::connect(OfflinePupilDetectionOneButton, SIGNAL(clicked(bool)), this, SLOT(onDetectCurrentFrame()));
+    QPushButton *OfflineDetectOneFrameButton = new QPushButton("One frame");
+    QObject::connect(OfflineDetectOneFrameButton, SIGNAL(clicked(bool)), this, SLOT(onDetectCurrentFrame()));
 
-    QPushButton *OfflinePupilDetectionAllFramesButton = new QPushButton("All frames");
-    QObject::connect(OfflinePupilDetectionAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllFrames()));
+    QPushButton *OfflineDetectAllFramesButton = new QPushButton("All frames");
+    QObject::connect(OfflineDetectAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllFrames()));
 
-    QPushButton *OfflinePupilDetectionAllTrialsButton = new QPushButton("All trials");
-    QObject::connect(OfflinePupilDetectionAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllTrials()));
+    QPushButton *OfflineDetectAllTrialsButton = new QPushButton("All trials");
+    QObject::connect(OfflineDetectAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllTrials()));
+
+    QPushButton *OfflineDetectAllExperimentsButton = new QPushButton("All experiments");
+    QObject::connect(OfflineDetectAllExperimentsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllExperiments()));
 
     QPushButton *SavePupilDataButton = new QPushButton("Save");
     QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(onSaveTrialData()));
@@ -343,10 +346,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeTrackingOfflineLayout->addWidget(OfflineImageSlider);
     EyeTrackingOfflineLayout->addWidget(OfflineNextImageButton);
     EyeTrackingOfflineLayout->addWidget(OfflineImageFrameTextBox);
-    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionTextBox);
-    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionOneButton);
-    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionAllFramesButton);
-    EyeTrackingOfflineLayout->addWidget(OfflinePupilDetectionAllTrialsButton);
+    EyeTrackingOfflineLayout->addWidget(OfflineDetectionTextBox);
+    EyeTrackingOfflineLayout->addWidget(OfflineDetectOneFrameButton);
+    EyeTrackingOfflineLayout->addWidget(OfflineDetectAllFramesButton);
+    EyeTrackingOfflineLayout->addWidget(OfflineDetectAllTrialsButton);
+    EyeTrackingOfflineLayout->addWidget(OfflineDetectAllExperimentsButton);
     EyeTrackingOfflineLayout->addStretch();
 
     OfflineModeMainWidget->setVisible(false);

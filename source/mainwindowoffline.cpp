@@ -57,7 +57,7 @@ void MainWindow::countNumTrials()
     {
         std::stringstream folderName;
         folderName << dataDirectoryOffline.toStdString()
-                   << "/trial_"
+                   << "/images/trial_"
                    << trialTotalOffline;
         if (!boost::filesystem::exists(folderName.str())) { break; }
         trialTotalOffline++;
@@ -75,7 +75,7 @@ void MainWindow::countNumImages()
     {
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
-                 << "/trial_"
+                 << "/images/trial_"
                  << trialIndexOffline
                  << "/raw/"
                  << imageTotalOffline
@@ -88,7 +88,7 @@ void MainWindow::countNumImages()
 
 void MainWindow::onLoadSession()
 {
-    QString dataDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    QString dataDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), dataDirectoryOffline, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
     if (!dataDirectoryTemp.isEmpty())
     {
@@ -111,7 +111,7 @@ void MainWindow::setupOfflineSession()
 
             std::stringstream directoryName;
             directoryName << dataDirectoryOffline.toStdString()
-                          << "/trial_"
+                          << "/images/trial_"
                           << trialIndexOffline
                           << "/processed";
 
@@ -122,7 +122,7 @@ void MainWindow::setupOfflineSession()
             {
                 std::stringstream directory;
                 directory << dataDirectoryOffline.toStdString()
-                          << "/timestamps.dat";
+                          << "/images/timestamps.dat";
 
                 std::ifstream data;
                 data.open(directory.str().c_str());
@@ -153,8 +153,8 @@ void MainWindow::onSetTrialOffline(int index)
 
     if (imageTotalOffline > 0)
     {
-        vDataVariablesPL.resize(imageTotalOffline);
-        vDataVariablesEC.resize(imageTotalOffline);
+        //        vDataVariablesPL.resize(imageTotalOffline);
+        //        vDataVariablesEC.resize(imageTotalOffline);
 
         vDataVariables.resize(imageTotalOffline);
         vDataVariablesBead.resize(imageTotalOffline);
@@ -177,7 +177,7 @@ void MainWindow::onSetTrialOffline(int index)
 
         std::stringstream directoryPath;
         directoryPath << dataDirectoryOffline.toStdString()
-                      << "/trial_"
+                      << "/images/trial_"
                       << trialIndexOffline
                       << "/processed/";
 
@@ -192,7 +192,7 @@ void MainWindow::updateImageRaw(int imgIndex) // for signal from qimageopencv
 
     std::stringstream imagePath;
     imagePath << dataDirectoryOffline.toStdString()
-              << "/trial_"
+              << "/images/trial_"
               << trialIndexOffline
               << "/raw/"
               << imgIndex
@@ -218,7 +218,7 @@ void MainWindow::updateImageProcessed(int imgIndex)
 {
     std::stringstream fileName;
     fileName << dataDirectoryOffline.toStdString()
-             << "/trial_"
+             << "/images/trial_"
              << trialIndexOffline
              << "/processed/"
              << imgIndex
@@ -289,7 +289,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     std::stringstream imagePathRaw;
     imagePathRaw << dataDirectoryOffline.toStdString()
-                 << "/trial_"
+                 << "/images/trial_"
                  << trialIndexOffline
                  << "/raw/"
                  << imageIndex
@@ -363,7 +363,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     std::stringstream imagePath;
     imagePath << dataDirectoryOffline.toStdString()
-              << "/trial_"
+              << "/images/trial_"
               << trialIndexOffline
               << "/processed/"
               << imageIndex
@@ -378,63 +378,63 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         if (mParameterWidgetBead->getState()) { vDetectionVariablesBead[imageIndex + 1] = mDetectionVariablesBeadNew; }
     }
 
-    // Do detection with other algorithms
+    //    // Do detection with other algorithms
 
-    // PupilLabs
+    //    // PupilLabs
 
-    {
-        cv::Mat imageNew;
-        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
-        cv::Mat imageDebug;
-        cv::Mat imageColor = imageRaw.clone();
-        cv::Rect roi(Parameters::eyeAOI.xPos, Parameters::eyeAOI.yPos, Parameters::eyeAOI.wdth, Parameters::eyeAOI.hght);
+    //    {
+    //        cv::Mat imageNew;
+    //        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
+    //        cv::Mat imageDebug;
+    //        cv::Mat imageColor = imageRaw.clone();
+    //        cv::Rect roi(Parameters::eyeAOI.xPos, Parameters::eyeAOI.yPos, Parameters::eyeAOI.wdth, Parameters::eyeAOI.hght);
 
-        t1 = std::chrono::high_resolution_clock::now();
-        mDetector2DResult = mDetector2D.detect(props, imageNew, imageColor, imageDebug, roi, false, false, false);
-        t2 = std::chrono::high_resolution_clock::now();
-        fp_ms = t2 - t1;
+    //        t1 = std::chrono::high_resolution_clock::now();
+    //        mDetector2DResult = mDetector2D.detect(props, imageNew, imageColor, imageDebug, roi, false, false, false);
+    //        t2 = std::chrono::high_resolution_clock::now();
+    //        fp_ms = t2 - t1;
 
-        //        // Save image
+    //        //        // Save image
 
-        //        std::stringstream imagePath;
-        //        imagePath << dataDirectoryOffline.toStdString()
-        //                  << "/trial_"
-        //                  << trialIndexOffline
-        //                  << "/processed/"
-        //                  << imageIndex
-        //                  << ".png";
+    //        //        std::stringstream imagePath;
+    //        //        imagePath << dataDirectoryOffline.toStdString()
+    //        //                  << "/images/trial_"
+    //        //                  << trialIndexOffline
+    //        //                  << "/processed/"
+    //        //                  << imageIndex
+    //        //                  << ".png";
 
-        //        cv::imwrite(imagePath.str(), imageColor);
+    //        //        cv::imwrite(imagePath.str(), imageColor);
 
-    }
+    //    }
 
-    Detector2DResult mDetector2DResultNew = *mDetector2DResult;
+    //    Detector2DResult mDetector2DResultNew = *mDetector2DResult;
 
-    dataVariables mDataVariablesPL;
-    mDataVariablesPL.timestamp = mDetector2DResultNew.confidence;
-    mDataVariablesPL.exactXPos = mDetector2DResultNew.ellipse.center[0];
-    mDataVariablesPL.exactYPos = mDetector2DResultNew.ellipse.center[1];
-    mDataVariablesPL.duration  = fp_ms.count();
-    vDataVariablesPL[imageIndex] = mDataVariablesPL;
+    //    dataVariables mDataVariablesPL;
+    //    mDataVariablesPL.timestamp = mDetector2DResultNew.confidence;
+    //    mDataVariablesPL.exactXPos = mDetector2DResultNew.ellipse.center[0];
+    //    mDataVariablesPL.exactYPos = mDetector2DResultNew.ellipse.center[1];
+    //    mDataVariablesPL.duration  = fp_ms.count();
+    //    vDataVariablesPL[imageIndex] = mDataVariablesPL;
 
-    // ExCuSe
+    //    // ExCuSe
 
-    {
-        cv::Mat imageNew;
-        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
-        cv::Mat imageThreshold = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
-        cv::Mat imageEdges     = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
-        t1 = std::chrono::high_resolution_clock::now();
-        detectedEllipse = run(&imageNew, &imageThreshold, &imageEdges, false);
-        t2 = std::chrono::high_resolution_clock::now();
-        fp_ms = t2 - t1;
-    }
+    //    {
+    //        cv::Mat imageNew;
+    //        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
+    //        cv::Mat imageThreshold = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
+    //        cv::Mat imageEdges     = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
+    //        t1 = std::chrono::high_resolution_clock::now();
+    //        detectedEllipse = run(&imageNew, &imageThreshold, &imageEdges, false);
+    //        t2 = std::chrono::high_resolution_clock::now();
+    //        fp_ms = t2 - t1;
+    //    }
 
-    dataVariables mDataVariablesEC;
-    mDataVariablesEC.exactXPos = detectedEllipse.center.x;
-    mDataVariablesEC.exactYPos = detectedEllipse.center.y;
-    mDataVariablesEC.duration  = fp_ms.count();
-    vDataVariablesEC[imageIndex] = mDataVariablesEC;
+    //    dataVariables mDataVariablesEC;
+    //    mDataVariablesEC.exactXPos = detectedEllipse.center.x;
+    //    mDataVariablesEC.exactYPos = detectedEllipse.center.y;
+    //    mDataVariablesEC.duration  = fp_ms.count();
+    //    vDataVariablesEC[imageIndex] = mDataVariablesEC;
 
 }
 
@@ -525,24 +525,19 @@ void MainWindow::onDetectAllTrials()
 
 void MainWindow::onDetectAllExperiments()
 {
-    QString mainDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    QString mainDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), dataDirectoryOffline, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
     std::string mainDirectory = mainDirectoryTemp.toStdString();
 
     if (boost::filesystem::exists(mainDirectory))
     {
-        boost::filesystem::directory_iterator end_itr;
-        for (boost::filesystem::directory_iterator itr(dataDirectoryTemp); itr != end_itr; ++itr)
+        for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(mainDirectory), {}))
         {
-            std::string subDirectory = itr->status();
-
-            if (boost::filesystem::is_directory(subDirectory))
-            {
-                dataDirectoryOffline = QString::fromStdString(subDirectory);
-                timeMatrix.clear();
-                setupOfflineSession();
-                onDetectAllTrials();
-            }
+            std::string subDirectory = entry.path().string();
+            dataDirectoryOffline = QString::fromStdString(subDirectory);
+            timeMatrix.clear();
+            setupOfflineSession();
+            onDetectAllTrials();
         }
     }
 }
@@ -556,7 +551,7 @@ void MainWindow::onSaveTrialData()
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
-                 << "/trial_"
+                 << "/images/trial_"
                  << trialIndexOffline
                  << "/tracking_data.dat";
 
@@ -614,7 +609,7 @@ void MainWindow::onSaveTrialData()
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
-                 << "/trial_"
+                 << "/images/trial_"
                  << trialIndexOffline
                  << "/edge_data.dat";
 
@@ -643,7 +638,7 @@ void MainWindow::onSaveTrialData()
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
-                 << "/trial_"
+                 << "/images/trial_"
                  << trialIndexOffline
                  << "/fit_data.dat";
 
@@ -653,6 +648,7 @@ void MainWindow::onSaveTrialData()
         for (int i = 0; i < imageTotalOffline; i++)
         {
             int numFits = vDataVariables[i].ellipseData.size();
+
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].tag           << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].xPos          << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].yPos          << delimiter; }
@@ -660,46 +656,47 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].aspectRatio   << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].fitError      << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].edgeLength    << delimiter; }
+
             file << "\n";
         }
 
         file.close();
     }
 
-    // Save data from all algorithms
+    //    // Save data from all algorithms
 
-    { // save pupil data
+    //    { // save pupil data
 
-        std::stringstream filename;
-        filename << dataDirectoryOffline.toStdString()
-                 << "/trial_"
-                 << trialIndexOffline
-                 << "/tracking_data_all.dat";
+    //        std::stringstream filename;
+    //        filename << dataDirectoryOffline.toStdString()
+    //                 << "/images/trial_"
+    //                 << trialIndexOffline
+    //                 << "/tracking_data_all.dat";
 
-        std::ofstream file;
-        file.open(filename.str(), std::ios::trunc); // open file and remove any existing data
+    //        std::ofstream file;
+    //        file.open(filename.str(), std::ios::trunc); // open file and remove any existing data
 
-        file << imageTotalOffline << ";";  // data samples
+    //        file << imageTotalOffline << ";";  // data samples
 
-        file << std::fixed;
-        file << std::setprecision(3);
+    //        file << std::fixed;
+    //        file << std::setprecision(3);
 
-        // write data
+    //        // write data
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].DETECTED << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactXPos << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactYPos << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].timestamp << delimiter; } // confidence
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactXPos << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactYPos << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].duration << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactXPos << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactYPos << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].duration << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].DETECTED << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactXPos << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactYPos << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].timestamp << delimiter; } // confidence
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactXPos << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactYPos << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].duration << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactXPos << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactYPos << delimiter; }
+    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].duration << delimiter; }
 
-        file.close();
-    }
+    //        file.close();
+    //    }
 
 }
 
@@ -708,7 +705,7 @@ void MainWindow::onCombineData()
     dataFilename = (DataFilenameLineEdit->text()).toStdString();
     std::stringstream fileNameWriteSS;
     fileNameWriteSS << dataDirectoryOffline.toStdString()
-                    << "/../"
+                    << "/"
                     << dataFilename
                     << ".dat";
 
@@ -729,7 +726,7 @@ void MainWindow::onCombineData()
 
         std::stringstream fileNameRead;
         fileNameRead << dataDirectoryOffline.toStdString()
-                     << "/trial_"
+                     << "/images/trial_"
                      << iTrial
                      << "/tracking_data.dat";
 

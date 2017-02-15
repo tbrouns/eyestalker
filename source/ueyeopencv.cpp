@@ -55,13 +55,10 @@ bool UEyeOpencvCam::findCamera()
         libusb_device_descriptor desc;
         libusb_get_device_descriptor(device, &desc);
 
-        if (desc.idVendor == idVendor)
+        if (desc.idVendor == idVendor && desc.idProduct == idProduct)
         {
-            if (desc.idProduct == idProduct)
-            {
-                returnVal = true;
-                break;
-            }
+            returnVal = true;
+            break;
         }
     }
 

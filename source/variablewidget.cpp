@@ -77,23 +77,29 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
 
     mDetectionVariables.averageAspectRatio   = initialAspectRatio; // close to perfect circle
     mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin); // calculate first
-    mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
+    mDetectionVariables.averageCurvature     = initialCurvature;
+    mDetectionVariables.averageGradient      = 0;
     mDetectionVariables.averageHeight        = mDetectionVariables.averageCircumference / M_PI;
     mDetectionVariables.averageIntensity     = initialIntensity;
-    mDetectionVariables.averageGradient      = 0;
+    mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
 
     mDetectionVariables.predictedAspectRatio   = mDetectionVariables.averageAspectRatio;
     mDetectionVariables.predictedCircumference = mDetectionVariables.averageCircumference;
-    mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
+    mDetectionVariables.predictedCurvature     = mDetectionVariables.averageCurvature;
+    mDetectionVariables.predictedGradient      = mDetectionVariables.averageGradient;
     mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
+    mDetectionVariables.predictedIntensity     = mDetectionVariables.averageIntensity;
+    mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
     mDetectionVariables.predictedXPos          = 0.5 * mAOI.wdth; // centre of image
     mDetectionVariables.predictedYPos          = 0.5 * mAOI.hght;
-    mDetectionVariables.predictedCurvature     = 0;
 
     mDetectionVariables.momentumAspectRatio   = 0;
     mDetectionVariables.momentumCircumference = 0;
-    mDetectionVariables.momentumWidth         = 0;
+    mDetectionVariables.momentumCurvature     = 0;
+    mDetectionVariables.momentumGradient      = 0;
     mDetectionVariables.momentumHeight        = 0;
+    mDetectionVariables.momentumIntensity     = 0;
+    mDetectionVariables.momentumWidth         = 0;
     mDetectionVariables.momentumXPos          = 0;
     mDetectionVariables.momentumYPos          = 0;
 
@@ -101,9 +107,10 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
     else                       { AOISize = mAOI.hght; }
 
-    mDetectionVariables.changeThresholdAspectRatio   = 1.0 / mDetectionParameters.aspectRatioMin;
-    mDetectionVariables.changeThresholdCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
-    mDetectionVariables.changeThresholdPosition      = AOISize;
+    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 / mDetectionParameters.aspectRatioMin;
+    mDetectionVariables.thresholdChangeCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
+    mDetectionVariables.thresholdChangePosition      = AOISize;
+    mDetectionVariables.thresholdScore               = 0;
 
     mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
 

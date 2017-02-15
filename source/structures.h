@@ -34,10 +34,13 @@
 
 struct AOIProperties
 {
+    AOIProperties(): flag(true) { }
+
     int xPos;
     int yPos;
     int wdth;
     int hght;
+    int flag;
 };
 
 struct edgeProperties
@@ -49,8 +52,8 @@ struct edgeProperties
     double gradient;
     double radius;
     double radiusVar;
+    double length;
     int index;
-    int length;
     int size;
     int tag;
     std::vector<int> pointIndices;
@@ -87,29 +90,29 @@ struct detectionParameters
 {
     detectionParameters(): DETECTION_ON(false) { }
 
-    double alphaFeatures;
+    bool DETECTION_ON;
     double alphaAverages;
-    double alphaPosition;
     double alphaCertainty;
-    double curvatureOffset;
-    double edgeLengthFraction;
-    double ellipseFitErrorMaximum;
+    double alphaFeatures;
+    double alphaPosition;
+    double aspectRatioMin;
+    double cannyThresholdHigh;
+    double cannyThresholdLow;
     double circumferenceMax;
     double circumferenceMin;
     double circumferenceOffset;
-    double aspectRatioMin;
-    double changeThresholdCircumference;
-    double changeThresholdAspectRatio;
-    double changeThresholdPosition;
+    double curvatureOffset;
+    double edgeLengthFraction;
+    double ellipseFitErrorMaximum;
     double scoreThreshold;
-    double scoreThresholdPoints;
+    double scoreThresholdDiff;
+    double thresholdChangeAspectRatio;
+    double thresholdChangeCircumference;
+    double thresholdChangePosition;
     int cannyBlurLevel;
     int cannyKernelSize;
-    double cannyThresholdLow;
-    double cannyThresholdHigh;
     int ellipseFitNumberMaximum;
     int glintWdth;
-    bool DETECTION_ON;
 };
 
 struct detectionVariables
@@ -124,9 +127,6 @@ struct detectionVariables
     double certaintyAverages;
     double certaintyFeatures;
     double certaintyPosition;
-    double changeThresholdAspectRatio;
-    double changeThresholdCircumference;
-    double changeThresholdPosition;
     double offsetCircumference;
     double momentumAspectRatio;
     double momentumCircumference;
@@ -148,6 +148,10 @@ struct detectionVariables
     double predictedYPos;
     double predictedXPosRelative;
     double predictedYPosRelative;
+    double thresholdChangeAspectRatio;
+    double thresholdChangeCircumference;
+    double thresholdChangePosition;
+    double thresholdScore;
 };
 
 struct dataVariables

@@ -73,6 +73,8 @@ private:
     SliderDouble*ThresholdDisplacementSlider;
     QLabel      *ThresholdScoreLabel;
     SliderDouble*ThresholdScoreSlider;
+    QLabel      *ThresholdScoreDiffLabel;
+    SliderDouble*ThresholdScoreDiffSlider;
 
     detectionParameters mDetectionParameters;
 
@@ -81,7 +83,7 @@ signals:
 private slots:
 
     void setAlphaFeatures           (double);
-    void setAlphaAverages            (double);
+    void setAlphaAverages           (double);
     void setAlphaPosition           (double);
     void setAlphaCertainty          (double);
     void setCannyBlurLevel          (int);
@@ -101,6 +103,7 @@ private slots:
     void setThresholdAspectRatio    (double);
     void setThresholdDisplacement   (double);
     void setThresholdScore          (double);
+    void setThresholdScoreDiff      (double);
 
 public slots:
 };

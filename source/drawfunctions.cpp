@@ -17,30 +17,33 @@
 
 void drawAOI(cv::Mat& I, const AOIProperties &mAOI, const cv::Vec3b &col)
 {
-    int imgWdth = I.cols;
-    int imgHght = I.rows;
-
-    int AOIXPos = mAOI.xPos;
-    int AOIYPos = mAOI.yPos;
-    int AOIWdth = mAOI.wdth;
-    int AOIHght = mAOI.hght;
-
-    if (AOIXPos >= imgWdth || AOIYPos >= imgHght || AOIWdth <= 0 || AOIHght <= 0) { return; }
-    if (AOIXPos < 0) { AOIXPos = 0; }
-    if (AOIYPos < 0) { AOIYPos = 0; }
-    if (AOIXPos + AOIWdth >= imgWdth) { AOIWdth = imgWdth - AOIXPos - 1; }
-    if (AOIYPos + AOIHght >= imgHght) { AOIHght = imgHght - AOIYPos - 1; }
-
-    for (int x = AOIXPos; x < AOIXPos + AOIWdth; x++) // left to right
+    if (mAOI.flag)
     {
-        I.at<cv::Vec3b>(AOIYPos,           x) = col; // top
-        I.at<cv::Vec3b>(AOIYPos + AOIHght, x) = col; // bottom
-    }
+        int imgWdth = I.cols;
+        int imgHght = I.rows;
 
-    for (int y = AOIYPos; y < AOIYPos + AOIHght; y++) // top to bottom
-    {
-        I.at<cv::Vec3b>(y, AOIXPos)           = col; // left
-        I.at<cv::Vec3b>(y, AOIXPos + AOIWdth) = col; // right
+        int AOIXPos = mAOI.xPos;
+        int AOIYPos = mAOI.yPos;
+        int AOIWdth = mAOI.wdth;
+        int AOIHght = mAOI.hght;
+
+        if (AOIXPos >= imgWdth || AOIYPos >= imgHght || AOIWdth <= 0 || AOIHght <= 0) { return; }
+        if (AOIXPos < 0) { AOIXPos = 0; }
+        if (AOIYPos < 0) { AOIYPos = 0; }
+        if (AOIXPos + AOIWdth >= imgWdth) { AOIWdth = imgWdth - AOIXPos - 1; }
+        if (AOIYPos + AOIHght >= imgHght) { AOIHght = imgHght - AOIYPos - 1; }
+
+        for (int x = AOIXPos; x < AOIXPos + AOIWdth; x++) // left to right
+        {
+            I.at<cv::Vec3b>(AOIYPos,           x) = col; // top
+            I.at<cv::Vec3b>(AOIYPos + AOIHght, x) = col; // bottom
+        }
+
+        for (int y = AOIYPos; y < AOIYPos + AOIHght; y++) // top to bottom
+        {
+            I.at<cv::Vec3b>(y, AOIXPos)           = col; // left
+            I.at<cv::Vec3b>(y, AOIXPos + AOIWdth) = col; // right
+        }
     }
 }
 
@@ -161,9 +164,9 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
     {
         if (Parameters::drawFlags.haar)
         {
-            drawAOI(I, mDrawVariables.cannyAOI, blue);
-            drawAOI(I, mDrawVariables.haarAOI, blue);
+            drawAOI(I, mDrawVariables.haarAOI,  blue);
             drawAOI(I, mDrawVariables.glintAOI, blue);
+            drawAOI(I, mDrawVariables.cannyAOI, blue);
         }
 
         if (Parameters::drawFlags.edge)
