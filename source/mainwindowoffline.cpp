@@ -152,7 +152,7 @@ void MainWindow::onSetTrialOffline(int index)
     countNumImages();
 
     if (imageTotalOffline > 0)
-    {        
+    {
         vDataVariablesPL.resize(imageTotalOffline);
         vDataVariablesEC.resize(imageTotalOffline);
 
@@ -394,17 +394,17 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         t2 = std::chrono::high_resolution_clock::now();
         fp_ms = t2 - t1;
 
-//        // Save image
+        //        // Save image
 
-//        std::stringstream imagePath;
-//        imagePath << dataDirectoryOffline.toStdString()
-//                  << "/trial_"
-//                  << trialIndexOffline
-//                  << "/processed/"
-//                  << imageIndex
-//                  << ".png";
+        //        std::stringstream imagePath;
+        //        imagePath << dataDirectoryOffline.toStdString()
+        //                  << "/trial_"
+        //                  << trialIndexOffline
+        //                  << "/processed/"
+        //                  << imageIndex
+        //                  << ".png";
 
-//        cv::imwrite(imagePath.str(), imageColor);
+        //        cv::imwrite(imagePath.str(), imageColor);
 
     }
 
@@ -523,6 +523,31 @@ void MainWindow::onDetectAllTrials()
     PROCESSING_ALL_TRIALS = false;
 }
 
+void MainWindow::onDetectAllExperiments()
+{
+    QString mainDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+    std::string mainDirectory = mainDirectoryTemp.toStdString();
+
+    if (boost::filesystem::exists(mainDirectory))
+    {
+        boost::filesystem::directory_iterator end_itr;
+        for (boost::filesystem::directory_iterator itr(dataDirectoryTemp); itr != end_itr; ++itr)
+        {
+            std::string subDirectory = itr->status();
+
+            if (boost::filesystem::is_directory(subDirectory))
+            {
+                dataDirectoryOffline = QString::fromStdString(subDirectory);
+                timeMatrix.clear();
+                setupOfflineSession();
+                onDetectAllTrials();
+            }
+        }
+    }
+}
+
+
 void MainWindow::onSaveTrialData()
 {
     std::string delimiter = ";";
@@ -634,6 +659,7 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].circumference << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].aspectRatio   << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].fitError      << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].edgeLength    << delimiter; }
             file << "\n";
         }
 

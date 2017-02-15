@@ -101,8 +101,8 @@ void VariableWidget::resetStructure(const detectionParameters& mDetectionParamet
     if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
     else                       { AOISize = mAOI.hght; }
 
-    mDetectionVariables.changeThresholdAspectRatio   = 1.0;
-    mDetectionVariables.changeThresholdCircumference = mDetectionParameters.circumferenceMax;
+    mDetectionVariables.changeThresholdAspectRatio   = 1.0 / mDetectionParameters.aspectRatioMin;
+    mDetectionVariables.changeThresholdCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
     mDetectionVariables.changeThresholdPosition      = AOISize;
 
     mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;

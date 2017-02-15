@@ -37,15 +37,15 @@ const double fitErrorFraction   = 0.05;
 const int lengthWindowLength    = 5;
 const int curvatureWindowLength = 5; // window length for curvature
 const int minimumEdgeLength     = 5;
-const int edgeIntensitiesPositionOffset = 2;
 
 // Edge classification
 
-const double scoreFactorRadius        = 0.67;
-const double scoreFactorCurvature     = 0.05;
-const double scoreFactorCircumference = 0.81;
-const double scoreFactorIntensity     = 0.55;
-const double scoreFactorGradient      = 0.00; // needs to be measured still
+const double scoreFactorCircumference = 0.50;
+const double scoreFactorIntensity     = 0.75;
+const double scoreFactorGradient      = 0.60;
+const double scoreFactorCurvature     = 0.80;
+const double scoreFactorRadius        = 0.65;
+const double scoreFactorRadiusVar     = 0.65;
 
 // Functions
 

@@ -15,6 +15,8 @@
 
 #include "eyestalker.h"
 
+// General
+
 double calculateMean(const std::vector<double>& v)
 {
     double sum = std::accumulate(v.begin(), v.end(), 0.0);
@@ -55,6 +57,8 @@ double ceil2( double value )
     else             { return  ceil(value); }
 }
 
+// Scores
+
 inline double calculateCertainty(double x, double midpoint)
 {
     double a = certaintyAsymptoteX * midpoint;
@@ -64,32 +68,80 @@ inline double calculateCertainty(double x, double midpoint)
 
 inline double calculateScoreIntensity(double x)
 {
-    double a = 9.0813; double b = 1.3047;
-    return (1 - 1 / (1 + exp(-a * (x - b))));
+    double a1 = 0.97776, b1 = 1.0016, c1 = 0.23774;
+    return (a1 * exp(-pow((x - b1) / c1, 2)));
 }
 
 inline double calculateScoreRadius(double x)
 {
-    double a1 = 0.68506; double b1 = 1.0209; double c1 = 0.085277; double a2 = 0.42543; double b2 = 0.93862; double c2 = 0.128;
+    double a1 = 0.53607, b1 = 1.0056, c1 = 0.044014, a2 = 0.51909, b2 = 0.96756, c2 = 0.085579;
     return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2)));
+}
+
+inline double calculateScoreRadiusVariance(double x)
+{
+    double a = 2.7265, b = -0.13217;
+    return (exp(-a * (x - b)));
 }
 
 inline double calculateScoreCurvature(double x)
 {
-    double a1 = 0.89692; double b1 = 1.035; double c1 = 0.35464;
-    return (a1 * exp(-pow((x - b1) / c1, 2)));
+    double a1 = 0.93939, b1 = 1.0253, c1 = 0.30592, a2 = 0.18935, b2 = 1.5762, c2 = 0.23473;
+    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2)));
 }
 
 inline double calculateScoreCircumference(double x)
 {
-    double a = 22.408; double b = 0.17454;
-    return 1 / (1 + exp(-a * (x - b)));
+    double a = 10, b = 0.3;
+    return (1 / (1 + exp(-a * (x - b))));
 }
 
-inline double calculateScoreGradient(double d_gradient)
+inline double calculateScoreGradient(double x)
 {
-    return d_gradient;
+    double a1 = 0.71377, b1 = 1.0064, c1 = 0.18697, a2 = 0.2733, b2 = 0.99493, c2 = 0.41415;
+    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2)));
 }
+
+double calculateScoreTotal(const detectionVariables& mDetectionVariables, const std::vector<double>& inputVector)
+{
+    double changeRadius        = inputVector[0];
+    double changeCircumference = inputVector[1];
+    double changeCurvature     = inputVector[2];
+    double changeIntensity     = inputVector[3];
+    double changeGradient      = inputVector[4];
+    double varianceRadius      = inputVector[5];
+
+    double certaintyFactorPosition = 0.5 * (mDetectionVariables.certaintyPosition + 1);
+    double certaintyFactorFeatures = 0.5 * (mDetectionVariables.certaintyFeatures + 1);
+    double certaintyFactorAverages = 0.5 * (mDetectionVariables.certaintyAverages + 1);
+    double certaintyFactorGradient = certaintyFactorPosition * certaintyFactorAverages; // need to be certain about position and average gradient
+
+    double factorRadius        = certaintyFactorPosition * scoreFactorRadius;
+    double factorCircumference = certaintyFactorFeatures * scoreFactorCircumference;
+    double factorIntensity     = certaintyFactorFeatures * scoreFactorIntensity;
+    double factorGradient      = certaintyFactorGradient * scoreFactorGradient;
+
+    double scoreCircumference = calculateScoreCircumference(changeCircumference); // unmodified circumference score
+
+    double factorRadiusVar = certaintyFactorPosition * scoreFactorRadiusVar * scoreCircumference; // curvature and radial variance should only be relevant for longer edges
+    double factorCurvature = certaintyFactorFeatures * scoreFactorCurvature * scoreCircumference;
+
+    scoreCircumference = factorCircumference * scoreCircumference;
+
+    double scoreRadiusVar = factorRadiusVar * calculateScoreRadiusVar(varianceRadius);
+    double scoreCurvature = factorCurvature * calculateScoreCurvature(changeCurvature);
+    double scoreRadius    = factorRadius    * calculateScoreRadius   (changeRadius);
+    double scoreIntensity = factorIntensity * calculateScoreIntensity(changeIntensity);
+    double scoreGradient  = factorGradient  * calculateScoreGradient (changeGradient);
+
+    const double norm =  factorRadius + factorRadiusVar + factorCurvature + factorCircumference + factorIntensity + factorGradient;
+
+    double scoreTotal = (scoreRadius + scoreRadiusVar + scoreGradient + scoreCurvature + scoreCircumference + scoreIntensity) / norm;
+
+    return scoreTotal;
+}
+
+// Detection
 
 std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, AOIProperties searchAOI)
 {
@@ -99,16 +151,16 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, AOIP
     int height = searchAOI.hght;
 
     uchar *ptr = img.data;
-    
+
     std::vector<unsigned int> integralImage(width * height); // unsigned due to large positive values
-    
+
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
             int i = width * y + x; // integral image coordinates
             int j = imgWidth * (y + startY) + (x + startX); // image coordinates
-            
+
             double val = ptr[j];
 
             if (x == 0 && y == 0) { integralImage[i] = val; }                            // first point
@@ -117,7 +169,7 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, AOIP
             else                  { integralImage[i] = val + integralImage[i - 1] + integralImage[i - width] - integralImage[i - width - 1]; }
         }
     }
-    
+
     return integralImage;
 }
 
@@ -131,7 +183,7 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
     int glintRadius = round(0.5 * glintAOI.wdth);
 
     uchar *ptr = img.data;
-    
+
     std::vector<double> imageGradient(searchAOI.wdth * searchAOI.hght, 0.0);
 
     std::vector<int> dZ(numDirections);
@@ -139,14 +191,14 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
     dZ[1] = -searchAOI.wdth + 1;
     dZ[2] =  searchAOI.wdth + 1;
     dZ[3] =  searchAOI.wdth - 1;
-    
+
     for (int y = gradientWindowLength; y < searchAOI.hght - gradientWindowLength; y = y + stepSize)
     {
         for (int x = gradientWindowLength; x < searchAOI.wdth - gradientWindowLength; x = x + stepSize)
         {
             int i = searchAOI.wdth * y + x; // gradient coordinates
             int j = imgWidth * (y + searchAOI.yPos) + (x + searchAOI.xPos); // image coordinates
-            
+
             int centreIntensity = ptr[j];
 
             if (centreIntensity > glintThreshold)
@@ -157,9 +209,9 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
             }
         }
     }
-    
+
     int glintIndex = std::distance(imageGradient.begin(), std::max_element(imageGradient.begin(), imageGradient.end()));
-    
+
     int x = glintIndex % searchAOI.wdth;
     int y = (glintIndex - x) / searchAOI.wdth;
 
@@ -177,9 +229,9 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
 
     haarAOI.xPos = 0;
     haarAOI.yPos = 0;
-    
+
     int innerArea = (haarAOI.wdth - 1) * (haarAOI.hght - 1);
-    
+
     int wdth = searchAOI.wdth - haarAOI.wdth;
     int hght = searchAOI.hght - haarAOI.hght;
 
@@ -188,25 +240,25 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
         for (int iCol = 0; iCol < wdth; iCol = iCol + stepSize)
         {
             // vertices of inner square
-            
+
             int xTopLeft = iCol;
             int yTopLeft = iRow;
-            
+
             int xBtmRght = xTopLeft + haarAOI.wdth - 1;
             int yBtmRght = yTopLeft + haarAOI.hght - 1;
-            
+
             int iTopLeft = searchAOI.wdth * yTopLeft + xTopLeft;
             int iTopRght = searchAOI.wdth * yTopLeft + xBtmRght;
             int iBtmLeft = searchAOI.wdth * yBtmRght + xTopLeft;
             int iBtmRght = searchAOI.wdth * yBtmRght + xBtmRght;
-            
+
             // calculate glint intensity
-            
+
             double glintIntensity = 0.0;
             double glintArea = 0.0;
-            
+
             bool GLINT_OVERLAP = false; // flag for glint overlap
-            
+
             int xTopLeftGlint = glintAOI.xPos;
             int yTopLeftGlint = glintAOI.yPos;
             int xBtmRghtGlint = glintAOI.xPos + glintAOI.wdth - 1;
@@ -219,7 +271,7 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
             std::vector<int> Y(2);
             Y[0] = yTopLeftGlint;
             Y[1] = yBtmRghtGlint;
-            
+
             // check if glint overlaps with Haar detector
 
             for (int i = 0; i < 2; i++)
@@ -249,7 +301,7 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
                 int iTopRghtGlint = searchAOI.wdth * yTopLeftGlint + xBtmRghtGlint;
                 int iBtmLeftGlint = searchAOI.wdth * yBtmRghtGlint + xTopLeftGlint;
                 int iBtmRghtGlint = searchAOI.wdth * yBtmRghtGlint + xBtmRghtGlint;
-                
+
                 // calculate area and intensity of glint
 
                 glintIntensity = I[iBtmRghtGlint] - I[iBtmLeftGlint] - I[iTopRghtGlint] + I[iTopLeftGlint];
@@ -258,7 +310,7 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
                 int glintHght = yBtmRghtGlint - yTopLeftGlint;
                 glintArea = glintWdth * glintHght;
             }
-            
+
             double intensityInner = I[iBtmRght] - I[iBtmLeft] - I[iTopRght] + I[iTopLeft];
             intensityInner = intensityInner - glintIntensity; // adjust for glint
             intensityInner = intensityInner / (innerArea - glintArea);
@@ -370,7 +422,7 @@ std::vector<int> findEdges(const detectionVariables& mDetectionVariables, std::v
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
 
-    double pupilRadius = (mDetectionVariables.predictedCircumference + mDetectionVariables.changeThresholdCircumference) / (2 * M_PI);
+    double pupilRadius = (mDetectionVariables.predictedCircumference * mDetectionVariables.changeThresholdCircumference) / (2 * M_PI);
 
     // Find a starting edge point using Starburst-like algorithm
 
@@ -1021,60 +1073,60 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
     return vEdgePropertiesAll;
 }
 
+double calculateCurvatureAverage(double circumference, double aspectRatio)
+{
+    int arrayWdth = arrayCircumferences.size();
+
+    int arrayXPos = *std::upper_bound(arrayCircumferences.begin(), arrayCircumferences.end(), circumference);
+    int arrayYPos = *std::upper_bound(arrayAspectRatios.begin(),   arrayAspectRatios.end(),   aspectRatio);
+
+    double curvatureAverage = 0.5 * (arrayCurvatureMax[arrayYPos * arrayWdth + arrayXPos] + arrayCurvatureMin[arrayYPos * arrayWdth + arrayXPos]);
+
+    return curvatureAverage;
+}
+
 void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, double& curvatureUpperLimit, double& curvatureLowerLimit)
 {
     // Calculate curvature limits
+
+    std::vector<int> arrayXPos(2);
+    std::vector<int> arrayYPos(2);
 
     // Circumference
 
     int arrayWidth = arrayCircumferences.size();
 
-    int arrayXPosMax = 0;
-    for (int x = 0; x < arrayWidth; x++)
+    double circumferenceLow  = mDetectionVariables.predictedCircumference * (1 / mDetectionVariables.changeThresholdCircumference);
+    double circumferenceHigh = mDetectionVariables.predictedCircumference *      mDetectionVariables.changeThresholdCircumference;
+
+    double aspectRatioLow  = mDetectionVariables.predictedAspectRatio * (1 / mDetectionVariables.changeThresholdAspectRatio);
+    double aspectRatioHigh = mDetectionVariables.predictedAspectRatio *      mDetectionVariables.changeThresholdAspectRatio;
+
+    arrayXPos[0] = *std::upper_bound(arrayCircumferences.begin(), arrayCircumferences.end(), circumferenceLow);
+    arrayXPos[1] = *std::upper_bound(arrayCircumferences.begin(), arrayCircumferences.end(), circumferenceHigh);
+
+    arrayYPos[0] = *std::upper_bound(arrayAspectRatios.begin(), arrayAspectRatios.end(), aspectRatioLow);
+    arrayYPos[1] = *std::upper_bound(arrayAspectRatios.begin(), arrayAspectRatios.end(), aspectRatioHigh);
+
+    // Calculate limits
+
+    std::vector<double> curvaturesMax(4);
+    std::vector<double> curvaturesMin(4);
+
+    for (int i = 0; i < 2; i++)
     {
-        if (x == arrayWidth - 1 || arrayCircumferences[x] >= mDetectionVariables.predictedCircumference - mDetectionVariables.changeThresholdCircumference)
+        int x = arrayXPos[i];
+
+        for (int j = 0; j < 2; j++)
         {
-            arrayXPosMax = x;
-            break;
+            int y = arrayYPos[j];
+            curvaturesMax[2 * y + x] = arrayCurvatureMax[y * arrayWidth + x];
+            curvaturesMin[2 * y + x] = arrayCurvatureMin[y * arrayWidth + x];
         }
     }
 
-    int arrayXPosMin = 0;
-    for (int x = 0; x < arrayWidth; x++)
-    {
-        if (x == arrayWidth - 1 || arrayCircumferences[x] >= mDetectionVariables.predictedCircumference + mDetectionVariables.changeThresholdCircumference)
-        {
-            arrayXPosMin = x;
-            break;
-        }
-    }
-
-    // Aspect ratio
-
-    int arrayHeight = arrayAspectRatios.size();
-
-    int arrayYPosMax = 0;
-    for (int y = 0; y < arrayHeight; y++)
-    {
-        if (y == arrayHeight - 1 || arrayAspectRatios[y] >= mDetectionVariables.predictedAspectRatio - mDetectionVariables.changeThresholdAspectRatio)
-        {
-            arrayYPosMax = y;
-            break;
-        }
-    }
-
-    int arrayYPosMin = 0;
-    for (int y = 0; y < arrayHeight; y++)
-    {
-        if (y == arrayHeight - 1 || arrayAspectRatios[y] >= mDetectionVariables.predictedAspectRatio + mDetectionVariables.changeThresholdAspectRatio)
-        {
-            arrayYPosMin = y;
-            break;
-        }
-    }
-
-    curvatureUpperLimit = arrayCurvatureMax[arrayYPosMax * arrayWidth + arrayXPosMax] + mDetectionParameters.curvatureOffset;
-    curvatureLowerLimit = arrayCurvatureMin[arrayYPosMin * arrayWidth + arrayXPosMin] - mDetectionParameters.curvatureOffset;
+    curvatureUpperLimit = *std::max_element(std::begin(curvaturesMax), std::end(curvaturesMax)) + mDetectionParameters.curvatureOffset;
+    curvatureLowerLimit = *std::min_element(std::begin(curvaturesMin), std::end(curvaturesMin)) - mDetectionParameters.curvatureOffset;
 }
 
 std::vector<double> calculateCurvatures(std::vector<double>& xNormals, std::vector<double>& yNormals, const std::vector<double>& xTangentsAll, const std::vector<double>& yTangentsAll)
@@ -1265,40 +1317,30 @@ std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDe
         // 1 = main section
         // 2 = end terminal
 
-        double dIntensity_0 = vEdgeProperties[0].intensity / vEdgeProperties[1].intensity;
-        double dIntensity_2 = vEdgeProperties[2].intensity / vEdgeProperties[1].intensity;
+        std::vector<double> inputVector_1(6); // for start terminal
+        inputVector_1[0] = vEdgeProperties[0].radius / vEdgeProperties[1].radius;
+        inputVector_1[1] = 0; // don't use circumference
+        inputVector_1[2] = vEdgeProperties[0].curvature / vEdgeProperties[1].curvature;
+        inputVector_1[3] = vEdgeProperties[0].intensity / vEdgeProperties[1].intensity;
+        inputVector_1[4] = vEdgeProperties[0].gradient  / vEdgeProperties[1].gradient;
+        inputVector_1[5] = 0; // don't use radial variance
 
-        double dCurvature_0 = vEdgeProperties[0].curvature / vEdgeProperties[1].curvature;
-        double dCurvature_2 = vEdgeProperties[2].curvature / vEdgeProperties[1].curvature;
+        std::vector<double> inputVector_2(6); // for end terminal
+        inputVector_2[0] = vEdgeProperties[2].radius / vEdgeProperties[1].radius;
+        inputVector_2[1] = 0; // don't use circumference
+        inputVector_2[2] = vEdgeProperties[2].curvature / vEdgeProperties[1].curvature;
+        inputVector_2[3] = vEdgeProperties[2].intensity / vEdgeProperties[1].intensity;
+        inputVector_2[4] = vEdgeProperties[2].gradient  / vEdgeProperties[1].gradient;
+        inputVector_2[5] = 0; // don't use radial variance
 
-        double dRadius_0    = vEdgeProperties[0].radius / vEdgeProperties[1].radius;
-        double dRadius_2    = vEdgeProperties[2].radius / vEdgeProperties[1].radius;
-
-        double dGradient_0  = vEdgeProperties[0].gradient / vEdgeProperties[1].gradient;
-        double dGradient_2  = vEdgeProperties[2].gradient / vEdgeProperties[1].gradient;
-
-        double scoreIntensity_0 = calculateScoreIntensity(dIntensity_0);
-        double scoreIntensity_2 = calculateScoreIntensity(dIntensity_2);
-
-        double scoreCurvature_0 = calculateScoreCurvature(dCurvature_0);
-        double scoreCurvature_2 = calculateScoreCurvature(dCurvature_2);
-
-        double certaintyFactorPosition = 0.5 * (mDetectionVariables.certaintyPosition + 1);
-
-        double scoreRadius_0 = certaintyFactorPosition * calculateScoreRadius(dRadius_0);
-        double scoreRadius_2 = certaintyFactorPosition * calculateScoreRadius(dRadius_2);
-
-        double scoreGradient_0 = certaintyFactorPosition * calculateScoreGradient(dGradient_0);
-        double scoreGradient_2 = certaintyFactorPosition * calculateScoreGradient(dGradient_2);
-
-        double scoreTotal_0 = scoreFactorIntensity * scoreIntensity_0 + scoreFactorCurvature * scoreCurvature_0 + scoreFactorRadius * scoreRadius_0 + scoreFactorGradient * scoreGradient_0;
-        double scoreTotal_2 = scoreFactorIntensity * scoreIntensity_2 + scoreFactorCurvature * scoreCurvature_2 + scoreFactorRadius * scoreRadius_2 + scoreFactorGradient * scoreGradient_2;
+        double scoreTotal_1 = calculateScoreTotal(mDetectionVariables, inputVector_1);
+        double scoreTotal_2 = calculateScoreTotal(mDetectionVariables, inputVector_2);
 
         int indexStart = 0;
         int indexEnd   = 0;
 
-        if      (scoreTotal_0 > scoreTotal_2) { indexStart = 0; indexEnd = 1; }
-        else if (scoreTotal_0 < scoreTotal_2) { indexStart = 1; indexEnd = 2; }
+        if      (scoreTotal_1 > scoreTotal_2) { indexStart = 0; indexEnd = 1; }
+        else if (scoreTotal_1 < scoreTotal_2) { indexStart = 1; indexEnd = 2; }
 
         if (indexStart != indexEnd) // if scores are equal, cut both terminals
         {
@@ -1392,9 +1434,11 @@ std::vector<int> calculateRadialGradients(const detectionVariables& mDetectionVa
     return gradientVector;
 }
 
-std::vector<int> findEdgeIntensities(const cv::Mat& img, const edgeProperties& mEdgeProperties, AOIProperties mAOI)
+std::vector<int> findEdgeIntensities(const cv::Mat& img, const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, AOIProperties mAOI)
 {
     int edgeSize = mEdgeProperties.pointIndices.size();
+
+    int positionOffset = floor(0.5 * mDetectionParameters.cannyKernelSize);
 
     // calculate pixel intensities within inner curve of edge points
 
@@ -1408,8 +1452,8 @@ std::vector<int> findEdgeIntensities(const cv::Mat& img, const edgeProperties& m
         int edgePointXPos  = edgePointIndex % mAOI.wdth;
         int edgePointYPos  = (edgePointIndex - edgePointXPos) / mAOI.wdth;
 
-        int offsetXPos = edgePointXPos + edgeIntensitiesPositionOffset * ceil2(mEdgeProperties.xnormals[iEdgePoint]);
-        int offsetYPos = edgePointYPos + edgeIntensitiesPositionOffset * ceil2(mEdgeProperties.ynormals[iEdgePoint]);
+        int offsetXPos = edgePointXPos + positionOffset * ceil2(mEdgeProperties.xnormals[iEdgePoint]);
+        int offsetYPos = edgePointYPos + positionOffset * ceil2(mEdgeProperties.ynormals[iEdgePoint]);
 
         if (edgePointXPos < 0 || edgePointXPos > mAOI.wdth || edgePointYPos < 0 || edgePointYPos > mAOI.hght)
         {       edgeIntensities[iEdgePoint] = (int) ptr_img[edgePointXPos + edgePointYPos * mAOI.wdth]; }
@@ -1595,25 +1639,18 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
 
     std::vector<double> totalScores(numEdges);
 
-    double certaintyFactorPosition = 0.5 * (mDetectionVariables.certaintyPosition + 1);
-    double certaintyFactorFeatures = 0.5 * (mDetectionVariables.certaintyFeatures + 1);
-
-    const double norm = certaintyFactorPosition * scoreFactorRadius + certaintyFactorFeatures * (scoreFactorCurvature + scoreFactorCircumference) + scoreFactorIntensity;
-
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        double dRadius          = vEdgePropertiesAll[iEdge].radius    / (mDetectionVariables.predictedCircumference / (2 * M_PI));
-        double dCircumference   = vEdgePropertiesAll[iEdge].length    / (mDetectionVariables.predictedCircumference);
-        double dCurvature       = vEdgePropertiesAll[iEdge].curvature /  mDetectionVariables.predictedCurvature;
-        double dIntensity       = vEdgePropertiesAll[iEdge].intensity /  mDetectionVariables.averageIntensity;
+        std::vector<double> inputVector(6);
 
-        double scoreRadius        = certaintyFactorPosition * scoreFactorRadius        * calculateScoreRadius(dRadius);
-        double scoreCurvature     = certaintyFactorFeatures * scoreFactorCurvature     * calculateScoreCurvature(dCurvature);
-        double scoreCircumference = certaintyFactorFeatures * scoreFactorCircumference * calculateScoreCircumference(dCircumference);
+        inputVector[0] = vEdgePropertiesAll[iEdge].radius    / (mDetectionVariables.predictedCircumference / (2 * M_PI));
+        inputVector[1] = vEdgePropertiesAll[iEdge].length    / mDetectionVariables.predictedCircumference;
+        inputVector[2] = vEdgePropertiesAll[iEdge].curvature / mDetectionVariables.predictedCurvature;
+        inputVector[3] = vEdgePropertiesAll[iEdge].intensity / mDetectionVariables.averageIntensity;
+        inputVector[4] = vEdgePropertiesAll[iEdge].gradient  / mDetectionVariables.averageGradient;
+        inputVector[5] = vEdgePropertiesAll[iEdge].radiusVar;
 
-        double scoreIntensity     = scoreFactorIntensity * calculateScoreIntensity(dIntensity);
-
-        totalScores[iEdge] = (scoreRadius + scoreCurvature + scoreCircumference + scoreIntensity) / norm;
+        totalScores[iEdge] = calculateScoreTotal(mDetectionVariables,inputVector);
     }
 
     // Only pick edges above threshold
@@ -1852,7 +1889,7 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
             int edgeSetLength = std::accumulate(combiEdgeLengths.begin(), combiEdgeLengths.end(), 0);
 
-            if (edgeSetLength < (mDetectionVariables.predictedCircumference - mDetectionVariables.changeThresholdCircumference) * mDetectionParameters.edgeLengthFraction)
+            if (edgeSetLength < (mDetectionVariables.predictedCircumference * (1 / mDetectionVariables.changeThresholdCircumference)) * mDetectionParameters.edgeLengthFraction)
             { continue; }
 
             int edgeSetSize = std::accumulate(combiEdgeSizes.begin(), combiEdgeSizes.end(), 0);
@@ -1906,26 +1943,36 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
             if (!mEllipsePropertiesNew.DETECTED) { continue; } // error
 
-            // Size and shape filters
-
-            if (mEllipsePropertiesNew.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
-            if (mEllipsePropertiesNew.circumference < circumferenceLowerLimit) { continue; } // no small ellipse
-            if (mEllipsePropertiesNew.aspectRatio   < mDetectionParameters.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
+            // Absolute displacement filter
 
             double dX = mEllipsePropertiesNew.xPos - (mDetectionVariables.predictedXPos - mAOI.xPos);
             double dY = mEllipsePropertiesNew.yPos - (mDetectionVariables.predictedYPos - mAOI.yPos);
             double dR = sqrt(dX * dX + dY * dY);
             if (dR > mDetectionVariables.changeThresholdPosition) { continue; } // no large ellipse displacements
 
-            if (std::abs(mEllipsePropertiesNew.circumference - mDetectionVariables.predictedCircumference) > mDetectionVariables.changeThresholdCircumference) { continue; } // no large ellipse size changes
-            if (std::abs(mEllipsePropertiesNew.aspectRatio   - mDetectionVariables.predictedAspectRatio  ) > mDetectionVariables.changeThresholdAspectRatio  ) { continue; } // no large ellipse shape changes
+            // Absolute size and shape filter
+
+            if (mEllipsePropertiesNew.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
+            if (mEllipsePropertiesNew.circumference < circumferenceLowerLimit) { continue; } // no small ellipse
+            if (mEllipsePropertiesNew.aspectRatio   < mDetectionParameters.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
+
+            // Relative change in size and shape filter
+
+            double relativeChangeAspectRatio   = mEllipsePropertiesNew.aspectRatio   / mDetectionVariables.predictedAspectRatio;
+            double relativeChangeCircumference = mEllipsePropertiesNew.circumference / mDetectionVariables.predictedCircumference;
+
+            if (relativeChangeAspectRatio   < 1.0) { relativeChangeAspectRatio   = 1 / relativeChangeAspectRatio; }
+            if (relativeChangeCircumference < 1.0) { relativeChangeCircumference = 1 / relativeChangeCircumference; }
+
+            if (relativeChangeAspectRatio   > mDetectionVariables.changeThresholdAspectRatio  ) { continue; } // no large ellipse shape changes
+            if (relativeChangeCircumference > mDetectionVariables.changeThresholdCircumference) { continue; } // no large ellipse size changes
 
             // Check number of edge points again, after fitting
 
             if (edgeSetLength <= mEllipsePropertiesNew.circumference * mDetectionParameters.edgeLengthFraction)
             { continue; }
 
-            // calculate error between fit and every edge point
+            // Calculate error between fit and every edge point
 
             double A = mEllipsePropertiesNew.coefficients[0];
             double B = mEllipsePropertiesNew.coefficients[1];
@@ -1933,8 +1980,6 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
             double D = mEllipsePropertiesNew.coefficients[3];
             double E = mEllipsePropertiesNew.coefficients[4];
             double F = mEllipsePropertiesNew.coefficients[5];
-
-            // calculate errors
 
             std::vector<double> fitErrors(edgeSetSize);
 
@@ -1949,16 +1994,18 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
             }
 
             std::vector<double> fitErrorsSorted = fitErrors;
-            std::sort(fitErrorsSorted.begin(), fitErrorsSorted.end());
+            std::sort   (fitErrorsSorted.begin(), fitErrorsSorted.end());
             std::reverse(fitErrorsSorted.begin(), fitErrorsSorted.end());
             std::vector<double> fitErrorsMax(fitErrorsSorted.begin(), fitErrorsSorted.begin() + round(fitErrorFraction * edgeSetLength));
             double fitErrorMax = calculateMean(fitErrorsMax);
+
+            // Fit error filter
 
             if (fitErrorMax > mDetectionParameters.ellipseFitErrorMaximum) { continue; } // no large fit errors
 
             mEllipsePropertiesNew.fitError = fitErrorMax;
 
-            // save parameters of accepted fit
+            // Save parameters of accepted fit
 
             mEllipsePropertiesNew.edgeIndices = combiEdgeIndices;
             mEllipsePropertiesNew.edgeLength  = edgeSetLength;
@@ -2270,7 +2317,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
             mEdgeProperties.gradient  = calculateMeanInt(mEdgeProperties.gradients);
 
             mEdgeProperties.radius    = calculateMean(mEdgeProperties.radii);
-            mEdgeProperties.radiusVar = calculateVariance(mEdgeProperties.radii);
+            mEdgeProperties.radiusVar = calculateVariance(mEdgeProperties.radii) / mEdgeProperties.radius; // relative variance
 
             calculateCurvatureStats(mEdgeProperties);
 
@@ -2337,10 +2384,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
             vEdgePropertiesAll[jEdge].tag = 2;
         }
 
-        // Calculate average brightness and gradient of fitted edges
+        // Calculate average properties of fitted edges
 
         double intensitySum = 0;
-        double gradientSum  = 0;
+        double  gradientSum = 0;
+        double curvatureSum = 0;
         int numEdges        = 0;
 
         for (int iEdge = 0, numEdgesAll = vEdgePropertiesAll.size(); iEdge < numEdgesAll; iEdge++)
@@ -2349,6 +2397,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
             if (mEdgeProperties.tag == 2)
             {
+                curvatureSum += (double) mEdgeProperties.curvature;
                 intensitySum += (double) mEdgeProperties.intensity;
                 gradientSum  += (double) mEdgeProperties.gradient;
                 numEdges++;
@@ -2357,6 +2406,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
         if (numEdges > 0)
         {
+            mEllipseProperties.curvature = curvatureSum / numEdges;
             mEllipseProperties.intensity = intensitySum / numEdges;
             mEllipseProperties.gradient  =  gradientSum / numEdges;
         }
@@ -2393,8 +2443,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
     else                       { AOISize = mAOI.hght; }
 
-    double maxChangeThresholdAspectRatio   = 1.0;
-    double maxChangeThresholdCircumference = mDetectionParameters.circumferenceMax;
+    double maxChangeThresholdAspectRatio   = 1.0 / mDetectionParameters.aspectRatioMin;
+    double maxChangeThresholdCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
     double maxChangeThresholdPosition      = AOISize;
     double maxOffsetCircumference          = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
 
@@ -2418,6 +2468,19 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         double meanHeight        = meanCircumference / M_PI;
         double meanIntensity     = initialIntensity;
         double meanGradient      = 0;
+        double meanCurvature     = calculateCurvatureAverage(meanCircumference,meanAspectRatio);
+
+        // Momentum terms should decay to zero. Assume that pupil was stationary (i.e. error = 0)
+
+        mDetectionVariablesNew.momentumAspectRatio   = mDetectionVariables.momentumAspectRatio   * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumCircumference = mDetectionVariables.momentumCircumference * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumWidth         = mDetectionVariables.momentumWidth         * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumHeight        = mDetectionVariables.momentumHeight        * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumCurvature     = mDetectionVariables.momentumCurvature     * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumIntensity     = mDetectionVariables.momentumIntensity     * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumGradient      = mDetectionVariables.momentumGradient      * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumXPos          = mDetectionVariables.momentumXPos          * (1 - mDetectionParameters.alphaPosition);
+        mDetectionVariablesNew.momentumYPos          = mDetectionVariables.momentumYPos          * (1 - mDetectionParameters.alphaPosition);
 
         // Averages should decay to initial values
 
@@ -2425,37 +2488,30 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         mDetectionVariablesNew.averageCircumference = mDetectionVariables.averageCircumference + mDetectionParameters.alphaAverages * certaintyFactorAverages * (meanCircumference - mDetectionVariables.averageCircumference);
         mDetectionVariablesNew.averageWidth         = mDetectionVariables.averageWidth         + mDetectionParameters.alphaAverages * certaintyFactorAverages * (meanWidth         - mDetectionVariables.averageWidth);
         mDetectionVariablesNew.averageHeight        = mDetectionVariables.averageHeight        + mDetectionParameters.alphaAverages * certaintyFactorAverages * (meanHeight        - mDetectionVariables.averageHeight);
-
-        mDetectionVariablesNew.averageIntensity = mDetectionVariables.averageIntensity + mDetectionParameters.alphaAverages * (meanIntensity - mDetectionVariables.averageIntensity);
-        mDetectionVariablesNew.averageGradient  = mDetectionVariables.averageGradient  + mDetectionParameters.alphaAverages * (meanGradient  - mDetectionVariables.averageGradient);
+        mDetectionVariablesNew.averageCurvature     = mDetectionVariables.averageCurvature     + mDetectionParameters.alphaAverages * certaintyFactorAverages * (meanCurvature     - mDetectionVariables.averageCurvature);
+        mDetectionVariablesNew.averageIntensity     = mDetectionVariables.averageIntensity     + mDetectionParameters.alphaAverages * certaintyFactorAverages * (meanIntensity     - mDetectionVariables.averageIntensity);
+        mDetectionVariablesNew.averageGradient      = mDetectionVariables.averageGradient      + mDetectionParameters.alphaAverages * certaintyFactorAverages * (meanGradient      - mDetectionVariables.averageGradient);
 
         // Feature predictions should decay to average terms. Certainty term gives some latency.
 
-        mDetectionVariablesNew.predictedAspectRatio   = mDetectionVariables.predictedAspectRatio   + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageAspectRatio   - mDetectionVariables.predictedAspectRatio   + mDetectionVariables.momentumAspectRatio);
-        mDetectionVariablesNew.predictedCircumference = mDetectionVariables.predictedCircumference + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageCircumference - mDetectionVariables.predictedCircumference + mDetectionVariables.momentumCircumference);
-        mDetectionVariablesNew.predictedWidth         = mDetectionVariables.predictedWidth         + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageWidth         - mDetectionVariables.predictedWidth         + mDetectionVariables.momentumWidth);
-        mDetectionVariablesNew.predictedHeight        = mDetectionVariables.predictedHeight        + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageHeight        - mDetectionVariables.predictedHeight        + mDetectionVariables.momentumHeight);
+        mDetectionVariablesNew.predictedAspectRatio   = mDetectionVariables.predictedAspectRatio   + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageAspectRatio   - mDetectionVariables.predictedAspectRatio)   + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumAspectRatio;
+        mDetectionVariablesNew.predictedCircumference = mDetectionVariables.predictedCircumference + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageCircumference - mDetectionVariables.predictedCircumference) + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumCircumference;
+        mDetectionVariablesNew.predictedWidth         = mDetectionVariables.predictedWidth         + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageWidth         - mDetectionVariables.predictedWidth)         + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumWidth;
+        mDetectionVariablesNew.predictedHeight        = mDetectionVariables.predictedHeight        + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageHeight        - mDetectionVariables.predictedHeight)        + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumHeight;
+        mDetectionVariablesNew.predictedCurvature     = mDetectionVariables.predictedCurvature     + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageCurvature     - mDetectionVariables.predictedCurvature)     + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumCurvature;
+        mDetectionVariablesNew.predictedIntensity     = mDetectionVariables.predictedIntensity     + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageIntensity     - mDetectionVariables.predictedIntensity)     + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumIntensity;
+        mDetectionVariablesNew.predictedGradient      = mDetectionVariables.predictedGradient      + mDetectionParameters.alphaFeatures * certaintyFactorFeatures * (mDetectionVariablesNew.averageGradient      - mDetectionVariables.predictedGradient)      + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumGradient;
 
         // Position predictions should decay to approximate detection position. Certainty term gives some latency.
 
-        mDetectionVariablesNew.predictedXPos = mDetectionVariables.predictedXPos + mDetectionParameters.alphaPosition * certaintyFactorPosition * (haarAOI.xPos + 0.5 * haarAOI.wdth - mDetectionVariables.predictedXPos + mDetectionVariables.momentumXPos);
-        mDetectionVariablesNew.predictedYPos = mDetectionVariables.predictedYPos + mDetectionParameters.alphaPosition * certaintyFactorPosition * (haarAOI.yPos + 0.5 * haarAOI.hght - mDetectionVariables.predictedYPos + mDetectionVariables.momentumYPos);
+        mDetectionVariablesNew.predictedXPos = mDetectionVariables.predictedXPos + mDetectionParameters.alphaPosition * certaintyFactorPosition * (haarAOI.xPos + 0.5 * haarAOI.wdth - mDetectionVariables.predictedXPos) + mDetectionVariablesNew.certaintyPosition * mDetectionVariables.momentumXPos;
+        mDetectionVariablesNew.predictedYPos = mDetectionVariables.predictedYPos + mDetectionParameters.alphaPosition * certaintyFactorPosition * (haarAOI.yPos + 0.5 * haarAOI.hght - mDetectionVariables.predictedYPos) + mDetectionVariablesNew.certaintyPosition * mDetectionVariables.momentumYPos;
 
-        // Momentum terms should decay to zero
-
-        mDetectionVariablesNew.momentumAspectRatio   = mDetectionVariables.momentumAspectRatio   * (1 - mDetectionParameters.alphaFeatures);
-        mDetectionVariablesNew.momentumCircumference = mDetectionVariables.momentumCircumference * (1 - mDetectionParameters.alphaFeatures);
-        mDetectionVariablesNew.momentumWidth         = mDetectionVariables.momentumWidth         * (1 - mDetectionParameters.alphaFeatures);
-        mDetectionVariablesNew.momentumHeight        = mDetectionVariables.momentumHeight        * (1 - mDetectionParameters.alphaFeatures);
-
-        mDetectionVariablesNew.momentumXPos          = mDetectionVariables.momentumXPos          * (1 - mDetectionParameters.alphaPosition);
-        mDetectionVariablesNew.momentumYPos          = mDetectionVariables.momentumYPos          * (1 - mDetectionParameters.alphaPosition);
-
-        // Determine whether prior pupil characteristics should be used in next frame
+        // Certainty decays to minimum value
 
         mDetectionVariablesNew.certaintyPosition = mDetectionVariables.certaintyPosition - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaPosition;
         mDetectionVariablesNew.certaintyFeatures = mDetectionVariables.certaintyFeatures - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.certaintyAverages = mDetectionVariables.certaintyAverages  - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
+        mDetectionVariablesNew.certaintyAverages = mDetectionVariables.certaintyAverages - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
     }
     else // pupil detected
     {
@@ -2467,58 +2523,33 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         mDataVariables.exactXPos = mEllipseProperties.xPos + cannyAOI.xPos;
         mDataVariables.exactYPos = mEllipseProperties.yPos + cannyAOI.yPos;
 
-        // Running averages
-
-        double changeAspectRatio   = mDetectionVariablesNew.predictedAspectRatio    - mDetectionVariables.predictedAspectRatio;
-        double changeCircumference = mDetectionVariablesNew.predictedCircumference  - mDetectionVariables.predictedCircumference;
-        double changeXPosition     = mDetectionVariablesNew.predictedXPos           - mDetectionVariables.predictedXPos;
-        double changeYPosition     = mDetectionVariablesNew.predictedYPos           - mDetectionVariables.predictedYPos;
-
-        double changeWidth         = mDetectionVariablesNew.predictedWidth          - mDetectionVariables.predictedWidth;
-        double changeHeight        = mDetectionVariablesNew.predictedHeight         - mDetectionVariables.predictedHeight;
+        // Errors
 
         double errorAspectRatio   = mEllipseProperties.aspectRatio   - mDetectionVariables.predictedAspectRatio;
         double errorCircumference = mEllipseProperties.circumference - mDetectionVariables.predictedCircumference;
         double errorWidth         = mEllipseProperties.width         - mDetectionVariables.predictedWidth;
         double errorHeight        = mEllipseProperties.height        - mDetectionVariables.predictedHeight;
+        double errorCurvature     = mEllipseProperties.curvature     - mDetectionVariables.predictedCurvature;
+        double errorIntensity     = mEllipseProperties.intensity     - mDetectionVariables.predictedIntensity;
+        double errorGradient      = mEllipseProperties.gradient      - mDetectionVariables.predictedGradient;
         double errorXPosition     = mDataVariables.exactXPos         - mDetectionVariables.predictedXPos;
         double errorYPosition     = mDataVariables.exactYPos         - mDetectionVariables.predictedYPos;
 
-        // Update predictions
+        // Changes
 
-        mDetectionVariablesNew.predictedAspectRatio   = mDetectionVariables.predictedAspectRatio   + mDetectionParameters.alphaFeatures * (errorAspectRatio   + mDetectionVariables.momentumAspectRatio);
-        mDetectionVariablesNew.predictedCircumference = mDetectionVariables.predictedCircumference + mDetectionParameters.alphaFeatures * (errorCircumference + mDetectionVariables.momentumCircumference);
-        mDetectionVariablesNew.predictedWidth         = mDetectionVariables.predictedWidth         + mDetectionParameters.alphaFeatures * (errorWidth         + mDetectionVariables.momentumWidth);
-        mDetectionVariablesNew.predictedHeight        = mDetectionVariables.predictedHeight        + mDetectionParameters.alphaFeatures * (errorHeight        + mDetectionVariables.momentumHeight);
+        double displacement = sqrt(changeXPosition * changeXPosition + changeYPosition * changeYPosition);
 
-        mDetectionVariablesNew.predictedXPos = mDetectionVariables.predictedXPos + mDetectionParameters.alphaPosition * (errorXPosition + mDetectionVariables.momentumXPos);
-        mDetectionVariablesNew.predictedYPos = mDetectionVariables.predictedYPos + mDetectionParameters.alphaPosition * (errorYPosition + mDetectionVariables.momentumYPos);
+        double relativeChangeAspectRatio   = mEllipseProperties.aspectRatio   / mDetectionVariables.predictedAspectRatio;
+        double relativeChangeCircumference = mEllipseProperties.circumference / mDetectionVariables.predictedCircumference;
 
-        // Averages
+        if (relativeChangeAspectRatio   < 1) { relativeChangeAspectRatio   = 1 / relativeChangeAspectRatio;   }
+        if (relativeChangeCircumference < 1) { relativeChangeCircumference = 1 / relativeChangeCircumference; }
 
-        mDetectionVariablesNew.averageAspectRatio   = mDetectionVariables.averageAspectRatio   + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedAspectRatio   - mDetectionVariables.averageAspectRatio);
-        mDetectionVariablesNew.averageCircumference = mDetectionVariables.averageCircumference + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedCircumference - mDetectionVariables.averageCircumference);
-        mDetectionVariablesNew.averageWidth         = mDetectionVariables.averageWidth         + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedWidth         - mDetectionVariables.averageWidth);
-        mDetectionVariablesNew.averageHeight        = mDetectionVariables.averageHeight        + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedHeight        - mDetectionVariables.averageHeight);
+        // Determine certainty of current measurement
 
-        mDetectionVariablesNew.averageIntensity = mDetectionVariables.averageIntensity + mDetectionParameters.alphaAverages * (mEllipseProperties.intensity - mDetectionVariables.averageIntensity);
-        mDetectionVariablesNew.averageGradient  = mDetectionVariables.averageGradient  + mDetectionParameters.alphaAverages * (mEllipseProperties.gradient  - mDetectionVariables.averageGradient);
-
-        // Momentum
-
-        mDetectionVariablesNew.momentumAspectRatio   =  changeAspectRatio   * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.momentumCircumference =  changeCircumference * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.momentumWidth         =  changeWidth         * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.momentumHeight        =  changeHeight        * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.momentumXPos          =  changeXPosition     * mDetectionParameters.alphaPosition;
-        mDetectionVariablesNew.momentumYPos          =  changeYPosition     * mDetectionParameters.alphaPosition;
-
-        // Determine whether prior pupil characteristics should be used in next frame
-
-        double displacement           = sqrt(changeXPosition * changeXPosition + changeYPosition * changeYPosition);
-        double certaintyPosition      = calculateCertainty(displacement,                  mDetectionParameters.changeThresholdPosition);
-        double certaintyAspectRatio   = calculateCertainty(std::abs(changeAspectRatio),   mDetectionParameters.changeThresholdAspectRatio);
-        double certaintyCircumference = calculateCertainty(std::abs(changeCircumference), mDetectionParameters.changeThresholdCircumference);
+        double certaintyPosition      = calculateCertainty(displacement,                mDetectionParameters.changeThresholdPosition);
+        double certaintyAspectRatio   = calculateCertainty(relativeChangeAspectRatio,   mDetectionParameters.changeThresholdAspectRatio);
+        double certaintyCircumference = calculateCertainty(relativeChangeCircumference, mDetectionParameters.changeThresholdCircumference);
         double certaintyFeatures      = 0.5 * (certaintyAspectRatio + certaintyCircumference);
 
         // Increase or reduce certainty with a fraction of a constant step size (product of the two learning rate parameters)
@@ -2526,14 +2557,48 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         mDetectionVariablesNew.certaintyPosition = mDetectionVariables.certaintyPosition + certaintyPosition * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaPosition;
         mDetectionVariablesNew.certaintyFeatures = mDetectionVariables.certaintyFeatures + certaintyFeatures * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaFeatures;
         mDetectionVariablesNew.certaintyAverages = mDetectionVariables.certaintyAverages + certaintyFeatures * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
+
+        // Momentum. Rate of change approximation.
+
+        mDetectionVariablesNew.momentumAspectRatio   =  mDetectionVariablesNew.momentumAspectRatio   + mDetectionParameters.alphaFeatures * (errorAspectRatio   - mDetectionVariablesNew.momentumAspectRatio);
+        mDetectionVariablesNew.momentumCircumference =  mDetectionVariablesNew.momentumCircumference + mDetectionParameters.alphaFeatures * (errorCircumference - mDetectionVariablesNew.momentumCircumference);
+        mDetectionVariablesNew.momentumWidth         =  mDetectionVariablesNew.momentumWidth         + mDetectionParameters.alphaFeatures * (errorWidth         - mDetectionVariablesNew.momentumWidth);
+        mDetectionVariablesNew.momentumHeight        =  mDetectionVariablesNew.momentumHeight        + mDetectionParameters.alphaFeatures * (errorHeight        - mDetectionVariablesNew.momentumHeight);
+        mDetectionVariablesNew.momentumGradient      =  mDetectionVariablesNew.momentumGradient      + mDetectionParameters.alphaFeatures * (errorGradient      - mDetectionVariablesNew.momentumGradient);
+        mDetectionVariablesNew.momentumIntensity     =  mDetectionVariablesNew.momentumIntensity     + mDetectionParameters.alphaFeatures * (errorIntensity     - mDetectionVariablesNew.momentumIntensity);
+        mDetectionVariablesNew.momentumCurvature     =  mDetectionVariablesNew.momentumCurvature     + mDetectionParameters.alphaFeatures * (errorCurvature     - mDetectionVariablesNew.momentumCurvature);
+        mDetectionVariablesNew.momentumXPos          =  mDetectionVariablesNew.momentumXPos          + mDetectionParameters.alphaPosition * (errorXPosition     - mDetectionVariablesNew.momentumXPos);
+        mDetectionVariablesNew.momentumYPos          =  mDetectionVariablesNew.momentumYPos          + mDetectionParameters.alphaPosition * (errorYPosition     - mDetectionVariablesNew.momentumYPos);
+
+        // Update predictions. Only add momentum when certainty is high
+
+        mDetectionVariablesNew.predictedAspectRatio   = mDetectionVariables.predictedAspectRatio   + mDetectionParameters.alphaFeatures * errorAspectRatio   + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumAspectRatio;
+        mDetectionVariablesNew.predictedCircumference = mDetectionVariables.predictedCircumference + mDetectionParameters.alphaFeatures * errorCircumference + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumCircumference;
+        mDetectionVariablesNew.predictedWidth         = mDetectionVariables.predictedWidth         + mDetectionParameters.alphaFeatures * errorWidth         + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumWidth;
+        mDetectionVariablesNew.predictedHeight        = mDetectionVariables.predictedHeight        + mDetectionParameters.alphaFeatures * errorHeight        + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumHeight;
+        mDetectionVariablesNew.predictedCurvature     = mDetectionVariables.predictedCurvature     + mDetectionParameters.alphaFeatures * errorCurvature     + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumCurvature;
+        mDetectionVariablesNew.predictedIntensity     = mDetectionVariables.predictedIntensity     + mDetectionParameters.alphaFeatures * errorIntensity     + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumIntensity;
+        mDetectionVariablesNew.predictedGradient      = mDetectionVariables.predictedGradient      + mDetectionParameters.alphaFeatures * errorGradient      + mDetectionVariablesNew.certaintyFeatures * mDetectionVariables.momentumGradient;
+        mDetectionVariablesNew.predictedXPos          = mDetectionVariables.predictedXPos          + mDetectionParameters.alphaPosition * errorXPosition     + mDetectionVariablesNew.certaintyPosition * mDetectionVariables.momentumXPos;
+        mDetectionVariablesNew.predictedYPos          = mDetectionVariables.predictedYPos          + mDetectionParameters.alphaPosition * errorYPosition     + mDetectionVariablesNew.certaintyPosition * mDetectionVariables.momentumYPos;
+
+        // Averages
+
+        mDetectionVariablesNew.averageAspectRatio   = mDetectionVariables.averageAspectRatio   + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedAspectRatio   - mDetectionVariables.averageAspectRatio);
+        mDetectionVariablesNew.averageCircumference = mDetectionVariables.averageCircumference + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedCircumference - mDetectionVariables.averageCircumference);
+        mDetectionVariablesNew.averageWidth         = mDetectionVariables.averageWidth         + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedWidth         - mDetectionVariables.averageWidth);
+        mDetectionVariablesNew.averageHeight        = mDetectionVariables.averageHeight        + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedHeight        - mDetectionVariables.averageHeight);
+        mDetectionVariablesNew.averageCurvature     = mDetectionVariables.averageCurvature     + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedCurvature     - mDetectionVariables.averageCurvature);
+        mDetectionVariablesNew.averageIntensity     = mDetectionVariables.averageIntensity     + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedIntensity     - mDetectionVariables.averageIntensity);
+        mDetectionVariablesNew.averageGradient      = mDetectionVariables.averageGradient      + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedGradient      - mDetectionVariables.averageGradient);
     }
 
     // For drawing
 
     mDrawVariables.DETECTED = mEllipseProperties.DETECTED;
-    mDrawVariables.cannyAOI = cannyAOI;
-    mDrawVariables.haarAOI = haarAOI;
+    mDrawVariables.haarAOI  = haarAOI;
     mDrawVariables.glintAOI = glintAOI;
+    mDrawVariables.cannyAOI = cannyAOI;
 
     mDrawVariables.exactXPos = round(mDataVariables.exactXPos);
     mDrawVariables.exactYPos = round(mDataVariables.exactYPos);

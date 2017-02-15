@@ -161,7 +161,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdCircumferenceLabel  = new QLabel;
     ThresholdCircumferenceSlider = new SliderDouble;
     ThresholdCircumferenceSlider->setPrecision(1);
-    ThresholdCircumferenceSlider->setDoubleRange(0, 25);
+    ThresholdCircumferenceSlider->setDoubleRange(1.0, 2.0);
     ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
 
@@ -175,7 +175,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdAspectRatioLabel  = new QLabel;
     ThresholdAspectRatioSlider = new SliderDouble;
     ThresholdAspectRatioSlider->setPrecision(2);
-    ThresholdAspectRatioSlider->setDoubleRange(0, 1.0);
+    ThresholdAspectRatioSlider->setDoubleRange(1.0, 2.0);
     ThresholdAspectRatioSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdAspectRatioSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatio(double)));
 
@@ -271,7 +271,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(CannyKernelSizeTextBox,           8, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CannyBlurLevelTextBox,            9, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(AlphaAveragesTextBox,              11, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AlphaAveragesTextBox,             11, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaPositionTextBox,             12, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaFeaturesTextBox,             13, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(AlphaCertaintyTextBox,            15, 0, 1, 1, Qt::AlignRight);
@@ -433,7 +433,7 @@ void ParameterWidget::reset()
     // Change thresholds
 
     ThresholdCircumferenceSlider->setDoubleValue(mDetectionParameters.changeThresholdCircumference);
-    ThresholdCircumferenceLabel ->setText(QString::number(mDetectionParameters.changeThresholdCircumference, 'f', 1));
+    ThresholdCircumferenceLabel ->setText(QString::number(mDetectionParameters.changeThresholdCircumference, 'f', 2));
 
     ThresholdAspectRatioSlider->setDoubleValue(mDetectionParameters.changeThresholdAspectRatio);
     ThresholdAspectRatioLabel ->setText(QString::number(mDetectionParameters.changeThresholdAspectRatio, 'f', 2));
@@ -565,7 +565,7 @@ void ParameterWidget::setAlphaCertainty(double value)
 void ParameterWidget::setThresholdCircumference(double value)
 {
     mDetectionParameters.changeThresholdCircumference = value;
-    ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 1));
+    ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setThresholdAspectRatio(double value)

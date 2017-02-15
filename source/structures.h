@@ -65,6 +65,7 @@ struct edgeProperties
 struct ellipseProperties
 {
     bool DETECTED;
+    double curvature;
     double fitError;
     double intensity;
     double gradient;
@@ -115,6 +116,7 @@ struct detectionVariables
 {
     double averageAspectRatio;
     double averageCircumference;
+    double averageCurvature;
     double averageHeight;
     double averageWidth;
     double averageIntensity;
@@ -132,15 +134,20 @@ struct detectionVariables
     double momentumWidth;
     double momentumXPos;
     double momentumYPos;
+    double momentumGradient;
+    double momentumIntensity;
+    double momentumCurvature;
     double predictedAspectRatio;
     double predictedCircumference;
+    double predictedCurvature;
+    double predictedIntensity;
+    double predictedGradient;
     double predictedHeight;
     double predictedWidth;
     double predictedXPos;
     double predictedYPos;
     double predictedXPosRelative;
     double predictedYPosRelative;
-    double predictedCurvature;
 };
 
 struct dataVariables
