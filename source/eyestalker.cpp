@@ -74,50 +74,52 @@ inline double calculateCertainty(double x, double midpoint)
 {
     double a = certaintyAsymptoteX * midpoint;
     double k = - log((1 / certaintyAsymptoteY) - 1) / a;
-    return (1 - 2 / (1 + exp(-k * (x - midpoint))));
+    return (1 - 2 / (1 + exp(-k * (x - midpoint)))); // Logistic
 }
 
 inline double calculateScoreIntensity(double x)
 {
-    double a1 = 0.97776, b1 = 1.0016, c1 = 0.23774;
-    return (a1 * exp(-pow((x - b1) / c1, 2)));
+    double a1 = 1.0, b1 = 0, c1 = 12;
+    return (a1 * exp(-pow((x - b1) / c1, 2)));  // Gaussian
 }
 
 inline double calculateScoreRadius(double x)
 {
-    double a1 = 0.53607, b1 = 1.0056, c1 = 0.044014, a2 = 0.51909, b2 = 0.96756, c2 = 0.085579;
-    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2)));
+    double a1 = 0.54, b1 = 1.006, c1 = 0.044, a2 = 0.52, b2 = 0.97, c2 = 0.085;
+    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2))); // Two-term Gaussian
 }
 
 inline double calculateScoreRadiusVar(double x)
 {
-    double a = 2.7265, b = -0.13217;
-    return (exp(-a * (x - b)));
+    double a = 2.73, b = -0.13;
+    return (exp(-a * (x - b))); // Exponential decay
 }
 
 inline double calculateScoreCurvature(double x)
 {
-    double a1 = 0.93939, b1 = 1.0253, c1 = 0.30592, a2 = 0.18935, b2 = 1.5762, c2 = 0.23473;
-    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2)));
+    double a1 = 0.90, b1 = 0.0, c1 = 8.0;
+    return (a1 * exp(-pow((x - b1) / c1, 2))); // Gaussian
 }
 
 inline double calculateScoreCircumference(double x)
 {
     double a = 10, b = 0.3;
-    return (1 / (1 + exp(-a * (x - b))));
+    return (1 / (1 + exp(-a * (x - b)))); // Logistic
 }
 
 inline double calculateScoreGradient(double x)
 {
-    double a1 = 0.71377, b1 = 1.0064, c1 = 0.18697, a2 = 0.2733, b2 = 0.99493, c2 = 0.41415;
-    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2)));
+    double a1 = 0.98, b1 = 0, c1 = 6.4;
+    return (a1 * exp(-pow((x - b1) / c1, 2))); // Gaussian
 }
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& inputVector, bool USE_CERTAINTY)
 {
     for (int i = 0, vSize = inputVector.size(); i < vSize; i++) // check for NaNs or Infs
     {
-        if (!std::isfinite(inputVector[i])) { inputVector[i] = 0; }
+        double val = inputVector[i];
+        if (!std::isfinite(val)) { inputVector[i] = 0; }
+        else if (val < 0)        { inputVector[i] = std::abs(val); }
     }
 
     // Do score calculation
@@ -1394,18 +1396,18 @@ std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDe
         std::vector<double> inputVector_1(7); // for start terminal
         inputVector_1[0] = vEdgeProperties[0].radius / vEdgeProperties[1].radius;
         inputVector_1[1] = 0; // don't use circumference
-        inputVector_1[2] = vEdgeProperties[0].curvature / vEdgeProperties[1].curvature;
-        inputVector_1[3] = vEdgeProperties[0].intensity / vEdgeProperties[1].intensity;
-        inputVector_1[4] = vEdgeProperties[0].gradient  / vEdgeProperties[1].gradient;
+        inputVector_1[2] = vEdgeProperties[0].curvature - vEdgeProperties[1].curvature;
+        inputVector_1[3] = vEdgeProperties[0].intensity - vEdgeProperties[1].intensity;
+        inputVector_1[4] = vEdgeProperties[0].gradient  - vEdgeProperties[1].gradient;
         inputVector_1[5] = 0; // don't use radial variance
         inputVector_1[6] = vEdgeProperties[0].length;
 
         std::vector<double> inputVector_2(7); // for end terminal
         inputVector_2[0] = vEdgeProperties[2].radius / vEdgeProperties[1].radius;
         inputVector_2[1] = 0; // don't use circumference
-        inputVector_2[2] = vEdgeProperties[2].curvature / vEdgeProperties[1].curvature;
-        inputVector_2[3] = vEdgeProperties[2].intensity / vEdgeProperties[1].intensity;
-        inputVector_2[4] = vEdgeProperties[2].gradient  / vEdgeProperties[1].gradient;
+        inputVector_2[2] = vEdgeProperties[2].curvature - vEdgeProperties[1].curvature;
+        inputVector_2[3] = vEdgeProperties[2].intensity - vEdgeProperties[1].intensity;
+        inputVector_2[4] = vEdgeProperties[2].gradient  - vEdgeProperties[1].gradient;
         inputVector_2[5] = 0; // don't use radial variance
         inputVector_1[6] = vEdgeProperties[2].length;
 
@@ -1614,9 +1616,9 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
                 std::vector<double> inputVector(7);
                 inputVector[0] = vEdgePropertiesTemp[0].radius    / vEdgePropertiesTemp[1].radius;
                 inputVector[1] = 0; // don't use circumference difference
-                inputVector[2] = vEdgePropertiesTemp[0].curvature / vEdgePropertiesTemp[1].curvature;
-                inputVector[3] = vEdgePropertiesTemp[0].intensity / vEdgePropertiesTemp[1].intensity;
-                inputVector[4] = vEdgePropertiesTemp[0].gradient  / vEdgePropertiesTemp[1].gradient;
+                inputVector[2] = vEdgePropertiesTemp[0].curvature - vEdgePropertiesTemp[1].curvature;
+                inputVector[3] = vEdgePropertiesTemp[0].intensity - vEdgePropertiesTemp[1].intensity;
+                inputVector[4] = vEdgePropertiesTemp[0].gradient  - vEdgePropertiesTemp[1].gradient;
                 inputVector[5] = 0; // don't use radial variance
                 inputVector[6] = edgeLength;
 
@@ -1785,9 +1787,9 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
 
             inputVector[0] = vEdgePropertiesAll[iEdge].radius    / (mDetectionVariables.predictedCircumference / (2 * M_PI));
             inputVector[1] = vEdgePropertiesAll[iEdge].length    / mDetectionVariables.predictedCircumference;
-            inputVector[2] = vEdgePropertiesAll[iEdge].curvature / mDetectionVariables.predictedCurvature;
-            inputVector[3] = vEdgePropertiesAll[iEdge].intensity / mDetectionVariables.averageIntensity;
-            inputVector[4] = vEdgePropertiesAll[iEdge].gradient  / mDetectionVariables.averageGradient;
+            inputVector[2] = vEdgePropertiesAll[iEdge].curvature - mDetectionVariables.predictedCurvature;
+            inputVector[3] = vEdgePropertiesAll[iEdge].intensity - mDetectionVariables.averageIntensity;
+            inputVector[4] = vEdgePropertiesAll[iEdge].gradient  - mDetectionVariables.averageGradient;
             inputVector[5] = vEdgePropertiesAll[iEdge].radiusVar;
             inputVector[6] = vEdgePropertiesAll[iEdge].length;
 
