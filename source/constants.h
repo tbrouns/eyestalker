@@ -36,9 +36,9 @@ const double fitErrorFraction   = 0.05;
 
 // Edge processing
 
-const int lengthWindowLength    = 5;
-const int curvatureWindowLength = 5; // window length for curvature
-const int minimumEdgeLength     = 5;
+const int lengthWindowLength    =  5;
+const int curvatureWindowLength = 16; // window length for curvature
+const int minimumEdgeLength     =  5;
 
 // Edge classification
 

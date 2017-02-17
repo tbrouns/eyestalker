@@ -39,7 +39,7 @@ const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                              1.15,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
                                              0.39,  // Score threshold
-                                             0.15}; // Score difference threshold
+                                             0.50}; // Score difference threshold
 
 
 const std::vector<double> parametersBead = {0.005,  // Alpha average
@@ -63,7 +63,7 @@ const std::vector<double> parametersBead = {0.005,  // Alpha average
                                              1.10,  // Aspect ratio change threshold
                                                10,  // Displacement change threshold
                                              0.39,  // Score threshold
-                                             0.15}; // Score difference threshold
+                                             0.50}; // Score difference threshold
 
 const std::vector<double> parametersEdgeRadius        = { 0.83431,  0.99374,  0.062139,           0.22416,   0.92573,  0.11619};
 const std::vector<double> parametersEdgeCircumference = {  0.9201,   1.0419,   0.41725,           0.59665,     0.542,  0.31648};

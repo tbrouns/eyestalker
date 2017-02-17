@@ -16,7 +16,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CircumferenceMinLabel  = new QLabel;
     CircumferenceMinSlider = new SliderDouble;
     CircumferenceMinSlider->setPrecision(1);
-    CircumferenceMinSlider->setDoubleRange(0, 500);
+    CircumferenceMinSlider->setDoubleRange(1, 500);
     CircumferenceMinSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CircumferenceMinSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumferenceMin(double)));
 
@@ -26,7 +26,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CircumferenceMaxLabel  = new QLabel;
     CircumferenceMaxSlider = new SliderDouble;
     CircumferenceMaxSlider->setPrecision(1);
-    CircumferenceMaxSlider->setDoubleRange(0, 500);
+    CircumferenceMaxSlider->setDoubleRange(1, 500);
     CircumferenceMaxSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CircumferenceMaxSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumferenceMax(double)));
 
@@ -191,7 +191,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdScoreDiffLabel  = new QLabel;
     ThresholdScoreDiffSlider = new SliderDouble;
     ThresholdScoreDiffSlider->setPrecision(2);
-    ThresholdScoreDiffSlider->setDoubleRange(0, 0.5);
+    ThresholdScoreDiffSlider->setDoubleRange(0, 1.0);
     ThresholdScoreDiffSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdScoreDiffSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreDiff(double)));
 
@@ -216,7 +216,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CurvatureOffsetLabel  = new QLabel;
     CurvatureOffsetSlider = new SliderDouble;
     CurvatureOffsetSlider->setPrecision(1);
-    CurvatureOffsetSlider->setDoubleRange(0, 50);
+    CurvatureOffsetSlider->setDoubleRange(0, 180);
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
 
