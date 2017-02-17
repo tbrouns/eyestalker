@@ -42,12 +42,20 @@ const int minimumEdgeLength     = 5;
 
 // Edge classification
 
-const double scoreFactorCircumference = 0.50;
-const double scoreFactorIntensity     = 0.75;
-const double scoreFactorGradient      = 0.60;
-const double scoreFactorCurvature     = 0.80;
-const double scoreFactorRadius        = 0.65;
-const double scoreFactorRadiusVar     = 0.65;
+const double scoreFactorEdgeCircumference = 0.26;
+const double scoreFactorEdgeIntensity     = 0.49;
+const double scoreFactorEdgeCurvature     = 1.05;
+const double scoreFactorEdgeRadius        = 0.46;
+const double scoreFactorEdgeRadiusVar     = 0.13;
+const double scoreFactorEdgeGradient      = 0.16;
+
+// Fit classification
+
+const double scoreFactorFitAspectRatio   = 0.41;
+const double scoreFactorFitCircumference = 0.98;
+const double scoreFactorFitDisplacement  = 0.00;
+const double scoreFactorFitLength        = 3.71;
+const double scoreFactorFitError         = 0.18;
 
 // Functions
 

@@ -77,40 +77,9 @@ inline double calculateCertainty(double x, double midpoint)
     return (1 - 2 / (1 + exp(-k * (x - midpoint)))); // Logistic
 }
 
-inline double calculateScoreIntensity(double x)
+inline double calculateGaussian2(double x, std::vector<double> p)
 {
-    double a1 = 1.0, b1 = 0, c1 = 12;
-    return (a1 * exp(-pow((x - b1) / c1, 2)));  // Gaussian
-}
-
-inline double calculateScoreRadius(double x)
-{
-    double a1 = 0.54, b1 = 1.006, c1 = 0.044, a2 = 0.52, b2 = 0.97, c2 = 0.085;
-    return (a1 * exp(-pow((x - b1) / c1, 2)) + a2 * exp(-pow((x - b2) / c2, 2))); // Two-term Gaussian
-}
-
-inline double calculateScoreRadiusVar(double x)
-{
-    double a = 2.73, b = -0.13;
-    return (exp(-a * (x - b))); // Exponential decay
-}
-
-inline double calculateScoreCurvature(double x)
-{
-    double a1 = 0.90, b1 = 0.0, c1 = 8.0;
-    return (a1 * exp(-pow((x - b1) / c1, 2))); // Gaussian
-}
-
-inline double calculateScoreCircumference(double x)
-{
-    double a = 10, b = 0.3;
-    return (1 / (1 + exp(-a * (x - b)))); // Logistic
-}
-
-inline double calculateScoreGradient(double x)
-{
-    double a1 = 0.98, b1 = 0, c1 = 6.4;
-    return (a1 * exp(-pow((x - b1) / c1, 2))); // Gaussian
+   return (p[0] * exp(-pow((x - p[1]) / p[2], 2)) + p[3] * exp(-pow((x - p[4]) / p[5], 2))); // Two-term Gaussian
 }
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& inputVector, bool USE_CERTAINTY)
@@ -168,18 +137,17 @@ double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::v
 
     // Calculate scores
 
-    double scoreCircumference = factorCircumference * calculateScoreCircumference(changeCircumference);
-    double scoreRadiusVar     = factorRadiusVar     * calculateScoreRadiusVar(varianceRadius);
-    double scoreCurvature     = factorCurvature     * calculateScoreCurvature(changeCurvature);
-    double scoreRadius        = factorRadius        * calculateScoreRadius   (changeRadius);
-    double scoreIntensity     = factorIntensity     * calculateScoreIntensity(changeIntensity);
-    double scoreGradient      = factorGradient      * calculateScoreGradient (changeGradient);
+    double scoreRadius        = factorRadius        * calculateGaussian2(changeRadius,        parametersEdgeRadius       );
+    double scoreCircumference = factorCircumference * calculateGaussian2(changeCircumference, parametersEdgeCircumference);
+    double scoreCurvature     = factorCurvature     * calculateGaussian2(changeCurvature,     parametersEdgeCurvature    );
+    double scoreIntensity     = factorIntensity     * calculateGaussian2(changeIntensity,     parametersEdgeIntensity    );
+    double scoreGradient      = factorGradient      * calculateGaussian2(changeGradient,      parametersEdgeGradient     );
+    double scoreRadiusVar     = factorRadiusVar     * calculateGaussian2(varianceRadius,      parametersEdgeRadiusVar    );
 
     const double norm =  factorRadius + factorRadiusVar + factorCurvature + factorCircumference + factorIntensity + factorGradient;
 
-    double scoreTotal;
+    double scoreTotal = 0;
     if (norm > 0) { scoreTotal = (scoreRadius + scoreRadiusVar + scoreGradient + scoreCurvature + scoreCircumference + scoreIntensity) / norm; }
-    else          { scoreTotal = 0; }
     return scoreTotal;
 }
 
@@ -2162,53 +2130,52 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
     return vEllipsePropertiesAll;
 }
 
-int ellipseFitFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<ellipseProperties> vEllipseProperties)
+int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<ellipseProperties> vEllipseProperties)
 {
     int numFits = vEllipseProperties.size();
 
-    std::vector<double> featureChange(numFits); // new type of fit error
-
-    double maxScoreAspectRatio   = 1;
-    double maxScoreCircumference = 1;
-    double maxScoreDisplacement  = 1;
-    double maxScoreFitError      = 2;
-    double maxScoreLength        = 2;
-
-    double scoreAspectRatio   = 0;
-    double scoreCircumference = 0;
-    double scoreDisplacement  = 0;
+    std::vector<double> scoreFits(numFits);
 
     double certaintyFactorPosition = 0.5 * (mDetectionVariables.certaintyPosition + 1);
     double certaintyFactorFeatures = 0.5 * (mDetectionVariables.certaintyFeatures + 1);
+    double certaintyFactorAverages = 0.5 * (mDetectionVariables.certaintyAverages + 1);
+
+    if (certaintyFactorAverages > certaintyFactorFeatures + certaintyOffset) { certaintyFactorFeatures = certaintyFactorAverages; }
 
     for (int iFit = 0; iFit < numFits; iFit++)
-    {
+    {   
         ellipseProperties mEllipseProperties = vEllipseProperties[iFit];
 
         double dx = mEllipseProperties.xPos - mDetectionVariables.predictedXPos;
         double dy = mEllipseProperties.yPos - mDetectionVariables.predictedYPos;
-        double displacementChange  = sqrt(dx * dx + dy * dy);
-        double circumferenceChange = (std::abs(mEllipseProperties.circumference - mDetectionVariables.predictedCircumference));
-        double aspectRatioChange   = (std::abs(mEllipseProperties.aspectRatio   - mDetectionVariables.predictedAspectRatio));
-        double lengthDifference    = (std::abs(mEllipseProperties.edgeLength    - mDetectionVariables.predictedCircumference));
+        double changePosition      = sqrt(dx * dx + dy * dy);
+        double changeAspectRatio   = std::abs(mEllipseProperties.aspectRatio - mDetectionVariables.predictedAspectRatio);
+        double changeCircumference = mEllipseProperties.circumference / mDetectionVariables.predictedCircumference;
+        double changeLength        = mEllipseProperties.edgeLength    / mDetectionVariables.predictedCircumference;
         double fitError            = mEllipseProperties.fitError;
 
-        scoreAspectRatio   = (-maxScoreAspectRatio   / mDetectionParameters.thresholdChangeAspectRatio)   * aspectRatioChange   + maxScoreAspectRatio;
-        scoreCircumference = (-maxScoreCircumference / mDetectionParameters.thresholdChangeCircumference) * circumferenceChange + maxScoreCircumference;
-        scoreDisplacement  = (-maxScoreDisplacement  / mDetectionParameters.thresholdChangePosition)      * displacementChange  + maxScoreDisplacement;
+        double factorAspectRatio   = certaintyFactorFeatures * scoreFactorFitAspectRatio;
+        double factorCircumference = certaintyFactorFeatures * scoreFactorFitCircumference;
+        double factorDisplacement  = certaintyFactorPosition * scoreFactorFitDisplacement;
+        double factorLength        = certaintyFactorFeatures * scoreFactorFitLength;
+        double factorFitError      =                           scoreFactorFitError;
 
-        double scoreFitError = (-maxScoreFitError   / mDetectionParameters.ellipseFitErrorMaximum)  * fitError         + maxScoreFitError;
-        double scoreLength   = (-maxScoreLength * 2 / mDetectionVariables.predictedCircumference) * lengthDifference + maxScoreLength;
+        // Calculate scores
+        double scoreAspectRatio   = factorAspectRatio   * calculateGaussian2(changeAspectRatio,   parametersFitAspectRatio   );
+        double scoreCircumference = factorCircumference * calculateGaussian2(changeCircumference, parametersFitCircumference );
+        double scoreDisplacement  = factorDisplacement  * calculateGaussian2(changePosition,      parametersFitDisplacement  );
+        double scoreLength        = factorLength        * calculateGaussian2(changeLength,        parametersFitLength        );
+        double scoreFitError      = factorFitError      * calculateGaussian2(fitError,            parametersFitError         );
 
-        if (scoreCircumference  < 0) { scoreCircumference   = 0; }
-        if (scoreAspectRatio    < 0) { scoreAspectRatio     = 0; }
-        if (scoreFitError       < 0) { scoreFitError        = 0; }
-        if (scoreLength         < 0) { scoreLength          = 0; }
+        double norm =  factorAspectRatio + factorCircumference + factorDisplacement + factorLength + factorFitError;
 
-        featureChange[iFit] = certaintyFactorFeatures * (scoreAspectRatio + scoreCircumference) + certaintyFactorPosition * scoreDisplacement + scoreFitError + scoreLength;
+        double scoreTotal = 0;
+        if (norm > 0) { scoreTotal = (scoreAspectRatio + scoreCircumference + scoreDisplacement + scoreLength + scoreFitError) / norm; }
+
+        scoreFits[iFit] = scoreTotal;
     }
 
-    int acceptedFitIndex = std::distance(featureChange.begin(), std::max_element(featureChange.begin(), featureChange.end()));
+    int acceptedFitIndex = std::distance(scoreFits.begin(), std::max_element(scoreFits.begin(), scoreFits.end()));
 
     return acceptedFitIndex;
 }
@@ -2510,7 +2477,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     {
         mEllipseProperties.DETECTED = true;
 
-        if (numFits > 1) { acceptedFitIndex = ellipseFitFilter(mDetectionVariables, mDetectionParameters, vEllipsePropertiesAll); } // grab best fit
+        if (numFits > 1) { acceptedFitIndex = ellipseFitFilter(mDetectionVariables, vEllipsePropertiesAll); } // grab best fit
 
         mEllipseProperties = vEllipsePropertiesAll[acceptedFitIndex];
 
