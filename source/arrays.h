@@ -1,4 +1,4 @@
-//  Copyright (C) 2016  Terence Brouns
+//  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ const std::vector<double> parametersEye  = {0.005,  // Alpha average
                                              1.20,  // Circumference offset
                                              1.15,  // Circumference change threshold
                                              1.15,  // Aspect ratio change threshold
-                                                5,  // Displacement change threshold
+                                               10,  // Displacement change threshold
                                              0.39,  // Score threshold
                                              0.15}; // Score difference threshold
 
@@ -61,7 +61,7 @@ const std::vector<double> parametersBead = {0.005,  // Alpha average
                                              1.10,  // Circumference offset
                                              1.10,  // Circumference change threshold
                                              1.10,  // Aspect ratio change threshold
-                                                5,  // Displacement change threshold
+                                               10,  // Displacement change threshold
                                              0.39,  // Score threshold
                                              0.15}; // Score difference threshold
 

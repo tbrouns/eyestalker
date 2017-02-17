@@ -1,4 +1,4 @@
-//  Copyright (C) 2016  Terence Brouns
+//  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -94,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     camImageWdth            = 480; // size of image in widget
     PROCESSING_ALL_IMAGES   = false;
     PROCESSING_ALL_TRIALS   = false;
+    PROCESSING_ALL_EXPS     = false;
     imageIndexOffline       = 0;
     imageTotalOffline       = 0;
     TRIAL_RECORDING         = false;
@@ -1333,7 +1334,7 @@ void MainWindow::onDirectorySelect()
 
 void MainWindow::onDialogueOpen()
 {
-    QString text = "Copyright 2016 - 2017 Terence Brouns. <br> <br> "
+    QString text = "Copyright 2016 - 2017 Terence Brouns, t.s.n.brouns@gmail.com. <br> <br> "
                    "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; <br> "
                    "without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. <br><br>"
                    "See the GNU General Public License for more details. <br><br>"

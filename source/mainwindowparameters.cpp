@@ -1,4 +1,4 @@
-//  Copyright (C) 2016  Terence Brouns
+//  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

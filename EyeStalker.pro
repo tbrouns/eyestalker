@@ -1,4 +1,4 @@
-#  Copyright (C) 2016  Terence Brouns
+#  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ unix {
 
 # optimization
 
-#QMAKE_CXXFLAGS += -O3
-#QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
+QMAKE_CXXFLAGS += -O3
+QMAKE_CXXFLAGS += -DEIGEN_NO_DEBUG
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS   += -fopenmp
 

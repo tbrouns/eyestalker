@@ -1,4 +1,4 @@
-//  Copyright (C) 2016  Terence Brouns
+//  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -525,21 +525,32 @@ void MainWindow::onDetectAllTrials()
 
 void MainWindow::onDetectAllExperiments()
 {
-    QString mainDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), dataDirectoryOffline, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-
-    std::string mainDirectory = mainDirectoryTemp.toStdString();
-
-    if (boost::filesystem::exists(mainDirectory))
+    if (!PROCESSING_ALL_EXPS)
     {
-        for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(mainDirectory), {}))
+        QString mainDirectoryTemp = QFileDialog::getExistingDirectory(this, tr("Select data directory"), dataDirectoryOffline, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+        std::string mainDirectory = mainDirectoryTemp.toStdString();
+
+        if (boost::filesystem::exists(mainDirectory))
         {
-            std::string subDirectory = entry.path().string();
-            dataDirectoryOffline = QString::fromStdString(subDirectory);
-            timeMatrix.clear();
-            setupOfflineSession();
-            onDetectAllTrials();
+            PROCESSING_ALL_EXPS = true;
+
+            for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(mainDirectory), {}))
+            {
+                if (PROCESSING_ALL_EXPS)
+                {
+                    std::string subDirectory = entry.path().string();
+                    dataDirectoryOffline = QString::fromStdString(subDirectory);
+                    timeMatrix.clear();
+                    setupOfflineSession();
+                    onDetectAllTrials();
+                } else { break; }
+            }
         }
     }
+
+    PROCESSING_ALL_EXPS   = false;
+    PROCESSING_ALL_TRIALS = false;
+    PROCESSING_ALL_IMAGES = false;
 }
 
 
@@ -598,8 +609,8 @@ void MainWindow::onSaveTrialData()
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCircumference << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAspectRatio   << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCurvature     << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].averageIntensity       << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].averageGradient        << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedIntensity     << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
         for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
 
         file.close();
