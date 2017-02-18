@@ -135,7 +135,6 @@ HEADERS  += \
     source/ueyeopencv.h \
     source/parameterwidget.h \
     source/variablewidget.h \
-    source/arrays.h \
     source/eyestalker.h \
     source/qwtplotwidget.h
 

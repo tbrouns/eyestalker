@@ -23,47 +23,45 @@ void MainWindow::loadSettings(QString filename)
                                                         0.75,  // Alpha position
                                                            4,  // Canny blur level
                                                            5,  // Canny kernel size
-                                                300.0,  // Canny threshold low
-                                                600.0,  // Canny threshold high
-                                                   15,  // Curvature offset
-                                                 0.05,  // Edge window length fraction
-                                                    3,  // Ellipse fit number maximum
-                                                  120,  // Ellipse fit error maximum
-                                                   12,  // Glint size
-                                                  320,  // Circumference max
-                                                   60,  // Circumference min
-                                                  0.4,  // Aspect ratio min
-                                                 1.20,  // Circumference offset
-                                                 1.15,  // Circumference change threshold
-                                                 1.15,  // Aspect ratio change threshold
-                                                   10,  // Displacement change threshold
-                                                 0.39,  // Score threshold
-                                                 0.50}; // Score difference threshold
-
+                                                       300.0,  // Canny threshold low
+                                                       600.0,  // Canny threshold high
+                                                          15,  // Curvature offset
+                                                        0.05,  // Edge window length fraction
+                                                           3,  // Ellipse fit number maximum
+                                                        0.40,  // Ellipse fit error maximum
+                                                          12,  // Glint size
+                                                         320,  // Circumference max
+                                                          60,  // Circumference min
+                                                         0.4,  // Aspect ratio min
+                                                        1.20,  // Circumference offset
+                                                        1.15,  // Circumference change threshold
+                                                        1.15,  // Aspect ratio change threshold
+                                                          10,  // Displacement change threshold
+                                                        0.39,  // Score threshold
+                                                        0.50}; // Score difference threshold
 
     static const std::vector<double> parametersBead = {0.005,  // Alpha average
-                                                 0.75,  // Alpha miscellaneous
-                                                 0.10,  // Alpha certainty
-                                                 0.75,  // Alpha predicted
-                                                    4,  // Canny blur level
-                                                    3,  // Canny kernel size
-                                                300.0,  // Canny threshold low
-                                                600.0,  // Canny threshold high
-                                                   15,  // Curvature offset
-                                                 0.05,  // Edge window length fraction
-                                                    3,  // Ellipse fit number maximum
-                                                   80,  // Ellipse fit error maximum
-                                                    0,  // Glint size
-                                                  130,  // Circumference max
-                                                   90,  // Circumference min
-                                                  0.8,  // Aspect ratio min
-                                                 1.10,  // Circumference offset
-                                                 1.10,  // Circumference change threshold
-                                                 1.10,  // Aspect ratio change threshold
-                                                   10,  // Displacement change threshold
-                                                 0.39,  // Score threshold
-                                                 0.50}; // Score difference threshold
-
+                                                        0.75,  // Alpha miscellaneous
+                                                        0.10,  // Alpha certainty
+                                                        0.75,  // Alpha predicted
+                                                           4,  // Canny blur level
+                                                           3,  // Canny kernel size
+                                                       300.0,  // Canny threshold low
+                                                       600.0,  // Canny threshold high
+                                                          15,  // Curvature offset
+                                                        0.05,  // Edge window length fraction
+                                                           3,  // Ellipse fit number maximum
+                                                        0.40,  // Ellipse fit error maximum
+                                                           0,  // Glint size
+                                                         130,  // Circumference max
+                                                          90,  // Circumference min
+                                                         0.8,  // Aspect ratio min
+                                                        1.10,  // Circumference offset
+                                                        1.10,  // Circumference change threshold
+                                                        1.10,  // Aspect ratio change threshold
+                                                          10,  // Displacement change threshold
+                                                        0.39,  // Score threshold
+                                                        0.50}; // Score difference threshold
 
     QSettings settings(filename, QSettings::IniFormat);
 

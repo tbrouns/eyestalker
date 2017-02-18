@@ -51,7 +51,6 @@ VariableWidget::VariableWidget(QWidget *parent) : QWidget(parent)
 VariableWidget::~VariableWidget()
 {
 
-
 }
 
 void VariableWidget::setWidgets(const dataVariables& mDataVariables)

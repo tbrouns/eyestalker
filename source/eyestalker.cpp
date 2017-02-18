@@ -84,7 +84,14 @@ inline double calculateGaussian2(double x, std::vector<double> p)
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<double>& inputVector, bool USE_CERTAINTY)
 {
-    for (int i = 0, vSize = inputVector.size(); i < vSize; i++) // check for NaNs or Infs
+    static const std::vector<double> parametersEdgeRadius        = { 0.83431,  0.99374,  0.062139,           0.22416,   0.92573,  0.11619};
+    static const std::vector<double> parametersEdgeCircumference = {  0.9201,   1.0419,   0.41725,           0.59665,     0.542,  0.31648};
+    static const std::vector<double> parametersEdgeCurvature     = { -1.1992, -0.69392,    1.4081, 168571135634303.5, -130.9298,  23.1155};
+    static const std::vector<double> parametersEdgeIntensity     = { 0.92512,   1.3436,    9.6657,          0.069804,   -2.3099,  23.4447};
+    static const std::vector<double> parametersEdgeGradient      = {       0, -16.7695,    2.4122,            1.0705,   -1.6043,   6.7995};
+    static const std::vector<double> parametersEdgeRadiusVar     = {0.036046, 0.002672, 0.0017742,           0.98751, 0.0075968, 0.053661};
+
+        for (int i = 0, vSize = inputVector.size(); i < vSize; i++) // check for NaNs or Infs
     {
         double val = inputVector[i];
         if (!std::isfinite(val)) { inputVector[i] = 0; }
@@ -1085,22 +1092,24 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
 
 void getEdgeWindowLength(const detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters)
 {
+    std::vector<int> edgeWindowLengths = {5, 8, 12};
+
     // Functions finds closest discrete approximation to the desired exact window length
 
     double edgeWindowLengthExact = mDetectionParameters.edgeWindowLengthFraction * mDetectionVariables.predictedCircumference;
 
-    int numWindowLengths = arrayCurvatureWindowLengths.size();
+    int numWindowLengths = edgeWindowLengths.size();
 
     std::vector<double> diffs(numWindowLengths);
 
     for (int iLength = 0; iLength < numWindowLengths; iLength++)
     {
-        diffs[iLength] = std::abs(arrayCurvatureWindowLengths[iLength] - edgeWindowLengthExact);
+        diffs[iLength] = std::abs(edgeWindowLengths[iLength] - edgeWindowLengthExact);
     }
 
     int windowLengthIndex = std::distance(diffs.begin(), std::min_element(diffs.begin(), diffs.end()));
 
-    mDetectionParameters.edgeWindowLength = arrayCurvatureWindowLengths[windowLengthIndex]; // closest approximation
+    mDetectionParameters.edgeWindowLength = edgeWindowLengths[windowLengthIndex]; // closest approximation
 }
 
 void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, double& curvatureUpperLimit, double& curvatureLowerLimit)
@@ -1580,7 +1589,7 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
                 continue;
             }
 
-            int iEdgePoint  = mDetectionParameters.edgeWindowLength;
+            int iEdgePoint  = 0;
             bool BREAK_LOOP = false;
 
             std::vector<int> breakPointsAll;
@@ -1591,10 +1600,10 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
             {
                 iEdgePoint = iEdgePoint + mDetectionParameters.edgeWindowLength;
 
-                if (iEdgePoint >= edgeSize - 2 * mDetectionParameters.edgeWindowLength - 1)
+                if (iEdgePoint >= edgeSize - mDetectionParameters.edgeWindowLength - 1)
                 {
                     BREAK_LOOP = true;
-                    iEdgePoint = edgeSize - 2 * mDetectionParameters.edgeWindowLength - 1;
+                    iEdgePoint = edgeSize - mDetectionParameters.edgeWindowLength - 1;
                 }
 
                 std::vector<int> breakPoints = {0, iEdgePoint, iEdgePoint + 1, edgeSize - 1};
@@ -2144,6 +2153,12 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
 int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<ellipseProperties> vEllipseProperties)
 {
+    static const std::vector<double> parametersFitAspectRatio   = {0.73173, 0.0005102, 0.0093987, 0.23184, 0.0005102, 0.033331};
+    static const std::vector<double> parametersFitCircumference = {0.81525,   0.99994, 0.0051646, 0.17624,    1.0089, 0.034909};
+    static const std::vector<double> parametersFitDisplacement  = {0.37568,  0.040816,   0.66938, 0.59611,  0.040816,   3.1728};
+    static const std::vector<double> parametersFitLength        = {0.12018,   0.76041,  0.033629, 0.97603,   0.99961,  0.26897};
+    static const std::vector<double> parametersFitError         = {0.83881,   0.20388,  0.075325, 0.28425,   0.41703,  0.24919};
+
     int numFits = vEllipseProperties.size();
 
     std::vector<double> scoreFits(numFits);
@@ -2194,14 +2209,17 @@ int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<
 
 void checkVariableLimits(detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters)
 {
-    if (mDetectionVariables.thresholdChangeAspectRatio      < mDetectionParameters.thresholdChangeAspectRatio)
-    {        mDetectionVariables.thresholdChangeAspectRatio = mDetectionParameters.thresholdChangeAspectRatio; }
+    if (mDetectionVariables.thresholdScore < mDetectionParameters.scoreThreshold)
+    {   mDetectionVariables.thresholdScore = mDetectionParameters.scoreThreshold; }
 
-    if (mDetectionVariables.thresholdChangeCircumference      < mDetectionParameters.thresholdChangeCircumference)
-    {        mDetectionVariables.thresholdChangeCircumference = mDetectionParameters.thresholdChangeCircumference; }
+    if (mDetectionVariables.thresholdChangeAspectRatio < mDetectionParameters.thresholdChangeAspectRatio)
+    {   mDetectionVariables.thresholdChangeAspectRatio = mDetectionParameters.thresholdChangeAspectRatio; }
 
-    if (mDetectionVariables.thresholdChangePosition      < mDetectionParameters.thresholdChangePosition)
-    {        mDetectionVariables.thresholdChangePosition = mDetectionParameters.thresholdChangePosition; }
+    if (mDetectionVariables.thresholdChangeCircumference < mDetectionParameters.thresholdChangeCircumference)
+    {   mDetectionVariables.thresholdChangeCircumference = mDetectionParameters.thresholdChangeCircumference; }
+
+    if (mDetectionVariables.thresholdChangePosition < mDetectionParameters.thresholdChangePosition)
+    {   mDetectionVariables.thresholdChangePosition = mDetectionParameters.thresholdChangePosition; }
 
     if      (mDetectionVariables.certaintyPosition < -1.0) { mDetectionVariables.certaintyPosition = -1.0; }
     else if (mDetectionVariables.certaintyPosition >  1.0) { mDetectionVariables.certaintyPosition =  1.0; }
@@ -2209,8 +2227,8 @@ void checkVariableLimits(detectionVariables& mDetectionVariables, const detectio
     if      (mDetectionVariables.certaintyFeatures < -1.0) { mDetectionVariables.certaintyFeatures = -1.0; }
     else if (mDetectionVariables.certaintyFeatures >  1.0) { mDetectionVariables.certaintyFeatures =  1.0; }
 
-    if      (mDetectionVariables.certaintyAverages  < -1.0) { mDetectionVariables.certaintyAverages  = -1.0; }
-    else if (mDetectionVariables.certaintyAverages  >  1.0) { mDetectionVariables.certaintyAverages  =  1.0; }
+    if      (mDetectionVariables.certaintyAverages < -1.0) { mDetectionVariables.certaintyAverages = -1.0; }
+    else if (mDetectionVariables.certaintyAverages >  1.0) { mDetectionVariables.certaintyAverages =  1.0; }
 }
 
 detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables)

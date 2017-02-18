@@ -221,7 +221,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
 
     QLabel *EdgeWindowLengthFractionTextBox = new QLabel;
-    EdgeWindowLengthFractionTextBox->setText("<b>Edge minimum length:");
+    EdgeWindowLengthFractionTextBox->setText("<b>Edge window length:");
 
     EdgeWindowLengthFractionLabel  = new QLabel;
     EdgeWindowLengthFractionSlider = new SliderDouble;

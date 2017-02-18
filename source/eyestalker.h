@@ -18,7 +18,6 @@
 
 // Files
 
-#include "arrays.h"
 #include "constants.h"
 #include "structures.h"
 
