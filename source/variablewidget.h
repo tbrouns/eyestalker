@@ -18,8 +18,6 @@ class VariableWidget : public QWidget
 public:
 
     void setWidgets(const dataVariables&);
-    detectionVariables getStructure();
-    void resetStructure(const detectionParameters&, const AOIProperties &mAOI);
 
     explicit VariableWidget(QWidget *parent = 0);
     ~VariableWidget();
@@ -30,17 +28,6 @@ private:
     SliderDouble *AspectRatioSlider;
     QLabel *CircumferenceLabel;
     QLabel *AspectRatioLabel;
-
-    detectionVariables mDetectionVariables;
-
-signals:
-
-public slots:
-
-private slots:
-
-    void setCircumference(double);
-    void setAspectRatio(double);
 
 };
 

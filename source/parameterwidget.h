@@ -57,10 +57,8 @@ private:
     SliderDouble*CircumferenceOffsetSlider;
     QLabel      *CurvatureOffsetLabel;
     SliderDouble*CurvatureOffsetSlider;
-    QLabel      *EdgeLengthFractionLabel;
-    SliderDouble*EdgeLengthFractionSlider;
-    QLabel      *EllipseFitErrorMaximumLabel;
-    SliderDouble*EllipseFitErrorMaximumSlider;
+    QLabel      *EdgeWindowLengthFractionLabel;
+    SliderDouble*EdgeWindowLengthFractionSlider;
     QLabel      *EllipseFitNumberMaximumLabel;
     QSlider     *EllipseFitNumberMaximumSlider;
     QLabel      *GlintSizeLabel;
@@ -75,6 +73,8 @@ private:
     SliderDouble*ThresholdScoreSlider;
     QLabel      *ThresholdScoreDiffLabel;
     SliderDouble*ThresholdScoreDiffSlider;
+    QLabel      *ThresholdFitErrorLabel;
+    SliderDouble*ThresholdFitErrorSlider;
 
     detectionParameters mDetectionParameters;
 
@@ -91,9 +91,9 @@ private slots:
     void setCannyThresholdLow       (double);
     void setCannyThresholdHigh      (double);
     void setCurvatureOffset         (double);
-    void setEdgeLengthFraction      (double);
+    void setEdgeWindowLengthFraction(double);
     void setEllipseFitNumberMaximum (int);
-    void setEllipseFitErrorMaximum  (double);
+    void setThresholdFitError       (double);
     void setGlintSize               (int);
     void setCircumferenceMin        (double);
     void setCircumferenceMax        (double);

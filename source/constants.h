@@ -23,22 +23,13 @@
 #endif
 #endif
 
-
 // Parameter initial values
 
 const double initialAspectRatio = 0.9;
 const double initialCurvature   =  30;
 const double initialIntensity   =  60;
 
-const double fitErrorFraction   = 0.05;
-
 // Other
-
-// Edge processing
-
-const int lengthWindowLength    =  5;
-const int curvatureWindowLength =  5; // window length for curvature
-const int minimumEdgeLength     =  5;
 
 // Edge classification
 

@@ -907,11 +907,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::pupilTracking()
 {   
-    mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure(), Parameters::eyeAOI);
-    mDetectionVariablesEye = mVariableWidgetEye->getStructure();
-
-    mVariableWidgetBead->resetStructure(mParameterWidgetBead->getStructure(), Parameters::beadAOI);
-    mDetectionVariablesBead = mVariableWidgetBead->getStructure();
+    resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+    resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 
     while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
@@ -978,8 +975,9 @@ void MainWindow::pupilTracking()
             {
                 if (avgIntensity > flashThreshold)
                 {
-                    mVariableWidgetEye->resetStructure(mDetectionParametersTemp, AOIEyeTemp);
-                    mDetectionVariablesTemp = mVariableWidgetEye->getStructure();
+                    resetVariablesSoft(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+                    resetVariablesSoft(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+
                     startTime = mImageInfo.time;
                     startTrialRecording();
                 }
@@ -1245,6 +1243,64 @@ void MainWindow::findCamera()
     }
 }
 
+// Variables
+
+void MainWindow::resetVariablesHard(detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const AOIProperties& mAOI)
+{
+    // Reset all variables
+
+    mDetectionVariables.averageAspectRatio   = initialAspectRatio; // close to perfect circle
+    mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin); // calculate first
+    mDetectionVariables.averageCurvature     = initialCurvature;
+    mDetectionVariables.averageGradient      = 0;
+    mDetectionVariables.averageHeight        = mDetectionVariables.averageCircumference / M_PI;
+    mDetectionVariables.averageIntensity     = initialIntensity;
+    mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
+
+    mDetectionVariables.certaintyAverages = -1.0;
+
+    resetVariablesSoft(mDetectionVariables, mDetectionParameters, mAOI);
+}
+
+void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const AOIProperties& mAOI)
+{
+    // Reset everything but averages
+
+    mDetectionVariables.predictedAspectRatio   = mDetectionVariables.averageAspectRatio;
+    mDetectionVariables.predictedCircumference = mDetectionVariables.averageCircumference;
+    mDetectionVariables.predictedCurvature     = mDetectionVariables.averageCurvature;
+    mDetectionVariables.predictedGradient      = mDetectionVariables.averageGradient;
+    mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
+    mDetectionVariables.predictedIntensity     = mDetectionVariables.averageIntensity;
+    mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
+    mDetectionVariables.predictedXPos          = 0.5 * mAOI.wdth; // centre of image
+    mDetectionVariables.predictedYPos          = 0.5 * mAOI.hght;
+
+    mDetectionVariables.momentumAspectRatio   = 0;
+    mDetectionVariables.momentumCircumference = 0;
+    mDetectionVariables.momentumCurvature     = 0;
+    mDetectionVariables.momentumGradient      = 0;
+    mDetectionVariables.momentumHeight        = 0;
+    mDetectionVariables.momentumIntensity     = 0;
+    mDetectionVariables.momentumWidth         = 0;
+    mDetectionVariables.momentumXPos          = 0;
+    mDetectionVariables.momentumYPos          = 0;
+
+    int AOISize;
+    if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
+    else                       { AOISize = mAOI.hght; }
+
+    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 / mDetectionParameters.aspectRatioMin;
+    mDetectionVariables.thresholdChangeCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
+    mDetectionVariables.thresholdChangePosition      = AOISize;
+    mDetectionVariables.thresholdScore               = 0;
+
+    mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
+
+    mDetectionVariables.certaintyFeatures = -1.0;
+    mDetectionVariables.certaintyPosition = -1.0;
+}
+
 // General functions
 
 void MainWindow::msWait(int ms)
@@ -1316,7 +1372,6 @@ void MainWindow::onSetOfflineMode(int state)
         startOfflineSession();
     }
 }
-
 
 int MainWindow::getCurrentTime()
 {

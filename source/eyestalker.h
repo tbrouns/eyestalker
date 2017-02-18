@@ -48,11 +48,12 @@
 #include <string>
 #include <vector>
 
-detectionVariables eyeStalker(const cv::Mat&, const AOIProperties&, detectionVariables&, const detectionParameters&, dataVariables&, drawVariables&);
+detectionVariables eyeStalker(const cv::Mat&, const AOIProperties&, detectionVariables&, detectionParameters&, dataVariables&, drawVariables&);
 double flashDetection(const cv::Mat&);
 
-double getCurvatureLowerLimit(int, int, int);
-double getCurvatureUpperLimit(int, int, int);
+double getCurvatureUpperLimit(double, double, int);
+double getCurvatureLowerLimit(double, double, int);
+
 
 #endif // EYESTALKER
 

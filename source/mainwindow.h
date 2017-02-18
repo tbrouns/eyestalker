@@ -174,8 +174,6 @@ private:
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime;       // in ms
     std::vector<std::vector<double>> timeMatrix;
-    detectionVariables mDetectionVariablesEye;
-    detectionVariables mDetectionVariablesBead;
     int cameraAOIHghtMax;
     int cameraAOIHghtMin;
     int cameraAOIHghtStepSize;
@@ -202,10 +200,6 @@ private:
     int trialIndex;
     int trialStartTime;
     int trialTimeLength;
-    ParameterWidget *mParameterWidgetBead;
-    ParameterWidget *mParameterWidgetEye;
-    VariableWidget *mVariableWidgetEye;
-    VariableWidget *mVariableWidgetBead;
     QCheckBox *CameraHardwareGainAutoCheckBox;
     QImageOpenCV *CamQImage;
     QImageOpenCV *EyeQImage;
@@ -296,16 +290,31 @@ private:
     void findCamera();
     void getCameraParameters();
 
-    // Structures
+    // Variables and parameters
+
+    void resetVariablesHard(detectionVariables&, const detectionParameters&, const AOIProperties&);
+    void resetVariablesSoft(detectionVariables&, const detectionParameters&, const AOIProperties&);
+
+    detectionVariables mDetectionVariablesBead;
+    detectionVariables mDetectionVariablesEye;
 
     std::vector<detectionVariables> vDetectionVariablesBead;
     std::vector<detectionVariables> vDetectionVariablesEye;
+
     std::vector<dataVariables> vDataVariables;
     std::vector<dataVariables> vDataVariablesBead;
+
     drawVariables mDrawVariables;
     dataVariables mDataVariables;
+
     drawVariables mDrawVariablesBead;
     dataVariables mDataVariablesBead;
+
+    ParameterWidget *mParameterWidgetBead;
+    ParameterWidget *mParameterWidgetEye;
+
+    VariableWidget *mVariableWidgetEye;
+    VariableWidget *mVariableWidgetBead;
 
     // Saving and loading settings
 
@@ -341,7 +350,6 @@ private:
 
     void detectCurrentFrame(int);
     void detectAllFrames();
-
 
     // General
 

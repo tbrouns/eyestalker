@@ -162,11 +162,11 @@ void MainWindow::onSetTrialOffline(int index)
         vDetectionVariablesEye.resize(imageTotalOffline + 1);
         vDetectionVariablesBead.resize(imageTotalOffline + 1);
 
-        mVariableWidgetEye ->resetStructure(mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-        mVariableWidgetBead->resetStructure(mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+        resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+        resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 
-        vDetectionVariablesEye[0]  = mVariableWidgetEye ->getStructure();
-        vDetectionVariablesBead[0] = mVariableWidgetBead->getStructure();
+        vDetectionVariablesEye[0]  = mDetectionVariablesEye;
+        vDetectionVariablesBead[0] = mDetectionVariablesBead;
 
         if (imageIndexOffline != 0) { OfflineImageSlider->setValue(0); } // start with first frame
         else { onSetOfflineImage(0); }

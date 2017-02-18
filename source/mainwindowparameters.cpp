@@ -17,6 +17,54 @@
 
 void MainWindow::loadSettings(QString filename)
 {
+    static const std::vector<double> parametersEye  = {0.005,  // Alpha average
+                                                        0.20,  // Alpha features
+                                                        0.10,  // Alpha certainty
+                                                        0.75,  // Alpha position
+                                                           4,  // Canny blur level
+                                                           5,  // Canny kernel size
+                                                300.0,  // Canny threshold low
+                                                600.0,  // Canny threshold high
+                                                   15,  // Curvature offset
+                                                 0.05,  // Edge window length fraction
+                                                    3,  // Ellipse fit number maximum
+                                                  120,  // Ellipse fit error maximum
+                                                   12,  // Glint size
+                                                  320,  // Circumference max
+                                                   60,  // Circumference min
+                                                  0.4,  // Aspect ratio min
+                                                 1.20,  // Circumference offset
+                                                 1.15,  // Circumference change threshold
+                                                 1.15,  // Aspect ratio change threshold
+                                                   10,  // Displacement change threshold
+                                                 0.39,  // Score threshold
+                                                 0.50}; // Score difference threshold
+
+
+    static const std::vector<double> parametersBead = {0.005,  // Alpha average
+                                                 0.75,  // Alpha miscellaneous
+                                                 0.10,  // Alpha certainty
+                                                 0.75,  // Alpha predicted
+                                                    4,  // Canny blur level
+                                                    3,  // Canny kernel size
+                                                300.0,  // Canny threshold low
+                                                600.0,  // Canny threshold high
+                                                   15,  // Curvature offset
+                                                 0.05,  // Edge window length fraction
+                                                    3,  // Ellipse fit number maximum
+                                                   80,  // Ellipse fit error maximum
+                                                    0,  // Glint size
+                                                  130,  // Circumference max
+                                                   90,  // Circumference min
+                                                  0.8,  // Aspect ratio min
+                                                 1.10,  // Circumference offset
+                                                 1.10,  // Circumference change threshold
+                                                 1.10,  // Aspect ratio change threshold
+                                                   10,  // Displacement change threshold
+                                                 0.39,  // Score threshold
+                                                 0.50}; // Score difference threshold
+
+
     QSettings settings(filename, QSettings::IniFormat);
 
     cameraAOIFractionHght           = settings.value("CamAOIHghtFraction",          cameraAOIFractionHghtDefaultLeft).toDouble();
@@ -60,12 +108,13 @@ void MainWindow::loadSettings(QString filename)
     updateCamAOIy();
 
     detectionParameters mDetectionParametersEye  = loadParameters(filename, "Eye",  parametersEye);
-    mParameterWidgetEye ->setStructure(mDetectionParametersEye);
-    mVariableWidgetEye->resetStructure(mDetectionParametersEye, Parameters::eyeAOI);
-
     detectionParameters mDetectionParametersBead = loadParameters(filename, "Bead", parametersBead);
-    mParameterWidgetBead ->setStructure(mDetectionParametersBead);
-    mVariableWidgetBead->resetStructure(mDetectionParametersBead, Parameters::beadAOI);
+
+    mParameterWidgetEye ->setStructure(mDetectionParametersEye);
+    mParameterWidgetBead->setStructure(mDetectionParametersBead);
+
+    resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+    resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 }
 
 detectionParameters MainWindow::loadParameters(QString filename, QString prefix, std::vector<double> parameters)
@@ -73,7 +122,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     QSettings settings(filename, QSettings::IniFormat);
 
     detectionParameters mDetectionParameters;
-    mDetectionParameters.alphaAverages                       = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
+    mDetectionParameters.alphaAverages                      = settings.value(prefix + "AlphaAverage",                    parameters[0]).toDouble();
     mDetectionParameters.alphaFeatures                      = settings.value(prefix + "AlphaFeatures",                   parameters[1]).toDouble();
     mDetectionParameters.alphaCertainty                     = settings.value(prefix + "AlphaCertainty",                  parameters[2]).toDouble();
     mDetectionParameters.alphaPosition                      = settings.value(prefix + "AlphaPosition",                   parameters[3]).toDouble();
@@ -82,9 +131,9 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               parameters[6]).toDouble();
     mDetectionParameters.cannyThresholdHigh                 = settings.value(prefix + "CannyThresholdHigh",              parameters[7]).toDouble();
     mDetectionParameters.curvatureOffset                    = settings.value(prefix + "CurvatureOffset",                 parameters[8]).toDouble();
-    mDetectionParameters.edgeLengthFraction                 = settings.value(prefix + "EdgeLengthFraction",              parameters[9]).toDouble();
+    mDetectionParameters.edgeWindowLengthFraction           = settings.value(prefix + "EdgeWindowLengthFraction",        parameters[9]).toDouble();
     mDetectionParameters.ellipseFitNumberMaximum            = settings.value(prefix + "EllipseFitNumberMaximum",         parameters[10]).toInt();
-    mDetectionParameters.ellipseFitErrorMaximum             = settings.value(prefix + "EllipseFitErrorMaximum",          parameters[11]).toDouble();
+    mDetectionParameters.thresholdFitError                  = settings.value(prefix + "ThresholdFitError",               parameters[11]).toDouble();
     mDetectionParameters.glintWdth                          = settings.value(prefix + "GlintSize",                       parameters[12]).toInt();
     mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
     mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
@@ -158,7 +207,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.circumferenceMin);
     settings.setValue(prefix + "CurvatureOffset",                mDetectionParameters.curvatureOffset);
     settings.setValue(prefix + "EllipseFitNumberMaximum",        mDetectionParameters.ellipseFitNumberMaximum);
-    settings.setValue(prefix + "EllipseFitErrorMaximum",         mDetectionParameters.ellipseFitErrorMaximum);
+    settings.setValue(prefix + "ThresholdFitError",              mDetectionParameters.thresholdFitError);
     settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
     settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);
     settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.thresholdChangeCircumference);
@@ -178,8 +227,12 @@ void MainWindow::onResetParameters()
 
     QString filename = "";
     loadSettings(filename);
-    mParameterWidgetEye->reset();
-    mVariableWidgetEye->resetStructure(mParameterWidgetEye->getStructure(), Parameters::eyeAOI);
+
+    mParameterWidgetEye ->reset();
+    mParameterWidgetBead->reset();
+
+    resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+    resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 }
 
 void MainWindow::setBeadDetection(int state)

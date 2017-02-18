@@ -82,7 +82,7 @@ inline double calculateGaussian2(double x, std::vector<double> p)
     return (p[0] * exp(-pow((x - p[1]) / p[2], 2)) + p[3] * exp(-pow((x - p[4]) / p[5], 2))); // Two-term Gaussian
 }
 
-double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& inputVector, bool USE_CERTAINTY)
+double calculateScoreTotal(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<double>& inputVector, bool USE_CERTAINTY)
 {
     for (int i = 0, vSize = inputVector.size(); i < vSize; i++) // check for NaNs or Infs
     {
@@ -129,7 +129,7 @@ double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::v
 
     // Importance of curvature and radial variance should be dependent on length of edge
 
-    double factorLength = (1 / (mDetectionVariables.predictedCircumference - 2 * curvatureWindowLength)) * (edgeLength - 2 * curvatureWindowLength);
+    double factorLength = (1 / (mDetectionVariables.predictedCircumference - 2 * mDetectionParameters.edgeWindowLength)) * (edgeLength - 2 * mDetectionParameters.edgeWindowLength);
     if (factorLength < 0) { factorLength = 0; }
 
     double factorRadiusVar = certaintyFactorPosition  * scoreFactorEdgeRadiusVar * factorLength;
@@ -570,7 +570,7 @@ inline int calculateDirection(double x, double y)
     return dir;
 }
 
-int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
+int connectEdges(const detectionParameters& mDetectionParameters, std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
 {
     std::vector<int> dX = {  1,  1,  0, -1, -1, -1,  0,  1};
     std::vector<int> dY = {  0,  1,  1,  1,  0, -1, -1, -1};
@@ -578,7 +578,7 @@ int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int star
     std::vector<int> edgePoints = {startIndex};
     int edgePointNew = {startIndex};
 
-    for (int iEdgePoint = 0; iEdgePoint < curvatureWindowLength; iEdgePoint++) // move back through edge
+    for (int iEdgePoint = 0; iEdgePoint < mDetectionParameters.edgeWindowLength; iEdgePoint++) // move back through edge
     {
         int centreIndex = edgePointNew;
         int centreXPos  =  centreIndex % mAOI.wdth;
@@ -607,7 +607,7 @@ int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int star
 
     int edgeLength = edgePoints.size();
 
-    if (edgeLength >= curvatureWindowLength)
+    if (edgeLength >= mDetectionParameters.edgeWindowLength)
     {
         std::reverse(edgePoints.begin(), edgePoints.end());
 
@@ -655,7 +655,7 @@ int connectEdges(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int star
     return startIndex;
 }
 
-int findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
+int findEdgePoints(const detectionParameters& mDetectionParameters, std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
 {
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
@@ -704,7 +704,7 @@ int findEdgePoints(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int st
 
             if (nConnections == 1) // start or end of edge
             {
-                int edgePointNew = connectEdges(cannyEdgeVector, mAOI, centreIndex); // connect possible edge terminals
+                int edgePointNew = connectEdges(mDetectionParameters, cannyEdgeVector, mAOI, centreIndex); // connect possible edge terminals
 
                 if (centreIndex != edgePointNew)
                 {
@@ -1036,7 +1036,7 @@ void findLongestPath(std::vector<int>& allPoints, std::vector<int>& pathPoints, 
     }
 }
 
-std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVariables, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
+std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
 {
     std::vector<edgeProperties> vEdgePropertiesAll; // new structure containing length and indices of all edges
 
@@ -1047,7 +1047,7 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
 
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
     {
-        startIndices[iEdge] = findEdgePoints(cannyEdgeVector, mAOI, startIndicesRaw[iEdge]); // tag all edge points of found edges
+        startIndices[iEdge] = findEdgePoints(mDetectionParameters, cannyEdgeVector, mAOI, startIndicesRaw[iEdge]); // tag all edge points of found edges
     }
 
     for (int iEdge = 0; iEdge < numEdges; iEdge++)
@@ -1083,66 +1083,61 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
     return vEdgePropertiesAll;
 }
 
-double calculateCurvatureAverage(double circumference, double aspectRatio)
+void getEdgeWindowLength(const detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters)
 {
-    int arrayWdth = arrayCircumferences.size();
+    // Functions finds closest discrete approximation to the desired exact window length
 
-    int arrayXPos = *std::upper_bound(arrayCircumferences.begin(), arrayCircumferences.end(), circumference);
-    int arrayYPos = *std::upper_bound(arrayAspectRatios.begin(),   arrayAspectRatios.end(),   aspectRatio);
+    double edgeWindowLengthExact = mDetectionParameters.edgeWindowLengthFraction * mDetectionVariables.predictedCircumference;
 
-    double curvatureAverage = 0.5 * (arrayCurvatureMax[arrayYPos * arrayWdth + arrayXPos] + arrayCurvatureMin[arrayYPos * arrayWdth + arrayXPos]);
+    int numWindowLengths = arrayCurvatureWindowLengths.size();
 
-    return curvatureAverage;
+    std::vector<double> diffs(numWindowLengths);
+
+    for (int iLength = 0; iLength < numWindowLengths; iLength++)
+    {
+        diffs[iLength] = std::abs(arrayCurvatureWindowLengths[iLength] - edgeWindowLengthExact);
+    }
+
+    int windowLengthIndex = std::distance(diffs.begin(), std::min_element(diffs.begin(), diffs.end()));
+
+    mDetectionParameters.edgeWindowLength = arrayCurvatureWindowLengths[windowLengthIndex]; // closest approximation
 }
 
 void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, double& curvatureUpperLimit, double& curvatureLowerLimit)
 {
     // Calculate curvature limits
 
-    double circumferenceLow;
-    double circumferenceHigh;
+    std::vector<double> circumferences(2);
+    std::vector<double>   aspectRatios(2);
 
     double certaintyFactorFeatures = 0.5 * (mDetectionVariables.certaintyFeatures + 1);
     double certaintyFactorAverages = 0.5 * (mDetectionVariables.certaintyAverages + 1);
 
     if (certaintyFactorAverages > certaintyFactorFeatures + certaintyOffset)
     {
-        circumferenceLow  = mDetectionVariables.averageCircumference * mDetectionVariables.offsetCircumference;
-        circumferenceHigh = mDetectionVariables.averageCircumference / mDetectionVariables.offsetCircumference;
+        circumferences[0] = mDetectionVariables.averageCircumference * mDetectionVariables.offsetCircumference;
+        circumferences[1] = mDetectionVariables.averageCircumference / mDetectionVariables.offsetCircumference;
     }
     else
     {
-        circumferenceLow  = mDetectionVariables.predictedCircumference * (1 / mDetectionVariables.thresholdChangeCircumference);
-        circumferenceHigh = mDetectionVariables.predictedCircumference *      mDetectionVariables.thresholdChangeCircumference;
+        circumferences[0] = mDetectionVariables.predictedCircumference * (1 / mDetectionVariables.thresholdChangeCircumference);
+        circumferences[1] = mDetectionVariables.predictedCircumference *      mDetectionVariables.thresholdChangeCircumference;
     }
 
-    double aspectRatioLow  = mDetectionVariables.predictedAspectRatio * (1 / mDetectionVariables.thresholdChangeAspectRatio);
-    double aspectRatioHigh = mDetectionVariables.predictedAspectRatio *      mDetectionVariables.thresholdChangeAspectRatio;
-
-    std::vector<int> arrayXPos(2);
-    arrayXPos[0] = findUpperBound(arrayCircumferences, circumferenceLow);
-    arrayXPos[1] = findUpperBound(arrayCircumferences, circumferenceHigh);
-
-    std::vector<int> arrayYPos(2);
-    arrayYPos[0] = findUpperBound(arrayAspectRatios, aspectRatioLow);
-    arrayYPos[1] = findUpperBound(arrayAspectRatios, aspectRatioHigh);
+    aspectRatios[0] = mDetectionVariables.predictedAspectRatio * (1 / mDetectionVariables.thresholdChangeAspectRatio);
+    aspectRatios[1] = mDetectionVariables.predictedAspectRatio *      mDetectionVariables.thresholdChangeAspectRatio;
 
     // Calculate limits
 
     std::vector<double> curvaturesMax(4);
     std::vector<double> curvaturesMin(4);
 
-    int arrayWidth = arrayCircumferences.size();
-
     for (int i = 0; i < 2; i++)
     {
-        int x = arrayXPos[i];
-
         for (int j = 0; j < 2; j++)
         {
-            int y = arrayYPos[j];
-            curvaturesMax[2 * j + i] = arrayCurvatureMax[y * arrayWidth + x];
-            curvaturesMin[2 * j + i] = arrayCurvatureMin[y * arrayWidth + x];
+            curvaturesMax[2 * j + i] = getCurvatureUpperLimit(circumferences[i], aspectRatios[j], mDetectionParameters.edgeWindowLength);
+            curvaturesMin[2 * j + i] = getCurvatureLowerLimit(circumferences[i], aspectRatios[j], mDetectionParameters.edgeWindowLength);
         }
     }
 
@@ -1150,7 +1145,7 @@ void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, con
     curvatureLowerLimit = *std::min_element(std::begin(curvaturesMin), std::end(curvaturesMin)) - mDetectionParameters.curvatureOffset;
 }
 
-std::vector<double> calculateCurvatures(std::vector<double>& xNormals, std::vector<double>& yNormals, const std::vector<double>& xTangentsAll, const std::vector<double>& yTangentsAll)
+std::vector<double> calculateCurvatures(const detectionParameters& mDetectionParameters, std::vector<double>& xNormals, std::vector<double>& yNormals, const std::vector<double>& xTangentsAll, const std::vector<double>& yTangentsAll)
 {
     int edgeSize = xTangentsAll.size();
 
@@ -1159,22 +1154,22 @@ std::vector<double> calculateCurvatures(std::vector<double>& xNormals, std::vect
     int numPos = 0;
     int numNeg = 0;
 
-    for (int iEdgePoint = curvatureWindowLength; iEdgePoint < edgeSize - curvatureWindowLength; iEdgePoint++)
+    for (int iEdgePoint = mDetectionParameters.edgeWindowLength; iEdgePoint < edgeSize - mDetectionParameters.edgeWindowLength; iEdgePoint++)
     {
         // calculate window tangents
 
         // first window
 
-        std::vector<double> tangentsX_1(xTangentsAll.begin() + iEdgePoint - curvatureWindowLength, xTangentsAll.begin() + iEdgePoint - 1);
-        std::vector<double> tangentsY_1(yTangentsAll.begin() + iEdgePoint - curvatureWindowLength, yTangentsAll.begin() + iEdgePoint - 1);
+        std::vector<double> tangentsX_1(xTangentsAll.begin() + iEdgePoint - mDetectionParameters.edgeWindowLength, xTangentsAll.begin() + iEdgePoint - 1);
+        std::vector<double> tangentsY_1(yTangentsAll.begin() + iEdgePoint - mDetectionParameters.edgeWindowLength, yTangentsAll.begin() + iEdgePoint - 1);
 
         double tangentXMean_1 = calculateMean(tangentsX_1);
         double tangentYMean_1 = calculateMean(tangentsY_1);
 
         // second window
 
-        std::vector<double> tangentsX_2(xTangentsAll.begin() + iEdgePoint + 1, xTangentsAll.begin() + iEdgePoint + curvatureWindowLength);
-        std::vector<double> tangentsY_2(yTangentsAll.begin() + iEdgePoint + 1, yTangentsAll.begin() + iEdgePoint + curvatureWindowLength);
+        std::vector<double> tangentsX_2(xTangentsAll.begin() + iEdgePoint + 1, xTangentsAll.begin() + iEdgePoint + mDetectionParameters.edgeWindowLength);
+        std::vector<double> tangentsY_2(yTangentsAll.begin() + iEdgePoint + 1, yTangentsAll.begin() + iEdgePoint + mDetectionParameters.edgeWindowLength);
 
         double tangentXMean_2 = calculateMean(tangentsX_2);
         double tangentYMean_2 = calculateMean(tangentsY_2);
@@ -1197,7 +1192,7 @@ std::vector<double> calculateCurvatures(std::vector<double>& xNormals, std::vect
 
     if (numNeg > numPos) // if majority sign is negative, then swap all signs
     {
-        for (int iEdgePoint = curvatureWindowLength; iEdgePoint < edgeSize - curvatureWindowLength; iEdgePoint++)
+        for (int iEdgePoint = mDetectionParameters.edgeWindowLength; iEdgePoint < edgeSize - mDetectionParameters.edgeWindowLength; iEdgePoint++)
         {
             curvatures[iEdgePoint] = -curvatures[iEdgePoint];
         }
@@ -1206,7 +1201,7 @@ std::vector<double> calculateCurvatures(std::vector<double>& xNormals, std::vect
     return curvatures;
 }
 
-std::vector<edgeProperties> edgeSegmentationCurvature(const edgeProperties& mEdgeProperties, const double curvatureUpperLimit, const double curvatureLowerLimit)
+std::vector<edgeProperties> edgeSegmentationCurvature(const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, const double curvatureUpperLimit, const double curvatureLowerLimit)
 {
     int edgeSize = mEdgeProperties.curvatures.size();
 
@@ -1215,7 +1210,7 @@ std::vector<edgeProperties> edgeSegmentationCurvature(const edgeProperties& mEdg
     std::vector<int> breakPoints; // position of breakpoints
     breakPoints.push_back(-1); // add first point (+ 1 is added later)
 
-    for (int iEdgePoint = curvatureWindowLength; iEdgePoint < edgeSize - curvatureWindowLength; iEdgePoint++)
+    for (int iEdgePoint = mDetectionParameters.edgeWindowLength; iEdgePoint < edgeSize - mDetectionParameters.edgeWindowLength; iEdgePoint++)
     {
         double curvature = mEdgeProperties.curvatures[iEdgePoint];
 
@@ -1245,7 +1240,7 @@ std::vector<edgeProperties> edgeSegmentationCurvature(const edgeProperties& mEdg
         int diffLeft = iEdgePointCntr - iEdgePointLeft;
         int diffRght = iEdgePointRght - iEdgePointCntr;
 
-        if (diffLeft > minimumEdgeLength || diffRght > minimumEdgeLength)
+        if (diffLeft > mDetectionParameters.edgeWindowLength || diffRght > mDetectionParameters.edgeWindowLength)
         {
             breakPointsNew.push_back(iEdgePointCntr);
         }
@@ -1276,7 +1271,7 @@ std::vector<edgeProperties> edgeSegmentationCurvature(const edgeProperties& mEdg
     return vEdgePropertiesNew;
 }
 
-double calculateEdgeLength(const std::vector<int>& edgePoints, const AOIProperties& mAOI)
+double calculateEdgeLength(const detectionParameters& mDetectionParameters, const std::vector<int>& edgePoints, const AOIProperties& mAOI)
 {
     // calculates edge length without need of edge continuity
 
@@ -1288,7 +1283,7 @@ double calculateEdgeLength(const std::vector<int>& edgePoints, const AOIProperti
 
     do // run through all edge points
     {
-        int jEdgePoint = iEdgePoint + lengthWindowLength;
+        int jEdgePoint = iEdgePoint + mDetectionParameters.edgeWindowLength;
 
         if (jEdgePoint >= edgeSize)
         {
@@ -1310,13 +1305,13 @@ double calculateEdgeLength(const std::vector<int>& edgePoints, const AOIProperti
 
         lengthTotal += sqrt(dX * dX + dY * dY);
 
-        iEdgePoint = iEdgePoint + lengthWindowLength;
+        iEdgePoint = iEdgePoint + mDetectionParameters.edgeWindowLength;
     } while (!BREAK_LOOP);
 
     return lengthTotal;
 }
 
-std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDetectionVariables, const edgeProperties& mEdgeProperties, const AOIProperties& mAOI)
+std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, const AOIProperties& mAOI)
 {
     // This functions cuts edge terminals to make the edge shorter, if the edge is significantly longer than predicted
 
@@ -1329,9 +1324,9 @@ std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDe
 
     double lengthDifference = mEdgeProperties.length - mDetectionVariables.predictedCircumference;
 
-    if (lengthDifference > lengthWindowLength) // difference should be large enough
+    if (lengthDifference > mDetectionParameters.edgeWindowLength) // difference should be large enough
     {
-        if (edgeSize > 2 * lengthDifference + lengthWindowLength) // should be enough space between breakpoints
+        if (edgeSize > 2 * lengthDifference + mDetectionParameters.edgeWindowLength) // should be enough space between breakpoints
         {
             breakPoints.push_back(lengthDifference);
             breakPoints.push_back(edgeSize - lengthDifference - 1);
@@ -1368,7 +1363,7 @@ std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDe
             mEdgePropertiesNew.gradient  = calculateMeanInt(mEdgePropertiesNew.gradients);
             mEdgePropertiesNew.radius    = calculateMean(mEdgePropertiesNew.radii);
             mEdgePropertiesNew.curvature = calculateMean(mEdgePropertiesNew.curvatures);
-            mEdgePropertiesNew.length    = calculateEdgeLength(mEdgePropertiesNew.pointIndices, mAOI);
+            mEdgePropertiesNew.length    = calculateEdgeLength(mDetectionParameters, mEdgePropertiesNew.pointIndices, mAOI);
 
             vEdgeProperties[iBreakPoint] = mEdgePropertiesNew;
         }
@@ -1397,8 +1392,8 @@ std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDe
         inputVector_2[5] = 0; // don't use radial variance
         inputVector_1[6] = vEdgeProperties[2].length;
 
-        double scoreTotal_1 = calculateScoreTotal(mDetectionVariables, inputVector_1, false);
-        double scoreTotal_2 = calculateScoreTotal(mDetectionVariables, inputVector_2, false);
+        double scoreTotal_1 = calculateScoreTotal(mDetectionVariables, mDetectionParameters, inputVector_1, false);
+        double scoreTotal_2 = calculateScoreTotal(mDetectionVariables, mDetectionParameters, inputVector_2, false);
 
         int indexStart = 0;
         int indexEnd   = 0;
@@ -1527,7 +1522,7 @@ std::vector<int> findEdgeIntensities(const cv::Mat& img, const detectionParamete
     return edgeIntensities;
 }
 
-void calculateCurvatureStats(edgeProperties& mEdgeProperties)
+void calculateCurvatureStats(const detectionParameters& mDetectionParameters, edgeProperties& mEdgeProperties)
 {
     // Calculate min, max and mean curvature
 
@@ -1539,7 +1534,7 @@ void calculateCurvatureStats(edgeProperties& mEdgeProperties)
 
     int edgeSize = mEdgeProperties.curvatures.size();
 
-    for (int iEdgePoint = curvatureWindowLength; iEdgePoint < edgeSize - curvatureWindowLength; iEdgePoint++)
+    for (int iEdgePoint = mDetectionParameters.edgeWindowLength; iEdgePoint < edgeSize - mDetectionParameters.edgeWindowLength; iEdgePoint++)
     {
         double curvature = mEdgeProperties.curvatures[iEdgePoint];
         if (curvature < 180.0) { edgeCurvaturesNew.push_back(curvature); }
@@ -1560,7 +1555,7 @@ void calculateCurvatureStats(edgeProperties& mEdgeProperties)
     mEdgeProperties.curvatureMin = curvatureMin;
 }
 
-std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetectionVariables, const edgeProperties& mEdgeProperties, const AOIProperties& mAOI, double scoreThresholdDiff)
+std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, const AOIProperties& mAOI, double scoreThresholdDiff)
 {
     // start from end and move through edge with window
     // if window average is significantly below central average --> remove
@@ -1579,28 +1574,27 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
 
             int edgeSize = mEdgePropertiesOld.pointIndices.size();
 
-            if (edgeSize <= 3 * curvatureWindowLength) // don't segment short edges
+            if (edgeSize <= 3 * mDetectionParameters.edgeWindowLength) // don't segment short edges
             {
                 vEdgePropertiesAll.push_back(mEdgePropertiesOld);
                 continue;
             }
 
-            int iEdgePoint  = curvatureWindowLength;
+            int iEdgePoint  = mDetectionParameters.edgeWindowLength;
             bool BREAK_LOOP = false;
 
-            //            int numBreakPoints = ceil(edgeSize / curvatureWindowLength) + 1;
             std::vector<int> breakPointsAll;
             std::vector<double> scoreDifference;
             int iBreakPoint = 0;
 
             do // run through all edge points
             {
-                iEdgePoint = iEdgePoint + curvatureWindowLength;
+                iEdgePoint = iEdgePoint + mDetectionParameters.edgeWindowLength;
 
-                if (iEdgePoint >= edgeSize - 2 * curvatureWindowLength - 1)
+                if (iEdgePoint >= edgeSize - 2 * mDetectionParameters.edgeWindowLength - 1)
                 {
                     BREAK_LOOP = true;
-                    iEdgePoint = edgeSize - 2 * curvatureWindowLength - 1;
+                    iEdgePoint = edgeSize - 2 * mDetectionParameters.edgeWindowLength - 1;
                 }
 
                 std::vector<int> breakPoints = {0, iEdgePoint, iEdgePoint + 1, edgeSize - 1};
@@ -1620,9 +1614,9 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
                     mEdgePropertiesNew.radius    = calculateMean      (mEdgePropertiesNew.radii);
                     mEdgePropertiesNew.intensity = calculateMeanInt   (mEdgePropertiesNew.intensities);
                     mEdgePropertiesNew.gradient  = calculateMeanInt   (mEdgePropertiesNew.gradients);
-                    mEdgePropertiesNew.length    = calculateEdgeLength(mEdgePropertiesNew.pointIndices, mAOI);
+                    mEdgePropertiesNew.length    = calculateEdgeLength(mDetectionParameters, mEdgePropertiesNew.pointIndices, mAOI);
 
-                    calculateCurvatureStats(mEdgePropertiesNew); // get average curvature
+                    calculateCurvatureStats(mDetectionParameters, mEdgePropertiesNew); // get average curvature
 
                     vEdgePropertiesTemp[i] = mEdgePropertiesNew;
                 }
@@ -1647,8 +1641,8 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
                 inputVector_2[5] = 0; // don't use radial variance
                 inputVector_2[6] = vEdgePropertiesTemp[1].length;
 
-                double score_1 = calculateScoreTotal(mDetectionVariables, inputVector_1, true);
-                double score_2 = calculateScoreTotal(mDetectionVariables, inputVector_2, true);
+                double score_1 = calculateScoreTotal(mDetectionVariables, mDetectionParameters, inputVector_1, true);
+                double score_2 = calculateScoreTotal(mDetectionVariables, mDetectionParameters, inputVector_2, true);
 
                 scoreDifference.push_back(std::abs(score_1 - score_2));
                 breakPointsAll.push_back(iEdgePoint);
@@ -1750,14 +1744,14 @@ void restoreEdgePoints(edgeProperties& mEdgeProperties, std::vector<int>& cannyE
     }
 }
 
-std::vector<edgeProperties> removeShortEdges(const std::vector<edgeProperties>& vEdgeProperties)
+std::vector<edgeProperties> removeShortEdges(const detectionParameters& mDetectionParameters, const std::vector<edgeProperties>& vEdgeProperties)
 {
     std::vector<edgeProperties> vEdgePropertiesNew;
     for (int iEdge = 0, numEdges = vEdgeProperties.size(); iEdge < numEdges; iEdge++) // ignore short edges
     {
         edgeProperties mEdgeProperties = vEdgeProperties[iEdge];
         int edgeSize = mEdgeProperties.pointIndices.size();
-        if (edgeSize > minimumEdgeLength) { vEdgePropertiesNew.push_back(mEdgeProperties); }
+        if (edgeSize > mDetectionParameters.edgeWindowLength) { vEdgePropertiesNew.push_back(mEdgeProperties); }
     }
 
     return vEdgePropertiesNew;
@@ -1788,7 +1782,7 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
             inputVector[5] = vEdgePropertiesAll[iEdge].radiusVar;
             inputVector[6] = vEdgePropertiesAll[iEdge].length;
 
-            totalScores[iEdge] = calculateScoreTotal(mDetectionVariables,inputVector, true);
+            totalScores[iEdge] = calculateScoreTotal(mDetectionVariables, mDetectionParameters, inputVector, true);
         }
 
         // Only pick edges above threshold
@@ -1996,9 +1990,6 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
 
 std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const std::vector<edgeProperties>& vEdgePropertiesAll, AOIProperties mAOI)
 {
-    ellipseProperties mEllipseProperties;
-    mEllipseProperties.DETECTED = false;
-
     int numEdgesTotal = vEdgePropertiesAll.size(); // total number of edges
 
     std::vector<ellipseProperties> vEllipsePropertiesAll; // vector to record information for each accepted ellipse fit
@@ -2080,27 +2071,27 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
             // Fit ellipse
 
-            ellipseProperties mEllipsePropertiesNew = fitEllipse(edgeIndices, edgeSetSize, mAOI.wdth);
+            ellipseProperties mEllipseProperties = fitEllipse(edgeIndices, edgeSetSize, mAOI.wdth);
 
-            if (!mEllipsePropertiesNew.DETECTED) { continue; } // error
+            if (!mEllipseProperties.DETECTED) { continue; } // error
 
             // Absolute displacement filter
 
-            double dX = mEllipsePropertiesNew.xPos - (mDetectionVariables.predictedXPos - mAOI.xPos);
-            double dY = mEllipsePropertiesNew.yPos - (mDetectionVariables.predictedYPos - mAOI.yPos);
+            double dX = mEllipseProperties.xPos - (mDetectionVariables.predictedXPos - mAOI.xPos);
+            double dY = mEllipseProperties.yPos - (mDetectionVariables.predictedYPos - mAOI.yPos);
             double dR = sqrt(dX * dX + dY * dY);
             if (dR > mDetectionVariables.thresholdChangePosition) { continue; } // no large ellipse displacements
 
             // Absolute size and shape filter
 
-            if (mEllipsePropertiesNew.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
-            if (mEllipsePropertiesNew.circumference < circumferenceLowerLimit) { continue; } // no small ellipse
-            if (mEllipsePropertiesNew.aspectRatio   < mDetectionParameters.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
+            if (mEllipseProperties.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
+            if (mEllipseProperties.circumference < circumferenceLowerLimit) { continue; } // no small ellipse
+            if (mEllipseProperties.aspectRatio   < mDetectionParameters.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
 
             // Relative change in size and shape filter
 
-            double relativeChangeAspectRatio   = mEllipsePropertiesNew.aspectRatio   / mDetectionVariables.predictedAspectRatio;
-            double relativeChangeCircumference = mEllipsePropertiesNew.circumference / mDetectionVariables.predictedCircumference;
+            double relativeChangeAspectRatio   = mEllipseProperties.aspectRatio   / mDetectionVariables.predictedAspectRatio;
+            double relativeChangeCircumference = mEllipseProperties.circumference / mDetectionVariables.predictedCircumference;
 
             if (relativeChangeAspectRatio   < 1.0) { relativeChangeAspectRatio   = 1 / relativeChangeAspectRatio; }
             if (relativeChangeCircumference < 1.0) { relativeChangeCircumference = 1 / relativeChangeCircumference; }
@@ -2110,12 +2101,12 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
             // Calculate error between fit and every edge point
 
-            double A = mEllipsePropertiesNew.coefficients[0];
-            double B = mEllipsePropertiesNew.coefficients[1];
-            double C = mEllipsePropertiesNew.coefficients[2];
-            double D = mEllipsePropertiesNew.coefficients[3];
-            double E = mEllipsePropertiesNew.coefficients[4];
-            double F = mEllipsePropertiesNew.coefficients[5];
+            double A = mEllipseProperties.coefficients[0];
+            double B = mEllipseProperties.coefficients[1];
+            double C = mEllipseProperties.coefficients[2];
+            double D = mEllipseProperties.coefficients[3];
+            double E = mEllipseProperties.coefficients[4];
+            double F = mEllipseProperties.coefficients[5];
 
             std::vector<double> fitErrors(edgeSetSize);
 
@@ -2132,20 +2123,18 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
             std::vector<double> fitErrorsSorted = fitErrors;
             std::sort   (fitErrorsSorted.begin(), fitErrorsSorted.end());
             std::reverse(fitErrorsSorted.begin(), fitErrorsSorted.end());
-            std::vector<double> fitErrorsMax(fitErrorsSorted.begin(), fitErrorsSorted.begin() + round(fitErrorFraction * edgeSetLength));
-            double fitErrorMax = calculateMean(fitErrorsMax);
+            std::vector<double> fitErrorsMax(fitErrorsSorted.begin(), fitErrorsSorted.begin() + round(mDetectionParameters.edgeWindowLengthFraction * edgeSetLength));
+            double fitErrorAbsolute = calculateMean(fitErrorsMax); // absolute error
+            double fitErrorRelative = (fitErrorAbsolute + 0.5588) / mEllipseProperties.circumference; // relative error
 
-            // Fit error filter
-
-            if (fitErrorMax > mDetectionParameters.ellipseFitErrorMaximum) { continue; } // no large fit errors
-
-            mEllipsePropertiesNew.fitError = fitErrorMax;
+            if (fitErrorRelative > mDetectionParameters.thresholdFitError) { continue; } // no large fit errors
 
             // Save parameters of accepted fit
 
-            mEllipsePropertiesNew.edgeIndices = combiEdgeIndices;
-            mEllipsePropertiesNew.edgeLength  = edgeSetLength;
-            vEllipsePropertiesAll.push_back(mEllipsePropertiesNew);
+            mEllipseProperties.fitError    = fitErrorRelative;
+            mEllipseProperties.edgeIndices = combiEdgeIndices;
+            mEllipseProperties.edgeLength  = edgeSetLength;
+            vEllipsePropertiesAll.push_back(mEllipseProperties);
         }
         while (std::next_permutation(edgeCombination.begin(), edgeCombination.end()));
     }
@@ -2224,11 +2213,10 @@ void checkVariableLimits(detectionVariables& mDetectionVariables, const detectio
     else if (mDetectionVariables.certaintyAverages  >  1.0) { mDetectionVariables.certaintyAverages  =  1.0; }
 }
 
-detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables)
+detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables)
 {
-    // Keep variables within limits
-
-    checkVariableLimits(mDetectionVariables, mDetectionParameters);
+    checkVariableLimits(mDetectionVariables, mDetectionParameters); // keep variables within limits
+    getEdgeWindowLength(mDetectionVariables, mDetectionParameters); // get edge window length
 
     // Define search area
 
@@ -2346,8 +2334,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         mDetectionVariables.predictedYPosRelative = (1 - certaintyFactorPosition) * AOIYPos + certaintyFactorPosition * mDetectionVariables.predictedYPos - cannyAOI.yPos;
     }
 
-    std::vector<edgeProperties> vEdgePropertiesAll = edgeSelection(mDetectionVariables, cannyEdgesSharpened, cannyAOI);
-    vEdgePropertiesAll = removeShortEdges(vEdgePropertiesAll);
+    std::vector<edgeProperties> vEdgePropertiesAll = edgeSelection(mDetectionVariables, mDetectionParameters, cannyEdgesSharpened, cannyAOI);
+    vEdgePropertiesAll = removeShortEdges(mDetectionParameters, vEdgePropertiesAll);
 
     /////////////////////////////////////////////////////////////////////////////
     //////////////////////////// EDGE SEGMENTATION   ////////////////////////////
@@ -2378,19 +2366,19 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
             std::vector<double> edgeXNormals(edgeSize, 0.0);
             std::vector<double> edgeYNormals(edgeSize, 0.0);
 
-            mEdgeProperties.curvatures = calculateCurvatures(edgeXNormals, edgeYNormals, edgeXTangents, edgeYTangents);
+            mEdgeProperties.curvatures = calculateCurvatures(mDetectionParameters, edgeXNormals, edgeYNormals, edgeXTangents, edgeYTangents);
             mEdgeProperties.xnormals   = edgeXNormals;
             mEdgeProperties.ynormals   = edgeYNormals;
 
             // Do segmentation
-            std::vector<edgeProperties> vEdgePropertiesTemp = edgeSegmentationCurvature(mEdgeProperties, curvatureUpperLimit, curvatureLowerLimit);
+            std::vector<edgeProperties> vEdgePropertiesTemp = edgeSegmentationCurvature(mDetectionParameters, mEdgeProperties, curvatureUpperLimit, curvatureLowerLimit);
             vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end());
         }
 
         vEdgePropertiesAll = vEdgePropertiesNew;
     }
 
-    vEdgePropertiesAll = removeShortEdges(vEdgePropertiesAll);
+    vEdgePropertiesAll = removeShortEdges(mDetectionParameters, vEdgePropertiesAll);
 
     // Calculate additional edge properties and do length segmentation
 
@@ -2400,20 +2388,20 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         {
             edgeProperties mEdgeProperties = vEdgePropertiesAll[iEdge];
 
-            mEdgeProperties.length      = calculateEdgeLength(mEdgeProperties.pointIndices, cannyAOI);
+            mEdgeProperties.length      = calculateEdgeLength(mDetectionParameters, mEdgeProperties.pointIndices, cannyAOI);
             mEdgeProperties.radii       = calculateEdgeRadii(mEdgeProperties, cannyAOI, mDetectionVariables.predictedXPosRelative, mDetectionVariables.predictedYPosRelative);
             mEdgeProperties.gradients   = calculateRadialGradients(mDetectionVariables, mDetectionParameters, imageAOIGray, mEdgeProperties.pointIndices);
             mEdgeProperties.intensities = findEdgeIntensities(imageAOIGray, mDetectionParameters, mEdgeProperties, cannyAOI);
 
             // Do segmentation
-            std::vector<edgeProperties> vEdgePropertiesTemp = edgeSegmentationLength(mDetectionVariables, mEdgeProperties, cannyAOI);
+            std::vector<edgeProperties> vEdgePropertiesTemp = edgeSegmentationLength(mDetectionVariables, mDetectionParameters, mEdgeProperties, cannyAOI);
             vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end());
         }
 
         vEdgePropertiesAll = vEdgePropertiesNew;
     }
 
-    vEdgePropertiesAll = removeShortEdges(vEdgePropertiesAll);
+    vEdgePropertiesAll = removeShortEdges(mDetectionParameters, vEdgePropertiesAll);
 
     ////////////////////////////////////////////////////////////////////////
     //////////////////////// EDGE TERMINAL FILTER   ////////////////////////
@@ -2424,14 +2412,14 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
         {
             edgeProperties mEdgeProperties    = vEdgePropertiesAll[iEdge];
-            std::vector<edgeProperties> vEdgePropertiesTemp = edgeTerminalFilter(mDetectionVariables, mEdgeProperties, cannyAOI, mDetectionParameters.scoreThresholdDiff);
+            std::vector<edgeProperties> vEdgePropertiesTemp = edgeTerminalFilter(mDetectionVariables, mDetectionParameters, mEdgeProperties, cannyAOI, mDetectionParameters.scoreThresholdDiff);
             vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end());
         }
 
         vEdgePropertiesAll = vEdgePropertiesNew;
     }
 
-    vEdgePropertiesAll = removeShortEdges(vEdgePropertiesAll);
+    vEdgePropertiesAll = removeShortEdges(mDetectionParameters, vEdgePropertiesAll);
 
     ///////////////////////////////////////////////////////////////////////////
     ////////////////////////// EDGE CLASSIFICATION  ///////////////////////////
@@ -2447,7 +2435,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
             // re-evaluate edge properties
 
-            mEdgeProperties.length    = calculateEdgeLength(mEdgeProperties.pointIndices, cannyAOI);
+            mEdgeProperties.length    = calculateEdgeLength(mDetectionParameters, mEdgeProperties.pointIndices, cannyAOI);
 
             mEdgeProperties.intensity = calculateMeanInt(mEdgeProperties.intensities);
             mEdgeProperties.gradient  = calculateMeanInt(mEdgeProperties.gradients);
@@ -2455,7 +2443,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
             mEdgeProperties.radius    = calculateMean(mEdgeProperties.radii);
             mEdgeProperties.radiusVar = calculateVariance(mEdgeProperties.radii) / mEdgeProperties.radius; // relative variance
 
-            calculateCurvatureStats(mEdgeProperties);
+            calculateCurvatureStats(mDetectionParameters, mEdgeProperties);
 
             mEdgeProperties.index     = iEdge;
             mEdgeProperties.tag       = 0;
@@ -2649,7 +2637,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         double meanHeight        = meanCircumference / M_PI;
         double meanIntensity     = initialIntensity;
         double meanGradient      = 0;
-        double meanCurvature     = calculateCurvatureAverage(meanCircumference,meanAspectRatio);
+
+        double curvatureMax = getCurvatureUpperLimit(meanCircumference, meanAspectRatio, mDetectionParameters.edgeWindowLength);
+        double curvatureMin = getCurvatureLowerLimit(meanCircumference, meanAspectRatio, mDetectionParameters.edgeWindowLength);
+
+        double meanCurvature = (0.5 * (curvatureMax + curvatureMin));
 
         // Momentum terms should decay to zero. Assume that pupil was stationary (i.e. error = 0)
 
@@ -2810,8 +2802,14 @@ double flashDetection(const cv::Mat& imgBGR)
 // Look-up tables
 
 
-double getCurvatureUpperLimit(int x, int y, int windowLength)
+double getCurvatureUpperLimit(double circumference, double aspectRatio, int windowLength)
 {
+    static const std::vector<double> arrayCircumferences = {60,65.918,71.837,77.755,83.673,89.592,95.51,101.43,107.35,113.27,119.18,125.1,131.02,136.94,142.86,148.78,154.69,160.61,166.53,172.45,178.37,184.29,190.2,196.12,202.04,207.96,213.88,219.8,225.71,231.63,237.55,243.47,249.39,255.31,261.22,267.14,273.06,278.98,284.9,290.82,296.73,302.65,308.57,314.49,320.41,326.33,332.24,338.16,344.08,350};
+    static const std::vector<double> arrayAspectRatios   = {0.4,0.41224,0.42449,0.43673,0.44898,0.46122,0.47347,0.48571,0.49796,0.5102,0.52245,0.53469,0.54694,0.55918,0.57143,0.58367,0.59592,0.60816,0.62041,0.63265,0.6449,0.65714,0.66939,0.68163,0.69388,0.70612,0.71837,0.73061,0.74286,0.7551,0.76735,0.77959,0.79184,0.80408,0.81633,0.82857,0.84082,0.85306,0.86531,0.87755,0.8898,0.90204,0.91429,0.92653,0.93878,0.95102,0.96327,0.97551,0.98776,1};
+
+    int x = *std::upper_bound(arrayCircumferences.begin(), arrayCircumferences.end(), circumference);
+    int y = *std::upper_bound(  arrayAspectRatios.begin(),   arrayAspectRatios.end(),   aspectRatio);
+
     int arrayWidth = arrayCircumferences.size();
 
     switch(windowLength)
@@ -2983,10 +2981,20 @@ double getCurvatureUpperLimit(int x, int y, int windowLength)
         return arrayCurvatureMax[y * arrayWidth + x];
     }
     }
+
+    return 0;
 }
 
-double getCurvatureLowerLimit(int x, int y, int windowLength)
+double getCurvatureLowerLimit(double circumference, double aspectRatio, int windowLength)
 {
+    static const std::vector<double> arrayCircumferences = {60,65.918,71.837,77.755,83.673,89.592,95.51,101.43,107.35,113.27,119.18,125.1,131.02,136.94,142.86,148.78,154.69,160.61,166.53,172.45,178.37,184.29,190.2,196.12,202.04,207.96,213.88,219.8,225.71,231.63,237.55,243.47,249.39,255.31,261.22,267.14,273.06,278.98,284.9,290.82,296.73,302.65,308.57,314.49,320.41,326.33,332.24,338.16,344.08,350};
+    static const std::vector<double> arrayAspectRatios   = {0.4,0.41224,0.42449,0.43673,0.44898,0.46122,0.47347,0.48571,0.49796,0.5102,0.52245,0.53469,0.54694,0.55918,0.57143,0.58367,0.59592,0.60816,0.62041,0.63265,0.6449,0.65714,0.66939,0.68163,0.69388,0.70612,0.71837,0.73061,0.74286,0.7551,0.76735,0.77959,0.79184,0.80408,0.81633,0.82857,0.84082,0.85306,0.86531,0.87755,0.8898,0.90204,0.91429,0.92653,0.93878,0.95102,0.96327,0.97551,0.98776,1};
+
+    int x = *std::upper_bound(arrayCircumferences.begin(), arrayCircumferences.end(), circumference);
+    int y = *std::upper_bound(  arrayAspectRatios.begin(),   arrayAspectRatios.end(),   aspectRatio);
+
+    int arrayWidth = arrayCircumferences.size();
+
     switch(windowLength)
     {
 
@@ -3156,4 +3164,6 @@ double getCurvatureLowerLimit(int x, int y, int windowLength)
         return arrayCurvatureMin[y * arrayWidth + x];
     }
     }
+
+    return 0;
 }
