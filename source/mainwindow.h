@@ -139,8 +139,6 @@ private:
     AOIProperties flashAOI;
     bool APP_EXIT;
     bool APP_RUNNING;
-    bool GAIN_AUTO;
-    bool GAIN_BOOST;
     bool TRIAL_RECORDING;
     bool FLASH_STANDBY;
     bool OFFLINE_SAVE_DATA;
@@ -200,7 +198,7 @@ private:
     int trialIndex;
     int trialStartTime;
     int trialTimeLength;
-    QCheckBox *CameraHardwareGainAutoCheckBox;
+
     QImageOpenCV *CamQImage;
     QImageOpenCV *EyeQImage;
     QLabel *CameraBlackLevelOffsetLabel;
@@ -216,7 +214,7 @@ private:
     QLineEdit *DataFilenameLineEdit;
     QLineEdit *NameInputLineEdit;
     QLineEdit *TrialTimeLengthLineEdit;
-    QScrollArea *BeadTrackingScrollArea;
+
     QSlider *CameraBlackLevelOffsetSlider;
     QSlider *CameraHardwareGainSlider;
     QSlider *CameraPixelClockSlider;
@@ -233,7 +231,6 @@ private:
     QString LastUsedSettingsFileName;
     QTabWidget *MainTabWidget;
     QTimer *UpdateCameraImageTimer;
-    QWidget *CameraParametersWidget;
 
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
@@ -254,6 +251,9 @@ private:
     QCheckBox *RealTimeEyeTrackingCheckBox;
 
     // Interface
+
+    QScrollArea *BeadTrackingScrollArea;
+    QScrollArea *DevelopmentScrollArea;
 
     QString subjectIdentifier;
 
@@ -277,6 +277,9 @@ private:
     bool checkFlashAOI(AOIProperties&, const AOIProperties&, const AOIProperties&);
 
     // Camera interface
+
+    QCheckBox *CameraHardwareGainAutoCheckBox;
+    QCheckBox *CameraHardwareGainBoostCheckBox;
 
     SliderDouble *CameraExposureSlider;
     SliderDouble *CameraFrameRateSlider;
@@ -351,6 +354,10 @@ private:
     void detectCurrentFrame(int);
     void detectAllFrames();
 
+    // Development
+
+    developmentOptions mDevelopmentOptions;
+
     // General
 
     void msWait(int ms);
@@ -370,63 +377,68 @@ public slots:
 
 private slots:
 
-    void onImageNext();
-    void onCombineData();
-    void onCropAOI();
-    void onDetectAllFrames();
-    void onDetectAllTrials();
-    void onDetectAllExperiments();
-    void onDetectCurrentFrame();
-    void onDialogueOpen();
-    void onFlashStandbySlider(int);
-    void onImagePrevious();
-    void onLoadSession();
-    void onQuitButtonClicked();
-    void onResetFlashIntensity();
-    void onResetParameters();
-    void onSaveTrialData();
-    void onSetOfflineImage(int);
-    void onSetOfflineMode(int);
-    void onSetTrialOffline(int);
-    void onDirectorySelect();
-    void onSetAOIEyeLeft();
-    void onSetAOIEyeRght();
-    void setBeadDetection(int);
-    void setCamEyeAOIHght(double);
-    void setCamEyeAOIWdth(double);
-    void setCamEyeAOIXPos(double);
-    void setCamEyeAOIYPos(double);
-    void setCameraAutoGain(int);
-    void setCameraBlackLevelMode(int);
-    void setCameraBlackLevelOffset(int);
-    void setCameraExposure(double);
-    void setCameraFrameRate(double);
-    void setCameraGainBoost(int);
-    void setCameraHardwareGain(int);
-    void setCameraPixelClock(int);
-    void setCameraSubSampling(int);
-    void setDrawEdge(int);
-    void setDrawElps(int);
-    void setDrawHaar(int);
-    void setEyeAOIHght(double);
-    void setEyeAOIWdth(double);
-    void setFlashAOIHght(int);
-    void setFlashAOIWdth(int);
-    void setFlashAOIXPos(int);
-    void setFlashAOIYPos(int);
-    void setFlashThreshold(int);
-    void setPupilPosition(double, double);
-    void plotTrialData();
-    void onSetRealTime(int);
-    void setSaveDataAspectRatio(int);
-    void setSaveDataCircumference(int);
-    void setSaveDataPosition(int);
-    void onSetTrialIndex(int);
-    void startOfflineSession();
-    void startRecordingManual();
-    void updateCameraImage();
-    void updateImageRaw(int);
-    void updateImageProcessed(int);
+    void onCombineData              ();
+    void onCropAOI                  ();
+    void onDetectAllExperiments     ();
+    void onDetectAllFrames          ();
+    void onDetectAllTrials          ();
+    void onDetectCurrentFrame       ();
+    void onDialogueOpen             ();
+    void onDirectorySelect          ();
+    void onFlashStandbySlider       (int);
+    void onImageNext                ();
+    void onImagePrevious            ();
+    void onLoadSession              ();
+    void onPlotTrialData            ();
+    void onQuitButtonClicked        ();
+    void onResetFlashIntensity      ();
+    void onResetParameters          ();
+    void onSaveTrialData            ();
+    void onSetAOIEyeLeft            ();
+    void onSetAOIEyeRght            ();
+    void onSetBeadDetection         (int);
+    void onSetCamEyeAOIHght         (double);
+    void onSetCamEyeAOIWdth         (double);
+    void onSetCamEyeAOIXPos         (double);
+    void onSetCamEyeAOIYPos         (double);
+    void onSetCameraAutoGain        (int);
+    void onSetCameraBlackLevelMode  (int);
+    void onSetCameraBlackLevelOffset(int);
+    void onSetCameraExposure        (double);
+    void onSetCameraFrameRate       (double);
+    void onSetCameraGainBoost       (int);
+    void onSetCameraHardwareGain    (int);
+    void onSetCameraPixelClock      (int);
+    void onSetCameraSubSampling     (int);
+    void onSetDevelopmentMode       (bool);
+    void onSetDrawEdge              (int);
+    void onSetDrawElps              (int);
+    void onSetDrawHaar              (int);
+    void onSetEyeAOIHght            (double);
+    void onSetEyeAOIWdth            (double);
+    void onSetFlashAOIHght          (int);
+    void onSetFlashAOIWdth          (int);
+    void onSetFlashAOIXPos          (int);
+    void onSetFlashAOIYPos          (int);
+    void onSetFlashThreshold        (int);
+    void onSetOfflineImage          (int);
+    void onSetOfflineMode           (int);
+    void onSetPupilPosition         (double, double);
+    void onSetRealTimeTracking      (int);
+    void onSetSaveDataAspectRatio   (int);
+    void onSetSaveDataCircumference (int);
+    void onSetSaveDataPosition      (int);
+    void onSetTrialIndex            (int);
+    void onSetTrialOffline          (int);
+    void onStartOfflineSession      ();
+    void onStartRecordingManual     ();
+    void onUpdateCameraImage        ();
+    void onUpdateImageProcessed     (int);
+    void onUpdateImageRaw           (int);
+
+    // Development
+
+    void onSetCurvatureMeasurement  (int);
 
 };
 

@@ -91,28 +91,32 @@ struct detectionParameters
     detectionParameters(): DETECTION_ON(false) { }
 
     bool DETECTION_ON;
+
     double alphaAverages;
     double alphaCertainty;
     double alphaFeatures;
     double alphaPosition;
-    double aspectRatioMin;
+
     double cannyThresholdHigh;
     double cannyThresholdLow;
+    int    cannyBlurLevel;
+    int    cannyKernelSize;
+
+    double aspectRatioMin;
     double circumferenceMax;
     double circumferenceMin;
     double circumferenceOffset;
+    int    glintWdth;
+
     double curvatureOffset;
 
     double scoreThreshold;
     double scoreThresholdDiff;
+
     double thresholdChangeAspectRatio;
     double thresholdChangeCircumference;
     double thresholdChangePosition;
     double thresholdFitError;
-    int cannyBlurLevel;
-    int cannyKernelSize;
-
-    int glintWdth;
 
     int    fitEdgeMaximum;
     double fitEdgeFraction;
@@ -173,6 +177,13 @@ struct dataVariables
     double exactXPos;
     double exactYPos;
     double timestamp;
+};
+
+struct developmentOptions
+{
+    developmentOptions(): CURVATURE_MEASUREMENT(false) { }
+
+    bool CURVATURE_MEASUREMENT;
 };
 
 struct drawVariables

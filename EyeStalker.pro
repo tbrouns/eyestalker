@@ -110,9 +110,6 @@ LIBS        += C://libs//UEye//Lib//ueye_tools_64.lib
 SOURCES += source/main.cpp\
         source/mainwindow.cpp \
     source/drawfunctions.cpp \
-    source/mainwindowexperiment.cpp \
-    source/mainwindowparameters.cpp \
-    source/mainwindowoffline.cpp \
     source/parameters.cpp \
     source/qimageopencv.cpp \
     source/sliderdouble.cpp \
