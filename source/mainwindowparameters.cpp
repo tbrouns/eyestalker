@@ -28,7 +28,7 @@ void MainWindow::loadSettings(QString filename)
                                                           15,  // Curvature offset
                                                         0.05,  // Edge window length fraction
                                                            3,  // Ellipse fit number maximum
-                                                        0.40,  // Ellipse fit error maximum
+                                                        0.75,  // Ellipse fit error maximum
                                                           12,  // Glint size
                                                          320,  // Circumference max
                                                           60,  // Circumference min
@@ -51,7 +51,7 @@ void MainWindow::loadSettings(QString filename)
                                                           15,  // Curvature offset
                                                         0.05,  // Edge window length fraction
                                                            3,  // Ellipse fit number maximum
-                                                        0.40,  // Ellipse fit error maximum
+                                                        0.75,  // Ellipse fit error maximum
                                                            0,  // Glint size
                                                          130,  // Circumference max
                                                           90,  // Circumference min
