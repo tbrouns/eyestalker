@@ -2268,13 +2268,13 @@ void checkVariableLimits(detectionVariables& mDetectionVariables, const detectio
     else if (mDetectionVariables.certaintyAverages >  1.0) { mDetectionVariables.certaintyAverages =  1.0; }
 }
 
-detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables, const developmentOptions& mDevelopmentOptions)
+detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables, const developmentOptions& mAdvancedOptions)
 {
     int imageWdth = imageOriginalBGR.cols;
 
     checkVariableLimits(mDetectionVariables, mDetectionParameters); // keep variables within limits
 
-    if (mDevelopmentOptions.CURVATURE_MEASUREMENT) { setCurvatureMeasurement(mDetectionParameters, imageWdth); }
+    if (mAdvancedOptions.CURVATURE_MEASUREMENT) { setCurvatureMeasurement(mDetectionParameters, imageWdth); }
     else                                           { getWindowLengthEdge(mDetectionParameters); }
 
     // Define search area
@@ -2465,7 +2465,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
     // Length segmentation
 
-    if (!(mDevelopmentOptions.CURVATURE_MEASUREMENT))
+    if (!(mAdvancedOptions.CURVATURE_MEASUREMENT))
     {
         std::vector<edgeProperties> vEdgePropertiesNew;
 

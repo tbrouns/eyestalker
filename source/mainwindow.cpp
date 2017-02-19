@@ -21,23 +21,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Pupil labs
 
-//    props.intensity_range = 15;
-//    props.blur_size = 5;
-//    props.canny_treshold = 300;
-//    props.canny_ration = 2;
-//    props.canny_aperture = 5;
-//    props.pupil_size_max = 120;
-//    props.pupil_size_min = 20;
-//    props.strong_perimeter_ratio_range_min = 0.6;
-//    props.strong_perimeter_ratio_range_max = 1.1;
-//    props.strong_area_ratio_range_min = 0.8;
-//    props.strong_area_ratio_range_max = 1.1;
-//    props.contour_size_min = 5;
-//    props.ellipse_roundness_ratio = 0.09;
-//    props.initial_ellipse_fit_treshhold = 4.3;
-//    props.final_perimeter_ratio_range_min = 0.5;
-//    props.final_perimeter_ratio_range_max = 1.0;
-//    props.ellipse_true_support_min_dist = 3.0;
+    //    props.intensity_range = 15;
+    //    props.blur_size = 5;
+    //    props.canny_treshold = 300;
+    //    props.canny_ration = 2;
+    //    props.canny_aperture = 5;
+    //    props.pupil_size_max = 120;
+    //    props.pupil_size_min = 20;
+    //    props.strong_perimeter_ratio_range_min = 0.6;
+    //    props.strong_perimeter_ratio_range_max = 1.1;
+    //    props.strong_area_ratio_range_min = 0.8;
+    //    props.strong_area_ratio_range_max = 1.1;
+    //    props.contour_size_min = 5;
+    //    props.ellipse_roundness_ratio = 0.09;
+    //    props.initial_ellipse_fit_treshhold = 4.3;
+    //    props.final_perimeter_ratio_range_min = 0.5;
+    //    props.final_perimeter_ratio_range_max = 1.0;
+    //    props.ellipse_true_support_min_dist = 3.0;
 
 
 
@@ -798,7 +798,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     //////////////////// DEVELOPMENT TAB  /////////////////////////
     ///////////////////////////////////////////////////////////////
 
-    mDevelopmentOptions.CURVATURE_MEASUREMENT = false;
+    mAdvancedOptions.CURVATURE_MEASUREMENT = false;
 
     QLabel *CurvatureMeasurementTextBox = new QLabel;
     CurvatureMeasurementTextBox->setText("<b>Curvature measurement:</b>");
@@ -818,17 +818,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QCheckBox *SaveDataFitCheckBox = new QCheckBox;
     QObject::connect(SaveDataFitCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetSaveDataFit(int)));
 
-    QWidget* DevelopmentWidget = new QWidget;
-    QGridLayout* DevelopmentLayout = new QGridLayout(DevelopmentWidget);
-    DevelopmentLayout->addWidget(CurvatureMeasurementTextBox,  0, 0);
-    DevelopmentLayout->addWidget(CurvatureMeasurementCheckBox, 0, 1);
-    DevelopmentLayout->addWidget(SaveDataEdgeTextBox,          1, 0);
-    DevelopmentLayout->addWidget(SaveDataEdgeCheckBox,         1, 1);
-    DevelopmentLayout->addWidget(SaveDataFitTextBox,           2, 0);
-    DevelopmentLayout->addWidget(SaveDataFitCheckBox,          2, 1);
+    QLabel *SaveDataExtraTextBox = new QLabel;
+    SaveDataExtraTextBox->setText("<b>Save extra data:</b>");
 
-    DevelopmentLayout->setRowStretch(3, 1);
-    DevelopmentLayout->setColumnStretch(2, 1);
+    QCheckBox *SaveDataExtraCheckBox = new QCheckBox;
+    QObject::connect(SaveDataExtraCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetSaveDataExtra(int)));
+
+    QWidget* AdvancedOptionsWidget = new QWidget;
+    QGridLayout* AdvancedOptionsLayout = new QGridLayout(AdvancedOptionsWidget);
+    AdvancedOptionsLayout->addWidget(CurvatureMeasurementTextBox,  0, 0, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(CurvatureMeasurementCheckBox, 0, 1, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(SaveDataEdgeTextBox,          1, 0, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(SaveDataEdgeCheckBox,         1, 1, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(SaveDataFitTextBox,           2, 0, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(SaveDataFitCheckBox,          2, 1, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(SaveDataExtraTextBox,         3, 0, Qt::AlignRight);
+    AdvancedOptionsLayout->addWidget(SaveDataExtraCheckBox,        3, 1, Qt::AlignRight);
+
+    AdvancedOptionsLayout->setRowStretch(4, 1);
+    AdvancedOptionsLayout->setColumnStretch(2, 1);
 
     /////////////////// Tab layout ///////////////////////
 
@@ -850,16 +858,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     BeadTrackingScrollArea->setWidget(BeadTrackingWidget);
     BeadTrackingScrollArea->setWidgetResizable(true);
 
-    DevelopmentScrollArea = new QScrollArea();
-    DevelopmentScrollArea->setWidget(DevelopmentWidget);
-    DevelopmentScrollArea->setWidgetResizable(true);
+    AdvancedScrollArea = new QScrollArea();
+    AdvancedScrollArea->setWidget(AdvancedOptionsWidget);
+    AdvancedScrollArea->setWidgetResizable(true);
 
     MainTabWidget = new QTabWidget;
     MainTabWidget->addTab(CameraParametersWidget,  tr("Camera"));
     MainTabWidget->addTab(ExperimentTabWidget,     tr("Experimental"));
     MainTabWidget->addTab(EyeTrackingScrollArea,   tr("Eye-tracking"));
     MainTabWidget->addTab(BeadTrackingScrollArea,  tr("Bead-tracking"));
-    MainTabWidget->addTab(DevelopmentScrollArea,   tr("Development"));
+    MainTabWidget->addTab(AdvancedScrollArea,   tr("Advanced"));
 
     MainTabWidget->setTabEnabled(3, 0); // disable bead-tracking
     MainTabWidget->setTabEnabled(4, 0); // disable development mode
@@ -898,9 +906,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Menu bar
 
-    QAction *options = new QAction("&Development mode", this);
+    QAction *options = new QAction("&Advanced mode", this);
     options->setCheckable(true);
-    QObject::connect(options, SIGNAL(triggered(bool)), this, SLOT(onSetDevelopmentMode(bool)));
+    QObject::connect(options, SIGNAL(triggered(bool)), this, SLOT(onSetAdvancedMode(bool)));
 
     QAction *about   = new QAction("&About EyeStalker...", this);
     QObject::connect(about, &QAction::triggered, this, &MainWindow::onDialogueOpen);
@@ -1417,7 +1425,7 @@ void MainWindow::onSetOfflineMode(int state)
     }
 }
 
-void MainWindow::onSetDevelopmentMode(bool state)
+void MainWindow::onSetAdvancedMode(bool state)
 {
     MainTabWidget->setTabEnabled(4, state);
 }
@@ -1455,7 +1463,7 @@ void MainWindow::onDialogueOpen()
                    "Distributed under the Boost Software License, Version 1.0. <br>"
                    "(See accompanying file LICENSE_1_0.txt or copy at <br>"
                    "http://www.boost.org/LICENSE_1_0.txt) <br><br>"
-                   "<b>UEye:</b> <br><br> (c) 2016, IDS Imaging Development Systems GmbH <br><br>"
+                   "<b>UEye:</b> <br><br> (c) 2016, IDS Imaging Advanced Systems GmbH <br><br>"
                    "<b>libusb:</b> <br><br> libusb is released under version 2.1 of the GNU Lesser General Public License (LGPL).<br>"
                    "http://libusb.info/ <br>";
 
@@ -1743,7 +1751,7 @@ void MainWindow::onPlotTrialData()
             }
         }
 
-//        mQwtPlotWidget->plotTrajectory(x,y);
+        //        mQwtPlotWidget->plotTrajectory(x,y);
         mQwtPlotWidget->plotTimeSeries(x,y,t,0.001*trialTimeLength);
     }
 }
@@ -2148,7 +2156,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
                                                               mDetectionParametersEye,
                                                               mDataVariables,
                                                               mDrawVariables,
-                                                              mDevelopmentOptions);
+                                                              mAdvancedOptions);
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
@@ -2418,19 +2426,26 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesBead[i].absoluteYPos  << delimiter; }
         }
 
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedXPos          << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedYPos          << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCircumference << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAspectRatio   << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCurvature     << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedIntensity     << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
-        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
+        if (SAVE_DATA_EXTRA)
+        {
+
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedXPos          << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedYPos          << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCircumference << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAspectRatio   << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCurvature     << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedIntensity     << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
+
+            detectionParameters mDetectionParameters = mParameterWidgetEye->getStructure();
+            for (int i = 0; i < imageTotalOffline; i++) { file << mDetectionParameters.windowLengthEdge << delimiter; }
+        }
 
         file.close();
     }
 
-    if (SAVE_EDGE_DATA)
+    if (SAVE_DATA_EDGE)
     {
 
         std::stringstream filename;
@@ -2460,7 +2475,7 @@ void MainWindow::onSaveTrialData()
         file.close();
     }
 
-    if (SAVE_FIT_DATA)
+    if (SAVE_DATA_FIT)
     {
 
         std::stringstream filename;
@@ -2578,52 +2593,52 @@ void MainWindow::onCombineData()
 void MainWindow::loadSettings(QString filename)
 {
     static const std::vector<double> parametersEye  = {0.005,  // Alpha average
-                                                        0.20,  // Alpha features
-                                                        0.10,  // Alpha certainty
-                                                        0.75,  // Alpha position
-                                                           4,  // Canny blur level
-                                                           5,  // Canny kernel size
+                                                       0.20,  // Alpha features
+                                                       0.10,  // Alpha certainty
+                                                       0.75,  // Alpha position
+                                                       4,  // Canny blur level
+                                                       5,  // Canny kernel size
                                                        300.0,  // Canny threshold low
                                                        600.0,  // Canny threshold high
-                                                          15,  // Curvature offset
-                                                        0.05,  // Ellipse edge fraction
-                                                           3,  // Ellipse fit number maximum
-                                                        0.75,  // Ellipse fit error maximum
-                                                          12,  // Glint size
-                                                         320,  // Circumference max
-                                                          60,  // Circumference min
-                                                         0.4,  // Aspect ratio min
-                                                        1.20,  // Circumference offset
-                                                        1.15,  // Circumference change threshold
-                                                        1.15,  // Aspect ratio change threshold
-                                                          10,  // Displacement change threshold
-                                                        0.39,  // Score threshold
-                                                        0.50,  // Score difference threshold
-                                                          5};  // Edge window length
+                                                       15,  // Curvature offset
+                                                       0.05,  // Ellipse edge fraction
+                                                       3,  // Ellipse fit number maximum
+                                                       0.75,  // Ellipse fit error maximum
+                                                       12,  // Glint size
+                                                       320,  // Circumference max
+                                                       60,  // Circumference min
+                                                       0.4,  // Aspect ratio min
+                                                       1.20,  // Circumference offset
+                                                       1.15,  // Circumference change threshold
+                                                       1.15,  // Aspect ratio change threshold
+                                                       10,  // Displacement change threshold
+                                                       0.39,  // Score threshold
+                                                       0.50,  // Score difference threshold
+                                                       5};  // Edge window length
 
     static const std::vector<double> parametersBead = {0.005,  // Alpha average
-                                                        0.75,  // Alpha miscellaneous
-                                                        0.10,  // Alpha certainty
-                                                        0.75,  // Alpha predicted
-                                                           4,  // Canny blur level
-                                                           3,  // Canny kernel size
+                                                       0.75,  // Alpha miscellaneous
+                                                       0.10,  // Alpha certainty
+                                                       0.75,  // Alpha predicted
+                                                       4,  // Canny blur level
+                                                       3,  // Canny kernel size
                                                        300.0,  // Canny threshold low
                                                        600.0,  // Canny threshold high
-                                                          15,  // Curvature offset
-                                                        0.05,  // Ellipse edge fraction
-                                                           3,  // Ellipse fit number maximum
-                                                        0.75,  // Ellipse fit error maximum
-                                                           0,  // Glint size
-                                                         130,  // Circumference max
-                                                          90,  // Circumference min
-                                                         0.8,  // Aspect ratio min
-                                                        1.10,  // Circumference offset
-                                                        1.10,  // Circumference change threshold
-                                                        1.10,  // Aspect ratio change threshold
-                                                          10,  // Displacement change threshold
-                                                        0.39,  // Score threshold
-                                                        0.50,  // Score difference threshold
-                                                          5};  // Edge window length
+                                                       15,  // Curvature offset
+                                                       0.05,  // Ellipse edge fraction
+                                                       3,  // Ellipse fit number maximum
+                                                       0.75,  // Ellipse fit error maximum
+                                                       0,  // Glint size
+                                                       130,  // Circumference max
+                                                       90,  // Circumference min
+                                                       0.8,  // Aspect ratio min
+                                                       1.10,  // Circumference offset
+                                                       1.10,  // Circumference change threshold
+                                                       1.10,  // Aspect ratio change threshold
+                                                       10,  // Displacement change threshold
+                                                       0.39,  // Score threshold
+                                                       0.50,  // Score difference threshold
+                                                       5};  // Edge window length
 
     QSettings settings(filename, QSettings::IniFormat);
 
@@ -3161,7 +3176,8 @@ void MainWindow::onSetDrawHaar             (int state) { Parameters::drawFlags.h
 void MainWindow::onSetDrawEdge             (int state) { Parameters::drawFlags.edge = state; }
 void MainWindow::onSetDrawElps             (int state) { Parameters::drawFlags.elps = state; }
 
-void MainWindow::onSetCurvatureMeasurement(int state) { mDevelopmentOptions.CURVATURE_MEASUREMENT = state; }
+void MainWindow::onSetCurvatureMeasurement(int state) { mAdvancedOptions.CURVATURE_MEASUREMENT = state; }
 
-void MainWindow::onSetSaveDataEdge(int state) { SAVE_EDGE_DATA = state; }
-void MainWindow::onSetSaveDataFit (int state) { SAVE_FIT_DATA  = state; }
+void MainWindow::onSetSaveDataEdge (int state) { SAVE_DATA_EDGE  = state; }
+void MainWindow::onSetSaveDataFit  (int state) { SAVE_DATA_FIT   = state; }
+void MainWindow::onSetSaveDataExtra(int state) { SAVE_DATA_EXTRA = state; }

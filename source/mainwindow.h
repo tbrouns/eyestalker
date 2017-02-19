@@ -250,7 +250,7 @@ private:
     // Interface
 
     QScrollArea *BeadTrackingScrollArea;
-    QScrollArea *DevelopmentScrollArea;
+    QScrollArea *AdvancedScrollArea;
 
     QString subjectIdentifier;
 
@@ -356,12 +356,13 @@ private:
     void detectCurrentFrame(int);
     void detectAllFrames();
 
-    // Development
+    // Advanced
 
-    developmentOptions mDevelopmentOptions;
+    developmentOptions mAdvancedOptions;
 
-    bool SAVE_EDGE_DATA;
-    bool SAVE_FIT_DATA;
+    bool SAVE_DATA_EDGE;
+    bool SAVE_DATA_FIT;
+    bool SAVE_DATA_EXTRA;
 
     // General
 
@@ -415,7 +416,7 @@ private slots:
     void onSetCameraHardwareGain    (int);
     void onSetCameraPixelClock      (int);
     void onSetCameraSubSampling     (int);
-    void onSetDevelopmentMode       (bool);
+    void onSetAdvancedMode       (bool);
     void onSetDrawEdge              (int);
     void onSetDrawElps              (int);
     void onSetDrawHaar              (int);
@@ -441,12 +442,13 @@ private slots:
     void onUpdateImageProcessed     (int);
     void onUpdateImageRaw           (int);
 
-    // Development
+    // Advanced
 
     void onSetCurvatureMeasurement  (int);
 
-    void onSetSaveDataEdge(int);
-    void onSetSaveDataFit (int);
+    void onSetSaveDataEdge (int);
+    void onSetSaveDataFit  (int);
+    void onSetSaveDataExtra(int);
 
 };
 
