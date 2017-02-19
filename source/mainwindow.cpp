@@ -806,12 +806,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QCheckBox *CurvatureMeasurementCheckBox = new QCheckBox;
     QObject::connect(CurvatureMeasurementCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetCurvatureMeasurement(int)));
 
+    QLabel *SaveDataEdgeTextBox = new QLabel;
+    SaveDataEdgeTextBox->setText("<b>Save edge data:</b>");
+
+    QCheckBox *SaveDataEdgeCheckBox = new QCheckBox;
+    QObject::connect(SaveDataEdgeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetSaveDataEdge(int)));
+
+    QLabel *SaveDataFitTextBox = new QLabel;
+    SaveDataFitTextBox->setText("<b>Save fit data:</b>");
+
+    QCheckBox *SaveDataFitCheckBox = new QCheckBox;
+    QObject::connect(SaveDataFitCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetSaveDataFit(int)));
+
     QWidget* DevelopmentWidget = new QWidget;
     QGridLayout* DevelopmentLayout = new QGridLayout(DevelopmentWidget);
     DevelopmentLayout->addWidget(CurvatureMeasurementTextBox,  0, 0);
     DevelopmentLayout->addWidget(CurvatureMeasurementCheckBox, 0, 1);
+    DevelopmentLayout->addWidget(SaveDataEdgeTextBox,          1, 0);
+    DevelopmentLayout->addWidget(SaveDataEdgeCheckBox,         1, 1);
+    DevelopmentLayout->addWidget(SaveDataFitTextBox,           2, 0);
+    DevelopmentLayout->addWidget(SaveDataFitCheckBox,          2, 1);
 
-    DevelopmentLayout->setRowStretch(1, 1);
+    DevelopmentLayout->setRowStretch(3, 1);
     DevelopmentLayout->setColumnStretch(2, 1);
 
     /////////////////// Tab layout ///////////////////////
@@ -2414,7 +2430,8 @@ void MainWindow::onSaveTrialData()
         file.close();
     }
 
-    { // save edge data
+    if (SAVE_EDGE_DATA)
+    {
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
@@ -2443,7 +2460,8 @@ void MainWindow::onSaveTrialData()
         file.close();
     }
 
-    { // save ellipse data
+    if (SAVE_FIT_DATA)
+    {
 
         std::stringstream filename;
         filename << dataDirectoryOffline.toStdString()
@@ -3145,3 +3163,5 @@ void MainWindow::onSetDrawElps             (int state) { Parameters::drawFlags.e
 
 void MainWindow::onSetCurvatureMeasurement(int state) { mDevelopmentOptions.CURVATURE_MEASUREMENT = state; }
 
+void MainWindow::onSetSaveDataEdge(int state) { SAVE_EDGE_DATA = state; }
+void MainWindow::onSetSaveDataFit (int state) { SAVE_FIT_DATA  = state; }

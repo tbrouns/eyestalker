@@ -145,10 +145,7 @@ private:
     bool PROCESSING_ALL_IMAGES;
     bool PROCESSING_ALL_TRIALS;
     bool PROCESSING_ALL_EXPS;
-    bool SAVE_ASPECT_RATIO;
-    bool SAVE_CIRCUMFERENCE;
-    bool SAVE_POSITION;
-    bool SAVE_EYE_IMAGE;
+
     char currentDate[80];
 
     double cameraAOIFractionHghtDefaultLeft;
@@ -332,6 +329,11 @@ private:
 
     // Experimental
 
+    bool SAVE_ASPECT_RATIO;
+    bool SAVE_CIRCUMFERENCE;
+    bool SAVE_POSITION;
+    bool SAVE_EYE_IMAGE;
+
     unsigned long long absoluteTime; // in units of 0.1 microseconds
     unsigned long long startTime;
 
@@ -357,6 +359,9 @@ private:
     // Development
 
     developmentOptions mDevelopmentOptions;
+
+    bool SAVE_EDGE_DATA;
+    bool SAVE_FIT_DATA;
 
     // General
 
@@ -439,6 +444,9 @@ private slots:
     // Development
 
     void onSetCurvatureMeasurement  (int);
+
+    void onSetSaveDataEdge(int);
+    void onSetSaveDataFit (int);
 
 };
 
