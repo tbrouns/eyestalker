@@ -26,7 +26,7 @@ void MainWindow::loadSettings(QString filename)
                                                        300.0,  // Canny threshold low
                                                        600.0,  // Canny threshold high
                                                           15,  // Curvature offset
-                                                        0.05,  // Edge window length fraction
+                                                        0.05,  // Ellipse edge fraction
                                                            3,  // Ellipse fit number maximum
                                                         0.75,  // Ellipse fit error maximum
                                                           12,  // Glint size
@@ -38,7 +38,8 @@ void MainWindow::loadSettings(QString filename)
                                                         1.15,  // Aspect ratio change threshold
                                                           10,  // Displacement change threshold
                                                         0.39,  // Score threshold
-                                                        0.50}; // Score difference threshold
+                                                        0.50,  // Score difference threshold
+                                                          5};  // Edge window length
 
     static const std::vector<double> parametersBead = {0.005,  // Alpha average
                                                         0.75,  // Alpha miscellaneous
@@ -49,7 +50,7 @@ void MainWindow::loadSettings(QString filename)
                                                        300.0,  // Canny threshold low
                                                        600.0,  // Canny threshold high
                                                           15,  // Curvature offset
-                                                        0.05,  // Edge window length fraction
+                                                        0.05,  // Ellipse edge fraction
                                                            3,  // Ellipse fit number maximum
                                                         0.75,  // Ellipse fit error maximum
                                                            0,  // Glint size
@@ -61,7 +62,8 @@ void MainWindow::loadSettings(QString filename)
                                                         1.10,  // Aspect ratio change threshold
                                                           10,  // Displacement change threshold
                                                         0.39,  // Score threshold
-                                                        0.50}; // Score difference threshold
+                                                        0.50,  // Score difference threshold
+                                                          5};  // Edge window length
 
     QSettings settings(filename, QSettings::IniFormat);
 
@@ -129,8 +131,8 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.cannyThresholdLow                  = settings.value(prefix + "CannyThresholdLow",               parameters[6]).toDouble();
     mDetectionParameters.cannyThresholdHigh                 = settings.value(prefix + "CannyThresholdHigh",              parameters[7]).toDouble();
     mDetectionParameters.curvatureOffset                    = settings.value(prefix + "CurvatureOffset",                 parameters[8]).toDouble();
-    mDetectionParameters.edgeWindowLengthFraction           = settings.value(prefix + "EdgeWindowLengthFraction",        parameters[9]).toDouble();
-    mDetectionParameters.ellipseFitNumberMaximum            = settings.value(prefix + "EllipseFitNumberMaximum",         parameters[10]).toInt();
+    mDetectionParameters.fitEdgeFraction                    = settings.value(prefix + "FitEdgeFraction",                 parameters[9]).toDouble();
+    mDetectionParameters.fitEdgeMaximum                     = settings.value(prefix + "FitEdgeMaximum",                  parameters[10]).toInt();
     mDetectionParameters.thresholdFitError                  = settings.value(prefix + "ThresholdFitError",               parameters[11]).toDouble();
     mDetectionParameters.glintWdth                          = settings.value(prefix + "GlintSize",                       parameters[12]).toInt();
     mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
@@ -142,6 +144,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.thresholdChangePosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
     mDetectionParameters.scoreThreshold                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
     mDetectionParameters.scoreThresholdDiff                 = settings.value(prefix + "ScoreThresholdDiff",              parameters[21]).toDouble();
+    mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",                parameters[22]).toDouble();
 
     return mDetectionParameters;
 }
@@ -204,7 +207,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CircumferenceMax",               mDetectionParameters.circumferenceMax);
     settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.circumferenceMin);
     settings.setValue(prefix + "CurvatureOffset",                mDetectionParameters.curvatureOffset);
-    settings.setValue(prefix + "EllipseFitNumberMaximum",        mDetectionParameters.ellipseFitNumberMaximum);
+    settings.setValue(prefix + "FitEdgeMaximum",                 mDetectionParameters.fitEdgeMaximum);
     settings.setValue(prefix + "ThresholdFitError",              mDetectionParameters.thresholdFitError);
     settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
     settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);
@@ -213,6 +216,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.thresholdChangePosition);
     settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.scoreThreshold);
     settings.setValue(prefix + "ScoreThresholdDiff",             mDetectionParameters.scoreThresholdDiff);
+    settings.setValue(prefix + "WindowLengthEdge",               mDetectionParameters.windowLengthEdge);
 }
 
 void MainWindow::onResetParameters()

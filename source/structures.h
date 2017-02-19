@@ -102,8 +102,7 @@ struct detectionParameters
     double circumferenceMin;
     double circumferenceOffset;
     double curvatureOffset;
-    double edgeWindowLength;
-    double edgeWindowLengthFraction;
+
     double scoreThreshold;
     double scoreThresholdDiff;
     double thresholdChangeAspectRatio;
@@ -112,8 +111,14 @@ struct detectionParameters
     double thresholdFitError;
     int cannyBlurLevel;
     int cannyKernelSize;
-    int ellipseFitNumberMaximum;
+
     int glintWdth;
+
+    int    fitEdgeMaximum;
+    double fitEdgeFraction;
+
+    int windowLengthEdge;
+    int windowLengthCurvature;
 };
 
 struct detectionVariables

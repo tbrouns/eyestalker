@@ -57,10 +57,10 @@ private:
     SliderDouble*CircumferenceOffsetSlider;
     QLabel      *CurvatureOffsetLabel;
     SliderDouble*CurvatureOffsetSlider;
-    QLabel      *EdgeWindowLengthFractionLabel;
-    SliderDouble*EdgeWindowLengthFractionSlider;
-    QLabel      *EllipseFitNumberMaximumLabel;
-    QSlider     *EllipseFitNumberMaximumSlider;
+    QLabel      *FitEdgeFractionLabel;
+    SliderDouble*FitEdgeFractionSlider;
+    QLabel      *FitEdgeMaximumLabel;
+    QSlider     *FitEdgeMaximumSlider;
     QLabel      *GlintSizeLabel;
     QSlider     *GlintSizeSlider;
     QLabel      *ThresholdAspectRatioLabel;
@@ -75,6 +75,8 @@ private:
     SliderDouble*ThresholdScoreDiffSlider;
     QLabel      *ThresholdFitErrorLabel;
     SliderDouble*ThresholdFitErrorSlider;
+    QLabel      *WindowLengthEdgeLabel;
+    QSlider     *WindowLengthEdgeSlider;
 
     detectionParameters mDetectionParameters;
 
@@ -91,8 +93,8 @@ private slots:
     void setCannyThresholdLow       (double);
     void setCannyThresholdHigh      (double);
     void setCurvatureOffset         (double);
-    void setEdgeWindowLengthFraction(double);
-    void setEllipseFitNumberMaximum (int);
+    void setFitEdgeFraction         (double);
+    void setFitEdgeMaximum          (int);
     void setThresholdFitError       (double);
     void setGlintSize               (int);
     void setCircumferenceMin        (double);
@@ -104,6 +106,7 @@ private slots:
     void setThresholdDisplacement   (double);
     void setThresholdScore          (double);
     void setThresholdScoreDiff      (double);
+    void setWindowLengthEdge        (int);
 
 public slots:
 };

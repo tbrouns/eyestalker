@@ -195,6 +195,16 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdScoreDiffSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdScoreDiffSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreDiff(double)));
 
+    QLabel *ThresholdFitErrorTextBox = new QLabel;
+    ThresholdFitErrorTextBox->setText("<b>Fit error:</b>");
+
+    ThresholdFitErrorLabel  = new QLabel;
+    ThresholdFitErrorSlider = new SliderDouble;
+    ThresholdFitErrorSlider->setPrecision(2);
+    ThresholdFitErrorSlider->setDoubleRange(0, 1.0);
+    ThresholdFitErrorSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(ThresholdFitErrorSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdFitError(double)));
+
     // Miscellaneous parameters
 
     QLabel *MiscParametersTextBox = new QLabel;
@@ -220,34 +230,33 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
 
-    QLabel *EdgeWindowLengthFractionTextBox = new QLabel;
-    EdgeWindowLengthFractionTextBox->setText("<b>Edge window length:");
+    QLabel *WindowLengthEdgeTextBox = new QLabel;
+    WindowLengthEdgeTextBox->setText("<b>Edge window length:</b>");
 
-    EdgeWindowLengthFractionLabel  = new QLabel;
-    EdgeWindowLengthFractionSlider = new SliderDouble;
-    EdgeWindowLengthFractionSlider->setPrecision(2);
-    EdgeWindowLengthFractionSlider->setDoubleRange(0, 1.0);
-    EdgeWindowLengthFractionSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EdgeWindowLengthFractionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setEdgeWindowLengthFraction(double)));
+    WindowLengthEdgeLabel  = new QLabel;
+    WindowLengthEdgeSlider = new QSlider;
+    WindowLengthEdgeSlider->setRange(1, 16);
+    WindowLengthEdgeSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(WindowLengthEdgeSlider, SIGNAL(valueChanged(int)), this, SLOT(setWindowLengthEdge(int)));
 
-    QLabel *EllipseFitNumberMaximumTextBox = new QLabel;
-    EllipseFitNumberMaximumTextBox->setText("<b>Edge maximum fit number:</b>");
+    QLabel *FitEdgeFractionTextBox = new QLabel;
+    FitEdgeFractionTextBox->setText("<b>Fit error edge fraction:");
 
-    EllipseFitNumberMaximumLabel  = new QLabel;
-    EllipseFitNumberMaximumSlider = new QSlider;
-    EllipseFitNumberMaximumSlider->setRange(0, 7);
-    EllipseFitNumberMaximumSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EllipseFitNumberMaximumSlider, SIGNAL(valueChanged(int)), this, SLOT(setEllipseFitNumberMaximum(int)));
+    FitEdgeFractionLabel  = new QLabel;
+    FitEdgeFractionSlider = new SliderDouble;
+    FitEdgeFractionSlider->setPrecision(2);
+    FitEdgeFractionSlider->setDoubleRange(0, 1.0);
+    FitEdgeFractionSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(FitEdgeFractionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setFitEdgeFraction(double)));
 
-    QLabel *ThresholdFitErrorTextBox = new QLabel;
-    ThresholdFitErrorTextBox->setText("<b>Ellipse maximum fit error:</b>");
+    QLabel *FitEdgeMaximumTextBox = new QLabel;
+    FitEdgeMaximumTextBox->setText("<b>Maximum number of edges:</b>");
 
-    ThresholdFitErrorLabel  = new QLabel;
-    ThresholdFitErrorSlider = new SliderDouble;
-    ThresholdFitErrorSlider->setPrecision(2);
-    ThresholdFitErrorSlider->setDoubleRange(0, 1.0);
-    ThresholdFitErrorSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdFitErrorSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdFitError(double)));
+    FitEdgeMaximumLabel  = new QLabel;
+    FitEdgeMaximumSlider = new QSlider;
+    FitEdgeMaximumSlider->setRange(1, 7);
+    FitEdgeMaximumSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(FitEdgeMaximumSlider, SIGNAL(valueChanged(int)), this, SLOT(setFitEdgeMaximum(int)));
 
     QLabel *TitleLimitTextBox  = new QLabel;
     QLabel *TitleCannyTextBox  = new QLabel;
@@ -286,12 +295,13 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdDisplacementTextBox,     20, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdScoreTextBox,            21, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdScoreDiffTextBox,        22, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdFitErrorTextBox,         23, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(GlintSizeTextBox,                 24, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CurvatureOffsetTextBox,           25, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EdgeWindowLengthFractionTextBox,        26, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(EllipseFitNumberMaximumTextBox,   27, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdFitErrorTextBox,    28, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GlintSizeTextBox,                 25, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CurvatureOffsetTextBox,           26, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(WindowLengthEdgeTextBox,          27, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitEdgeFractionTextBox,           28, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitEdgeMaximumTextBox,            29, 0, 1, 1, Qt::AlignRight);
 
     // Sliders and titles
 
@@ -323,14 +333,15 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdDisplacementSlider,     20, 1);
     MainLayout->addWidget(ThresholdScoreSlider,            21, 1);
     MainLayout->addWidget(ThresholdScoreDiffSlider,        22, 1);
+    MainLayout->addWidget(ThresholdFitErrorSlider,         23, 1);
 
-    MainLayout->addWidget(TitleMiscTextBox,                23, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(TitleMiscTextBox,                24, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(GlintSizeSlider,                 24, 1);
-    MainLayout->addWidget(CurvatureOffsetSlider,           25, 1);
-    MainLayout->addWidget(EdgeWindowLengthFractionSlider,        26, 1);
-    MainLayout->addWidget(EllipseFitNumberMaximumSlider,   27, 1);
-    MainLayout->addWidget(ThresholdFitErrorSlider,    28, 1);
+    MainLayout->addWidget(GlintSizeSlider,                 25, 1);
+    MainLayout->addWidget(CurvatureOffsetSlider,           26, 1);
+    MainLayout->addWidget(WindowLengthEdgeSlider,          27, 1);
+    MainLayout->addWidget(FitEdgeFractionSlider,           28, 1);
+    MainLayout->addWidget(FitEdgeMaximumSlider,            29, 1);
 
     // Value labels
 
@@ -354,12 +365,13 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdDisplacementLabel,    20, 2);
     MainLayout->addWidget(ThresholdScoreLabel,           21, 2);
     MainLayout->addWidget(ThresholdScoreDiffLabel,       22, 2);
+    MainLayout->addWidget(ThresholdFitErrorLabel,        23, 2);
 
-    MainLayout->addWidget(GlintSizeLabel,                24, 2);
-    MainLayout->addWidget(CurvatureOffsetLabel,          25, 2);
-    MainLayout->addWidget(EdgeWindowLengthFractionLabel,       26, 2);
-    MainLayout->addWidget(EllipseFitNumberMaximumLabel,  27, 2);
-    MainLayout->addWidget(ThresholdFitErrorLabel,   28, 2);
+    MainLayout->addWidget(GlintSizeLabel,                25, 2);
+    MainLayout->addWidget(CurvatureOffsetLabel,          26, 2);
+    MainLayout->addWidget(WindowLengthEdgeLabel,         27, 2);
+    MainLayout->addWidget(FitEdgeFractionLabel,          28, 2);
+    MainLayout->addWidget(FitEdgeMaximumLabel,           29, 2);
 
     MainLayout->setColumnStretch(0,1);
     MainLayout->setColumnStretch(1,3);
@@ -455,6 +467,9 @@ void ParameterWidget::reset()
     ThresholdScoreDiffSlider->setDoubleValue(mDetectionParameters.scoreThresholdDiff);
     ThresholdScoreDiffLabel ->setText(QString::number(mDetectionParameters.scoreThresholdDiff, 'f', 2));
 
+    ThresholdFitErrorSlider->setDoubleValue(mDetectionParameters.thresholdFitError);
+    ThresholdFitErrorLabel ->setText(QString::number(mDetectionParameters.thresholdFitError, 'f', 2));
+
     // Misc
 
     GlintSizeSlider->setValue(round(0.5 * mDetectionParameters.glintWdth));
@@ -463,14 +478,15 @@ void ParameterWidget::reset()
     CurvatureOffsetSlider->setDoubleValue(mDetectionParameters.curvatureOffset);
     CurvatureOffsetLabel ->setText(QString::number(mDetectionParameters.curvatureOffset, 'f', 1));
 
-    EdgeWindowLengthFractionSlider->setDoubleValue(mDetectionParameters.edgeWindowLengthFraction);
-    EdgeWindowLengthFractionLabel ->setText(QString::number(mDetectionParameters.edgeWindowLengthFraction, 'f', 2));
+    WindowLengthEdgeSlider->setValue(mDetectionParameters.windowLengthEdge);
+    WindowLengthEdgeLabel ->setText(QString::number(mDetectionParameters.windowLengthEdge));
 
-    EllipseFitNumberMaximumSlider->setValue(mDetectionParameters.ellipseFitNumberMaximum);
-    EllipseFitNumberMaximumLabel ->setText(QString::number(mDetectionParameters.ellipseFitNumberMaximum));
+    FitEdgeFractionSlider->setDoubleValue(mDetectionParameters.fitEdgeFraction);
+    FitEdgeFractionLabel ->setText(QString::number(mDetectionParameters.fitEdgeFraction, 'f', 2));
 
-    ThresholdFitErrorSlider->setDoubleValue(mDetectionParameters.thresholdFitError);
-    ThresholdFitErrorLabel ->setText(QString::number(mDetectionParameters.thresholdFitError, 'f', 2));
+    FitEdgeMaximumSlider->setValue(mDetectionParameters.fitEdgeMaximum);
+    FitEdgeMaximumLabel ->setText(QString::number(mDetectionParameters.fitEdgeMaximum));
+
 }
 
 void ParameterWidget::setCircumferenceMin(double value)
@@ -507,10 +523,10 @@ void ParameterWidget::setAspectRatioMin(double value)
     AspectRatioMinLabel->setText(QString::number(value, 'f', 2));
 }
 
-void ParameterWidget::setEdgeWindowLengthFraction(double value)
+void ParameterWidget::setFitEdgeFraction(double value)
 {
-    mDetectionParameters.edgeWindowLengthFraction = value;
-    EdgeWindowLengthFractionLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.FitEdgeFraction = value;
+    FitEdgeFractionLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setCannyThresholdLow(double value)
@@ -616,10 +632,16 @@ void ParameterWidget::setCurvatureOffset(double value)
     CurvatureOffsetLabel->setText(QString::number(value, 'f', 1));
 }
 
-void ParameterWidget::setEllipseFitNumberMaximum(int value)
+void ParameterWidget::setWindowLengthEdge(int value)
 {
-    mDetectionParameters.ellipseFitNumberMaximum = value;
-    EllipseFitNumberMaximumLabel->setText(QString::number(value));
+    mDetectionParameters.windowLengthEdge = value;
+    WindowLengthEdgeLabel->setText(QString::number(value));
+}
+
+void ParameterWidget::setFitEdgeMaximum(int value)
+{
+    mDetectionParameters.fitEdgeMaximum = value;
+    FitEdgeMaximumLabel->setText(QString::number(value));
 }
 
 void ParameterWidget::setThresholdFitError(double value)
