@@ -68,6 +68,7 @@ struct edgeProperties
 struct ellipseProperties
 {
     bool DETECTED;
+    double angle;
     double curvature;
     double fitError;
     double intensity;
@@ -122,7 +123,6 @@ struct detectionParameters
     double fitEdgeFraction;
 
     int windowLengthEdge;
-    int windowLengthCurvature;
 };
 
 struct detectionVariables
@@ -147,6 +147,7 @@ struct detectionVariables
     double momentumGradient;
     double momentumIntensity;
     double momentumCurvature;
+    double predictedAngle;
     double predictedAspectRatio;
     double predictedCircumference;
     double predictedCurvature;

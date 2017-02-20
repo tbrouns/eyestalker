@@ -1320,6 +1320,7 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
 {
     // Reset everything but averages
 
+    mDetectionVariables.predictedAngle         = 0;
     mDetectionVariables.predictedAspectRatio   = mDetectionVariables.averageAspectRatio;
     mDetectionVariables.predictedCircumference = mDetectionVariables.averageCircumference;
     mDetectionVariables.predictedCurvature     = mDetectionVariables.averageCurvature;
@@ -2436,10 +2437,8 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCurvature     << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedIntensity     << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAngle         << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
-
-            detectionParameters mDetectionParameters = mParameterWidgetEye->getStructure();
-            for (int i = 0; i < imageTotalOffline; i++) { file << mDetectionParameters.windowLengthEdge << delimiter; }
         }
 
         file.close();
@@ -2498,6 +2497,7 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].aspectRatio   << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].fitError      << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].edgeLength    << delimiter; }
+            for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].angle         << delimiter; }
 
             file << "\n";
         }
@@ -2592,53 +2592,53 @@ void MainWindow::onCombineData()
 
 void MainWindow::loadSettings(QString filename)
 {
-    static const std::vector<double> parametersEye  = {0.005,  // Alpha average
-                                                       0.20,  // Alpha features
-                                                       0.10,  // Alpha certainty
-                                                       0.75,  // Alpha position
-                                                       4,  // Canny blur level
-                                                       5,  // Canny kernel size
-                                                       300.0,  // Canny threshold low
-                                                       600.0,  // Canny threshold high
-                                                       15,  // Curvature offset
-                                                       0.05,  // Ellipse edge fraction
-                                                       3,  // Ellipse fit number maximum
-                                                       0.75,  // Ellipse fit error maximum
-                                                       12,  // Glint size
-                                                       320,  // Circumference max
-                                                       60,  // Circumference min
-                                                       0.4,  // Aspect ratio min
-                                                       1.20,  // Circumference offset
-                                                       1.15,  // Circumference change threshold
-                                                       1.15,  // Aspect ratio change threshold
-                                                       10,  // Displacement change threshold
-                                                       0.39,  // Score threshold
-                                                       0.50,  // Score difference threshold
-                                                       5};  // Edge window length
+    static const std::vector<double> parametersEye  = {0.005,   // Alpha average
+                                                       0.40,    // Alpha features
+                                                       0.20,    // Alpha certainty
+                                                       0.75,    // Alpha position
+                                                       4,       // Canny blur level
+                                                       5,       // Canny kernel size
+                                                       300.0,   // Canny threshold low
+                                                       600.0,   // Canny threshold high
+                                                       15,      // Curvature offset
+                                                       0.05,    // Ellipse edge fraction
+                                                       3,       // Ellipse fit number maximum
+                                                       0.70,    // Ellipse fit error maximum
+                                                       12,      // Glint size
+                                                       320,     // Circumference max
+                                                       60,      // Circumference min
+                                                       0.4,     // Aspect ratio min
+                                                       1.20,    // Circumference offset
+                                                       1.15,    // Circumference change threshold
+                                                       1.15,    // Aspect ratio change threshold
+                                                       10,      // Displacement change threshold
+                                                       0.39,    // Score threshold
+                                                       0.50,    // Score difference threshold
+                                                       7};      // Edge window length
 
-    static const std::vector<double> parametersBead = {0.005,  // Alpha average
-                                                       0.75,  // Alpha miscellaneous
-                                                       0.10,  // Alpha certainty
-                                                       0.75,  // Alpha predicted
-                                                       4,  // Canny blur level
-                                                       3,  // Canny kernel size
-                                                       300.0,  // Canny threshold low
-                                                       600.0,  // Canny threshold high
-                                                       15,  // Curvature offset
-                                                       0.05,  // Ellipse edge fraction
-                                                       3,  // Ellipse fit number maximum
-                                                       0.75,  // Ellipse fit error maximum
-                                                       0,  // Glint size
-                                                       130,  // Circumference max
-                                                       90,  // Circumference min
-                                                       0.8,  // Aspect ratio min
-                                                       1.10,  // Circumference offset
-                                                       1.10,  // Circumference change threshold
-                                                       1.10,  // Aspect ratio change threshold
-                                                       10,  // Displacement change threshold
-                                                       0.39,  // Score threshold
-                                                       0.50,  // Score difference threshold
-                                                       5};  // Edge window length
+    static const std::vector<double> parametersBead = {0.005,   // Alpha average
+                                                       0.40,    // Alpha features
+                                                       0.20,    // Alpha certainty
+                                                       0.75,    // Alpha predicted
+                                                       4,       // Canny blur level
+                                                       5,       // Canny kernel size
+                                                       300.0,   // Canny threshold low
+                                                       600.0,   // Canny threshold high
+                                                       15,      // Curvature offset
+                                                       0.05,    // Ellipse edge fraction
+                                                       3,       // Ellipse fit number maximum
+                                                       0.70,    // Ellipse fit error maximum
+                                                       0,       // Glint size
+                                                       130,     // Circumference max
+                                                       90,      // Circumference min
+                                                       0.8,     // Aspect ratio min
+                                                       1.10,    // Circumference offset
+                                                       1.10,    // Circumference change threshold
+                                                       1.10,    // Aspect ratio change threshold
+                                                       10,      // Displacement change threshold
+                                                       0.39,    // Score threshold
+                                                       0.50,    // Score difference threshold
+                                                       7};      // Edge window length
 
     QSettings settings(filename, QSettings::IniFormat);
 
