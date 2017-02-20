@@ -1908,7 +1908,7 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
     return v;
 }
 
-ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int haarWidth)
+ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, const AOIProperties& mAOI)
 {
     Eigen::MatrixXd ConstraintMatrix(6, 6); // constraint matrix
     ConstraintMatrix <<  0,  0,  2,  0,  0,  0,
@@ -1926,8 +1926,8 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
     {
         int edgePointIndex = edgeIndices[iEdgePoint];
 
-        double edgePointX = edgePointIndex % haarWidth;
-        double edgePointY = (edgePointIndex - edgePointX) / haarWidth;
+        double edgePointX = edgePointIndex % mAOI.wdth;
+        double edgePointY = (edgePointIndex - edgePointX) / mAOI.wdth;
 
         DesignMatrix(iEdgePoint, 0) = edgePointX * edgePointX;
         DesignMatrix(iEdgePoint, 1) = edgePointX * edgePointY;
@@ -1982,8 +1982,8 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, int 
     mEllipseProperties.circumference = ramanujansApprox(semiMajor,semiMinor);
     mEllipseProperties.aspectRatio   = semiMinor / semiMajor;
     mEllipseProperties.radius        = 0.5 * (semiMinor + semiMajor);
-    mEllipseProperties.xPos          = ellipseParameters[2];
-    mEllipseProperties.yPos          = ellipseParameters[3];
+    mEllipseProperties.xPos          = ellipseParameters[2] + mAOI.xPos;
+    mEllipseProperties.yPos          = ellipseParameters[3] + mAOI.yPos;
     mEllipseProperties.width         = ellipseParameters[4];
     mEllipseProperties.height        = ellipseParameters[5];
     mEllipseProperties.angle         = ellipseParameters[6];
@@ -2080,14 +2080,14 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
             // Fit ellipse
 
-            ellipseProperties mEllipseProperties = fitEllipse(edgeIndices, edgeSetSize, mAOI.wdth);
+            ellipseProperties mEllipseProperties = fitEllipse(edgeIndices, edgeSetSize, mAOI);
 
             if (!mEllipseProperties.DETECTED) { continue; } // error
 
             // Absolute displacement filter
 
-            double dX = mEllipseProperties.xPos - (mDetectionVariables.predictedXPos - mAOI.xPos);
-            double dY = mEllipseProperties.yPos - (mDetectionVariables.predictedYPos - mAOI.yPos);
+            double dX = mEllipseProperties.xPos - mDetectionVariables.predictedXPos;
+            double dY = mEllipseProperties.yPos - mDetectionVariables.predictedYPos;
             double dR = sqrt(dX * dX + dY * dY);
             if (dR > mDetectionVariables.thresholdChangePosition) { continue; } // no large ellipse displacements
 
@@ -2758,8 +2758,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         mDataVariables.exactAspectRatio   = mEllipseProperties.aspectRatio;
         mDataVariables.exactCircumference = mEllipseProperties.circumference;
 
-        mDataVariables.exactXPos = mEllipseProperties.xPos + cannyAOI.xPos;
-        mDataVariables.exactYPos = mEllipseProperties.yPos + cannyAOI.yPos;
+        mDataVariables.exactXPos = mEllipseProperties.xPos;
+        mDataVariables.exactYPos = mEllipseProperties.yPos;
 
         // Delta error
 

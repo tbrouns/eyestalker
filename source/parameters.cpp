@@ -31,8 +31,6 @@ int Parameters::cameraXResolution;
 int Parameters::cameraYResolution;
 AOIProperties Parameters::cameraAOI;
 
-int Parameters::cannyKernelSize;
-
 double Parameters::ellipseDrawOutlineWidth;
 int    Parameters::ellipseDrawCrossSize;
 

@@ -50,8 +50,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 
 
-
-
     // Get current date
 
     time_t rawtime;
@@ -66,17 +64,41 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     mUEyeOpencvCam.setDeviceInfo(5129, 5445);
 
-    Parameters::cameraXResolution       = 1280;
-    Parameters::cameraYResolution       = 1024;
-    Parameters::CAMERA_READY            = false;
-    Parameters::CAMERA_RUNNING          = false;
-    Parameters::ONLINE_PROCESSING       = true;
-    Parameters::cannyKernelSize         = 3;
+    APP_EXIT    = false;
+    APP_RUNNING = true;
+
+    Parameters::CAMERA_READY      = false;
+    Parameters::CAMERA_RUNNING    = false;
+    Parameters::ONLINE_PROCESSING = true;
+
+    TRIAL_RECORDING = false;
+    SAVE_EYE_IMAGE  = true;
+    FLASH_STANDBY   = false;
+
     Parameters::ellipseDrawCrossSize    = 5;
     Parameters::ellipseDrawOutlineWidth = 0.032;
 
-    APP_EXIT    = false;
-    APP_RUNNING = true;
+    cameraPixelClock = 24;
+
+    frameCount         = 0;
+    guiUpdateFrequency = 30;
+    relativeTime       = 0;
+
+    startTime         = 0;
+    subjectIdentifier = "";
+    trialIndex        = 0;
+
+    mParameterWidgetEye  = new ParameterWidget;
+    mParameterWidgetBead = new ParameterWidget;
+
+    mVariableWidgetEye  = new VariableWidget;
+    mVariableWidgetBead = new VariableWidget;
+
+    // AOI
+
+    Parameters::cameraXResolution = 1280;
+    Parameters::cameraYResolution = 1024;
+
     cameraAOIFractionHghtDefaultLeft = 0.19;
     cameraAOIFractionHghtDefaultRght = 0.22;
     cameraAOIFractionWdthDefaultLeft = 0.25;
@@ -85,37 +107,38 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     cameraAOIFractionXPosDefaultRght = 0.52;
     cameraAOIFractionYPosDefaultLeft = 0.41;
     cameraAOIFractionYPosDefaultRght = 0.37;
-    cameraAOIHghtMin        = 4;
-    cameraAOIHghtStepSize   = 2;
-    cameraAOIWdthMin        = 32;
-    cameraAOIWdthStepSize   = 4;
-    cameraPixelClock        = 24;
-    camImageHght            = 200;
-    camImageWdth            = 480; // size of image in widget
-    PROCESSING_ALL_IMAGES   = false;
-    PROCESSING_ALL_TRIALS   = false;
-    PROCESSING_ALL_EXPS     = false;
-    imageIndexOffline       = 0;
-    imageTotalOffline       = 0;
-    TRIAL_RECORDING         = false;
-    eyeAOIHghtMin           = 75;
-    eyeAOIWdthMin           = 100;
-    eyeImageHght            = 200;
-    eyeImageWdth            = 320; // size of image in widget
-    FLASH_STANDBY           = false;
-    frameCount              = 0;
-    guiUpdateFrequency      = 30;
-    relativeTime            = 0;
-    SAVE_EYE_IMAGE          = true;
-    startTime               = 0;
-    subjectIdentifier       = "";
-    trialIndex              = 0;
 
-    mParameterWidgetEye  = new ParameterWidget;
-    mParameterWidgetBead = new ParameterWidget;
+    camImageHght = 200;
+    camImageWdth = 480; // size of image in widget
 
-    mVariableWidgetEye  = new VariableWidget;
-    mVariableWidgetBead = new VariableWidget;
+    eyeImageHght = 200;
+    eyeImageWdth = 320; // size of image in widget
+
+    eyeAOIHghtMin = 75;
+    eyeAOIWdthMin = 100;
+
+    cameraAOIHghtMin = 4;
+    cameraAOIWdthMin = 32;
+
+    cameraAOIHghtStepSize = 2;
+    cameraAOIWdthStepSize = 4;
+
+    // Offline mode
+
+    PROCESSING_ALL_IMAGES = false;
+    PROCESSING_ALL_TRIALS = false;
+    PROCESSING_ALL_EXPS   = false;
+
+    imageIndexOffline = 0;
+    imageTotalOffline = 0;
+
+    // Advanced options
+
+    mAdvancedOptions.CURVATURE_MEASUREMENT = false;
+
+    SAVE_DATA_FIT   = false;
+    SAVE_DATA_EDGE  = false;
+    SAVE_DATA_EXTRA = false;
 
     // Grab parameters from ini file
 
@@ -143,10 +166,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CamEyeAOIYPosSlider->setOrientation(Qt::Vertical);
     CamEyeAOIYPosSlider->setInvertedAppearance(true);
 
-
     CameraHardwareGainAutoCheckBox  = new QCheckBox;
     CameraHardwareGainBoostCheckBox = new QCheckBox;
-
 
     loadSettings(LastUsedSettingsFileName);
 
@@ -797,8 +818,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ///////////////////////////////////////////////////////////////
     //////////////////// DEVELOPMENT TAB  /////////////////////////
     ///////////////////////////////////////////////////////////////
-
-    mAdvancedOptions.CURVATURE_MEASUREMENT = false;
 
     QLabel *CurvatureMeasurementTextBox = new QLabel;
     CurvatureMeasurementTextBox->setText("<b>Curvature measurement:</b>");
@@ -1964,42 +1983,45 @@ void MainWindow::setupOfflineSession()
 
 void MainWindow::onSetTrialOffline(int index)
 {
-    trialIndexOffline = index;
+    if (index >= 0) {
 
-    countNumImages();
+        trialIndexOffline = index;
 
-    if (imageTotalOffline > 0)
-    {
-        //        vDataVariablesPL.resize(imageTotalOffline);
-        //        vDataVariablesEC.resize(imageTotalOffline);
+        countNumImages();
 
-        vDataVariables.resize(imageTotalOffline);
-        vDataVariablesBead.resize(imageTotalOffline);
+        if (imageTotalOffline > 0)
+        {
+            //        vDataVariablesPL.resize(imageTotalOffline);
+            //        vDataVariablesEC.resize(imageTotalOffline);
 
-        vDetectionVariablesEye.resize(imageTotalOffline + 1);
-        vDetectionVariablesBead.resize(imageTotalOffline + 1);
+            vDataVariables.resize(imageTotalOffline);
+            vDataVariablesBead.resize(imageTotalOffline);
 
-        resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-        resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+            vDetectionVariablesEye.resize(imageTotalOffline + 1);
+            vDetectionVariablesBead.resize(imageTotalOffline + 1);
 
-        vDetectionVariablesEye[0]  = mDetectionVariablesEye;
-        vDetectionVariablesBead[0] = mDetectionVariablesBead;
+            resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+            resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 
-        if (imageIndexOffline != 0) { OfflineImageSlider->setValue(0); } // start with first frame
-        else { onSetOfflineImage(0); }
+            vDetectionVariablesEye[0]  = mDetectionVariablesEye;
+            vDetectionVariablesBead[0] = mDetectionVariablesBead;
 
-        OfflineImageSlider->setMaximum(imageTotalOffline - 1);
+            if (imageIndexOffline != 0) { OfflineImageSlider->setValue(0); } // start with first frame
+            else { onSetOfflineImage(0); }
 
-        // Create folder
+            OfflineImageSlider->setMaximum(imageTotalOffline - 1);
 
-        std::stringstream directoryPath;
-        directoryPath << dataDirectoryOffline.toStdString()
-                      << "/images/trial_"
-                      << trialIndexOffline
-                      << "/processed/";
+            // Create folder
 
-        if (!boost::filesystem::exists(directoryPath.str()))
-        {    boost::filesystem::create_directory(directoryPath.str().c_str()); }
+            std::stringstream directoryPath;
+            directoryPath << dataDirectoryOffline.toStdString()
+                          << "/images/trial_"
+                          << trialIndexOffline
+                          << "/processed/";
+
+            if (!boost::filesystem::exists(directoryPath.str()))
+            {    boost::filesystem::create_directory(directoryPath.str().c_str()); }
+        }
     }
 }
 
@@ -2612,7 +2634,7 @@ void MainWindow::loadSettings(QString filename)
                                                        1.15,    // Circumference change threshold
                                                        1.15,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
-                                                       0.39,    // Score threshold
+                                                       0.30,    // Score threshold
                                                        0.50,    // Score difference threshold
                                                        7};      // Edge window length
 
@@ -2636,7 +2658,7 @@ void MainWindow::loadSettings(QString filename)
                                                        1.10,    // Circumference change threshold
                                                        1.10,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
-                                                       0.39,    // Score threshold
+                                                       0.30,    // Score threshold
                                                        0.50,    // Score difference threshold
                                                        7};      // Edge window length
 
