@@ -550,11 +550,16 @@ inline int calculateDirection(double x, double y)
     double thresholdLow  = 0.4142; // ~ tan(  M_PI/8)
     double thresholdHigh = 2.4142; // ~ tan(3*M_PI/8)
 
+    int dir = 0;
+
     double ratio;
     if (x != 0) { ratio = std::abs(y / x); }
-    else        { ratio = 0; } // arbitrary choice
-
-    int dir = 0;
+    else
+    {
+        if      (y > 0) { dir = 2; }
+        else if (y < 0) { dir = 6; }
+        else            { dir = 0; } // arbitrary choice
+    }
 
     if (x >= 0) // Right half
     {
@@ -1160,9 +1165,6 @@ std::vector<double> calculateCurvatures(const detectionParameters& mDetectionPar
 
     std::vector<double> curvatures(edgeSize, 0.0);
 
-    int numPos = 0;
-    int numNeg = 0;
-
     for (int iEdgePoint = mDetectionParameters.windowLengthEdge; iEdgePoint < edgeSize - mDetectionParameters.windowLengthEdge; iEdgePoint++)
     {
         // calculate window tangents
@@ -1190,21 +1192,10 @@ std::vector<double> calculateCurvatures(const detectionParameters& mDetectionPar
         if      (vectorAngle >  M_PI) { vectorAngle = vectorAngle - 2 * M_PI; }
         else if (vectorAngle < -M_PI) { vectorAngle = vectorAngle + 2 * M_PI; }
 
-        if      (vectorAngle > 0) { numPos++; }
-        else if (vectorAngle < 0) { numNeg++; }
-
         curvatures[iEdgePoint] = 180 * vectorAngle / M_PI; // in degrees
 
         xNormals[iEdgePoint] = tangentXMean_2 - tangentXMean_1;
         yNormals[iEdgePoint] = tangentYMean_2 - tangentYMean_1;
-    }
-
-    if (numNeg > numPos) // if majority sign is negative, then swap all signs
-    {
-        for (int iEdgePoint = mDetectionParameters.windowLengthEdge; iEdgePoint < edgeSize - mDetectionParameters.windowLengthEdge; iEdgePoint++)
-        {
-            curvatures[iEdgePoint] = -curvatures[iEdgePoint];
-        }
     }
 
     return curvatures;
@@ -1212,72 +1203,101 @@ std::vector<double> calculateCurvatures(const detectionParameters& mDetectionPar
 
 std::vector<edgeProperties> edgeSegmentationCurvature(const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, const double curvatureUpperLimit, const double curvatureLowerLimit)
 {
-    int edgeSize = mEdgeProperties.curvatures.size();
-
-    // find breakpoints based on curvature thresholding
-
-    std::vector<int> breakPoints; // position of breakpoints
-    breakPoints.push_back(-1); // add first point (+ 1 is added later)
-
-    for (int iEdgePoint = mDetectionParameters.windowLengthEdge; iEdgePoint < edgeSize - mDetectionParameters.windowLengthEdge; iEdgePoint++)
-    {
-        double curvature = mEdgeProperties.curvatures[iEdgePoint];
-
-        if (curvature >= curvatureUpperLimit || curvature <= curvatureLowerLimit)
-        {
-            breakPoints.push_back(iEdgePoint);
-        }
-    }
-
-    // always add last point
-
-    breakPoints.push_back(edgeSize - 1);
-
-    // make sure length between breakpoints is long enough
-
-    int numBreakPoints = breakPoints.size();
-
-    std::vector<int> breakPointsNew; // position of breakpoints
-    breakPointsNew.push_back(-1); // add first point (+ 1 is added later)
-
-    for (int iBreakPoint = 1; iBreakPoint < numBreakPoints - 1; iBreakPoint++)
-    {
-        int iEdgePointLeft = breakPoints[iBreakPoint - 1];
-        int iEdgePointCntr = breakPoints[iBreakPoint];
-        int iEdgePointRght = breakPoints[iBreakPoint + 1];
-
-        int diffLeft = iEdgePointCntr - iEdgePointLeft;
-        int diffRght = iEdgePointRght - iEdgePointCntr;
-
-        if (diffLeft > mDetectionParameters.windowLengthEdge || diffRght > mDetectionParameters.windowLengthEdge)
-        {
-            breakPointsNew.push_back(iEdgePointCntr);
-        }
-    }
-
-    breakPointsNew.push_back(edgeSize - 1); // add last point again
-
-    // cut edge at breakpoints
-
+    std::vector<edgeProperties> vEdgePropertiesAll;
     std::vector<edgeProperties> vEdgePropertiesNew;
 
-    int numBreakPointsNew = breakPointsNew.size();
+    edgeProperties mEdgePropertiesNew = mEdgeProperties;
 
-    for (int iBreakPoint = 0; iBreakPoint < numBreakPointsNew - 1; iBreakPoint++)
+    do
     {
-        int iStartBreakPoint = breakPointsNew[iBreakPoint] + 1;
-        int iEndBreakPoint   = breakPointsNew[iBreakPoint  + 1];
+        int edgeSize = mEdgePropertiesNew.curvatures.size();
 
-        edgeProperties mEdgePropertiesNew;
-        mEdgePropertiesNew.pointIndices = std::vector<int>    (mEdgeProperties.pointIndices.begin() + iStartBreakPoint, mEdgeProperties.pointIndices.begin() + iEndBreakPoint);
-        mEdgePropertiesNew.curvatures   = std::vector<double> (mEdgeProperties.curvatures.begin()   + iStartBreakPoint, mEdgeProperties.curvatures.begin()   + iEndBreakPoint);
-        mEdgePropertiesNew.xnormals     = std::vector<double> (mEdgeProperties.xnormals.begin()     + iStartBreakPoint, mEdgeProperties.xnormals.begin()     + iEndBreakPoint);
-        mEdgePropertiesNew.ynormals     = std::vector<double> (mEdgeProperties.ynormals.begin()     + iStartBreakPoint, mEdgeProperties.ynormals.begin()     + iEndBreakPoint);
+        // check majority sign
 
-        vEdgePropertiesNew.push_back(mEdgePropertiesNew);
-    }
+        int curvatureSign = 1;
 
-    return vEdgePropertiesNew;
+        int numPos = 0;
+        int numNeg = 0;
+
+        for (int iEdgePoint = mDetectionParameters.windowLengthEdge; iEdgePoint < edgeSize - mDetectionParameters.windowLengthEdge; iEdgePoint++)
+        {
+                double curvature = mEdgePropertiesNew.curvatures[iEdgePoint];
+                if      (curvature > 0) { numPos++; }
+                else if (curvature < 0) { numNeg++; }
+        }
+
+        if (numNeg > numPos) {curvatureSign = -1;} // if majority sign is negative, then swap sign of threshold
+
+        // find breakpoints based on curvature thresholding
+
+        std::vector<int> breakPoints; // position of breakpoints
+        breakPoints.push_back(-1); // add first point (+ 1 is added later)
+
+        for (int iEdgePoint = mDetectionParameters.windowLengthEdge; iEdgePoint < edgeSize - mDetectionParameters.windowLengthEdge; iEdgePoint++)
+        {
+            double curvature = mEdgePropertiesNew.curvatures[iEdgePoint];
+
+            if (std::abs(curvature) >= curvatureUpperLimit || curvatureSign * curvature <= curvatureLowerLimit)
+            {
+                breakPoints.push_back(iEdgePoint);
+                break;
+            }
+        }
+
+        // always add last point
+
+        breakPoints.push_back(edgeSize - 1);
+
+        // make sure length between breakpoints is long enough
+
+        int numBreakPoints = breakPoints.size();
+
+        std::vector<int> breakPointsNew; // position of breakpoints
+        breakPointsNew.push_back(-1); // add first point (+ 1 is added later)
+
+        for (int iBreakPoint = 1; iBreakPoint < numBreakPoints - 1; iBreakPoint++)
+        {
+            int iEdgePointLeft = breakPoints[iBreakPoint - 1];
+            int iEdgePointCntr = breakPoints[iBreakPoint];
+            int iEdgePointRght = breakPoints[iBreakPoint + 1];
+
+            int diffLeft = iEdgePointCntr - iEdgePointLeft;
+            int diffRght = iEdgePointRght - iEdgePointCntr;
+
+            if (diffLeft > mDetectionParameters.windowLengthEdge || diffRght > mDetectionParameters.windowLengthEdge)
+            {
+                breakPointsNew.push_back(iEdgePointCntr);
+            }
+        }
+
+        breakPointsNew.push_back(edgeSize - 1); // add last point again
+
+        // cut edge at breakpoints
+
+        vEdgePropertiesNew.clear();
+
+        int numBreakPointsNew = breakPointsNew.size();
+
+        for (int iBreakPoint = 0; iBreakPoint < numBreakPointsNew - 1; iBreakPoint++)
+        {
+            int iStartBreakPoint = breakPointsNew[iBreakPoint] + 1;
+            int iEndBreakPoint   = breakPointsNew[iBreakPoint  + 1];
+
+            edgeProperties mEdgePropertiesTemp;
+            mEdgePropertiesTemp.pointIndices = std::vector<int>    (mEdgePropertiesNew.pointIndices.begin() + iStartBreakPoint, mEdgePropertiesNew.pointIndices.begin() + iEndBreakPoint);
+            mEdgePropertiesTemp.curvatures   = std::vector<double> (mEdgePropertiesNew.curvatures.begin()   + iStartBreakPoint, mEdgePropertiesNew.curvatures.begin()   + iEndBreakPoint);
+            mEdgePropertiesTemp.xnormals     = std::vector<double> (mEdgePropertiesNew.xnormals.begin()     + iStartBreakPoint, mEdgePropertiesNew.xnormals.begin()     + iEndBreakPoint);
+            mEdgePropertiesTemp.ynormals     = std::vector<double> (mEdgePropertiesNew.ynormals.begin()     + iStartBreakPoint, mEdgePropertiesNew.ynormals.begin()     + iEndBreakPoint);
+
+            vEdgePropertiesNew.push_back(mEdgePropertiesTemp);
+        }
+
+        vEdgePropertiesAll.push_back(vEdgePropertiesNew[0]); // record first edge
+        mEdgePropertiesNew = vEdgePropertiesNew.back();      // check last edge
+
+    } while (vEdgePropertiesNew.size() > 1);
+
+    return vEdgePropertiesAll;
 }
 
 void calculateCurvatureStats(const detectionParameters& mDetectionParameters, edgeProperties& mEdgeProperties)
@@ -1528,7 +1548,7 @@ std::vector<int> findEdgeIntensities(const cv::Mat& img, const detectionParamete
     return edgeIntensities;
 }
 
-std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, double scoreThresholdDiff)
+std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, double thresholdScoreDiffEdge)
 {
     // start from end and move through edge with window
     // if window average is significantly below central average --> remove
@@ -1629,7 +1649,7 @@ std::vector<edgeProperties> edgeTerminalFilter(const detectionVariables& mDetect
 
             std::vector<edgeProperties> vEdgePropertiesTemp;
 
-            if (scoreDifferenceMax > scoreThresholdDiff)
+            if (scoreDifferenceMax > thresholdScoreDiffEdge)
             {
                 std::vector<int> breakPoints = {0, breakPointsAll[indexMax], breakPointsAll[indexMax] + 1, edgeSize - 1};
 
@@ -1859,7 +1879,7 @@ std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
     double w = 2 * sqrt(pow(semiMajor * cos(alpha), 2) + pow(semiMinor * sin(alpha), 2));
     double h = 2 * sqrt(pow(semiMajor * sin(alpha), 2) + pow(semiMinor * cos(alpha), 2));
 
-    std::vector<double> v(6);
+    std::vector<double> v(7);
 
     v[0] = semiMajor;
     v[1] = semiMinor;
@@ -1945,7 +1965,6 @@ ellipseProperties fitEllipse(std::vector<int> edgeIndices, int edgeSetSize, cons
     mEllipseProperties.DETECTED      = true;
     mEllipseProperties.circumference = ramanujansApprox(semiMajor,semiMinor);
     mEllipseProperties.aspectRatio   = semiMinor / semiMajor;
-    mEllipseProperties.radius        = 0.5 * (semiMinor + semiMajor);
     mEllipseProperties.xPos          = ellipseParameters[2] + mAOI.xPos;
     mEllipseProperties.yPos          = ellipseParameters[3] + mAOI.yPos;
     mEllipseProperties.width         = ellipseParameters[4];
@@ -2048,6 +2067,8 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
             if (!mEllipseProperties.DETECTED) { continue; } // error
 
+            if (edgeSetLength < fitEdgeFractionMin * mEllipseProperties.circumference) { continue; } // minimum number of edge points required
+
             // Absolute displacement filter
 
             double dX = mEllipseProperties.xPos - mDetectionVariables.predictedXPos;
@@ -2060,6 +2081,11 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
             if (mEllipseProperties.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
             if (mEllipseProperties.circumference < circumferenceLowerLimit) { continue; } // no small ellipse
             if (mEllipseProperties.aspectRatio   < mDetectionParameters.aspectRatioMin)   { continue; } // no extreme deviations from circular shape
+
+            // Size and shape combination filter
+
+            circumferenceUpperLimit = aspectRatioSlope * mEllipseProperties.aspectRatio + mDetectionParameters.circumferenceMax - aspectRatioSlope;
+            if (mEllipseProperties.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
 
             // Relative change in size and shape filter
 
@@ -2115,7 +2141,7 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
     return vEllipsePropertiesAll;
 }
 
-int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<ellipseProperties> vEllipseProperties)
+std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<ellipseProperties> vEllipseProperties)
 {
     static const double scoreFactorAspectRatio   = 0.815;
     static const double scoreFactorCircumference = 0.415;
@@ -2173,9 +2199,88 @@ int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<
         scoreFits[iFit] = scoreTotal;
     }
 
-    int acceptedFitIndex = std::distance(scoreFits.begin(), std::max_element(scoreFits.begin(), scoreFits.end()));
+    // Find all accepted fits
 
-    return acceptedFitIndex;
+    std::vector<int> acceptedIndices(1);
+
+    if (mDetectionVariables.certaintyPosition > certaintyThreshold || mDetectionVariables.certaintyFeatures > certaintyThreshold || mDetectionVariables.certaintyAverages > certaintyThreshold)
+    {
+        std::vector<double> scoreFitsSorted = scoreFits;
+
+        std::sort   (scoreFitsSorted.begin(), scoreFitsSorted.end());
+        std::reverse(scoreFitsSorted.begin(), scoreFitsSorted.end());
+
+        double scoreFitMax = scoreFitsSorted[0];
+        std::vector<double> acceptedScores = {scoreFitMax};
+
+        for (int iFit = 1; iFit < numFits; iFit++)
+        {
+            double scoreFit = scoreFitsSorted[iFit];
+
+            if (scoreFit + mDetectionParameters.thresholdScoreDiffFit >= scoreFitMax)
+            {
+                acceptedScores.push_back(scoreFit);
+            }
+        }
+
+        int numFitsAccepted = acceptedScores.size();
+
+        acceptedIndices.resize(numFitsAccepted);
+
+        for (int iFit = 0; iFit < numFitsAccepted; iFit++)
+        {
+            double scoreFit = acceptedScores[iFit];
+
+            for (int jFit = 0; jFit < numFits; jFit++)
+            {
+                if (scoreFit == scoreFits[jFit])
+                {
+                    acceptedIndices[iFit] = jFit;
+                    scoreFits[jFit] = -std::numeric_limits<double>::max();
+                }
+            }
+        }
+    }
+    else
+    {
+        acceptedIndices[0] = std::distance(scoreFits.begin(), std::max_element(scoreFits.begin(), scoreFits.end()));
+    }
+
+    return acceptedIndices;
+}
+
+
+void ellipseFitAverage(ellipseProperties& mEllipseProperties, const std::vector<ellipseProperties>& vEllipseProperties)
+{
+    int numFits = vEllipseProperties.size();
+
+    std::vector<double> aspectRatios    (numFits);
+    std::vector<double> circumferences  (numFits);
+    std::vector<double> widths          (numFits);
+    std::vector<double> heights         (numFits);
+    std::vector<double> angles          (numFits);
+    std::vector<double> xPositions      (numFits);
+    std::vector<double> yPositions      (numFits);
+
+    for (int iFit = 0; iFit < numFits; iFit++)
+    {
+        ellipseProperties mEllipsePropertiesTemp = vEllipseProperties[iFit];
+        aspectRatios    [iFit] = mEllipsePropertiesTemp.aspectRatio;
+        circumferences  [iFit] = mEllipsePropertiesTemp.circumference;
+        widths          [iFit] = mEllipsePropertiesTemp.width;
+        heights         [iFit] = mEllipsePropertiesTemp.height;
+        angles          [iFit] = mEllipsePropertiesTemp.angle;
+        xPositions      [iFit] = mEllipsePropertiesTemp.xPos;
+        yPositions      [iFit] = mEllipsePropertiesTemp.yPos;
+    }
+
+    mEllipseProperties.aspectRatio      = calculateMean(aspectRatios);
+    mEllipseProperties.circumference    = calculateMean(circumferences);
+    mEllipseProperties.width            = calculateMean(widths);
+    mEllipseProperties.height           = calculateMean(heights);
+    mEllipseProperties.angle            = calculateMean(angles);
+    mEllipseProperties.xPos             = calculateMean(xPositions);
+    mEllipseProperties.yPos             = calculateMean(yPositions);
 }
 
 void setCurvatureMeasurement(detectionParameters& mDetectionParameters, int imgWdth)
@@ -2190,16 +2295,16 @@ void setCurvatureMeasurement(detectionParameters& mDetectionParameters, int imgW
 
     mDetectionParameters.curvatureOffset = 360;
 
-    mDetectionParameters.scoreThreshold     = 0.0;
-    mDetectionParameters.scoreThresholdDiff = 1.0;
+    mDetectionParameters.thresholdScore     = 0.0;
+    mDetectionParameters.thresholdScoreDiffEdge = 1.0;
 
     mDetectionParameters.glintWdth = 0.0;
 }
 
 void checkVariableLimits(detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters)
 {
-    if (mDetectionVariables.thresholdScore > mDetectionParameters.scoreThreshold)
-    {   mDetectionVariables.thresholdScore = mDetectionParameters.scoreThreshold; }
+    if (mDetectionVariables.thresholdScore > mDetectionParameters.thresholdScore)
+    {   mDetectionVariables.thresholdScore = mDetectionParameters.thresholdScore; }
 
     if (mDetectionVariables.thresholdChangeAspectRatio < mDetectionParameters.thresholdChangeAspectRatio)
     {   mDetectionVariables.thresholdChangeAspectRatio = mDetectionParameters.thresholdChangeAspectRatio; }
@@ -2435,7 +2540,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     //////////////////////// EDGE TERMINAL FILTER   ////////////////////////
     ////////////////////////////////////////////////////////////////////////
 
-    if (mDetectionVariables.certaintyPosition > certaintyThreshold && (mDetectionVariables.certaintyFeatures > certaintyThreshold || mDetectionVariables.certaintyAverages > certaintyThreshold))
+    if (mDetectionVariables.certaintyPosition > certaintyThreshold || mDetectionVariables.certaintyFeatures > certaintyThreshold || mDetectionVariables.certaintyAverages > certaintyThreshold)
     {
         std::vector<edgeProperties> vEdgePropertiesNew;
 
@@ -2443,7 +2548,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         {
             edgeProperties mEdgeProperties    = vEdgePropertiesAll[iEdge];
 
-            std::vector<edgeProperties> vEdgePropertiesTemp = edgeTerminalFilter(mDetectionVariables, mDetectionParameters, mEdgeProperties, mDetectionParameters.scoreThresholdDiff);
+            std::vector<edgeProperties> vEdgePropertiesTemp = edgeTerminalFilter(mDetectionVariables, mDetectionParameters, mEdgeProperties, mDetectionParameters.thresholdScoreDiffEdge);
             vEdgePropertiesNew.insert(vEdgePropertiesNew.end(), vEdgePropertiesTemp.begin(), vEdgePropertiesTemp.end());
         }
 
@@ -2513,31 +2618,40 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
     int numFits = vEllipsePropertiesAll.size();
 
-    int acceptedFitIndex = 0;
-
     if (numFits > 0)
     {
-        mEllipseProperties.DETECTED = true;
+        std::vector<int> acceptedFitIndices;
 
-        if (numFits > 1) { acceptedFitIndex = ellipseFitFilter(mDetectionVariables, vEllipsePropertiesAll); } // grab best fit
+        if (numFits > 1) { acceptedFitIndices = ellipseFitFilter(mDetectionVariables, mDetectionParameters, vEllipsePropertiesAll); } // grab best fit
+        else             { acceptedFitIndices = {0}; }
 
-        mEllipseProperties = vEllipsePropertiesAll[acceptedFitIndex];
+        int numFitsAccepted = acceptedFitIndices.size();
+
+        std::vector<ellipseProperties> vEllipsePropertiesNew(numFitsAccepted);
 
         // Tag fits
 
-        for (int iFit = 0; iFit < numFits; iFit++)
+        for (int iFit = 0; iFit < numFitsAccepted; iFit++)
         {
-            if (iFit == acceptedFitIndex) { vEllipsePropertiesAll[iFit].tag = 1; }
-            else                          { vEllipsePropertiesAll[iFit].tag = 0; }
+            ellipseProperties mEllipsePropertiesTemp = vEllipsePropertiesAll[acceptedFitIndices[iFit]];
+            vEllipsePropertiesNew[iFit] = mEllipsePropertiesTemp;
+            vEllipsePropertiesAll[acceptedFitIndices[iFit]].tag = 1;
+
+            // Tag edges
+
+            for (int iEdge = 0, numEdges = mEllipsePropertiesTemp.edgeIndices.size(); iEdge < numEdges; iEdge++)
+            {
+                int jEdge = mEllipsePropertiesTemp.edgeIndices[iEdge];
+                vEdgePropertiesAll[jEdge].tag = 2;
+            }
         }
 
-        // Tag edges
+        mEllipseProperties = vEllipsePropertiesNew[0]; // set equal to highest score fit
+        mEllipseProperties.DETECTED = true;
 
-        for (int iEdge = 0, numEdges = mEllipseProperties.edgeIndices.size(); iEdge < numEdges; iEdge++)
-        {
-            int jEdge = mEllipseProperties.edgeIndices[iEdge];
-            vEdgePropertiesAll[jEdge].tag = 2;
-        }
+        // Get average properties if multiple fits are accepted
+
+        if (numFitsAccepted > 1) { ellipseFitAverage(mEllipseProperties, vEllipsePropertiesNew); }
 
         // Calculate average properties of fitted edges
 
@@ -2613,6 +2727,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         vEllipsePropertiesAll.push_back(mEllipseProperties);
     }
 
+
     /////////////////////////////////////////////////////////////////
     /////////////////////// SAVING DATA  ////////////////////////////
     /////////////////////////////////////////////////////////////////
@@ -2656,7 +2771,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
     std::vector<double> certaintyFactors = {certaintyFactorAverages, certaintyFactorFeatures, certaintyFactorAverages};
     double certaintyFactorMin = *std::min_element(certaintyFactors.begin(), certaintyFactors.end());
-    mDetectionVariablesNew.thresholdScore = (1 - certaintyFactorMin) * mDetectionParameters.scoreThreshold;
+    mDetectionVariablesNew.thresholdScore = (1 - certaintyFactorMin) * mDetectionParameters.thresholdScore;
 
     if (!mEllipseProperties.DETECTED) // pupil not detected
     {

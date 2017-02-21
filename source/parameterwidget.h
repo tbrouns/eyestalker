@@ -71,8 +71,10 @@ private:
     SliderDouble*ThresholdDisplacementSlider;
     QLabel      *ThresholdScoreLabel;
     SliderDouble*ThresholdScoreSlider;
-    QLabel      *ThresholdScoreDiffLabel;
-    SliderDouble*ThresholdScoreDiffSlider;
+    QLabel      *ThresholdScoreDiffEdgeLabel;
+    SliderDouble*ThresholdScoreDiffEdgeSlider;
+    QLabel      *ThresholdScoreDiffFitLabel;
+    SliderDouble*ThresholdScoreDiffFitSlider;
     QLabel      *ThresholdFitErrorLabel;
     SliderDouble*ThresholdFitErrorSlider;
     QLabel      *WindowLengthEdgeLabel;
@@ -105,7 +107,8 @@ private slots:
     void setThresholdAspectRatio    (double);
     void setThresholdDisplacement   (double);
     void setThresholdScore          (double);
-    void setThresholdScoreDiff      (double);
+    void setThresholdScoreDiffEdge  (double);
+    void setThresholdScoreDiffFit   (double);
     void setWindowLengthEdge        (int);
 
 public slots:

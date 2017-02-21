@@ -75,13 +75,12 @@ struct ellipseProperties
     double gradient;
     double circumference;
     double aspectRatio;
-    double radius;
     double xPos;
     double yPos;
     double width;
     double height;
     int edgeLength;
-    int tag;
+    int tag = 0;
     std::vector<double> coefficients;
     std::vector<int> edgeIndices;
 
@@ -111,13 +110,13 @@ struct detectionParameters
 
     double curvatureOffset;
 
-    double scoreThreshold;
-    double scoreThresholdDiff;
-
     double thresholdChangeAspectRatio;
     double thresholdChangeCircumference;
     double thresholdChangePosition;
     double thresholdFitError;
+    double thresholdScore;
+    double thresholdScoreDiffEdge;
+    double thresholdScoreDiffFit;
 
     int    fitEdgeMaximum;
     double fitEdgeFraction;

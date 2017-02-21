@@ -21,23 +21,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Pupil labs
 
-    //    props.intensity_range = 15;
-    //    props.blur_size = 5;
-    //    props.canny_treshold = 300;
-    //    props.canny_ration = 2;
-    //    props.canny_aperture = 5;
-    //    props.pupil_size_max = 120;
-    //    props.pupil_size_min = 20;
-    //    props.strong_perimeter_ratio_range_min = 0.6;
-    //    props.strong_perimeter_ratio_range_max = 1.1;
-    //    props.strong_area_ratio_range_min = 0.8;
-    //    props.strong_area_ratio_range_max = 1.1;
-    //    props.contour_size_min = 5;
-    //    props.ellipse_roundness_ratio = 0.09;
-    //    props.initial_ellipse_fit_treshhold = 4.3;
-    //    props.final_perimeter_ratio_range_min = 0.5;
-    //    props.final_perimeter_ratio_range_max = 1.0;
-    //    props.ellipse_true_support_min_dist = 3.0;
+    props.intensity_range = 15;
+    props.blur_size = 5;
+    props.canny_treshold = 300;
+    props.canny_ration = 2;
+    props.canny_aperture = 5;
+    props.pupil_size_max = 120;
+    props.pupil_size_min = 20;
+    props.strong_perimeter_ratio_range_min = 0.6;
+    props.strong_perimeter_ratio_range_max = 1.1;
+    props.strong_area_ratio_range_min = 0.8;
+    props.strong_area_ratio_range_max = 1.1;
+    props.contour_size_min = 5;
+    props.ellipse_roundness_ratio = 0.09;
+    props.initial_ellipse_fit_treshhold = 4.3;
+    props.final_perimeter_ratio_range_min = 0.5;
+    props.final_perimeter_ratio_range_max = 1.0;
+    props.ellipse_true_support_min_dist = 3.0;
 
 
 
@@ -1991,8 +1991,8 @@ void MainWindow::onSetTrialOffline(int index)
 
         if (imageTotalOffline > 0)
         {
-            //        vDataVariablesPL.resize(imageTotalOffline);
-            //        vDataVariablesEC.resize(imageTotalOffline);
+            vDataVariablesPL.resize(imageTotalOffline);
+            vDataVariablesEC.resize(imageTotalOffline);
 
             vDataVariables.resize(imageTotalOffline);
             vDataVariablesBead.resize(imageTotalOffline);
@@ -2223,63 +2223,63 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         if (mParameterWidgetBead->getState()) { vDetectionVariablesBead[imageIndex + 1] = mDetectionVariablesBeadNew; }
     }
 
-    //    // Do detection with other algorithms
+    // Do detection with other algorithms
 
-    //    // PupilLabs
+    // PupilLabs
 
-    //    {
-    //        cv::Mat imageNew;
-    //        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
-    //        cv::Mat imageDebug;
-    //        cv::Mat imageColor = imageRaw.clone();
-    //        cv::Rect roi(Parameters::eyeAOI.xPos, Parameters::eyeAOI.yPos, Parameters::eyeAOI.wdth, Parameters::eyeAOI.hght);
+    {
+        cv::Mat imageNew;
+        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
+        cv::Mat imageDebug;
+        cv::Mat imageColor = imageRaw.clone();
+        cv::Rect roi(Parameters::eyeAOI.xPos, Parameters::eyeAOI.yPos, Parameters::eyeAOI.wdth, Parameters::eyeAOI.hght);
 
-    //        t1 = std::chrono::high_resolution_clock::now();
-    //        mDetector2DResult = mDetector2D.detect(props, imageNew, imageColor, imageDebug, roi, false, false, false);
-    //        t2 = std::chrono::high_resolution_clock::now();
-    //        fp_ms = t2 - t1;
+        t1 = std::chrono::high_resolution_clock::now();
+        mDetector2DResult = mDetector2D.detect(props, imageNew, imageColor, imageDebug, roi, false, false, false);
+        t2 = std::chrono::high_resolution_clock::now();
+        fp_ms = t2 - t1;
 
-    //        //        // Save image
+        //        // Save image
 
-    //        //        std::stringstream imagePath;
-    //        //        imagePath << dataDirectoryOffline.toStdString()
-    //        //                  << "/images/trial_"
-    //        //                  << trialIndexOffline
-    //        //                  << "/processed/"
-    //        //                  << imageIndex
-    //        //                  << ".png";
+        //        std::stringstream imagePath;
+        //        imagePath << dataDirectoryOffline.toStdString()
+        //                  << "/images/trial_"
+        //                  << trialIndexOffline
+        //                  << "/processed/"
+        //                  << imageIndex
+        //                  << ".png";
 
-    //        //        cv::imwrite(imagePath.str(), imageColor);
+        //        cv::imwrite(imagePath.str(), imageColor);
 
-    //    }
+    }
 
-    //    Detector2DResult mDetector2DResultNew = *mDetector2DResult;
+    Detector2DResult mDetector2DResultNew = *mDetector2DResult;
 
-    //    dataVariables mDataVariablesPL;
-    //    mDataVariablesPL.timestamp = mDetector2DResultNew.confidence;
-    //    mDataVariablesPL.exactXPos = mDetector2DResultNew.ellipse.center[0];
-    //    mDataVariablesPL.exactYPos = mDetector2DResultNew.ellipse.center[1];
-    //    mDataVariablesPL.duration  = fp_ms.count();
-    //    vDataVariablesPL[imageIndex] = mDataVariablesPL;
+    dataVariables mDataVariablesPL;
+    mDataVariablesPL.timestamp = mDetector2DResultNew.confidence;
+    mDataVariablesPL.exactXPos = mDetector2DResultNew.ellipse.center[0];
+    mDataVariablesPL.exactYPos = mDetector2DResultNew.ellipse.center[1];
+    mDataVariablesPL.duration  = fp_ms.count();
+    vDataVariablesPL[imageIndex] = mDataVariablesPL;
 
-    //    // ExCuSe
+    // ExCuSe
 
-    //    {
-    //        cv::Mat imageNew;
-    //        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
-    //        cv::Mat imageThreshold = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
-    //        cv::Mat imageEdges     = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
-    //        t1 = std::chrono::high_resolution_clock::now();
-    //        detectedEllipse = run(&imageNew, &imageThreshold, &imageEdges, false);
-    //        t2 = std::chrono::high_resolution_clock::now();
-    //        fp_ms = t2 - t1;
-    //    }
+    {
+        cv::Mat imageNew;
+        cv::cvtColor(imageRaw, imageNew, cv::COLOR_BGR2GRAY);
+        cv::Mat imageThreshold = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
+        cv::Mat imageEdges     = cv::Mat(imageNew.rows, imageNew.cols, CV_64F, 0.0);
+        t1 = std::chrono::high_resolution_clock::now();
+        detectedEllipse = run(&imageNew, &imageThreshold, &imageEdges, false);
+        t2 = std::chrono::high_resolution_clock::now();
+        fp_ms = t2 - t1;
+    }
 
-    //    dataVariables mDataVariablesEC;
-    //    mDataVariablesEC.exactXPos = detectedEllipse.center.x;
-    //    mDataVariablesEC.exactYPos = detectedEllipse.center.y;
-    //    mDataVariablesEC.duration  = fp_ms.count();
-    //    vDataVariablesEC[imageIndex] = mDataVariablesEC;
+    dataVariables mDataVariablesEC;
+    mDataVariablesEC.exactXPos = detectedEllipse.center.x;
+    mDataVariablesEC.exactYPos = detectedEllipse.center.y;
+    mDataVariablesEC.duration  = fp_ms.count();
+    vDataVariablesEC[imageIndex] = mDataVariablesEC;
 
 }
 
@@ -2451,7 +2451,6 @@ void MainWindow::onSaveTrialData()
 
         if (SAVE_DATA_EXTRA)
         {
-
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedXPos          << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedYPos          << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedCircumference << delimiter; }
@@ -2527,40 +2526,40 @@ void MainWindow::onSaveTrialData()
         file.close();
     }
 
-    //    // Save data from all algorithms
+    // Save data from all algorithms
 
-    //    { // save pupil data
+    { // save pupil data
 
-    //        std::stringstream filename;
-    //        filename << dataDirectoryOffline.toStdString()
-    //                 << "/images/trial_"
-    //                 << trialIndexOffline
-    //                 << "/tracking_data_all.dat";
+        std::stringstream filename;
+        filename << dataDirectoryOffline.toStdString()
+                 << "/images/trial_"
+                 << trialIndexOffline
+                 << "/tracking_data_all.dat";
 
-    //        std::ofstream file;
-    //        file.open(filename.str(), std::ios::trunc); // open file and remove any existing data
+        std::ofstream file;
+        file.open(filename.str(), std::ios::trunc); // open file and remove any existing data
 
-    //        file << imageTotalOffline << ";";  // data samples
+        file << imageTotalOffline << ";";  // data samples
 
-    //        file << std::fixed;
-    //        file << std::setprecision(3);
+        file << std::fixed;
+        file << std::setprecision(3);
 
-    //        // write data
+        // write data
 
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].DETECTED << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactXPos << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactYPos << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].timestamp << delimiter; } // confidence
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactXPos << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactYPos << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].duration << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactXPos << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactYPos << delimiter; }
-    //        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].duration << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].DETECTED << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactXPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].exactYPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].timestamp << delimiter; } // confidence
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactXPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].exactYPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesPL[i].duration << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactXPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].exactYPos << delimiter; }
+        for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariablesEC[i].duration << delimiter; }
 
-    //        file.close();
-    //    }
+        file.close();
+    }
 
 }
 
@@ -2622,12 +2621,12 @@ void MainWindow::loadSettings(QString filename)
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       10,      // Curvature offset
+                                                       8,      // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        3,       // Ellipse fit number maximum
                                                        0.60,    // Ellipse fit error maximum
                                                        12,      // Glint size
-                                                       320,     // Circumference max
+                                                       305,     // Circumference max
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
                                                        1.20,    // Circumference offset
@@ -2635,8 +2634,9 @@ void MainWindow::loadSettings(QString filename)
                                                        1.15,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
                                                        0.30,    // Score threshold
-                                                       0.60,    // Score difference threshold
-                                                       7};      // Edge window length
+                                                       0.60,    // Score difference threshold edge
+                                                       0.10,    // Score difference threshold fit
+                                                       7};    // Edge window length
 
     static const std::vector<double> parametersBead = {0.005,   // Alpha average
                                                        0.40,    // Alpha features
@@ -2646,7 +2646,7 @@ void MainWindow::loadSettings(QString filename)
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       10,      // Curvature offset
+                                                       8,      // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        3,       // Ellipse fit number maximum
                                                        0.60,    // Ellipse fit error maximum
@@ -2660,7 +2660,8 @@ void MainWindow::loadSettings(QString filename)
                                                        10,      // Displacement change threshold
                                                        0.30,    // Score threshold
                                                        0.60,    // Score difference threshold
-                                                       7};      // Edge window length
+                                                       0.10,    // Score difference threshold fit
+                                                       7};    // Edge window length
 
     QSettings settings(filename, QSettings::IniFormat);
 
@@ -2740,9 +2741,10 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.thresholdChangeCircumference       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
     mDetectionParameters.thresholdChangeAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.thresholdChangePosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
-    mDetectionParameters.scoreThreshold                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
-    mDetectionParameters.scoreThresholdDiff                 = settings.value(prefix + "ScoreThresholdDiff",              parameters[21]).toDouble();
-    mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",                parameters[22]).toDouble();
+    mDetectionParameters.thresholdScore                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
+    mDetectionParameters.thresholdScoreDiffEdge             = settings.value(prefix + "ScoreThresholdDiffEdge",          parameters[21]).toDouble();
+    mDetectionParameters.thresholdScoreDiffFit              = settings.value(prefix + "ScoreThresholdDiffFit",           parameters[22]).toDouble();
+    mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",                parameters[23]).toDouble();
 
     return mDetectionParameters;
 }
@@ -2812,8 +2814,9 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.thresholdChangeCircumference);
     settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.thresholdChangeAspectRatio);
     settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.thresholdChangePosition);
-    settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.scoreThreshold);
-    settings.setValue(prefix + "ScoreThresholdDiff",             mDetectionParameters.scoreThresholdDiff);
+    settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.thresholdScore);
+    settings.setValue(prefix + "ScoreThresholdDiffEdge",         mDetectionParameters.thresholdScoreDiffEdge);
+    settings.setValue(prefix + "ScoreThresholdDiffFit",          mDetectionParameters.thresholdScoreDiffFit);
     settings.setValue(prefix + "WindowLengthEdge",               mDetectionParameters.windowLengthEdge);
 }
 

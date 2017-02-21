@@ -31,14 +31,18 @@ const double initialIntensity   =  60;
 
 // Other
 
+const double fitEdgeFractionMin = 0.30;
+
+const double aspectRatioSlope = 175;
+
 // Functions
 
 const double certaintyAsymptoteX = 0.50;
 const double certaintyAsymptoteY = 0.99;
 
-const double certaintyLatency = 10.0; // turn into adjustable parameter.
+const double certaintyOffset    = 0.10;
+const double certaintyThreshold = 0.50;
+const double certaintyLatency   = 10.0; // turn into adjustable parameter.
 
-const double certaintyOffset    = 0.1;
-const double certaintyThreshold = 0.9;
 
 #endif
