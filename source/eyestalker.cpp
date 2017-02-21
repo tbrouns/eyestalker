@@ -2153,23 +2153,23 @@ std::vector<ellipseProperties> getEllipseFits(const detectionVariables& mDetecti
 
 int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<ellipseProperties> vEllipseProperties)
 {
-    static const double scoreFactorFitAspectRatio   = 0.41;
-    static const double scoreFactorFitCircumference = 0.98;
-    static const double scoreFactorFitDisplacement  = 0.00;
-    static const double scoreFactorFitLength        = 3.71;
-    static const double scoreFactorFitError         = 0.18;
+    static const double scoreFactorAspectRatio   = 0.815;
+    static const double scoreFactorCircumference = 0.415;
+    static const double scoreFactorLength        = 1.325;
+    static const double scoreFactorError         = 0.239;
+    static const double scoreFactorAngle         = 1.014;
+    static const double scoreFactorAngleFunction = 0.787;
 
-    static const std::vector<double> parametersFitAspectRatio   = {0.73173, 0.0005102, 0.0093987, 0.23184, 0.0005102, 0.033331};
-    static const std::vector<double> parametersFitCircumference = {0.81525,   0.99994, 0.0051646, 0.17624,    1.0089, 0.034909};
-    static const std::vector<double> parametersFitDisplacement  = {0.37568,  0.040816,   0.66938, 0.59611,  0.040816,   3.1728};
-    static const std::vector<double> parametersFitLength        = {0.12018,   0.76041,  0.033629, 0.97603,   0.99961,  0.26897};
-    static const std::vector<double> parametersFitError         = {0.83881,   0.20388,  0.075325, 0.28425,   0.41703,  0.24919};
+    static const std::vector<double> parametersAspectRatio   = {0.70922, 0.0005102,  0.0087285,  0.26935, 0.0005102, 0.028891};
+    static const std::vector<double> parametersCircumference = {0.74258, 1.0003,     0.0051637,  0.23681, 1.0061,    0.030051};
+    static const std::vector<double> parametersLength        = {0.32519, 0.9949,     0.14673,    0.67869, 0.9949,    0.32326};
+    static const std::vector<double> parametersError         = {0.28342, 0.20204,    0.024372,   0.68972, 0.20204,   0.15905};
+    static const std::vector<double> parametersAngle         = {0.31997, 0.0010204,  0.01714,    0.66619, 0.0010204, 0.080493};
 
     int numFits = vEllipseProperties.size();
 
     std::vector<double> scoreFits(numFits);
 
-    double certaintyFactorPosition = 0.5 * (mDetectionVariables.certaintyPosition + 1);
     double certaintyFactorFeatures = 0.5 * (mDetectionVariables.certaintyFeatures + 1);
     double certaintyFactorAverages = 0.5 * (mDetectionVariables.certaintyAverages + 1);
 
@@ -2179,31 +2179,32 @@ int ellipseFitFilter(const detectionVariables& mDetectionVariables, std::vector<
     {
         ellipseProperties mEllipseProperties = vEllipseProperties[iFit];
 
-        double dx = mEllipseProperties.xPos - mDetectionVariables.predictedXPos;
-        double dy = mEllipseProperties.yPos - mDetectionVariables.predictedYPos;
-        double changePosition      = sqrt(dx * dx + dy * dy);
         double changeAspectRatio   = std::abs(mEllipseProperties.aspectRatio - mDetectionVariables.predictedAspectRatio);
+        double changeAngle         = std::abs(mEllipseProperties.angle       - mDetectionVariables.predictedAngle);
         double changeCircumference = mEllipseProperties.circumference / mDetectionVariables.predictedCircumference;
         double changeLength        = mEllipseProperties.edgeLength    / mDetectionVariables.predictedCircumference;
         double fitError            = mEllipseProperties.fitError;
 
-        double factorAspectRatio   = certaintyFactorFeatures * scoreFactorFitAspectRatio;
-        double factorCircumference = certaintyFactorFeatures * scoreFactorFitCircumference;
-        double factorDisplacement  = certaintyFactorPosition * scoreFactorFitDisplacement;
-        double factorLength        = certaintyFactorFeatures * scoreFactorFitLength;
-        double factorFitError      =                           scoreFactorFitError;
+        double factorAngleFunction = scoreFactorAngleFunction * (1 - mEllipseProperties.aspectRatio) + (1 - scoreFactorAngleFunction);
+
+        double factorAngle         = certaintyFactorFeatures * scoreFactorAngle         * factorAngleFunction;
+        double factorAspectRatio   = certaintyFactorFeatures * scoreFactorAspectRatio;
+        double factorCircumference = certaintyFactorFeatures * scoreFactorCircumference;
+        double factorLength        = certaintyFactorFeatures * scoreFactorLength;
+        double factorFitError      =                           scoreFactorError;
 
         // Calculate scores
-        double scoreAspectRatio   = factorAspectRatio   * calculateGaussian2(changeAspectRatio,   parametersFitAspectRatio   );
-        double scoreCircumference = factorCircumference * calculateGaussian2(changeCircumference, parametersFitCircumference );
-        double scoreDisplacement  = factorDisplacement  * calculateGaussian2(changePosition,      parametersFitDisplacement  );
-        double scoreLength        = factorLength        * calculateGaussian2(changeLength,        parametersFitLength        );
-        double scoreFitError      = factorFitError      * calculateGaussian2(fitError,            parametersFitError         );
 
-        double norm =  factorAspectRatio + factorCircumference + factorDisplacement + factorLength + factorFitError;
+        double scoreAngle         = factorAngle         * calculateGaussian2(changeAngle,         parametersAngle         );
+        double scoreAspectRatio   = factorAspectRatio   * calculateGaussian2(changeAspectRatio,   parametersAspectRatio   );
+        double scoreCircumference = factorCircumference * calculateGaussian2(changeCircumference, parametersCircumference );
+        double scoreLength        = factorLength        * calculateGaussian2(changeLength,        parametersLength        );
+        double scoreFitError      = factorFitError      * calculateGaussian2(fitError,            parametersError         );
+
+        double norm =  factorAngle + factorAspectRatio + factorCircumference + factorLength + factorFitError;
 
         double scoreTotal = 0;
-        if (norm > 0) { scoreTotal = (scoreAspectRatio + scoreCircumference + scoreDisplacement + scoreLength + scoreFitError) / norm; }
+        if (norm > 0) { scoreTotal = (scoreAngle + scoreAspectRatio + scoreCircumference + scoreLength + scoreFitError) / norm; }
 
         scoreFits[iFit] = scoreTotal;
     }
