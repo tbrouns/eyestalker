@@ -2622,10 +2622,10 @@ void MainWindow::loadSettings(QString filename)
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       15,      // Curvature offset
+                                                       10,      // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        3,       // Ellipse fit number maximum
-                                                       0.70,    // Ellipse fit error maximum
+                                                       0.60,    // Ellipse fit error maximum
                                                        12,      // Glint size
                                                        320,     // Circumference max
                                                        60,      // Circumference min
@@ -2635,7 +2635,7 @@ void MainWindow::loadSettings(QString filename)
                                                        1.15,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
                                                        0.30,    // Score threshold
-                                                       0.50,    // Score difference threshold
+                                                       0.60,    // Score difference threshold
                                                        7};      // Edge window length
 
     static const std::vector<double> parametersBead = {0.005,   // Alpha average
@@ -2646,10 +2646,10 @@ void MainWindow::loadSettings(QString filename)
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       15,      // Curvature offset
+                                                       10,      // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        3,       // Ellipse fit number maximum
-                                                       0.70,    // Ellipse fit error maximum
+                                                       0.60,    // Ellipse fit error maximum
                                                        0,       // Glint size
                                                        130,     // Circumference max
                                                        90,      // Circumference min
@@ -2659,7 +2659,7 @@ void MainWindow::loadSettings(QString filename)
                                                        1.10,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
                                                        0.30,    // Score threshold
-                                                       0.50,    // Score difference threshold
+                                                       0.60,    // Score difference threshold
                                                        7};      // Edge window length
 
     QSettings settings(filename, QSettings::IniFormat);
