@@ -255,7 +255,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     FitEdgeFractionLabel  = new QLabel;
     FitEdgeFractionSlider = new SliderDouble;
     FitEdgeFractionSlider->setPrecision(2);
-    FitEdgeFractionSlider->setDoubleRange(0, 1.0);
+    FitEdgeFractionSlider->setDoubleRange(0.0, 0.2);
     FitEdgeFractionSlider->setOrientation(Qt::Horizontal);
     QObject::connect(FitEdgeFractionSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setFitEdgeFraction(double)));
 

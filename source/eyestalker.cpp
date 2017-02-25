@@ -552,43 +552,45 @@ inline int calculateDirection(double x, double y)
 
     int dir = 0;
 
-    double ratio;
-    if (x != 0) { ratio = std::abs(y / x); }
-    else
+    if (x == 0)
     {
         if      (y > 0) { dir = 2; }
         else if (y < 0) { dir = 6; }
         else            { dir = 0; } // arbitrary choice
     }
+    else
+    {
+        double ratio = std::abs(y / x);
 
-    if (x >= 0) // Right half
-    {
-        if (y >= 0) // Top-right quadrant
+        if (x > 0) // Right half
         {
-            if      (ratio < thresholdLow)  { dir = 0; }
-            else if (ratio > thresholdHigh) { dir = 6; }
-            else                            { dir = 7; }
+            if (y >= 0) // Top-right quadrant
+            {
+                if      (ratio < thresholdLow)  { dir = 0; }
+                else if (ratio > thresholdHigh) { dir = 6; }
+                else                            { dir = 7; }
+            }
+            else // Bottom-right quadrant
+            {
+                if      (ratio < thresholdLow)  { dir = 0; }
+                else if (ratio > thresholdHigh) { dir = 2; }
+                else                            { dir = 1; }
+            }
         }
-        else // Bottom-right quadrant
+        else // Left half
         {
-            if      (ratio < thresholdLow)  { dir = 0; }
-            else if (ratio > thresholdHigh) { dir = 2; }
-            else                            { dir = 1; }
-        }
-    }
-    else // Left half
-    {
-        if (y >= 0) // Top-left quadrant
-        {
-            if      (ratio < thresholdLow)  { dir = 4; }
-            else if (ratio > thresholdHigh) { dir = 6; }
-            else                            { dir = 5; }
-        }
-        else // Bottom-left quadrant
-        {
-            if      (ratio < thresholdLow)  { dir = 4; }
-            else if (ratio > thresholdHigh) { dir = 2; }
-            else                            { dir = 3; }
+            if (y >= 0) // Top-left quadrant
+            {
+                if      (ratio < thresholdLow)  { dir = 4; }
+                else if (ratio > thresholdHigh) { dir = 6; }
+                else                            { dir = 5; }
+            }
+            else // Bottom-left quadrant
+            {
+                if      (ratio < thresholdLow)  { dir = 4; }
+                else if (ratio > thresholdHigh) { dir = 2; }
+                else                            { dir = 3; }
+            }
         }
     }
 
@@ -1221,9 +1223,9 @@ std::vector<edgeProperties> edgeSegmentationCurvature(const detectionParameters&
 
         for (int iEdgePoint = mDetectionParameters.windowLengthEdge; iEdgePoint < edgeSize - mDetectionParameters.windowLengthEdge; iEdgePoint++)
         {
-                double curvature = mEdgePropertiesNew.curvatures[iEdgePoint];
-                if      (curvature > 0) { numPos++; }
-                else if (curvature < 0) { numNeg++; }
+            double curvature = mEdgePropertiesNew.curvatures[iEdgePoint];
+            if      (curvature > 0) { numPos++; }
+            else if (curvature < 0) { numNeg++; }
         }
 
         if (numNeg > numPos) {curvatureSign = -1;} // if majority sign is negative, then swap sign of threshold
