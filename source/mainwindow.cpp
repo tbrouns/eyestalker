@@ -1964,8 +1964,16 @@ void MainWindow::onSetTrialOffline(int index)
             vDetectionVariablesEye.resize(imageTotalOffline + 1);
             vDetectionVariablesBead.resize(imageTotalOffline + 1);
 
-            resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-            resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+            if (index == 0)
+            {
+                resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+                resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+            }
+            else
+            {
+                resetVariablesSoft(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+                resetVariablesSoft(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+            }
 
             vDetectionVariablesEye[0]  = mDetectionVariablesEye;
             vDetectionVariablesBead[0] = mDetectionVariablesBead;
@@ -2106,22 +2114,22 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     int cameraAOIXPos;
     int cameraAOIYPos;
 
-    detectionVariables mDetectionVariablesEye;
-    detectionVariables mDetectionVariablesBead;
+    detectionVariables mDetectionVariablesEyeTemp;
+    detectionVariables mDetectionVariablesBeadTemp;
 
-    detectionParameters mDetectionParametersEye;
-    detectionParameters mDetectionParametersBead;
+    detectionParameters mDetectionParametersEyeTemp;
+    detectionParameters mDetectionParametersBeadTemp;
 
     AOIProperties AOIEyeTemp;
     AOIProperties AOIBeadTemp;
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
 
-        mDetectionVariablesEye  = vDetectionVariablesEye[imageIndex];
-        mDetectionParametersEye = mParameterWidgetEye->getStructure();
+        mDetectionVariablesEyeTemp  = vDetectionVariablesEye[imageIndex];
+        mDetectionParametersEyeTemp = mParameterWidgetEye->getStructure();
 
-        mDetectionVariablesBead = vDetectionVariablesBead[imageIndex];
-        mDetectionParametersBead = mParameterWidgetBead->getStructure();
+        mDetectionVariablesBeadTemp  = vDetectionVariablesBead[imageIndex];
+        mDetectionParametersBeadTemp = mParameterWidgetBead->getStructure();
 
         cameraAOIXPos = Parameters::cameraAOI.xPos;
         cameraAOIYPos = Parameters::cameraAOI.yPos;
@@ -2139,8 +2147,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     auto t1 = std::chrono::high_resolution_clock::now();
     detectionVariables mDetectionVariablesEyeNew = eyeStalker(imageRaw,
                                                               AOIEyeTemp,
-                                                              mDetectionVariablesEye,
-                                                              mDetectionParametersEye,
+                                                              mDetectionVariablesEyeTemp,
+                                                              mDetectionParametersEyeTemp,
                                                               mDataVariables,
                                                               mDrawVariables,
                                                               mAdvancedOptions);
@@ -2150,8 +2158,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     // Save data
 
     mDataVariables.duration     = fp_ms.count();
-    mDataVariables.absoluteXPos = mDataVariables.exactXPos + AOIEyeTemp.xPos + cameraAOIXPos;
-    mDataVariables.absoluteYPos = mDataVariables.exactYPos + AOIEyeTemp.yPos + cameraAOIYPos;
+    mDataVariables.absoluteXPos = mDataVariables.exactXPos + cameraAOIXPos;
+    mDataVariables.absoluteYPos = mDataVariables.exactYPos + cameraAOIYPos;
     vDataVariables[imageIndex]  = mDataVariables;
 
     cv::Mat imageProcessed = imageRaw.clone();
@@ -2161,9 +2169,9 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     if (mParameterWidgetBead->getState())
     {
-        mDetectionVariablesBeadNew      = eyeStalker(imageRaw, AOIBeadTemp, mDetectionVariablesBead, mDetectionParametersBead, mDataVariablesBead, mDrawVariablesBead);
-        mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos + AOIBeadTemp.xPos + cameraAOIXPos;
-        mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos + AOIBeadTemp.yPos + cameraAOIYPos;
+        mDetectionVariablesBeadNew      = eyeStalker(imageRaw, AOIBeadTemp, mDetectionVariablesBeadTemp, mDetectionParametersBeadTemp, mDataVariablesBead, mDrawVariablesBead);
+        mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos + cameraAOIXPos;
+        mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos + cameraAOIYPos;
         vDataVariablesBead[imageIndex]  = mDataVariablesBead;
         drawAll(imageProcessed, mDrawVariablesBead);
     }
@@ -2183,8 +2191,12 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     // Record variables for next frame(s)
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-        vDetectionVariablesEye[imageIndex + 1] = mDetectionVariablesEyeNew;
-        if (mParameterWidgetBead->getState()) { vDetectionVariablesBead[imageIndex + 1] = mDetectionVariablesBeadNew; }
+        mDetectionVariablesEye = mDetectionVariablesEyeNew;
+        vDetectionVariablesEye[imageIndex + 1] = mDetectionVariablesEye;
+        if (mParameterWidgetBead->getState())
+        {
+            mDetectionVariablesBead = mDetectionVariablesBeadNew;
+            vDetectionVariablesBead[imageIndex + 1] = mDetectionVariablesBead; }
     }
 }
 
@@ -2498,7 +2510,7 @@ void MainWindow::loadSettings(QString filename)
                                                        305,     // Circumference max
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
-                                                       1.20,    // Circumference offset
+                                                       1.30,    // Circumference offset
                                                        1.15,    // Circumference change threshold
                                                        1.15,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
