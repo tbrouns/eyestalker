@@ -36,7 +36,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CircumferenceOffsetLabel  = new QLabel;
     CircumferenceOffsetSlider = new SliderDouble;
     CircumferenceOffsetSlider->setPrecision(2);
-    CircumferenceOffsetSlider->setDoubleRange(1, 1.5);
+    CircumferenceOffsetSlider->setDoubleRange(0, 0.5);
     CircumferenceOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CircumferenceOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumferenceOffset(double)));
 
@@ -157,14 +157,14 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdAspectRatioLabel  = new QLabel;
     ThresholdAspectRatioSlider = new SliderDouble;
     ThresholdAspectRatioSlider->setPrecision(2);
-    ThresholdAspectRatioSlider->setDoubleRange(1.0, 1.5);
+    ThresholdAspectRatioSlider->setDoubleRange(0.0, 0.5);
     ThresholdAspectRatioSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdAspectRatioSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatio(double)));
 
     ThresholdCircumferenceLabel  = new QLabel;
     ThresholdCircumferenceSlider = new SliderDouble;
     ThresholdCircumferenceSlider->setPrecision(2);
-    ThresholdCircumferenceSlider->setDoubleRange(1.0, 1.5);
+    ThresholdCircumferenceSlider->setDoubleRange(0.0, 1.0);
     ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
 

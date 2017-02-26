@@ -1297,7 +1297,7 @@ void MainWindow::resetVariablesHard(detectionVariables& mDetectionVariables, con
     mDetectionVariables.averageIntensity     = initialIntensity;
     mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
 
-    mDetectionVariables.certaintyAverages = -1.0;
+    mDetectionVariables.certaintyAverages = 0;
 
     resetVariablesSoft(mDetectionVariables, mDetectionParameters, mAOI);
 }
@@ -1331,15 +1331,15 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
     else                       { AOISize = mAOI.hght; }
 
-    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 / mDetectionParameters.aspectRatioMin;
-    mDetectionVariables.thresholdChangeCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
+    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 - mDetectionParameters.aspectRatioMin;
+    mDetectionVariables.thresholdChangeCircumference = std::abs(mDetectionParameters.circumferenceMax - mDetectionParameters.circumferenceMin) / mDetectionParameters.circumferenceMax;;
     mDetectionVariables.thresholdChangePosition      = AOISize;
     mDetectionVariables.thresholdScore               = 0;
 
-    mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceMax / mDetectionParameters.circumferenceMin;
+    mDetectionVariables.offsetCircumference = mDetectionVariables.thresholdChangeCircumference;
 
-    mDetectionVariables.certaintyFeatures = -1.0;
-    mDetectionVariables.certaintyPosition = -1.0;
+    mDetectionVariables.certaintyFeatures = 0;
+    mDetectionVariables.certaintyPosition = 0;
 }
 
 // General functions
@@ -2511,9 +2511,9 @@ void MainWindow::loadSettings(QString filename)
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
                                                        1.30,    // Circumference offset
-                                                       1.15,    // Circumference change threshold
-                                                       1.15,    // Aspect ratio change threshold
-                                                       10,      // Displacement change threshold
+                                                       0.20,    // Circumference change threshold
+                                                       0.10,    // Aspect ratio change threshold
+                                                       12,      // Displacement change threshold
                                                        0.30,    // Score threshold
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
@@ -2536,8 +2536,8 @@ void MainWindow::loadSettings(QString filename)
                                                        90,      // Circumference min
                                                        0.8,     // Aspect ratio min
                                                        1.10,    // Circumference offset
-                                                       1.10,    // Circumference change threshold
-                                                       1.10,    // Aspect ratio change threshold
+                                                       0.10,    // Circumference change threshold
+                                                       0.05,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
                                                        0.30,    // Score threshold
                                                        0.60,    // Score difference threshold
