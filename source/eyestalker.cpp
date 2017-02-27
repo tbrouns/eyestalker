@@ -2313,6 +2313,16 @@ void checkVariableLimits(detectionVariables& mDetectionVariables, const detectio
 
     if (mDetectionVariables.thresholdChangePosition < mDetectionParameters.thresholdChangePosition)
     {   mDetectionVariables.thresholdChangePosition = mDetectionParameters.thresholdChangePosition; }
+
+    if      (mDetectionVariables.certaintyPositionPrime > 1.0) { mDetectionVariables.certaintyPositionPrime = 1.0; }
+    else if (mDetectionVariables.certaintyPositionPrime < 0.0) { mDetectionVariables.certaintyPositionPrime = 0.0; }
+
+    if      (mDetectionVariables.certaintyFeaturesPrime > 1.0) { mDetectionVariables.certaintyFeaturesPrime = 1.0; }
+    else if (mDetectionVariables.certaintyFeaturesPrime < 0.0) { mDetectionVariables.certaintyFeaturesPrime = 0.0; }
+
+    if      (mDetectionVariables.certaintyAveragesPrime > 1.0) { mDetectionVariables.certaintyAveragesPrime = 1.0; }
+    else if (mDetectionVariables.certaintyAveragesPrime < 0.0) { mDetectionVariables.certaintyAveragesPrime = 0.0; }
+
 }
 
 detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables, const developmentOptions& mAdvancedOptions)
@@ -2325,12 +2335,14 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
     // Define search area
 
+    double AOIOffset = mDetectionVariables.thresholdChangePosition + (mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference) / (2 * M_PI);
+
     AOIProperties searchAOI;
 
-    searchAOI.xPos = round(mDetectionVariables.predictedXPos - mDetectionVariables.thresholdChangePosition);
-    searchAOI.yPos = round(mDetectionVariables.predictedYPos - mDetectionVariables.thresholdChangePosition);
-    int searchEndX = round(mDetectionVariables.predictedXPos + mDetectionVariables.thresholdChangePosition);
-    int searchEndY = round(mDetectionVariables.predictedYPos + mDetectionVariables.thresholdChangePosition);
+    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset);
+    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset);
+    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset);
+    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset);
     if (searchAOI.xPos < mAOI.xPos)
     {   searchAOI.xPos = mAOI.xPos; }
     if (searchAOI.yPos < mAOI.yPos)
@@ -2376,9 +2388,10 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     }
     else // search not required
     {
-        haarAOI.xPos = searchAOI.xPos;
-        haarAOI.yPos = searchAOI.yPos;
-        haarAOI.flag = false; glintAOI.flag = false;
+        haarAOI.xPos  = searchAOI.xPos;
+        haarAOI.yPos  = searchAOI.yPos;
+        haarAOI.flag  = false;
+        glintAOI.flag = false;
     }
 
     // Create new AOI for Canny edge deteciton
@@ -2387,7 +2400,6 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     double AOIYPos   = haarAOI.yPos + 0.5 * haarAOI.hght;
     double AOIWdth   = mDetectionVariables.predictedWidth;
     double AOIHght   = mDetectionVariables.predictedHeight;
-    double AOIOffset = mDetectionVariables.thresholdChangePosition + mDetectionVariables.thresholdChangeCircumference / (2 * M_PI);
 
     if (AOIOffset > searchAOI.wdth || AOIOffset > searchAOI.hght)
     {
@@ -2745,10 +2757,10 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     double rangeChangeThresholdPosition      = maxChangeThresholdPosition      - mDetectionParameters.thresholdChangePosition;
     double rangeOffsetCircumference          = maxChangeThresholdCircumference - mDetectionParameters.circumferenceOffset;
 
-    mDetectionVariablesNew.thresholdChangeAspectRatio   = rangeChangeThresholdAspectRatio   * mDetectionVariables.certaintyFeatures + mDetectionParameters.thresholdChangeAspectRatio;
-    mDetectionVariablesNew.thresholdChangeCircumference = rangeChangeThresholdCircumference * mDetectionVariables.certaintyFeatures + mDetectionParameters.thresholdChangeCircumference;
-    mDetectionVariablesNew.thresholdChangePosition      = rangeChangeThresholdPosition      * mDetectionVariables.certaintyPosition + mDetectionParameters.thresholdChangePosition;
-    mDetectionVariablesNew.offsetCircumference          = rangeOffsetCircumference          * mDetectionVariables.certaintyAverages + mDetectionParameters.circumferenceOffset;
+    mDetectionVariablesNew.thresholdChangeAspectRatio   = rangeChangeThresholdAspectRatio   * (1 - mDetectionVariables.certaintyFeatures) + mDetectionParameters.thresholdChangeAspectRatio;
+    mDetectionVariablesNew.thresholdChangeCircumference = rangeChangeThresholdCircumference * (1 - mDetectionVariables.certaintyFeatures) + mDetectionParameters.thresholdChangeCircumference;
+    mDetectionVariablesNew.thresholdChangePosition      = rangeChangeThresholdPosition      * (1 - mDetectionVariables.certaintyPosition) + mDetectionParameters.thresholdChangePosition;
+    mDetectionVariablesNew.offsetCircumference          = rangeOffsetCircumference          * (1 - mDetectionVariables.certaintyAverages) + mDetectionParameters.circumferenceOffset;
 
     std::vector<double> certaintyFactors = {mDetectionVariables.certaintyAverages, mDetectionVariables.certaintyFeatures, mDetectionVariables.certaintyAverages};
     double certaintyFactorMin = *std::min_element(certaintyFactors.begin(), certaintyFactors.end());
@@ -2811,9 +2823,9 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
         // Certainty decays to minimum value
 
-        mDetectionVariablesNew.certaintyPosition = mDetectionVariables.certaintyPosition - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaPosition;
-        mDetectionVariablesNew.certaintyFeatures = mDetectionVariables.certaintyFeatures - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.certaintyAverages = mDetectionVariables.certaintyAverages - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
+        mDetectionVariablesNew.certaintyPositionPrime = mDetectionVariables.certaintyPositionPrime - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaPosition;
+        mDetectionVariablesNew.certaintyFeaturesPrime = mDetectionVariables.certaintyFeaturesPrime - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaFeatures;
+        mDetectionVariablesNew.certaintyAveragesPrime = mDetectionVariables.certaintyAveragesPrime - mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
     }
     else // pupil detected
     {
@@ -2890,17 +2902,17 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
         // Increase or reduce certainty with a fraction of a constant step size (product of the two learning rate parameters)
 
-        mDetectionVariablesNew.certaintyPosition = mDetectionVariables.certaintyPosition + certaintyPosition * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaPosition;
-        mDetectionVariablesNew.certaintyFeatures = mDetectionVariables.certaintyFeatures + certaintyFeatures * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaFeatures;
-        mDetectionVariablesNew.certaintyAverages = mDetectionVariables.certaintyAverages + certaintyFeatures * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
+        mDetectionVariablesNew.certaintyPositionPrime = mDetectionVariables.certaintyPositionPrime + certaintyPosition * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaPosition;
+        mDetectionVariablesNew.certaintyFeaturesPrime = mDetectionVariables.certaintyFeaturesPrime + certaintyFeatures * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaFeatures;
+        mDetectionVariablesNew.certaintyAveragesPrime = mDetectionVariables.certaintyAveragesPrime + certaintyFeatures * mDetectionParameters.alphaCertainty * mDetectionParameters.alphaAverages;
     }
 
     // Logistic functions are used to add response latency to changes in certainty.
     // Multiple detections are required until a reduction in certainty leads to changes in parameter limits or variable predictions
 
-    mDetectionVariablesNew.certaintyPosition = 1 / (1 + exp(-certaintyLatency * (mDetectionVariablesNew.certaintyPosition - 0.5)));
-    mDetectionVariablesNew.certaintyFeatures = 1 / (1 + exp(-certaintyLatency * (mDetectionVariablesNew.certaintyFeatures - 0.5)));
-    mDetectionVariablesNew.certaintyAverages = 1 / (1 + exp(-certaintyLatency * (mDetectionVariablesNew.certaintyAverages - 0.5)));
+    mDetectionVariablesNew.certaintyPosition = 1 / (1 + exp(-certaintyLatency * (mDetectionVariablesNew.certaintyPositionPrime - 0.5)));
+    mDetectionVariablesNew.certaintyFeatures = 1 / (1 + exp(-certaintyLatency * (mDetectionVariablesNew.certaintyFeaturesPrime - 0.5)));
+    mDetectionVariablesNew.certaintyAverages = 1 / (1 + exp(-certaintyLatency * (mDetectionVariablesNew.certaintyAveragesPrime - 0.5)));
 
     // For drawing
 

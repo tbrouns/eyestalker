@@ -1297,7 +1297,8 @@ void MainWindow::resetVariablesHard(detectionVariables& mDetectionVariables, con
     mDetectionVariables.averageIntensity     = initialIntensity;
     mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
 
-    mDetectionVariables.certaintyAverages = 0;
+    mDetectionVariables.certaintyAverages      = 0;
+    mDetectionVariables.certaintyAveragesPrime = 0;
 
     resetVariablesSoft(mDetectionVariables, mDetectionParameters, mAOI);
 }
@@ -1338,8 +1339,11 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
 
     mDetectionVariables.offsetCircumference = mDetectionVariables.thresholdChangeCircumference;
 
-    mDetectionVariables.certaintyFeatures = 0;
-    mDetectionVariables.certaintyPosition = 0;
+    mDetectionVariables.certaintyFeatures      = 0;
+    mDetectionVariables.certaintyPosition      = 0;
+    mDetectionVariables.certaintyFeaturesPrime = 0;
+    mDetectionVariables.certaintyPositionPrime = 0;
+
 }
 
 // General functions
@@ -2510,8 +2514,8 @@ void MainWindow::loadSettings(QString filename)
                                                        305,     // Circumference max
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
-                                                       1.30,    // Circumference offset
-                                                       0.20,    // Circumference change threshold
+                                                       0.20,    // Circumference offset
+                                                       0.10,    // Circumference change threshold
                                                        0.10,    // Aspect ratio change threshold
                                                        12,      // Displacement change threshold
                                                        0.30,    // Score threshold
@@ -2535,8 +2539,8 @@ void MainWindow::loadSettings(QString filename)
                                                        130,     // Circumference max
                                                        90,      // Circumference min
                                                        0.8,     // Aspect ratio min
-                                                       1.10,    // Circumference offset
-                                                       0.10,    // Circumference change threshold
+                                                       0.10,    // Circumference offset
+                                                       0.05,    // Circumference change threshold
                                                        0.05,    // Aspect ratio change threshold
                                                        10,      // Displacement change threshold
                                                        0.30,    // Score threshold

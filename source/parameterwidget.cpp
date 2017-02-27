@@ -164,7 +164,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdCircumferenceLabel  = new QLabel;
     ThresholdCircumferenceSlider = new SliderDouble;
     ThresholdCircumferenceSlider->setPrecision(2);
-    ThresholdCircumferenceSlider->setDoubleRange(0.0, 1.0);
+    ThresholdCircumferenceSlider->setDoubleRange(0.0, 0.5);
     ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
 

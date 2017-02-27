@@ -42,7 +42,7 @@ const double certaintyAsymptoteY = 0.99;
 
 const double certaintyOffset    = 0.10;
 const double certaintyThreshold = 0.75;
-const double certaintyLatency   = 20.0; // turn into adjustable parameter.
+const double certaintyLatency   = 10.0; // turn into adjustable parameter.
 
 
 #endif
