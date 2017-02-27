@@ -2891,13 +2891,9 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         double displacement                = sqrt(errorXPosition * errorXPosition + errorYPosition * errorYPosition);
         double relativeChangeCircumference = std::abs(errorCircumference) / std::max(mEllipseProperties.circumference, mDetectionVariables.predictedCircumference);
 
-        double midpointPosition      = 3.469; // add frame rate factor
-        double midpointAspectRatio   = 0.069;
-        double midpointCircumference = 0.056;
-
-        double certaintyPosition      = calculateCertainty(displacement,                midpointPosition);
-        double certaintyAspectRatio   = calculateCertainty(std::abs(errorAspectRatio),  midpointAspectRatio);
-        double certaintyCircumference = calculateCertainty(relativeChangeCircumference, midpointCircumference);
+        double certaintyPosition      = calculateCertainty(displacement,                mDetectionParameters.thresholdChangePosition);
+        double certaintyAspectRatio   = calculateCertainty(std::abs(errorAspectRatio),  mDetectionParameters.thresholdChangeAspectRatio);
+        double certaintyCircumference = calculateCertainty(relativeChangeCircumference, mDetectionParameters.thresholdChangeCircumference);
         double certaintyFeatures      = 0.5 * (certaintyAspectRatio + certaintyCircumference);
 
         // Increase or reduce certainty with a fraction of a constant step size (product of the two learning rate parameters)
