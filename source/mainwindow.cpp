@@ -2282,6 +2282,7 @@ void MainWindow::onDetectAllTrials()
         {
             OfflineTrialSlider->setValue(iTrial);
             onDetectAllFrames();
+            if (iTrial > 100) { break; } // needs to be removed
         }
     }
 
@@ -2381,6 +2382,9 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAngle         << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].intensityInner                 << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].intensityOuterLeft             << delimiter; }
+            for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].intensityOuterRght             << delimiter; }
         }
 
         file.close();
@@ -2514,7 +2518,7 @@ void MainWindow::loadSettings(QString filename)
                                                        305,     // Circumference max
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
-                                                       0.20,    // Circumference offset
+                                                       0.35,    // Circumference offset
                                                        0.10,    // Circumference change threshold
                                                        0.10,    // Aspect ratio change threshold
                                                        12,      // Displacement change threshold

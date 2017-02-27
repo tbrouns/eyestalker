@@ -245,7 +245,7 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
     return glintAOI;
 }
 
-AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties haarAOI, AOIProperties glintAOI)
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties haarAOI, AOIProperties glintAOI, double& innerMin, double& outerLeftMin, double& outerRghtMin)
 {
     int stepSize = 2;
 
@@ -302,11 +302,8 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
             {
                 for (int j = 0; j < 2; j++)
                 {
-                    if
-                            (X[i] > xTopLeft &&
-                             X[i] < xBtmRght &&
-                             Y[j] > yTopLeft &&
-                             Y[j] < yBtmRght) { GLINT_OVERLAP = true; }
+                    if (X[i] > xTopLeft && X[i] < xBtmRght && Y[j] > yTopLeft && Y[j] < yBtmRght)
+                    { GLINT_OVERLAP = true; }
                 }
             }
 
@@ -339,11 +336,46 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
             intensityInner = intensityInner - glintIntensity; // adjust for glint
             intensityInner = intensityInner / (innerArea - glintArea);
 
+            int xTopLeftOuter = round(xTopLeft - 0.5 * haarAOI.wdth);
+            int xBtmRghtOuter = round(xBtmRght + 0.5 * haarAOI.wdth);
+
+            if (xTopLeftOuter <               0) { xTopLeftOuter =                  0; }
+            if (xBtmRghtOuter >= searchAOI.wdth) { xBtmRghtOuter = searchAOI.wdth - 1; }
+
+            int iTopLeftOuter = searchAOI.wdth * yTopLeft + xTopLeftOuter;
+            int iTopRghtOuter = searchAOI.wdth * yTopLeft + xBtmRghtOuter;
+            int iBtmLeftOuter = searchAOI.wdth * yBtmRght + xTopLeftOuter;
+            int iBtmRghtOuter = searchAOI.wdth * yBtmRght + xBtmRghtOuter;
+
+            double intensityOuterLeft = I[iBtmLeft]      - I[iBtmLeftOuter] - I[iTopLeft]      + I[iTopLeftOuter];
+            double intensityOuterRght = I[iBtmRghtOuter] - I[iBtmRght]      - I[iTopRghtOuter] + I[iTopRght];
+
+            int outerWdthLeft = xTopLeft - xTopLeftOuter;
+            int outerWdthRght = xBtmRghtOuter - xBtmRght;
+
+            if (outerWdthLeft > 0)
+            {
+                int outerAreaLeft  = outerWdthLeft * (haarAOI.hght - 1);
+                intensityOuterLeft = intensityOuterLeft / outerAreaLeft;
+            }
+            else { intensityOuterLeft = 0; }
+
+            if (outerWdthRght > 0)
+            {
+                int outerAreaRght  = outerWdthRght * (haarAOI.hght - 1);
+                intensityOuterRght = intensityOuterRght / outerAreaRght;
+            }
+            else { intensityOuterRght = 0; }
+
             if (intensityInner < intensityInnerMin)
             {
                 haarAOI.xPos = xTopLeft;
                 haarAOI.yPos = yTopLeft;
                 intensityInnerMin = intensityInner;
+
+                innerMin     = intensityInner;
+                outerLeftMin = intensityOuterLeft;
+                outerRghtMin = intensityOuterRght;
             }
         }
     }
@@ -2314,6 +2346,9 @@ void checkVariableLimits(detectionVariables& mDetectionVariables, const detectio
     if (mDetectionVariables.thresholdChangePosition < mDetectionParameters.thresholdChangePosition)
     {   mDetectionVariables.thresholdChangePosition = mDetectionParameters.thresholdChangePosition; }
 
+    if (mDetectionVariables.offsetCircumference < mDetectionParameters.circumferenceOffset)
+    {   mDetectionVariables.offsetCircumference = mDetectionParameters.circumferenceOffset; }
+
     if      (mDetectionVariables.certaintyPositionPrime > 1.0) { mDetectionVariables.certaintyPositionPrime = 1.0; }
     else if (mDetectionVariables.certaintyPositionPrime < 0.0) { mDetectionVariables.certaintyPositionPrime = 0.0; }
 
@@ -2339,10 +2374,16 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
     AOIProperties searchAOI;
 
-    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset);
-    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset);
-    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset);
-    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset);
+//    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset); // needs to be uncommented
+//    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset);
+//    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset);
+//    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset);
+
+    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset -       mDetectionVariables.predictedWidth);
+    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
+    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset +       mDetectionVariables.predictedWidth);
+    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
+
     if (searchAOI.xPos < mAOI.xPos)
     {   searchAOI.xPos = mAOI.xPos; }
     if (searchAOI.yPos < mAOI.yPos)
@@ -2382,7 +2423,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         glintAOI.xPos = searchAOI.xPos + glintAOI.xPos;
         glintAOI.yPos = searchAOI.yPos + glintAOI.yPos;
 
-        haarAOI      = detectPupilApprox(integralImage, searchAOI, haarAOI, glintAOI);
+        haarAOI      = detectPupilApprox(integralImage, searchAOI, haarAOI, glintAOI, mDataVariables.intensityInner, mDataVariables.intensityOuterLeft, mDataVariables.intensityOuterRght);
         haarAOI.xPos = searchAOI.xPos + haarAOI.xPos;
         haarAOI.yPos = searchAOI.yPos + haarAOI.yPos;
     }

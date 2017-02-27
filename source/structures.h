@@ -180,6 +180,10 @@ struct dataVariables
     double exactXPos;
     double exactYPos;
     double timestamp;
+
+    double intensityInner;
+    double intensityOuterLeft;
+    double intensityOuterRght;
 };
 
 struct developmentOptions
