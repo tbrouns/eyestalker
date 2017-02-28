@@ -181,9 +181,9 @@ struct dataVariables
     double exactYPos;
     double timestamp;
 
-    double intensityInner;
-    double intensityOuterLeft;
-    double intensityOuterRght;
+    std::vector<double> intensityInner;      // needs to be removed
+    std::vector<double> intensityOuterLeft;
+    std::vector<double> intensityOuterRght;
 };
 
 struct developmentOptions

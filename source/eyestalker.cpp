@@ -167,8 +167,10 @@ double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::v
 
 // Detection
 
-std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, AOIProperties searchAOI)
+std::vector<unsigned int> calculateIntImg(const cv::Mat& img, AOIProperties searchAOI)
 {
+    int imgWidth = img.cols;
+
     int startX = searchAOI.xPos;
     int startY = searchAOI.yPos;
     int width  = searchAOI.wdth;
@@ -197,11 +199,12 @@ std::vector<unsigned int> calculateIntImg(const cv::Mat& img, int imgWidth, AOIP
     return integralImage;
 }
 
-AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties searchAOI, AOIProperties glintAOI)
+AOIProperties detectGlint(const cv::Mat& img, AOIProperties searchAOI, AOIProperties glintAOI)
 {
-    int stepSize        = 2;
-    int numDirections   = 4;
-    int glintThreshold  = 200;
+    int imgWidth = img.cols;
+
+    int numDirections  = 4;
+    int glintThreshold = 200;
 
     int gradientWindowLength = glintAOI.wdth;
     int glintRadius = round(0.5 * glintAOI.wdth);
@@ -216,9 +219,9 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
     dZ[2] =  searchAOI.wdth + 1;
     dZ[3] =  searchAOI.wdth - 1;
 
-    for (int y = gradientWindowLength; y < searchAOI.hght - gradientWindowLength; y = y + stepSize)
+    for (int y = gradientWindowLength; y < searchAOI.hght - gradientWindowLength; y++)
     {
-        for (int x = gradientWindowLength; x < searchAOI.wdth - gradientWindowLength; x = x + stepSize)
+        for (int x = gradientWindowLength; x < searchAOI.wdth - gradientWindowLength; x++)
         {
             int i = searchAOI.wdth * y + x; // gradient coordinates
             int j = imgWidth * (y + searchAOI.yPos) + (x + searchAOI.xPos); // image coordinates
@@ -245,10 +248,8 @@ AOIProperties detectGlint(const cv::Mat& img, int imgWidth, AOIProperties search
     return glintAOI;
 }
 
-AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties haarAOI, AOIProperties glintAOI, double& innerMin, double& outerLeftMin, double& outerRghtMin)
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties haarAOI, AOIProperties glintAOI, std::vector<double>& innerIntensities, std::vector<double>& outerIntensitiesLeft, std::vector<double>& outerIntensitiesRght, int imgWidth)
 {
-    int stepSize = 2;
-
     double intensityInnerMin = std::numeric_limits<double>::max(); // set to maximum double value;
 
     haarAOI.xPos = 0;
@@ -259,9 +260,9 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
     int wdth = searchAOI.wdth - haarAOI.wdth;
     int hght = searchAOI.hght - haarAOI.hght;
 
-    for (int iRow = 0; iRow < hght; iRow = iRow + stepSize)
+    for (int iRow = 0; iRow < hght; iRow++)
     {
-        for (int iCol = 0; iCol < wdth; iCol = iCol + stepSize)
+        for (int iCol = 0; iCol < wdth; iCol++)
         {
             // vertices of inner square
 
@@ -372,11 +373,21 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
                 haarAOI.xPos = xTopLeft;
                 haarAOI.yPos = yTopLeft;
                 intensityInnerMin = intensityInner;
-
-                innerMin     = intensityInner;
-                outerLeftMin = intensityOuterLeft;
-                outerRghtMin = intensityOuterRght;
             }
+
+            // This section needs to be removed
+
+            int x = iCol;
+            int y = iRow;
+
+            x = x + searchAOI.xPos;
+            y = y + searchAOI.yPos;
+
+            int i = imgWidth * y + x;
+
+            innerIntensities[i]     = intensityInner;
+            outerIntensitiesLeft[i] = intensityOuterLeft;
+            outerIntensitiesRght[i] = intensityOuterRght;
         }
     }
 
@@ -2363,6 +2374,7 @@ void checkVariableLimits(detectionVariables& mDetectionVariables, const detectio
 detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperties& mAOI, detectionVariables& mDetectionVariables, detectionParameters& mDetectionParameters, dataVariables& mDataVariables, drawVariables& mDrawVariables, const developmentOptions& mAdvancedOptions)
 {
     int imageWdth = imageOriginalBGR.cols;
+    int imageHght = imageOriginalBGR.rows;
 
     checkVariableLimits(mDetectionVariables, mDetectionParameters); // keep variables within limits
 
@@ -2373,16 +2385,15 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     double AOIOffset = mDetectionVariables.thresholdChangePosition + (mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference) / (2 * M_PI);
 
     AOIProperties searchAOI;
+//    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset - 0.5 * mDetectionVariables.predictedWidth);  // needs to be uncommented
+//    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
+//    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset + 0.5 * mDetectionVariables.predictedWidth);
+//    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
 
-//    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset); // needs to be uncommented
-//    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset);
-//    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset);
-//    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset);
-
-    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset -       mDetectionVariables.predictedWidth);
-    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
-    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset +       mDetectionVariables.predictedWidth);
-    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
+    searchAOI.xPos = 0; // needs to be removed
+    searchAOI.yPos = 0;
+    int searchEndX = imageWdth;
+    int searchEndY = imageHght;
 
     if (searchAOI.xPos < mAOI.xPos)
     {   searchAOI.xPos = mAOI.xPos; }
@@ -2413,17 +2424,69 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
 
     AOIProperties glintAOI;
 
+    double sizeFactorUp   = 2;
+    double sizeFactorDown = 1 / sizeFactorUp;
+
     if (searchAOI.wdth > haarAOI.wdth || searchAOI.hght > haarAOI.hght)
     {
-        std::vector<unsigned int> integralImage = calculateIntImg(imageOriginalGray, imageWdth, searchAOI);
+        // Down sample image
 
-        glintAOI.wdth = mDetectionParameters.glintWdth;
-        glintAOI.hght = glintAOI.wdth;
-        glintAOI      = detectGlint(imageOriginalGray, imageWdth, searchAOI, glintAOI);
-        glintAOI.xPos = searchAOI.xPos + glintAOI.xPos;
-        glintAOI.yPos = searchAOI.yPos + glintAOI.yPos;
+        int imgWdthResized = round(imageWdth * sizeFactorDown);
+        int imgHghtResized = round(imageHght * sizeFactorDown);
 
-        haarAOI      = detectPupilApprox(integralImage, searchAOI, haarAOI, glintAOI, mDataVariables.intensityInner, mDataVariables.intensityOuterLeft, mDataVariables.intensityOuterRght);
+        cv::Size size(imgWdthResized, imgHghtResized);
+        cv::Mat imageResized;
+        cv::resize(imageOriginalGray, imageResized, size);
+
+        AOIProperties searchAOIResized;
+        searchAOIResized.xPos = sizeFactorDown * searchAOI.xPos;
+        searchAOIResized.yPos = sizeFactorDown * searchAOI.yPos;
+        searchAOIResized.wdth = sizeFactorDown * searchAOI.wdth;
+        searchAOIResized.hght = sizeFactorDown * searchAOI.hght;
+
+        AOIProperties haarAOIResized;
+        haarAOIResized.xPos = sizeFactorDown * haarAOI.xPos;
+        haarAOIResized.yPos = sizeFactorDown * haarAOI.yPos;
+        haarAOIResized.wdth = sizeFactorDown * haarAOI.wdth;
+        haarAOIResized.hght = sizeFactorDown * haarAOI.hght;
+
+        AOIProperties glintAOIResized;
+        glintAOIResized.wdth = sizeFactorDown * mDetectionParameters.glintWdth;
+        glintAOIResized.hght = glintAOIResized.wdth;
+
+        // Haar-like feature detection
+
+        std::vector<unsigned int> integralImage = calculateIntImg(imageResized, searchAOIResized);
+
+        glintAOIResized = detectGlint(imageResized, searchAOIResized, glintAOIResized);
+        glintAOIResized.xPos = searchAOIResized.xPos + glintAOIResized.xPos;
+        glintAOIResized.yPos = searchAOIResized.yPos + glintAOIResized.yPos;
+
+        mDataVariables.intensityInner.resize    (imgWdthResized * imgHghtResized);
+        mDataVariables.intensityOuterLeft.resize(imgWdthResized * imgHghtResized);
+        mDataVariables.intensityOuterRght.resize(imgWdthResized * imgHghtResized);
+
+        haarAOIResized = detectPupilApprox(integralImage, searchAOIResized, haarAOIResized, glintAOIResized, mDataVariables.intensityInner, mDataVariables.intensityOuterLeft, mDataVariables.intensityOuterRght, imgWdthResized);
+
+        // Upsample to original size
+
+        glintAOI.xPos = sizeFactorUp * glintAOIResized.xPos;
+        glintAOI.yPos = sizeFactorUp * glintAOIResized.yPos;
+        glintAOI.wdth = sizeFactorUp * glintAOIResized.wdth;
+        glintAOI.hght = sizeFactorUp * glintAOIResized.hght;
+
+        searchAOI.xPos = sizeFactorUp * searchAOIResized.xPos;
+        searchAOI.yPos = sizeFactorUp * searchAOIResized.yPos;
+        searchAOI.wdth = sizeFactorUp * searchAOIResized.wdth;
+        searchAOI.hght = sizeFactorUp * searchAOIResized.hght;
+
+        haarAOI.xPos = sizeFactorUp * haarAOIResized.xPos;
+        haarAOI.yPos = sizeFactorUp * haarAOIResized.yPos;
+        haarAOI.wdth = sizeFactorUp * haarAOIResized.wdth;
+        haarAOI.hght = sizeFactorUp * haarAOIResized.hght;
+
+        // Offset Haar AOI
+
         haarAOI.xPos = searchAOI.xPos + haarAOI.xPos;
         haarAOI.yPos = searchAOI.yPos + haarAOI.yPos;
     }
