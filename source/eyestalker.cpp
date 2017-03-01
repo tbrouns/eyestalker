@@ -446,7 +446,7 @@ std::vector<int> findEdges(const detectionVariables& mDetectionVariables, std::v
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
 
-    double pupilRadius = (mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference) / (2 * M_PI);
+    double pupilRadius = mDetectionVariables.predictedCircumference * (1 + mDetectionVariables.thresholdChangeCircumference) / (2 * M_PI);
 
     // Find a starting edge point using Starburst-like algorithm
 
