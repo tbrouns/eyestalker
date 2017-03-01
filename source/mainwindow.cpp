@@ -2280,8 +2280,12 @@ void MainWindow::onDetectAllTrials()
 
         for (int iTrial = trialIndexOffline; iTrial < trialTotalOffline && PROCESSING_ALL_TRIALS; iTrial++)
         {
+            if (iTrial < 5)  { continue; }
+            if (iTrial > 15) { break; } // needs to be removed
+
             OfflineTrialSlider->setValue(iTrial);
             onDetectAllFrames();
+
         }
     }
 
@@ -2383,6 +2387,30 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
         }
 
+        file.close();
+    }
+
+    {
+        std::stringstream filename;
+        filename << dataDirectoryOffline.toStdString()
+                 << "/images/trial_"
+                 << trialIndexOffline
+                 << "/haar_data.dat";
+
+        std::ofstream file;
+        file.open(filename.str());
+
+        file << std::fixed;
+        file << std::setprecision(1);
+
+        for (int i = 0; i < imageTotalOffline; i++)
+        {
+            int numPixels = vDataVariables[i].intensityInner.size();
+            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityInner[j]     << delimiter; }
+            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterLeft[j] << delimiter; }
+            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterRght[j] << delimiter; }
+            file << "\n";
+        }
         file.close();
     }
 
@@ -2514,7 +2542,7 @@ void MainWindow::loadSettings(QString filename)
                                                        305,     // Circumference max
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
-                                                       0.20,    // Circumference offset
+                                                       0.35,    // Circumference offset
                                                        0.10,    // Circumference change threshold
                                                        0.10,    // Aspect ratio change threshold
                                                        12,      // Displacement change threshold

@@ -180,6 +180,10 @@ struct dataVariables
     double exactXPos;
     double exactYPos;
     double timestamp;
+
+    std::vector<double> intensityInner;      // needs to be removed
+    std::vector<double> intensityOuterLeft;
+    std::vector<double> intensityOuterRght;
 };
 
 struct developmentOptions
