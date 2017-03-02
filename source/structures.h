@@ -210,15 +210,15 @@ struct drawVariables
 
 struct vertexProperties
 {
-    int index;
     int pointIndex;
+    std::vector<int> connectedVertices;
     std::vector<int> connectedBranches;
     std::vector<int> connectedPoints;
 };
 
 struct branchProperties
 {
-    int index;
+    //int index;
     std::vector<int> pointIndices;
     std::vector<int> connectedVertices;
     int length;
