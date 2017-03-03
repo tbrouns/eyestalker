@@ -1113,41 +1113,45 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
     return branchesAll;
 }
 
-std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<branchProperties>& vBranchPropertiesAll, std::vector<int>& pathBranchesRoot, std::vector<int>& branchesChecked, int vertexIndex)
+std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<branchProperties>& vBranchPropertiesAll, std::vector<int>& pathBranchesRoot, std::vector<int>& verticesChecked, std::vector<int>& branchesChecked, int vertexIndex)
 {
     // Depth-first search
-
     std::vector<std::vector<int>> pathBranchesAll;
-
-    vertexProperties mVertex = vVertexPropertiesAll[vertexIndex];
-    int numBranches = mVertex.connectedBranches.size();
-
-    for (int iBranch = 0; iBranch < numBranches; iBranch++)
+    if (verticesChecked == 0) // haven't started with this vertex yet
     {
-        int branchIndexNew = mVertex.connectedBranches[iBranch];
+        vertexProperties mVertex = vVertexPropertiesAll[vertexIndex];
+        int numBranches = mVertex.connectedBranches.size();
 
-        if (branchesChecked[branchIndexNew] == 0)
+        for (int iBranch = 0; iBranch < numBranches; iBranch++)
         {
-            std::vector<int> pathBranchesRootNew = pathBranchesRoot;
-            pathBranchesRootNew.push_back(branchIndexNew);
+            int branchIndexNew = mVertex.connectedBranches[iBranch];
 
-            std::vector<int> branchesCheckedNew = branchesChecked;
-            branchesCheckedNew[branchIndexNew]  = 1;
+            if (branchesChecked[branchIndexNew] == 0)
+            {
+                std::vector<int> pathBranchesRootNew = pathBranchesRoot;
+                pathBranchesRootNew.push_back(branchIndexNew);
 
-            // Grab other vertex edge is attached to
+                std::vector<int> branchesCheckedNew = branchesChecked;
+                branchesCheckedNew[branchIndexNew]  = 1;
 
-            std::vector<int> connectedVertices = vBranchPropertiesAll[branchIndexNew].connectedVertices;
+                // Grab other vertex edge is attached to
 
-            int vertexIndexNew;
-            if (connectedVertices[0] == vertexIndex) { vertexIndexNew = connectedVertices[1]; }
-            else                                     { vertexIndexNew = connectedVertices[0]; }
+                std::vector<int> connectedVertices = vBranchPropertiesAll[branchIndexNew].connectedVertices;
 
-            // Find all paths from next vertex
+                int vertexIndexNew;
+                if (connectedVertices[0] == vertexIndex) { vertexIndexNew = connectedVertices[1]; }
+                else                                     { vertexIndexNew = connectedVertices[0]; }
 
-            std::vector<std::vector<int>> pathBranchesNew = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRootNew, branchesCheckedNew, vertexIndexNew);
+                // Find all paths from next vertex
 
-            pathBranchesAll.push_back(pathBranchesRootNew); // add root path
-            pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew));
+                std::vector<std::vector<int>> pathBranchesNew = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRootNew, verticesChecked, branchesCheckedNew, vertexIndexNew);
+
+                if (pathBranchesNew.size() > 0)
+                {
+                    pathBranchesAll.push_back(pathBranchesRootNew); // add root path
+                    pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew));
+                }
+            }
         }
     }
 
