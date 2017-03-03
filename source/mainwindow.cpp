@@ -2390,30 +2390,6 @@ void MainWindow::onSaveTrialData()
         file.close();
     }
 
-    {
-        std::stringstream filename;
-        filename << dataDirectoryOffline.toStdString()
-                 << "/images/trial_"
-                 << trialIndexOffline
-                 << "/haar_data.dat";
-
-        std::ofstream file;
-        file.open(filename.str());
-
-        file << std::fixed;
-        file << std::setprecision(1);
-
-        for (int i = 0; i < imageTotalOffline; i++)
-        {
-            int numPixels = vDataVariables[i].intensityInner.size();
-            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityInner[j]     << delimiter; }
-            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterLeft[j] << delimiter; }
-            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterRght[j] << delimiter; }
-            file << "\n";
-        }
-        file.close();
-    }
-
     if (SAVE_DATA_EDGE)
     {
 

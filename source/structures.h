@@ -212,7 +212,6 @@ struct vertexProperties
 {
     int tag;
     std::vector<int> pointIndices;
-    std::vector<int> connectedVertices;
     std::vector<int> connectedBranches;
     std::vector<int> connectedPoints;
 };

@@ -418,7 +418,7 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
 {
     std::vector<int> binaryImageVector = binaryImageVectorRaw;
 
-    {
+    { // First morphological operation
         std::vector<int> edgePointIndices = getEdgeIndices(binaryImageVector, 1);
         int numEdgePoints = edgePointIndices.size();
 
@@ -428,6 +428,9 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
         for (int iEdgePoint = 0; iEdgePoint < numEdgePoints; iEdgePoint++)
         {
             int iCentre = edgePointIndices[iEdgePoint];
+            int xCentre = iCentre % mAOI.wdth;
+            int yCentre = (iCentre - xCentre) / mAOI.wdth;
+
             for (int m = 0; m < 4; m++)
             {
                 int numFilledPixels = 0;
@@ -461,7 +464,7 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
         }
     }
 
-    {
+    { // Second morphological operation
         std::vector<int> edgePointIndices = getEdgeIndices(binaryImageVector, 1);
         int numEdgePoints = edgePointIndices.size();
 
@@ -471,12 +474,14 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
         for (int iEdgePoint = 0; iEdgePoint < numEdgePoints; iEdgePoint++)
         {
             int iCentre = edgePointIndices[iEdgePoint];
+            int xCentre = iCentre % mAOI.wdth;
+            int yCentre = (iCentre - xCentre) / mAOI.wdth;
             std::vector<int> filledPixels;
             for (int m = 0; m < 8; m++)
             {
                 int xNeighbour = xCentre + dX[m];
                 int yNeighbour = yCentre + dY[m];
-                if (xNeighbour < 0 || xNeighbour >= mAOI.wdth ||yNeighbour < 0 || yNeighbour >= mAOI.hght) { continue; } // neighbour is out-of-bounds
+                if (xNeighbour < 0 || xNeighbour >= mAOI.wdth || yNeighbour < 0 || yNeighbour >= mAOI.hght) { continue; } // neighbour is out-of-bounds
                 int iNeighbour = mAOI.wdth * yNeighbour + xNeighbour;
                 if (binaryImageVector[iNeighbour] == 1) { filledPixels.push_back(m); } // check if neighbour is filled
             }
@@ -488,9 +493,9 @@ std::vector<int> sharpenEdges(std::vector<int>& binaryImageVectorRaw, AOIPropert
                 for (int i = 0; i < numFilledPixels; i++)
                 {
                     int j = (i + 1) % numFilledPixels;
-                    if (filledPixels[i] ~= filledPixels[j]) { k++; }
+                    if (filledPixels[i] != filledPixels[j]) { k++; }
                 }
-                if (k == 2) { binaryImageVector[iCentre] = -1;
+                if (k == 1) { binaryImageVector[iCentre] = -1;
                 }
             }
         }
@@ -556,16 +561,12 @@ std::vector<int> findEdges(const detectionVariables& mDetectionVariables, const 
                 int centreIndex = y * mAOI.wdth + x;
 
                 int tag = cannyEdgeVector[centreIndex];
+                if (tag == 1 || tag == 7) { EDGE_FOUND = true; }
+                if (tag == 1) { startIndices.push_back(centreIndex); }
 
-                if (tag == 1)
+                if (EDGE_FOUND)
                 {
-                    EDGE_FOUND = true;
-                    startIndices.push_back(centreIndex);
-                }
-
-                if (EDGE_FOUND && R > radiusMax)
-                {
-                    STOP_SEARCH = true;
+                    if (R > radiusMax) { STOP_SEARCH = true; }
                     break;
                 }
             }
@@ -776,11 +777,10 @@ std::vector<int> findEdgePoints(const detectionParameters& mDetectionParameters,
     cannyEdgeVector[startIndex] = 2; // tag pixel
 
     std::vector<int> edgePointsOld = {startIndex};
+    std::vector<int> edgePointsAll;
 
     int centreIndex   = 0;
     int numEdgePoints = 0;
-
-    std::vector<int> edgePointsAll;
 
     do
     {
@@ -836,7 +836,7 @@ std::vector<int> findEdgePoints(const detectionParameters& mDetectionParameters,
 
     } while (numEdgePoints > 0);
 
-    return edgePointsAll; // return last point
+    return edgePointsAll;
 }
 
 std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
@@ -870,10 +870,7 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
                 int neighbourTag = cannyEdgeVector[neighbourIndex];
                 if (neighbourTag > 1)
                 {
-                    edgePointsAll.push_back(neighbourIndex);
-                    connections[m] = 1;
                     nConnections++;
-
                     if (neighbourTag == 2)
                     {
                         edgePointsNew.push_back(neighbourIndex);
@@ -904,21 +901,19 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
 
     // Create internal vertices
 
-    int numVertices = vertexPointsAllRaw.size();
-    for (int iVertex = 0; iVertex < numVertices; iVertex++)
+    for (int iVertex = 0, numVertices = vertexPointsAllRaw.size(); iVertex < numVertices; iVertex++)
     {
         int vertexPointCentre = vertexPointsAllRaw[iVertex];
         if (cannyEdgeVector[vertexPointCentre] == 4)
         {
-            std::vector<int> vertexPointsAll;
             std::vector<int> vertexPointsOld = {vertexPointCentre};
+            std::vector<int> vertexPointsAll = vertexPointsOld;
             cannyEdgeVector[vertexPointCentre] = 5;
-
             int numEdgePoints = 1;
             do
             {
                 std::vector<int> vertexPointsNew;
-                for (int iEdgePoint = 0; iEdgePoint < numEdgePoints; iEdgePoints++)
+                for (int iEdgePoint = 0; iEdgePoint < numEdgePoints; iEdgePoint++)
                 {
                     int vertexPoint = vertexPointsOld[iEdgePoint];
                     int vertexXPos  = vertexPoint % mAOI.wdth;
@@ -937,6 +932,7 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
                         }
                     }
                 }
+
                 vertexPointsAll.insert(vertexPointsAll.end(), vertexPointsNew.begin(), vertexPointsNew.end());
                 vertexPointsOld = vertexPointsNew;
                 numEdgePoints = vertexPointsOld.size();
@@ -949,6 +945,16 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
             vertexNew.tag = 2;
             verticesAll.push_back(vertexNew);
         }
+    }
+
+    // Create vertex if full cyclic edge
+
+    if (verticesAll.size() == 0)
+    {
+        vertexProperties vertexNew;
+        vertexNew.pointIndices.push_back(startIndex);
+        vertexNew.tag = 2;
+        verticesAll.push_back(vertexNew);
     }
 
     return verticesAll;
@@ -997,6 +1003,7 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
         for (int iBranch = 0; iBranch < numBranches; iBranch++)
         {
             int centreIndex = connectedPoints[iBranch];
+            int vertexNeighbourIndex;
 
             // Create new branch, connect it with vertex and add first point
             branchProperties branchNew;
@@ -1011,6 +1018,7 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
             while (!FOUND_VERTEX && FOUND_POINT)
             {
                 FOUND_POINT = false;
+                vertexNeighbourIndex = -1;
 
                 int centreXPos = centreIndex % mAOI.wdth;
                 int centreYPos = (centreIndex - centreXPos) / mAOI.wdth;
@@ -1031,38 +1039,49 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
                         branchNew.pointIndices.push_back(neighbourIndex);
                         cannyEdgeVector[neighbourIndex] = 4; // new tag so that branch is not recorded again
                         centreIndex = neighbourIndex;
-                        FOUND_POINT  = true;
+                        FOUND_POINT = true;
                     }
                     else if (neighbourTag == 5 || neighbourTag == 6) // check if vertex has been found
                     {
                         int jVertex = iVertex;
                         if (neighbourTag == 5) { jVertex = find2(vertexPointIndices, neighbourIndex); }
-                        if (jVertex != iVertex || branchNew.pointIndices.size() > 5)
+                        if (jVertex < numVertices)
                         {
-                            branchNew.connectedVertices[1] = jVertex;
-                            verticesAll[iVertex].connectedVertices.push_back(jVertex);
-                            verticesAll[jVertex].connectedVertices.push_back(iVertex);
-                            FOUND_VERTEX = true;
-                            FOUND_POINT  = true;
-                            continue;
+                            if (jVertex != iVertex || branchNew.pointIndices.size() > 5)
+                            {
+                                branchNew.connectedVertices[1] = jVertex;
+                                FOUND_VERTEX = true;
+                                FOUND_POINT  = true;
+                                continue;
+                            }
+                            vertexNeighbourIndex = jVertex;
                         }
                     }
                 }
             }
 
-            if (!FOUND_VERTEX) // create new vertex
+            if (!FOUND_VERTEX) // no new vertex found
             {
-                vertexProperties vertexNew;
-                vertexNew.pointIndices.push_back(branchNew.pointIndices.back());
+                if (vertexNeighbourIndex >= 0) // cyclic path, add to existing vertex
+                {
+                    verticesAll[vertexNeighbourIndex].pointIndices.push_back(centreIndex);
+                    vertexPointIndices[vertexNeighbourIndex].push_back(centreIndex);
+                    branchNew.connectedVertices[1] = vertexNeighbourIndex;
+                }
+                else // create new vertex terminal
+                {
+                    vertexProperties vertexNew;
+                    vertexNew.pointIndices.push_back(centreIndex);
+                    vertexNew.tag = 1;
+                    vertexPointIndices.push_back(vertexNew.pointIndices);
+                    int jVertex = numVertices; // add to end
+                    branchNew.connectedVertices[1] = jVertex;
+                    verticesAll.push_back(vertexNew);
+                    numVertices++;
+                }
+
                 branchNew.pointIndices.erase(branchNew.pointIndices.end() - 1);
-                vertexNew.tag = 1; // make it a vertex terminal
-                vertexPointIndices.push_back(vertexNew.pointIndices);
-                int jVertex = numVertices; // add to end
-                branchNew.connectedVertices[1] = jVertex;
-                verticesAll.push_back(vertexNew);
-                verticesAll[iVertex].connectedVertices.push_back(jVertex);
-                verticesAll[jVertex].connectedVertices.push_back(iVertex);
-                numVertices++;
+                cannyEdgeVector[centreIndex] = 5;
             }
 
             branchesAll.push_back(branchNew);
@@ -1072,42 +1091,17 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
         { cannyEdgeVector[connectedPoints[iEdgePoint]] = 5; } // give normal tag now
     }
 
-    { // Remove vertices if they aren't connected to any vertices
-        std::vector<vertexProperties> verticesNew;
-        numVertices = verticesAll.size();
-
-        for (int iVertex = 0; iVertex < numVertices; iVertex++)
-        {
-            int numConnectedVertices = verticesAll[iVertex].connectedVertices.size();
-            if (numConnectedVertices > 0) { verticesNew.push_back(verticesAll[iVertex]); }
-        }
-
-        verticesAll = verticesNew;
-    }
-
     // Record branches each vertex is connected to
 
-    int numBranches = branchesAll.size();
-    for (int iBranch = 0; iBranch < numBranches; iBranch++)
+    for (int iBranch = 0, numBranches = branchesAll.size(); iBranch < numBranches; iBranch++)
     {
-        std::vector<int> branchConnections = branchesAll[iBranch].connectedVertices;
-        for (int iVertex = 0, numConnections = branchConnections.size(); iVertex < numConnections; iVertex++)
+        for (int iVertex = 0, vertexIndexOld = -1; iVertex < 2; iVertex++)
         {
-            verticesAll[branchConnections[iVertex]].connectedBranches.push_back(iBranch);
+            int vertexIndexNew = branchesAll[iBranch].connectedVertices[iVertex];
+            if (vertexIndexOld != vertexIndexNew && vertexIndexNew < numVertices)
+            { verticesAll[vertexIndexNew].connectedBranches.push_back(iBranch); }
+            vertexIndexOld = vertexIndexNew;
         }
-    }
-
-    { // Remove vertices if they aren't connected to any branches
-        std::vector<vertexProperties> verticesNew;
-        numVertices = verticesAll.size();
-
-        for (int iVertex = 0; iVertex < numVertices; iVertex++)
-        {
-            int numConnectedBranches = verticesAll[iVertex].connectedBranches.size();
-            if (numConnectedBranches > 0) { verticesNew.push_back(verticesAll[iVertex]); }
-        }
-
-        verticesAll = verticesNew;
     }
 
     return branchesAll;
@@ -1117,40 +1111,37 @@ std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vV
 {
     // Depth-first search
     std::vector<std::vector<int>> pathBranchesAll;
-    if (verticesChecked == 0) // haven't started with this vertex yet
+
+    vertexProperties mVertex = vVertexPropertiesAll[vertexIndex];
+    int numBranches = mVertex.connectedBranches.size();
+
+    for (int iBranch = 0; iBranch < numBranches; iBranch++)
     {
-        vertexProperties mVertex = vVertexPropertiesAll[vertexIndex];
-        int numBranches = mVertex.connectedBranches.size();
+        int branchIndexNew = mVertex.connectedBranches[iBranch];
 
-        for (int iBranch = 0; iBranch < numBranches; iBranch++)
+        if (branchesChecked[branchIndexNew] == 0)
         {
-            int branchIndexNew = mVertex.connectedBranches[iBranch];
+            std::vector<int> pathBranchesRootNew = pathBranchesRoot;
+            pathBranchesRootNew.push_back(branchIndexNew);
 
-            if (branchesChecked[branchIndexNew] == 0)
+            std::vector<int> branchesCheckedNew = branchesChecked;
+            branchesCheckedNew[branchIndexNew]  = 1;
+
+            // Grab other vertex edge is attached to
+
+            std::vector<int> connectedVertices = vBranchPropertiesAll[branchIndexNew].connectedVertices;
+
+            int vertexIndexNew;
+            if (connectedVertices[0] == vertexIndex) { vertexIndexNew = connectedVertices[1]; }
+            else                                     { vertexIndexNew = connectedVertices[0]; }
+
+            // Find all paths from next vertex
+
+            if (verticesChecked[vertexIndexNew] == 0)
             {
-                std::vector<int> pathBranchesRootNew = pathBranchesRoot;
-                pathBranchesRootNew.push_back(branchIndexNew);
-
-                std::vector<int> branchesCheckedNew = branchesChecked;
-                branchesCheckedNew[branchIndexNew]  = 1;
-
-                // Grab other vertex edge is attached to
-
-                std::vector<int> connectedVertices = vBranchPropertiesAll[branchIndexNew].connectedVertices;
-
-                int vertexIndexNew;
-                if (connectedVertices[0] == vertexIndex) { vertexIndexNew = connectedVertices[1]; }
-                else                                     { vertexIndexNew = connectedVertices[0]; }
-
-                // Find all paths from next vertex
-
                 std::vector<std::vector<int>> pathBranchesNew = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRootNew, verticesChecked, branchesCheckedNew, vertexIndexNew);
-
-                if (pathBranchesNew.size() > 0)
-                {
-                    pathBranchesAll.push_back(pathBranchesRootNew); // add root path
-                    pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew));
-                }
+                if (pathBranchesNew.size() > 0) { pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew)); }
+                pathBranchesAll.push_back(pathBranchesRootNew); // always add root path
             }
         }
     }
@@ -1208,69 +1199,42 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
     int numBranchesAll = vBranchPropertiesAll.size();
     int numVerticesAll = vVertexPropertiesAll.size();
 
-    // Count number of branches
-
     // Perform depth-first search for each vertex
 
     std::vector<std::vector<int>> pathsAll;
+    std::vector<int> cyclicPaths;
 
-    std::vector<int> verticesInternal;
-    std::vector<int> verticesExternal;
+    std::vector<int> verticesChecked(numVerticesAll, 0);
 
-    for (int iVertex = 0; iVertex < numVerticesAll; iVertex++)
+    for (int iVertex = 0; iVertex < numVerticesAll; iVertex++) // loop through all (starting) vertices
     {
-        if (vVertexPropertiesAll[iVertex].tag == 1) { verticesExternal.push_back(iVertex); }
-        else                                        { verticesInternal.push_back(iVertex); }
-    }
-
-    int numVerticesInternal = verticesInternal.size();
-    int numVerticesExternal = verticesExternal.size();
-
-    // Check all terminal vertices first
-
-    std::vector<int> branchesChecked(numBranchesAll, 0);
-
-    for (int iVertex = 0; iVertex < numVerticesExternal; iVertex++) // loop through all vertices
-    {
-        int vertexIndex = verticesExternal[iVertex];
-
-        std::vector<int> pathBranchesRoot; // start with no branches
-        std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, branchesChecked, vertexIndex);
-        pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
-
-        int branchIndex = vVertexPropertiesAll[vertexIndex].connectedBranches[0];
-        branchesChecked[branchIndex] = 1;  // Don't check branch that is attached to current terminal vertex again
-    }
-
-    std::vector<int> cyclicPaths; // terminal vertices can never be part of cyclic paths
-
-    // Then check internel vertices as well
-
-    for (int iVertex = 0; iVertex < numVerticesInternal; iVertex++) // loop through all vertices
-    {
-        int vertexIndex = verticesInternal[iVertex];
-
-        std::vector<int> pathBranchesRoot; // start with no branches
-        std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, branchesChecked, vertexIndex);
-
-        // Check if cyclic
-
-        int numPaths = pathBranchesAll.size();
-        if (numPaths > 1)
+        if (vVertexPropertiesAll[iVertex].connectedBranches.size() > 0) // ignore isolated nodes
         {
-            int numPathsTotal = pathsAll.size();
-            for (int iPath = 0; iPath < numPaths; iPath++)
+            std::vector<int> branchesChecked(numBranchesAll, 0); // no branches checked
+            std::vector<int> pathBranchesRoot; // start with no branches
+            std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, verticesChecked, branchesChecked, iVertex);
+            pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+
+            // Check for cyclic path
+            if (vVertexPropertiesAll[iVertex].tag == 2) // only internal vertices can have cyclic path
             {
-                std::vector<int> connectedBranches = vVertexPropertiesAll[vertexIndex].connectedBranches;
-                std::vector<int>::iterator itr = find(connectedBranches.begin(), connectedBranches.end(), pathBranchesAll[iPath].back()); // check if index has already been stored
-                if (itr != connectedBranches.end()) { cyclicPaths.push_back(numPathsTotal + iPath); }
+                int numPaths = pathBranchesAll.size();
+                if (numPaths > 1)
+                {
+                    for (int iPath = 0; iPath < numPaths; iPath++)
+                    {
+                        std::vector<int> connectedBranches = vVertexPropertiesAll[iVertex].connectedBranches; // all branches vertex connects
+                        std::vector<int>::iterator itr = find(connectedBranches.begin(), connectedBranches.end(), pathBranchesAll[iPath].back()); // check if last added branch connects to starting vertex
+                        if (itr != connectedBranches.end()) { cyclicPaths.push_back(iPath); }
+                    }
+                }
             }
         }
 
-        // Save paths
-
-        pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+        verticesChecked[iVertex] = 1; // never end with a vertex that we already started with (redundant)
     }
+
+    // Find optimal path
 
     double circumferencePrediction = mDetectionVariables.predictedCircumference;
 
@@ -1283,7 +1247,7 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
 
     std::vector<int> pathBranchIndices;
 
-    // First look for cyclic paths
+    // First consider cyclic paths
 
     int numCyclicPaths = cyclicPaths.size();
 
@@ -1305,7 +1269,9 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
 
     int numBranchesPath = pathBranchIndices.size();
 
-    if (numBranchesPath == 0) // if no cyclic path found, then take path closest to prediction
+    // If no cyclic path found, then take path closest to prediction length
+
+    if (numBranchesPath == 0)
     {
         int acceptedPathIndex;
         findPreferredPath(acceptedPathIndex, vBranchPropertiesAll, pathsAll, circumferencePrediction);
@@ -1447,7 +1413,7 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
             {
                 std::vector<int> allIndices = findEdgePoints(mDetectionParameters, cannyEdgeVector, mAOI, startIndex); // tag all edge points of found edges
                 int numEdgePointsTotal = allIndices.size();
-                if (numEdgePointsTotal > 0)
+                if (numEdgePointsTotal > mDetectionParameters.windowLengthEdge)
                 {
                     int startIndex = allIndices.back();
 
@@ -1467,26 +1433,25 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
                     {
                         std::vector<int> pathIndices = processGraphTree(mDetectionVariables, mDetectionParameters, vVertexProperties, vBranchProperties, mAOI);
 
-                        // Give points in longest path a new tag
+                        // Give points in optimal path a new tag
 
                         for (int iEdgePoint = 0, edgeSize = pathIndices.size(); iEdgePoint < edgeSize; iEdgePoint++)
                         { cannyEdgeVector[pathIndices[iEdgePoint]] = 7; }
-
-                        // Remove tag from points that have been tagged before, but not included in final path
-
-                        for (int iEdgePoint = 0; iEdgePoint < numEdgePointsTotal; iEdgePoint++)
-                        {
-                            int edgePointIndex  = allIndices[iEdgePoint];
-                            int edgePointTag    = cannyEdgeVector[edgePointIndex];
-                            if (edgePointTag >= 2 && edgePointTag <= 6)
-                            {
-                                cannyEdgeVector[edgePointIndex] = 1;}
-                        }
 
                         edgeProperties mEdgeProperties;
                         mEdgeProperties.pointIndices = pathIndices;
 
                         vEdgePropertiesAll.push_back(mEdgeProperties);
+                    }
+
+                    // Remove tag from points that have been tagged before, but not included in final path
+
+                    for (int iEdgePoint = 0; iEdgePoint < numEdgePointsTotal; iEdgePoint++)
+                    {
+                        int edgePointIndex  = allIndices[iEdgePoint];
+                        int edgePointTag    = cannyEdgeVector[edgePointIndex];
+                        if (edgePointTag >= 2 && edgePointTag <= 6)
+                        { cannyEdgeVector[edgePointIndex] = 1; }
                     }
                 }
             }
