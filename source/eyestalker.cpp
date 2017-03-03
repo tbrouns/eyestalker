@@ -876,7 +876,11 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
                         edgePointsNew.push_back(neighbourIndex);
                         cannyEdgeVector[neighbourIndex] = 3;
                     }
-                    else if (neighbourTag == 4) { VERTEX_NEIGHBOUR = true; }
+                    else if (neighbourTag == 4)
+                    {
+                        vertexNeighbourIndex = neighbourIndex;
+                        VERTEX_NEIGHBOUR = true;
+                    }
                 }
             }
 
@@ -899,7 +903,7 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
                 }
             }
 
-            if (vertexType > 0 && !VERTEX_NEIGHBOUR)
+            if (vertexType > 0) // vertex found
             {
                 cannyEdgeVector[centreIndex] = 4;
 
@@ -907,7 +911,6 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
                 {
                     vertexProperties vertexNew;
                     vertexNew.pointIndices.push_back(centreIndex);
-                    vertexNew.connectedPoints = edgePointsAll;
                     vertexNew.tag             = vertexType;
                     verticesAll.push_back(vertexNew);
                     numVertices++;
@@ -944,11 +947,9 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
 
     std::vector<branchProperties> branchesAll;
 
-    int numVertices    = verticesAll.size();
-    int numVerticesNew = numVertices;
+    int numVertices = verticesAll.size();
 
     std::vector<std::vector<int>> vertexPointIndices(numVertices);
-
     for (int iVertex = 0; iVertex < numVertices; iVertex++)
     {
         vertexPointIndices[iVertex] = verticesAll[iVertex].pointIndices;
@@ -956,15 +957,41 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
 
     for (int iVertex = 0; iVertex < numVertices; iVertex++)
     {
-        std::vector<int> connectedPoints = verticesAll[iVertex].connectedPoints;
+        int numVertexPoints = verticesAll[iVertex].pointIndices.size();
+
+        std::vector<int> connectedPoints;
+
+        for (int iEdgePoint = 0; iEdgePoint < numVertexPoints; iEdgePoint++)
+        {
+            int centreIndex = verticesAll[iVertex].pointIndices[iEdgePoint];
+
+            int centreXPos = centreIndex % mAOI.wdth;
+            int centreYPos = (centreIndex - centreXPos) / mAOI.wdth;
+
+            for (int m = 0; m < 8; m++) // loop through 8-connected environment of the current edge point
+            {
+                int neighbourXPos = centreXPos + dX[m];
+                int neighbourYPos = centreYPos + dY[m];
+
+                if (neighbourXPos < 0 || neighbourXPos >= mAOI.wdth || neighbourYPos < 0 || neighbourYPos >= mAOI.hght) { continue; } // neighbour is out-of-bounds
+
+                int neighbourIndex = mAOI.wdth * neighbourYPos + neighbourXPos;
+
+                int neighbourTag = cannyEdgeVector[neighbourIndex];
+
+                if (neighbourTag == 3)
+                {
+                    cannyEdgeVector[neighbourIndex] = 5;
+                    connectedPoints.push_back(neighbourIndex);
+                }
+            }
+        }
+
         int numBranches = connectedPoints.size();
 
         for (int iBranch = 0; iBranch < numBranches; iBranch++)
         {
             int centreIndex = connectedPoints[iBranch];
-
-            int centreTag = cannyEdgeVector[centreIndex];
-            if (centreTag == 5) { continue; } // already checked
 
             // Create new branch, connect it with vertex and add first point
 
@@ -1027,28 +1054,30 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
                 vertexNew.pointIndices.push_back(branchNew.pointIndices.back());
                 branchNew.pointIndices.erase(branchNew.pointIndices.end() - 1);
                 vertexNew.tag = 1; // make it a vertex terminal
-                int jVertex = numVerticesNew;
+                vertexPointIndices.push_back(vertexNew.pointIndices);
+                int jVertex = numVertices; // add to end
                 branchNew.connectedVertices[1] = jVertex;
                 verticesAll.push_back(vertexNew);
                 verticesAll[iVertex].connectedVertices.push_back(jVertex);
                 verticesAll[jVertex].connectedVertices.push_back(iVertex);
-                numVerticesNew++;
+                numVertices++;
             }
 
             branchesAll.push_back(branchNew);
         }
     }
 
-    // Remove vertices if they aren't connected to any vertices
+    { // Remove vertices if they aren't connected to any vertices
+        std::vector<vertexProperties> verticesNew;
+        numVertices = verticesAll.size();
 
-    for (int iVertex = 0, n = 0; iVertex < numVerticesNew; iVertex++)
-    {
-        int numConnectedVertices = verticesAll[iVertex].connectedVertices.size();
-        if (numConnectedVertices == 0)
+        for (int iVertex = 0; iVertex < numVertices; iVertex++)
         {
-            verticesAll.erase(verticesAll.begin() + iVertex - n);
-            n++;
+            int numConnectedVertices = verticesAll[iVertex].connectedVertices.size();
+            if (numConnectedVertices > 0) { verticesNew.push_back(verticesAll[iVertex]); }
         }
+
+        verticesAll = verticesNew;
     }
 
     // Record branches each vertex is connected to
@@ -1063,16 +1092,17 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
         }
     }
 
-    // Remove vertices if they aren't connected to any branches
+    { // Remove vertices if they aren't connected to any branches
+        std::vector<vertexProperties> verticesNew;
+        numVertices = verticesAll.size();
 
-    for (int iVertex = 0, n = 0; iVertex < numVerticesNew; iVertex++)
-    {
-        int numConnectedBranches = verticesAll[iVertex].connectedBranches.size();
-        if (numConnectedBranches == 0)
+        for (int iVertex = 0; iVertex < numVertices; iVertex++)
         {
-            verticesAll.erase(verticesAll.begin() + iVertex - n);
-            n++;
+            int numConnectedBranches = verticesAll[iVertex].connectedBranches.size();
+            if (numConnectedBranches > 0) { verticesNew.push_back(verticesAll[iVertex]); }
         }
+
+        verticesAll = verticesNew;
     }
 
     return branchesAll;
