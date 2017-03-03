@@ -210,6 +210,7 @@ struct drawVariables
 
 struct vertexProperties
 {
+    int tag;
     int pointIndex;
     std::vector<int> connectedVertices;
     std::vector<int> connectedBranches;
