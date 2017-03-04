@@ -778,6 +778,7 @@ std::vector<int> findEdgePoints(const detectionParameters& mDetectionParameters,
 
     std::vector<int> edgePointsOld = {startIndex};
     std::vector<int> edgePointsAll;
+    std::vector<int> edgeTerminals;
 
     int centreIndex   = 0;
     int numEdgePoints = 0;
@@ -819,19 +820,32 @@ std::vector<int> findEdgePoints(const detectionParameters& mDetectionParameters,
 
             if (nConnections == 1) // start or end of edge
             {
-                int edgePointNew = connectEdges(mDetectionParameters, cannyEdgeVector, mAOI, centreIndex); // connect possible edge terminals
+                edgeTerminals.push_back(centreIndex);
+            }
+        }
 
-                if (centreIndex != edgePointNew)
+        numEdgePoints = edgePointsNew.size();
+
+        if (numEdgePoints == 0) // check terminals once all other points have been found
+        {
+            int numTerminals = edgeTerminals.size();
+            for (int iEdgePoint = 0; iEdgePoint < numTerminals; iEdgePoint++)
+            {
+                int terminalIndex = edgeTerminals[iEdgePoint];
+                int edgePointNew = connectEdges(mDetectionParameters, cannyEdgeVector, mAOI, terminalIndex); // connect possible edge terminals
+
+                if (terminalIndex != edgePointNew)
                 {
                     cannyEdgeVector[edgePointNew] = 2; // tag newly added point
                     edgePointsNew.push_back(edgePointNew);
                 }
             }
+
+            numEdgePoints = edgePointsNew.size();
         }
 
         edgePointsAll.insert(edgePointsAll.begin(), edgePointsNew.begin(), edgePointsNew.end());
         edgePointsOld = edgePointsNew;
-        numEdgePoints = edgePointsOld.size();
         edgePointsNew.clear();
 
     } while (numEdgePoints > 0);
@@ -1406,59 +1420,66 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
         std::vector<int> startIndicesRaw = findEdges(mDetectionVariables, mDetectionParameters, cannyEdgeVector, mAOI);
         numEdges = startIndicesRaw.size();
 
+        std::vector<std::vector<int>> vAllIndices(numEdges);
         for (int iEdge = 0; iEdge < numEdges; iEdge++)
         {
             int startIndex = startIndicesRaw[iEdge];
             if (cannyEdgeVector[startIndex] == 1)
             {
-                std::vector<int> allIndices = findEdgePoints(mDetectionParameters, cannyEdgeVector, mAOI, startIndex); // tag all edge points of found edges
-                int numEdgePointsTotal = allIndices.size();
-                if (numEdgePointsTotal > mDetectionParameters.windowLengthEdge)
+                vAllIndices[iEdge] = findEdgePoints(mDetectionParameters, cannyEdgeVector, mAOI, startIndex); // tag all edge points of found edges
+            }
+        }
+
+        for (int iEdge = 0; iEdge < numEdges; iEdge++)
+        {
+            std::vector<int> allIndices = vAllIndices[iEdge];
+            int numEdgePointsTotal = allIndices.size();
+            if (numEdgePointsTotal > mDetectionParameters.windowLengthEdge)
+            {
+                int startIndex = allIndices.back();
+
+                // Find all vertices and all connected branches (i.e. obtain graph tree)
+
+                std::vector<vertexProperties> vVertexProperties = findGraphVertices(cannyEdgeVector, mAOI, startIndex);
+                std::vector<branchProperties> vBranchProperties = findGraphBranches(vVertexProperties, cannyEdgeVector, mAOI);
+
+                // Find preferred path:
+                // Cyclic path that resembles pupil outline the most,
+                // otherwise take path closest to circumference prediction
+
+                int numBranches = vBranchProperties.size();
+                int numVertices = vVertexProperties.size();
+
+                if (numBranches > 0 && numVertices > 0)
                 {
-                    int startIndex = allIndices.back();
+                    std::vector<int> pathIndices = processGraphTree(mDetectionVariables, mDetectionParameters, vVertexProperties, vBranchProperties, mAOI);
 
-                    // Find all vertices and all connected branches (i.e. obtain graph tree)
+                    // Give points in optimal path a new tag
 
-                    std::vector<vertexProperties> vVertexProperties = findGraphVertices(cannyEdgeVector, mAOI, startIndex);
-                    std::vector<branchProperties> vBranchProperties = findGraphBranches(vVertexProperties, cannyEdgeVector, mAOI);
+                    for (int iEdgePoint = 0, edgeSize = pathIndices.size(); iEdgePoint < edgeSize; iEdgePoint++)
+                    { cannyEdgeVector[pathIndices[iEdgePoint]] = 7; }
 
-                    // Find preferred path:
-                    // Cyclic path that resembles pupil outline the most,
-                    // otherwise take path closest to circumference prediction
+                    edgeProperties mEdgeProperties;
+                    mEdgeProperties.pointIndices = pathIndices;
 
-                    int numBranches = vBranchProperties.size();
-                    int numVertices = vVertexProperties.size();
+                    vEdgePropertiesAll.push_back(mEdgeProperties);
+                }
 
-                    if (numBranches > 0 && numVertices > 0)
-                    {
-                        std::vector<int> pathIndices = processGraphTree(mDetectionVariables, mDetectionParameters, vVertexProperties, vBranchProperties, mAOI);
+                // Remove tag from points that have been tagged before, but not included in final path
 
-                        // Give points in optimal path a new tag
-
-                        for (int iEdgePoint = 0, edgeSize = pathIndices.size(); iEdgePoint < edgeSize; iEdgePoint++)
-                        { cannyEdgeVector[pathIndices[iEdgePoint]] = 7; }
-
-                        edgeProperties mEdgeProperties;
-                        mEdgeProperties.pointIndices = pathIndices;
-
-                        vEdgePropertiesAll.push_back(mEdgeProperties);
-                    }
-
-                    // Remove tag from points that have been tagged before, but not included in final path
-
-                    for (int iEdgePoint = 0; iEdgePoint < numEdgePointsTotal; iEdgePoint++)
-                    {
-                        int edgePointIndex  = allIndices[iEdgePoint];
-                        int edgePointTag    = cannyEdgeVector[edgePointIndex];
-                        if (edgePointTag >= 2 && edgePointTag <= 6)
-                        { cannyEdgeVector[edgePointIndex] = 1; }
-                    }
+                for (int iEdgePoint = 0; iEdgePoint < numEdgePointsTotal; iEdgePoint++)
+                {
+                    int edgePointIndex  = allIndices[iEdgePoint];
+                    int edgePointTag    = cannyEdgeVector[edgePointIndex];
+                    if (edgePointTag >= 2 && edgePointTag <= 6)
+                    { cannyEdgeVector[edgePointIndex] = 1; }
                 }
             }
         }
-    } while (numEdges > 1);
+    }
+} while (numEdges > 1);
 
-    return vEdgePropertiesAll;
+return vEdgePropertiesAll;
 }
 
 void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, double& curvatureUpperLimit, double& curvatureLowerLimit)
