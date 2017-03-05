@@ -974,7 +974,7 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
     return verticesAll;
 }
 
-std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& verticesAll, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
+std::vector<branchProperties> findGraphBranches(const detectionParameters& mDetectionParameters, std::vector<vertexProperties>& verticesAll, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
 {
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
@@ -1061,7 +1061,7 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
                         if (neighbourTag == 5) { jVertex = find2(vertexPointIndices, neighbourIndex); }
                         if (jVertex < numVertices)
                         {
-                            if (jVertex != iVertex || branchNew.pointIndices.size() > 5)
+                            if (jVertex != iVertex || branchNew.pointIndices.size() > mDetectionParameters.windowLengthEdge)
                             {
                                 branchNew.connectedVertices[1] = jVertex;
                                 FOUND_VERTEX = true;
@@ -1121,7 +1121,7 @@ std::vector<branchProperties> findGraphBranches(std::vector<vertexProperties>& v
     return branchesAll;
 }
 
-std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<branchProperties>& vBranchPropertiesAll, std::vector<int>& pathBranchesRoot, std::vector<int>& verticesChecked, std::vector<int>& branchesChecked, int vertexIndex)
+std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<branchProperties>& vBranchPropertiesAll, std::vector<int>& pathBranchesRoot, std::vector<int>& verticesCheckedAll, std::vector<int>& verticesChecked, std::vector<int>& branchesChecked, int vertexIndex)
 {
     // Depth-first search
     std::vector<std::vector<int>> pathBranchesAll;
@@ -1141,6 +1141,9 @@ std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vV
             std::vector<int> branchesCheckedNew = branchesChecked;
             branchesCheckedNew[branchIndexNew]  = 1;
 
+            std::vector<int> verticesCheckedNew = verticesChecked;
+            verticesCheckedNew[vertexIndex]     = 1;
+
             // Grab other vertex edge is attached to
 
             std::vector<int> connectedVertices = vBranchPropertiesAll[branchIndexNew].connectedVertices;
@@ -1151,10 +1154,14 @@ std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vV
 
             // Find all paths from next vertex
 
-            if (verticesChecked[vertexIndexNew] == 0)
+            if (verticesCheckedAll[vertexIndexNew] == 0) // don't add branch
             {
-                std::vector<std::vector<int>> pathBranchesNew = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRootNew, verticesChecked, branchesCheckedNew, vertexIndexNew);
-                if (pathBranchesNew.size() > 0) { pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew)); }
+                if (verticesCheckedNew[vertexIndexNew] == 0) // add branch but stop at vertex
+                {
+                    std::vector<std::vector<int>> pathBranchesNew = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRootNew, verticesCheckedAll, verticesCheckedNew, branchesCheckedNew, vertexIndexNew);
+                    if (pathBranchesNew.size() > 0) { pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew)); }
+                }
+
                 pathBranchesAll.push_back(pathBranchesRootNew); // always add root path
             }
         }
@@ -1218,16 +1225,44 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
     std::vector<std::vector<int>> pathsAll;
     std::vector<int> cyclicPaths;
 
-    std::vector<int> verticesChecked(numVerticesAll, 0);
+    std::vector<int> verticesCheckedAll(numVerticesAll, 0);
+
+    // Do terminal vertices first
+
+    std::vector<int> terminalVertices;
+    for (int iVertex = 0; iVertex < numVerticesAll; iVertex++)
+    { if (vVertexPropertiesAll[iVertex].tag == 1) { terminalVertices.push_back(iVertex); }}
+    int numTerminals = terminalVertices.size();
+
+    for (int iVertex = 0; iVertex < numTerminals; iVertex++) // loop through all (starting) vertices
+    {
+        int jVertex = terminalVertices[iVertex];
+        if (vVertexPropertiesAll[jVertex].connectedBranches.size() > 0) // ignore isolated nodes
+        {
+            std::vector<int> branchesChecked(numBranchesAll, 0); // no branches checked
+            std::vector<int> verticesChecked(numVerticesAll, 0); // no branches checked
+            std::vector<int> pathBranchesRoot; // start with no branches
+            std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, verticesCheckedAll, verticesChecked, branchesChecked, jVertex);
+            pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+        }
+
+        verticesCheckedAll[jVertex] = 1; // never end with a vertex terminal that we already started with (redundant)
+    }
+
+    // Then do branch vertices
 
     for (int iVertex = 0; iVertex < numVerticesAll; iVertex++) // loop through all (starting) vertices
     {
-        if (vVertexPropertiesAll[iVertex].connectedBranches.size() > 0) // ignore isolated nodes
+        if (verticesCheckedAll[iVertex] == 0)
         {
-            std::vector<int> branchesChecked(numBranchesAll, 0); // no branches checked
-            std::vector<int> pathBranchesRoot; // start with no branches
-            std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, verticesChecked, branchesChecked, iVertex);
-            pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+            if (vVertexPropertiesAll[iVertex].connectedBranches.size() > 0) // ignore isolated nodes
+            {
+                std::vector<int> branchesChecked(numBranchesAll, 0); // no branches checked
+                std::vector<int> verticesChecked(numVerticesAll, 0); // no branches checked
+                std::vector<int> pathBranchesRoot; // start with no branches
+                std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, verticesCheckedAll, verticesChecked, branchesChecked, iVertex);
+                pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+            }
 
             // Check for cyclic path
             if (vVertexPropertiesAll[iVertex].tag == 2) // only internal vertices can have cyclic path
@@ -1244,8 +1279,6 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
                 }
             }
         }
-
-        verticesChecked[iVertex] = 1; // never end with a vertex that we already started with (redundant)
     }
 
     // Find optimal path
@@ -1410,7 +1443,7 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
     return pathPoints;
 }
 
-std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
+std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVariables, const detectionVariables& mDetectionParameters, detectionParameters& mDetectionParameters, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
 {
     std::vector<edgeProperties> vEdgePropertiesAll; // new structure containing length and indices of all edges
     int numEdges = 0;
@@ -1441,7 +1474,7 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
                 // Find all vertices and all connected branches (i.e. obtain graph tree)
 
                 std::vector<vertexProperties> vVertexProperties = findGraphVertices(cannyEdgeVector, mAOI, startIndex);
-                std::vector<branchProperties> vBranchProperties = findGraphBranches(vVertexProperties, cannyEdgeVector, mAOI);
+                std::vector<branchProperties> vBranchProperties = findGraphBranches(mDetectionParameters, vVertexProperties, cannyEdgeVector, mAOI);
 
                 // Find preferred path:
                 // Cyclic path that resembles pupil outline the most,
@@ -1476,10 +1509,10 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
                 }
             }
         }
-    }
-} while (numEdges > 1);
 
-return vEdgePropertiesAll;
+    } while (numEdges > 1);
+
+    return vEdgePropertiesAll;
 }
 
 void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, double& curvatureUpperLimit, double& curvatureLowerLimit)
