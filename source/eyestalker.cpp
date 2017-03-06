@@ -1562,8 +1562,8 @@ void calculateCurvatureLimits(const detectionVariables& mDetectionVariables, con
         }
     }
 
-    curvatureUpperLimit = *std::max_element(std::begin(curvaturesMax), std::end(curvaturesMax)) + mDetectionParameters.curvatureOffset;
-    curvatureLowerLimit = *std::min_element(std::begin(curvaturesMin), std::end(curvaturesMin)) - mDetectionParameters.curvatureOffset;
+    curvatureUpperLimit = *std::max_element(std::begin(curvaturesMax), std::end(curvaturesMax)) + (M_PI * mDetectionParameters.curvatureOffset / 180);
+    curvatureLowerLimit = *std::min_element(std::begin(curvaturesMin), std::end(curvaturesMin)) - (M_PI * mDetectionParameters.curvatureOffset / 180);
 }
 
 std::vector<double> calculateCurvatures(const detectionParameters& mDetectionParameters, std::vector<double>& xNormals, std::vector<double>& yNormals, const std::vector<double>& xTangentsAll, const std::vector<double>& yTangentsAll)
@@ -1731,11 +1731,11 @@ void calculateCurvatureStats(const detectionParameters& mDetectionParameters, ed
 
         curvatureAvg = curvatureAvg / edgeSize;
     }
-    else
+    else // ignore curvature
     {
-        curvatureAvg = 360;
-        curvatureMax = 360;
-        curvatureMin = 360;
+        curvatureAvg = std::numeric_limits<double>::quiet_NaN();
+        curvatureMax = std::numeric_limits<double>::quiet_NaN();
+        curvatureMin = std::numeric_limits<double>::quiet_NaN();
     }
 
     mEdgeProperties.curvature    = curvatureAvg;
@@ -3144,7 +3144,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
                 gradients.push_back(mEdgeProperties.gradient);
                 numEdgePoints_1.push_back(mEdgeProperties.size);
 
-                if (mEdgeProperties.curvature < 180) // ignore short edges for which no curvature information is available
+                if (std::isfinite(mEdgeProperties.curvature)) // ignore edges for which no curvature information is available
                 {
                     numEdgePoints_2.push_back(mEdgeProperties.size);
                     curvatures.push_back(mEdgeProperties.curvature);
