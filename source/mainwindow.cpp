@@ -1337,8 +1337,6 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.thresholdChangePosition      = AOISize;
     mDetectionVariables.thresholdScore               = 0;
 
-    mDetectionVariables.offsetCircumference = mDetectionVariables.thresholdChangeCircumference;
-
     mDetectionVariables.certaintyFeatures      = 0;
     mDetectionVariables.certaintyPosition      = 0;
     mDetectionVariables.certaintyFeaturesPrime = 0;

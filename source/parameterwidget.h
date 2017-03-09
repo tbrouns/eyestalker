@@ -53,8 +53,6 @@ private:
     SliderDouble*CircumferenceMaxSlider;
     QLabel      *CircumferenceMinLabel;
     SliderDouble*CircumferenceMinSlider;
-    QLabel      *CircumferenceOffsetLabel;
-    SliderDouble*CircumferenceOffsetSlider;
     QLabel      *CurvatureOffsetLabel;
     SliderDouble*CurvatureOffsetSlider;
     QLabel      *FitEdgeFractionLabel;
@@ -104,7 +102,6 @@ private slots:
     void setGlintSize               (int);
     void setCircumferenceMin        (double);
     void setCircumferenceMax        (double);
-    void setCircumferenceOffset     (double);
     void setAspectRatioMin          (double);
     void setThresholdCircumference  (double);
     void setThresholdAspectRatio    (double);

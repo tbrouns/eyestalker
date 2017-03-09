@@ -30,16 +30,6 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CircumferenceMaxSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CircumferenceMaxSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumferenceMax(double)));
 
-    QLabel *CircumferenceOffsetTextBox = new QLabel;
-    CircumferenceOffsetTextBox->setText("<b>Circumference offset:</b>");
-
-    CircumferenceOffsetLabel  = new QLabel;
-    CircumferenceOffsetSlider = new SliderDouble;
-    CircumferenceOffsetSlider->setPrecision(2);
-    CircumferenceOffsetSlider->setDoubleRange(0, 0.5);
-    CircumferenceOffsetSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(CircumferenceOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCircumferenceOffset(double)));
-
     // Pupil aspect ratio
 
     QLabel *AspectRatioMinTextBox = new QLabel;
@@ -296,8 +286,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     MainLayout->addWidget(CircumferenceMaxTextBox,          1, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CircumferenceMinTextBox,          2, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CircumferenceOffsetTextBox,       3, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AspectRatioMinTextBox,            4, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AspectRatioMinTextBox,            3, 0, 1, 1, Qt::AlignRight);
 
     MainLayout->addWidget(CannyThresholdHighTextBox,        6, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(CannyThresholdLowTextBox,         7, 0, 1, 1, Qt::AlignRight);
@@ -330,8 +319,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     MainLayout->addWidget(CircumferenceMaxSlider,           1, 1);
     MainLayout->addWidget(CircumferenceMinSlider,           2, 1);
-    MainLayout->addWidget(CircumferenceOffsetSlider,        3, 1);
-    MainLayout->addWidget(AspectRatioMinSlider,             4, 1);
+    MainLayout->addWidget(AspectRatioMinSlider,             3, 1);
 
     MainLayout->addWidget(TitleCannyTextBox,                5, 1, 1, 1, Qt::AlignCenter);
 
@@ -370,8 +358,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     MainLayout->addWidget(CircumferenceMaxLabel,         1, 2);
     MainLayout->addWidget(CircumferenceMinLabel,         2, 2);
-    MainLayout->addWidget(CircumferenceOffsetLabel,      3, 2);
-    MainLayout->addWidget(AspectRatioMinLabel,           4, 2);
+    MainLayout->addWidget(AspectRatioMinLabel,           3, 2);
 
     MainLayout->addWidget(CannyThresholdHighLabel,       6, 2);
     MainLayout->addWidget(CannyThresholdLowLabel,        7, 2);
@@ -440,9 +427,6 @@ void ParameterWidget::reset()
 
     CircumferenceMinSlider->setDoubleValue(mDetectionParameters.circumferenceMin);
     CircumferenceMinLabel ->setText(QString::number(mDetectionParameters.circumferenceMin, 'f', 1));
-
-    CircumferenceOffsetSlider->setDoubleValue(mDetectionParameters.circumferenceOffset);
-    CircumferenceOffsetLabel ->setText(QString::number(mDetectionParameters.circumferenceOffset, 'f', 2));
 
     AspectRatioMinSlider->setDoubleValue(mDetectionParameters.aspectRatioMin);
     AspectRatioMinLabel ->setText(QString::number(mDetectionParameters.aspectRatioMin, 'f', 2));
@@ -539,12 +523,6 @@ void ParameterWidget::setCircumferenceMax(double value)
 
     mDetectionParameters.circumferenceMax = value;
     CircumferenceMaxLabel->setText(QString::number(mDetectionParameters.circumferenceMax, 'f', 1));
-}
-
-void ParameterWidget::setCircumferenceOffset(double value)
-{
-    mDetectionParameters.circumferenceOffset = value;
-    CircumferenceOffsetLabel->setText(QString::number(mDetectionParameters.circumferenceOffset, 'f', 2));
 }
 
 void ParameterWidget::setAspectRatioMin(double value)
