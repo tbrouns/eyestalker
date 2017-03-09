@@ -2115,9 +2115,6 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     // Detect pupil
 
-    int cameraAOIXPos;
-    int cameraAOIYPos;
-
     detectionVariables mDetectionVariablesEyeTemp;
     detectionVariables mDetectionVariablesBeadTemp;
 
@@ -2134,9 +2131,6 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
         mDetectionVariablesBeadTemp  = vDetectionVariablesBead[imageIndex];
         mDetectionParametersBeadTemp = mParameterWidgetBead->getStructure();
-
-        cameraAOIXPos = Parameters::cameraAOI.xPos;
-        cameraAOIYPos = Parameters::cameraAOI.yPos;
 
         Parameters::cameraAOI.wdth = imageRaw.cols;
         Parameters::cameraAOI.hght = imageRaw.rows;
@@ -2162,8 +2156,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     // Save data
 
     mDataVariables.duration     = fp_ms.count();
-    mDataVariables.absoluteXPos = mDataVariables.exactXPos + cameraAOIXPos;
-    mDataVariables.absoluteYPos = mDataVariables.exactYPos + cameraAOIYPos;
+    mDataVariables.absoluteXPos = mDataVariables.exactXPos;
+    mDataVariables.absoluteYPos = mDataVariables.exactYPos;
     vDataVariables[imageIndex]  = mDataVariables;
 
     cv::Mat imageProcessed = imageRaw.clone();
@@ -2174,8 +2168,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     if (mParameterWidgetBead->getState())
     {
         mDetectionVariablesBeadNew      = eyeStalker(imageRaw, AOIBeadTemp, mDetectionVariablesBeadTemp, mDetectionParametersBeadTemp, mDataVariablesBead, mDrawVariablesBead);
-        mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos + cameraAOIXPos;
-        mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos + cameraAOIYPos;
+        mDataVariablesBead.absoluteXPos = mDataVariablesBead.exactXPos;
+        mDataVariablesBead.absoluteYPos = mDataVariablesBead.exactYPos;
         vDataVariablesBead[imageIndex]  = mDataVariablesBead;
         drawAll(imageProcessed, mDrawVariablesBead);
     }
@@ -2512,20 +2506,21 @@ void MainWindow::loadSettings(QString filename)
                                                        600.0,   // Canny threshold high
                                                        8,       // Curvature offset
                                                        0.05,    // Ellipse edge fraction
-                                                       3,       // Ellipse fit number maximum
-                                                       0.60,    // Ellipse fit error maximum
+                                                       4,       // Maximum number of edges
+                                                       0.60,    // Maximum fit error
                                                        12,      // Glint size
-                                                       305,     // Circumference max
+                                                       290,     // Circumference max
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
                                                        0.35,    // Circumference offset
                                                        0.10,    // Circumference change threshold
-                                                       0.10,    // Aspect ratio change threshold
+                                                       0.09,    // Aspect ratio change threshold
                                                        12,      // Displacement change threshold
                                                        0.30,    // Score threshold
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
-                                                       7};      // Edge window length
+                                                       7,       // Edge window length
+                                                       6};      // Maximum number of fits
 
     static const std::vector<double> parametersBead = {0.005,   // Alpha average
                                                        0.40,    // Alpha features
@@ -2537,8 +2532,8 @@ void MainWindow::loadSettings(QString filename)
                                                        600.0,   // Canny threshold high
                                                        8,       // Curvature offset
                                                        0.05,    // Ellipse edge fraction
-                                                       3,       // Ellipse fit number maximum
-                                                       0.60,    // Ellipse fit error maximum
+                                                       4,       // Maximum number of edges
+                                                       0.60,    // Maximum fit error
                                                        0,       // Glint size
                                                        130,     // Circumference max
                                                        90,      // Circumference min
@@ -2550,7 +2545,8 @@ void MainWindow::loadSettings(QString filename)
                                                        0.30,    // Score threshold
                                                        0.60,    // Score difference threshold
                                                        0.10,    // Score difference threshold fit
-                                                       7};      // Edge window length
+                                                       7,       // Edge window length
+                                                       6};      // Maximum number of fits
 
     QSettings settings(filename, QSettings::IniFormat);
 
@@ -2634,6 +2630,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.thresholdScoreDiffEdge             = settings.value(prefix + "ScoreThresholdDiffEdge",          parameters[21]).toDouble();
     mDetectionParameters.thresholdScoreDiffFit              = settings.value(prefix + "ScoreThresholdDiffFit",           parameters[22]).toDouble();
     mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",                parameters[23]).toDouble();
+    mDetectionParameters.fitMaximum                         = settings.value(prefix + "FitMaximum",                      parameters[24]).toDouble();
 
     return mDetectionParameters;
 }
@@ -2642,36 +2639,36 @@ void MainWindow::saveSettings(QString filename)
 {
     QSettings settings(filename, QSettings::IniFormat);
 
-    settings.setValue("AOIHghtFraction",                eyeAOIHghtFraction);
-    settings.setValue("AOIWdthFraction",                eyeAOIWdthFraction);
-    settings.setValue("AOIXPosRelative",                Parameters::eyeAOIXPosFraction);
-    settings.setValue("AOIYPosRelative",                Parameters::eyeAOIYPosFraction);
-    settings.setValue("AOIBeadHghtFraction",            beadAOIHghtFraction);
-    settings.setValue("AOIBeadWdthFraction",            beadAOIWdthFraction);
-    settings.setValue("AOIBeadXPosRelative",            Parameters::beadAOIXPosFraction);
-    settings.setValue("AOIBeadYPosRelative",            Parameters::beadAOIYPosFraction);
-    settings.setValue("DataDirectory",                  QString::fromStdString(dataDirectory));
-    settings.setValue("DataDirectoryOffline",           dataDirectoryOffline);
-    settings.setValue("GainAuto",                       CameraHardwareGainAutoCheckBox ->checkState());
-    settings.setValue("GainBoost",                      CameraHardwareGainBoostCheckBox->checkState());
-    settings.setValue("CamAOIHghtFraction",             cameraAOIFractionHght);
-    settings.setValue("CamAOIWdthFraction",             cameraAOIFractionWdth);
-    settings.setValue("CamAOIXPosFraction",             cameraAOIFractionXPos);
-    settings.setValue("CamAOIYPosFraction",             cameraAOIFractionYPos);
-    settings.setValue("CameraFrameRateDesired",         cameraFrameRateDesired);
-    settings.setValue("DataFilename",                   QString::fromStdString(dataFilename));
-    settings.setValue("FlashAOIHght",                   flashAOI.hght);
-    settings.setValue("FlashAOIWdth",                   flashAOI.wdth);
-    settings.setValue("FlashAOIXPos",                   flashAOI.xPos);
-    settings.setValue("FlashAOIYPos",                   flashAOI.yPos);
-    settings.setValue("FlashThreshold",                 flashThreshold);
-    settings.setValue("SaveAspectRatio",                SAVE_ASPECT_RATIO);
-    settings.setValue("SaveCircumference",              SAVE_CIRCUMFERENCE);
-    settings.setValue("SavePosition",                   SAVE_POSITION);
-    settings.setValue("SaveEyeImage",                   SAVE_EYE_IMAGE);
-    settings.setValue("SubjectName",                    subjectIdentifier);
-    settings.setValue("SubSamplingFactor",              cameraSubSamplingFactor);
-    settings.setValue("TrialTimeLength",                TrialTimeLengthLineEdit->text().toInt());
+    settings.setValue("AOIHghtFraction",        eyeAOIHghtFraction);
+    settings.setValue("AOIWdthFraction",        eyeAOIWdthFraction);
+    settings.setValue("AOIXPosRelative",        Parameters::eyeAOIXPosFraction);
+    settings.setValue("AOIYPosRelative",        Parameters::eyeAOIYPosFraction);
+    settings.setValue("AOIBeadHghtFraction",    beadAOIHghtFraction);
+    settings.setValue("AOIBeadWdthFraction",    beadAOIWdthFraction);
+    settings.setValue("AOIBeadXPosRelative",    Parameters::beadAOIXPosFraction);
+    settings.setValue("AOIBeadYPosRelative",    Parameters::beadAOIYPosFraction);
+    settings.setValue("DataDirectory",          QString::fromStdString(dataDirectory));
+    settings.setValue("DataDirectoryOffline",   dataDirectoryOffline);
+    settings.setValue("GainAuto",               CameraHardwareGainAutoCheckBox ->checkState());
+    settings.setValue("GainBoost",              CameraHardwareGainBoostCheckBox->checkState());
+    settings.setValue("CamAOIHghtFraction",     cameraAOIFractionHght);
+    settings.setValue("CamAOIWdthFraction",     cameraAOIFractionWdth);
+    settings.setValue("CamAOIXPosFraction",     cameraAOIFractionXPos);
+    settings.setValue("CamAOIYPosFraction",     cameraAOIFractionYPos);
+    settings.setValue("CameraFrameRateDesired", cameraFrameRateDesired);
+    settings.setValue("DataFilename",           QString::fromStdString(dataFilename));
+    settings.setValue("FlashAOIHght",           flashAOI.hght);
+    settings.setValue("FlashAOIWdth",           flashAOI.wdth);
+    settings.setValue("FlashAOIXPos",           flashAOI.xPos);
+    settings.setValue("FlashAOIYPos",           flashAOI.yPos);
+    settings.setValue("FlashThreshold",         flashThreshold);
+    settings.setValue("SaveAspectRatio",        SAVE_ASPECT_RATIO);
+    settings.setValue("SaveCircumference",      SAVE_CIRCUMFERENCE);
+    settings.setValue("SavePosition",           SAVE_POSITION);
+    settings.setValue("SaveEyeImage",           SAVE_EYE_IMAGE);
+    settings.setValue("SubjectName",            subjectIdentifier);
+    settings.setValue("SubSamplingFactor",      cameraSubSamplingFactor);
+    settings.setValue("TrialTimeLength",        TrialTimeLengthLineEdit->text().toInt());
 
     detectionParameters mDetectionParametersEye  = mParameterWidgetEye->getStructure();
     saveParameters(filename,  "Eye", mDetectionParametersEye);
@@ -2697,6 +2694,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.circumferenceMin);
     settings.setValue(prefix + "CurvatureOffset",                mDetectionParameters.curvatureOffset);
     settings.setValue(prefix + "FitEdgeMaximum",                 mDetectionParameters.fitEdgeMaximum);
+    settings.setValue(prefix + "FitMaximum",                     mDetectionParameters.fitMaximum);
     settings.setValue(prefix + "ThresholdFitError",              mDetectionParameters.thresholdFitError);
     settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
     settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);

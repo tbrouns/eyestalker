@@ -268,6 +268,15 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     FitEdgeMaximumSlider->setOrientation(Qt::Horizontal);
     QObject::connect(FitEdgeMaximumSlider, SIGNAL(valueChanged(int)), this, SLOT(setFitEdgeMaximum(int)));
 
+    QLabel *FitMaximumTextBox = new QLabel;
+    FitMaximumTextBox->setText("<b>Maximum number of fits:</b>");
+
+    FitMaximumLabel  = new QLabel;
+    FitMaximumSlider = new QSlider;
+    FitMaximumSlider->setRange(1, 10);
+    FitMaximumSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(FitMaximumSlider, SIGNAL(valueChanged(int)), this, SLOT(setFitMaximum(int)));
+
     QLabel *TitleLimitTextBox  = new QLabel;
     QLabel *TitleCannyTextBox  = new QLabel;
     QLabel *TitleLearnTextBox  = new QLabel;
@@ -313,6 +322,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(WindowLengthEdgeTextBox,          28, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(FitEdgeFractionTextBox,           29, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(FitEdgeMaximumTextBox,            30, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitMaximumTextBox,                31, 0, 1, 1, Qt::AlignRight);
 
     // Sliders and titles
 
@@ -354,6 +364,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(WindowLengthEdgeSlider,          28, 1);
     MainLayout->addWidget(FitEdgeFractionSlider,           29, 1);
     MainLayout->addWidget(FitEdgeMaximumSlider,            30, 1);
+    MainLayout->addWidget(FitMaximumSlider,                31, 1);
 
     // Value labels
 
@@ -385,6 +396,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(WindowLengthEdgeLabel,         28, 2);
     MainLayout->addWidget(FitEdgeFractionLabel,          29, 2);
     MainLayout->addWidget(FitEdgeMaximumLabel,           30, 2);
+    MainLayout->addWidget(FitMaximumLabel,               31, 2);
 
     MainLayout->setColumnStretch(0,1);
     MainLayout->setColumnStretch(1,3);
@@ -503,6 +515,8 @@ void ParameterWidget::reset()
     FitEdgeMaximumSlider->setValue(mDetectionParameters.fitEdgeMaximum);
     FitEdgeMaximumLabel ->setText(QString::number(mDetectionParameters.fitEdgeMaximum));
 
+    FitMaximumSlider->setValue(mDetectionParameters.fitMaximum);
+    FitMaximumLabel ->setText(QString::number(mDetectionParameters.fitMaximum));
 }
 
 void ParameterWidget::setCircumferenceMin(double value)
@@ -664,6 +678,12 @@ void ParameterWidget::setFitEdgeMaximum(int value)
 {
     mDetectionParameters.fitEdgeMaximum = value;
     FitEdgeMaximumLabel->setText(QString::number(value));
+}
+
+void ParameterWidget::setFitMaximum(int value)
+{
+    mDetectionParameters.fitMaximum = value;
+    FitMaximumLabel->setText(QString::number(value));
 }
 
 void ParameterWidget::setThresholdFitError(double value)

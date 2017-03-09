@@ -56,6 +56,7 @@ struct edgeProperties
     int index;
     int size;
     int tag;
+    std::vector<int> edgeIndices;
     std::vector<int> pointIndices;
     std::vector<int> gradients;
     std::vector<int> intensities;
@@ -118,6 +119,7 @@ struct detectionParameters
     double thresholdScoreDiffEdge;
     double thresholdScoreDiffFit;
 
+    int    fitMaximum;
     int    fitEdgeMaximum;
     double fitEdgeFraction;
 

@@ -61,6 +61,8 @@ private:
     SliderDouble*FitEdgeFractionSlider;
     QLabel      *FitEdgeMaximumLabel;
     QSlider     *FitEdgeMaximumSlider;
+    QLabel      *FitMaximumLabel;
+    QSlider     *FitMaximumSlider;
     QLabel      *GlintSizeLabel;
     QSlider     *GlintSizeSlider;
     QLabel      *ThresholdAspectRatioLabel;
@@ -97,6 +99,7 @@ private slots:
     void setCurvatureOffset         (double);
     void setFitEdgeFraction         (double);
     void setFitEdgeMaximum          (int);
+    void setFitMaximum              (int);
     void setThresholdFitError       (double);
     void setGlintSize               (int);
     void setCircumferenceMin        (double);

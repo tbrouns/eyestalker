@@ -31,9 +31,10 @@ const double initialIntensity   =  60;
 
 // Other
 
-const double fitEdgeFractionMin = 0.30;
-
-const double aspectRatioSlope = 175;
+const double fitMinRange      = 0.40;
+const double fitMinEdgeLength = 0.30;
+const double scoreStepSize    = 0.20;
+const double aspectRatioSlope = 154;
 
 // Functions
 
