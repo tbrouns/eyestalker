@@ -95,20 +95,20 @@ inline double gaussian(double x, double sigma)
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& featureValues, bool USE_LENGTH, bool USE_CERTAINTY)
 {   
-    static const double weightCircumference = 0.24;
-    static const double weightIntensity     = 0.66;
-    static const double weightCurvature     = 0.42;
-    static const double weightRadius        = 0.65;
-    static const double weightRadiusVar     = 0.21;
-    static const double weightGradient      = 0.24;
-    static const double weightBeta          = 0.49;
+    static const double weightCircumference = 0.2443;
+    static const double weightIntensity     = 0.6628;
+    static const double weightCurvature     = 0.4192;
+    static const double weightRadius        = 0.6536;
+    static const double weightRadiusVar     = 0.2102;
+    static const double weightGradient      = 0.2419;
+    static const double weightBeta          = 0.4874;
     
-    static const double sigmaRadius        = 0.0655810;
-    static const double sigmaCircumference = 0.7269800;
-    static const double sigmaCurvature     = 3.4627000;
-    static const double sigmaIntensity     = 11.532900;
-    static const double sigmaGradient      = 5.3539000;
-    static const double sigmaRadiusVar     = 0.0039498;
+    static const double sigmaRadius        = 0.058444;
+    static const double sigmaCircumference = 0.63221;
+    static const double sigmaCurvature     = 0.0656;
+    static const double sigmaIntensity     = 10.8613;
+    static const double sigmaGradient      = 5.3169;
+    static const double sigmaRadiusVar     = 0.0058784;
     
     for (int i = 0, vSize = featureValues.size(); i < vSize; i++) // check for NaNs or Infs
     {
@@ -2591,18 +2591,18 @@ std::vector<ellipseProperties> ellipseFitting(const detectionVariables& mDetecti
 
 std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<ellipseProperties> vEllipseProperties)
 {
-    static const double weightAspectRatio   = 0.815;
-    static const double weightCircumference = 0.415;
-    static const double weightLength        = 1.325;
-    static const double weightError         = 0.239;
-    static const double weightAngle         = 1.014;
-    static const double weightAngleFactor   = 0.787;
+    static const double weightAspectRatio   = 0.4353;
+    static const double weightCircumference = 0.3444;
+    static const double weightLength        = 0.8980;
+    static const double weightError         = 0.6121;
+    static const double weightAngle         = 0.7163;
+    static const double weightAngleFactor   = 0.7052;
 
-    static const double parametersAspectRatio   = 0.70922;
-    static const double parametersCircumference = 0.74258;
-    static const double parametersLength        = 0.32519;
-    static const double parametersError         = 0.28342;
-    static const double parametersAngle         = 0.31997;
+    static const double parametersAspectRatio   = 0.012187;
+    static const double parametersCircumference = 0.0067802;
+    static const double parametersLength        = 0.26383;
+    static const double parametersError         = 0.35359;
+    static const double parametersAngle         = 0.065955;
     
     int numFits = vEllipseProperties.size();
     
