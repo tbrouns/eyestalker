@@ -31,7 +31,7 @@ const double initialIntensity   =  60;
 
 // Other
 
-const double fitMinRange      = 0.40;
+const double fitMinRange      = 0.00;
 const double fitMinEdgeLength = 0.30;
 const double scoreStepSize    = 0.20;
 const double aspectRatioSlope = 154;

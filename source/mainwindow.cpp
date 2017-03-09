@@ -2502,7 +2502,7 @@ void MainWindow::loadSettings(QString filename)
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       8,       // Curvature offset
+                                                       3,       // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        4,       // Maximum number of edges
                                                        0.60,    // Maximum fit error

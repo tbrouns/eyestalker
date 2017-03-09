@@ -54,7 +54,6 @@ struct edgeProperties
     double radiusVar;
     double length;
     int index;
-    int size;
     int tag;
     std::vector<int> edgeIndices;
     std::vector<int> pointIndices;
