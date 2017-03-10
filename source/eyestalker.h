@@ -57,13 +57,12 @@ detectionVariables eyeStalker(const cv::Mat&,
 
 double flashDetection(const cv::Mat&);
 
-bool findPreferredPath(int& acceptedPath,
-                       const std::vector<branchProperties>& vBranchProperties,
-                       const std::vector<std::vector<int>>& pathsAll,
-                       const double& prediction,
-                       const double& lowerLimit = 0,
-                       const double& upperLimit = 0,
-                       const bool& CYCLIC = false);
+std::vector<int> findPreferredPath(const std::vector<arcProperties>& vArcProperties,
+                                   const std::vector<std::vector<int>>& pathsAll,
+                                   const double& prediction,
+                                   const double& lowerLimit = 0,
+                                   const double& upperLimit = 0,
+                                   const bool& CYCLIC = false);
 
 double getCurvatureUpperLimit(double, double, int);
 double getCurvatureLowerLimit(double, double, int);

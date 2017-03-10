@@ -41,6 +41,7 @@ const double aspectRatioSlope = 154;
 const double certaintyAsymptoteX = 0.50;
 const double certaintyAsymptoteY = 0.99;
 
+const double certaintyReduction = 0.90;
 const double certaintyOffset    = 0.10;
 const double certaintyThreshold = 0.75;
 const double certaintyLatency   = 10.0; // turn into adjustable parameter.

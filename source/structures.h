@@ -79,7 +79,7 @@ struct ellipseProperties
     double yPos;
     double width;
     double height;
-    int edgeLength;
+    double edgeLength;
     int tag = 0;
     std::vector<double> coefficients;
     std::vector<int> edgeIndices;
@@ -212,11 +212,11 @@ struct vertexProperties
 {
     int tag;
     std::vector<int> pointIndices;
-    std::vector<int> connectedBranches;
+    std::vector<int> connectedArcs;
     std::vector<int> connectedPoints;
 };
 
-struct branchProperties
+struct arcProperties
 {
     std::vector<int> pointIndices;
     std::vector<int> connectedVertices;

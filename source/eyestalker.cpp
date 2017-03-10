@@ -622,14 +622,14 @@ void calculateEdgeDirections(const std::vector<int>& edgeIndices, std::vector<do
     dZ[6] =  mAOI.wdth;
     dZ[7] =  mAOI.wdth - 1;
     
-    int edgeLength = edgeIndices.size();
+    int edgeSize = edgeIndices.size();
     
     // Calculate directions of edge points
     
     std::vector<double> xOrientation = { -1.0, -sqrt(0.5),  0.0,  sqrt(0.5), 1.0, sqrt(0.5), 0.0, -sqrt(0.5)};
     std::vector<double> yOrientation = {  0.0, -sqrt(0.5), -1.0, -sqrt(0.5), 0.0, sqrt(0.5), 1.0,  sqrt(0.5)};
     
-    for (int iEdgePoint = 0; iEdgePoint < edgeLength - 1; iEdgePoint++)
+    for (int iEdgePoint = 0; iEdgePoint < edgeSize - 1; iEdgePoint++)
     {
         int centreIndex    = edgeIndices[iEdgePoint];
         int neighbourIndex = edgeIndices[iEdgePoint + 1];
@@ -649,8 +649,8 @@ void calculateEdgeDirections(const std::vector<int>& edgeIndices, std::vector<do
     
     // add last indices and give them directions of second-to-last
     
-    edgeXTangents[edgeLength - 1] = edgeXTangents[edgeLength - 2];
-    edgeYTangents[edgeLength - 1] = edgeYTangents[edgeLength - 2];
+    edgeXTangents[edgeSize - 1] = edgeXTangents[edgeSize - 2];
+    edgeYTangents[edgeSize - 1] = edgeYTangents[edgeSize - 2];
 }
 
 inline int calculateDirection(double x, double y)
@@ -792,6 +792,40 @@ int connectEdges(const detectionParameters& mDetectionParameters, std::vector<in
     }
     
     return startIndex;
+}
+
+double calculateEdgeLength(const std::vector<int>& edgePoints, const AOIProperties& mAOI)
+{
+    int numEdgePoints = edgePoints.size();
+    double length   = 0;
+
+    if (numEdgePoints > 0)
+    {
+        int centreIndex = edgePoints[0];
+        int centreXPos  = centreIndex % mAOI.wdth;
+        int centreYPos  = (centreIndex - centreXPos) / mAOI.wdth;
+
+        for (int iEdgePoint = 0; iEdgePoint < numEdgePoints - 1; iEdgePoint++)
+        {
+            int neighbourIndex = edgePoints[iEdgePoint + 1];
+            int neighbourXPos  = neighbourIndex % mAOI.wdth;
+            int neighbourYPos  = (neighbourIndex - neighbourXPos) / mAOI.wdth;
+
+            double dX = std::abs(centreXPos - neighbourXPos);
+            double dY = std::abs(centreYPos - neighbourYPos);
+
+            double dR = 0;
+            if (dX == 0 || dY == 0) { dR = 1; }
+            else                    { dR = 1.414213562; }
+            length += dR;
+
+            centreIndex = neighbourIndex;
+            centreXPos  = neighbourXPos;
+            centreYPos  = neighbourYPos;
+        }
+    }
+
+    return length;
 }
 
 std::vector<int> findEdgePoints(const detectionParameters& mDetectionParameters, std::vector<int>& cannyEdgeVector, AOIProperties mAOI, int startIndex)
@@ -999,12 +1033,12 @@ std::vector<vertexProperties> findGraphVertices(std::vector<int>& cannyEdgeVecto
     return verticesAll;
 }
 
-std::vector<branchProperties> findGraphBranches(const detectionParameters& mDetectionParameters, std::vector<vertexProperties>& verticesAll, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
+std::vector<arcProperties> findGraphArcs(const detectionParameters& mDetectionParameters, std::vector<vertexProperties>& verticesAll, std::vector<int>& cannyEdgeVector, AOIProperties mAOI)
 {
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
     
-    std::vector<branchProperties> branchesAll;
+    std::vector<arcProperties> arcsAll;
     
     int numVertices = verticesAll.size();
     std::vector<std::vector<int>> vertexPointIndices(numVertices);
@@ -1013,7 +1047,7 @@ std::vector<branchProperties> findGraphBranches(const detectionParameters& mDete
     
     for (int iVertex = 0; iVertex < numVertices; iVertex++)
     {
-        // Find all branches that are connected to vertex
+        // Find all arcs that are connected to vertex
         int numVertexPoints = verticesAll[iVertex].pointIndices.size();
         std::vector<int> connectedPoints;
         for (int iEdgePoint = 0; iEdgePoint < numVertexPoints; iEdgePoint++)
@@ -1037,20 +1071,20 @@ std::vector<branchProperties> findGraphBranches(const detectionParameters& mDete
             }
         }
         
-        // Run through all connected branches
-        int numBranches = connectedPoints.size();
-        for (int iBranch = 0; iBranch < numBranches; iBranch++)
+        // Run through all connected arcs
+        int numArcs = connectedPoints.size();
+        for (int iArc = 0; iArc < numArcs; iArc++)
         {
-            int centreIndex = connectedPoints[iBranch];
+            int centreIndex = connectedPoints[iArc];
             int vertexNeighbourIndex;
             
-            // Create new branch, connect it with vertex and add first point
-            branchProperties branchNew;
-            branchNew.connectedVertices.resize(2); // each branch is connected to two vertices
-            branchNew.connectedVertices[0] = iVertex;
-            branchNew.pointIndices.push_back(centreIndex);
+            // Create new arc, connect it with vertex and add first point
+            arcProperties arcNew;
+            arcNew.connectedVertices.resize(2); // each arc is connected to two vertices
+            arcNew.connectedVertices[0] = iVertex;
+            arcNew.pointIndices.push_back(centreIndex);
             
-            // Scan through branch until new vertex is found
+            // Scan through arc until new vertex is found
             bool FOUND_VERTEX = false;
             bool FOUND_POINT  = true;
             
@@ -1073,10 +1107,10 @@ std::vector<branchProperties> findGraphBranches(const detectionParameters& mDete
                     
                     int neighbourTag = cannyEdgeVector[neighbourIndex];
                     
-                    if (neighbourTag == 3) // branch continues
+                    if (neighbourTag == 3) // arc continues
                     {
-                        branchNew.pointIndices.push_back(neighbourIndex);
-                        cannyEdgeVector[neighbourIndex] = 4; // new tag so that branch is not recorded again
+                        arcNew.pointIndices.push_back(neighbourIndex);
+                        cannyEdgeVector[neighbourIndex] = 4; // new tag so that arc is not recorded again
                         centreIndex = neighbourIndex;
                         FOUND_POINT = true;
                     }
@@ -1086,10 +1120,10 @@ std::vector<branchProperties> findGraphBranches(const detectionParameters& mDete
                         if (neighbourTag == 5) { jVertex = find2(vertexPointIndices, neighbourIndex); }
                         if (jVertex < numVertices)
                         {
-                            int branchLength = branchNew.pointIndices.size();
-                            if (jVertex != iVertex || branchLength > mDetectionParameters.windowLengthEdge)
+                            int arcLength = arcNew.pointIndices.size();
+                            if (jVertex != iVertex || arcLength > mDetectionParameters.windowLengthEdge)
                             {
-                                branchNew.connectedVertices[1] = jVertex;
+                                arcNew.connectedVertices[1] = jVertex;
                                 FOUND_VERTEX = true;
                                 FOUND_POINT  = true;
                                 continue;
@@ -1106,7 +1140,7 @@ std::vector<branchProperties> findGraphBranches(const detectionParameters& mDete
                 {
                     verticesAll[vertexNeighbourIndex].pointIndices.push_back(centreIndex);
                     vertexPointIndices[vertexNeighbourIndex].push_back(centreIndex);
-                    branchNew.connectedVertices[1] = vertexNeighbourIndex;
+                    arcNew.connectedVertices[1] = vertexNeighbourIndex;
                 }
                 else // create new vertex terminal
                 {
@@ -1115,64 +1149,64 @@ std::vector<branchProperties> findGraphBranches(const detectionParameters& mDete
                     vertexNew.tag = 1;
                     vertexPointIndices.push_back(vertexNew.pointIndices);
                     int jVertex = numVertices; // add to end
-                    branchNew.connectedVertices[1] = jVertex;
+                    arcNew.connectedVertices[1] = jVertex;
                     verticesAll.push_back(vertexNew);
                     numVertices++;
                 }
                 
-                branchNew.pointIndices.erase(branchNew.pointIndices.end() - 1);
+                arcNew.pointIndices.erase(arcNew.pointIndices.end() - 1);
                 cannyEdgeVector[centreIndex] = 5;
             }
             
-            branchesAll.push_back(branchNew);
+            arcsAll.push_back(arcNew);
         }
         
-        for (int iEdgePoint = 0; iEdgePoint < numBranches; iEdgePoint++)
+        for (int iEdgePoint = 0; iEdgePoint < numArcs; iEdgePoint++)
         { cannyEdgeVector[connectedPoints[iEdgePoint]] = 5; } // give normal tag now
     }
     
-    // Record branches each vertex is connected to
+    // Record arcs each vertex is connected to
     
-    for (int iBranch = 0, numBranches = branchesAll.size(); iBranch < numBranches; iBranch++)
+    for (int iArc = 0, numArcs = arcsAll.size(); iArc < numArcs; iArc++)
     {
         for (int iVertex = 0, vertexIndexOld = -1; iVertex < 2; iVertex++)
         {
-            int vertexIndexNew = branchesAll[iBranch].connectedVertices[iVertex];
+            int vertexIndexNew = arcsAll[iArc].connectedVertices[iVertex];
             if (vertexIndexOld != vertexIndexNew && vertexIndexNew < numVertices)
-            { verticesAll[vertexIndexNew].connectedBranches.push_back(iBranch); }
+            { verticesAll[vertexIndexNew].connectedArcs.push_back(iArc); }
             vertexIndexOld = vertexIndexNew;
         }
     }
     
-    return branchesAll;
+    return arcsAll;
 }
 
-std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<branchProperties>& vBranchPropertiesAll, std::vector<int>& pathBranchesRoot, std::vector<int>& verticesCheckedAll, std::vector<int>& verticesChecked, std::vector<int>& branchesChecked, int vertexIndex)
+std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<arcProperties>& vArcPropertiesAll, std::vector<int>& pathArcsRoot, std::vector<int>& verticesCheckedAll, std::vector<int>& verticesChecked, std::vector<int>& arcsChecked, int vertexIndex)
 {
     // Depth-first search
-    std::vector<std::vector<int>> pathBranchesAll;
+    std::vector<std::vector<int>> pathArcsAll;
     
     vertexProperties mVertex = vVertexPropertiesAll[vertexIndex];
-    int numBranches = mVertex.connectedBranches.size();
+    int numArcs = mVertex.connectedArcs.size();
     
-    for (int iBranch = 0; iBranch < numBranches; iBranch++)
+    for (int iArc = 0; iArc < numArcs; iArc++)
     {
-        int branchIndexNew = mVertex.connectedBranches[iBranch];
+        int arcIndexNew = mVertex.connectedArcs[iArc];
         
-        if (branchesChecked[branchIndexNew] == 0)
+        if (arcsChecked[arcIndexNew] == 0)
         {
-            std::vector<int> pathBranchesRootNew = pathBranchesRoot;
-            pathBranchesRootNew.push_back(branchIndexNew);
+            std::vector<int> pathArcsRootNew = pathArcsRoot;
+            pathArcsRootNew.push_back(arcIndexNew);
             
-            std::vector<int> branchesCheckedNew = branchesChecked;
-            branchesCheckedNew[branchIndexNew]  = 1;
+            std::vector<int> arcsCheckedNew = arcsChecked;
+            arcsCheckedNew[arcIndexNew]  = 1;
             
             std::vector<int> verticesCheckedNew = verticesChecked;
             verticesCheckedNew[vertexIndex]     = 1;
             
             // Grab other vertex edge is attached to
             
-            std::vector<int> connectedVertices = vBranchPropertiesAll[branchIndexNew].connectedVertices;
+            std::vector<int> connectedVertices = vArcPropertiesAll[arcIndexNew].connectedVertices;
             
             int vertexIndexNew;
             if (connectedVertices[0] == vertexIndex) { vertexIndexNew = connectedVertices[1]; }
@@ -1180,41 +1214,43 @@ std::vector<std::vector<int>> depthFirstSearch(std::vector<vertexProperties>& vV
             
             // Find all paths from next vertex
             
-            if (verticesCheckedAll[vertexIndexNew] == 0) // don't add branch
+            if (verticesCheckedAll[vertexIndexNew] == 0) // don't add arc
             {
-                if (verticesCheckedNew[vertexIndexNew] == 0) // add branch but stop at vertex
+                if (verticesCheckedNew[vertexIndexNew] == 0) // add arc but stop at vertex
                 {
-                    std::vector<std::vector<int>> pathBranchesNew = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRootNew, verticesCheckedAll, verticesCheckedNew, branchesCheckedNew, vertexIndexNew);
-                    if (pathBranchesNew.size() > 0) { pathBranchesAll.insert(std::end(pathBranchesAll), std::begin(pathBranchesNew), std::end(pathBranchesNew)); }
+                    std::vector<std::vector<int>> pathArcsNew = depthFirstSearch(vVertexPropertiesAll, vArcPropertiesAll, pathArcsRootNew, verticesCheckedAll, verticesCheckedNew, arcsCheckedNew, vertexIndexNew);
+                    if (pathArcsNew.size() > 0) { pathArcsAll.insert(std::end(pathArcsAll), std::begin(pathArcsNew), std::end(pathArcsNew)); }
                 }
                 
-                pathBranchesAll.push_back(pathBranchesRootNew); // always add root path
+                pathArcsAll.push_back(pathArcsRootNew); // always add root path
             }
         }
     }
     
-    return pathBranchesAll;
+    return pathArcsAll;
 }
 
-bool findPreferredPath(int& acceptedPathIndex, const std::vector<branchProperties>& vBranchProperties, const std::vector<std::vector<int>>& pathsAll, const double& prediction, const double& lowerLimit, const double& upperLimit, const bool& CYCLIC)
+std::vector<int> findPreferredPath(const std::vector<arcProperties>& vArcProperties, const std::vector<std::vector<int>>& pathsAll, const double& prediction, const double& lowerLimit, const double& upperLimit, const bool& CYCLIC)
 {
     int numPaths = pathsAll.size();
-    std::vector<int> pathLengths(numPaths);
-    
+    std::vector<int> pathLengths;
+    std::vector<std::vector<int>> pathAccepted;
+
     for (int iPath = 0; iPath < numPaths; iPath++)
     {
         int lengthTotal = 0;
         std::vector<int> pathCurrent = pathsAll[iPath];
-        int numPathBranches = pathCurrent.size();
+        int numPathArcs = pathCurrent.size();
         
-        for (int iBranch = 0; iBranch < numPathBranches; iBranch++)
+        for (int iArc = 0; iArc < numPathArcs; iArc++)
         {
-            lengthTotal += vBranchProperties[pathCurrent[iBranch]].length;
+            lengthTotal += vArcProperties[pathCurrent[iArc]].length;
         }
         
         if (!CYCLIC || (lengthTotal > lowerLimit && lengthTotal < upperLimit))
         {
-            pathLengths[iPath] = lengthTotal;
+            pathAccepted.push_back(pathCurrent);
+            pathLengths.push_back(lengthTotal);
         }
     }
     
@@ -1222,7 +1258,7 @@ bool findPreferredPath(int& acceptedPathIndex, const std::vector<branchPropertie
     
     if (pathLengths.size() > 0)
     {
-        acceptedPathIndex = 0;
+        int acceptedPathIndex = 0;
         
         if (numPathsNew > 1) // If multiple paths, choose closest to prediction
         {
@@ -1236,14 +1272,14 @@ bool findPreferredPath(int& acceptedPathIndex, const std::vector<branchPropertie
             acceptedPathIndex = std::distance(lengthError.begin(), std::min_element(lengthError.begin(), lengthError.end()));
         }
         
-        return true;
+        return pathAccepted[acceptedPathIndex];
     }
-    else { return false; }
+    else { return pathLengths; } // return empty vector
 }
 
-std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<branchProperties>& vBranchPropertiesAll, const AOIProperties& mAOI)
+std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<vertexProperties>& vVertexPropertiesAll, std::vector<arcProperties>& vArcPropertiesAll, const AOIProperties& mAOI)
 {
-    int numBranchesAll = vBranchPropertiesAll.size();
+    int numArcsAll = vArcPropertiesAll.size();
     int numVerticesAll = vVertexPropertiesAll.size();
     
     // Perform depth-first search for each vertex
@@ -1263,48 +1299,48 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
     for (int iVertex = 0; iVertex < numTerminals; iVertex++) // loop through all (starting) vertices
     {
         int jVertex = terminalVertices[iVertex];
-        if (vVertexPropertiesAll[jVertex].connectedBranches.size() > 0) // ignore isolated nodes
+        if (vVertexPropertiesAll[jVertex].connectedArcs.size() > 0) // ignore isolated nodes
         {
-            std::vector<int> branchesChecked(numBranchesAll, 0); // no branches checked
-            std::vector<int> verticesChecked(numVerticesAll, 0); // no branches checked
-            std::vector<int> pathBranchesRoot; // start with no branches
-            std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, verticesCheckedAll, verticesChecked, branchesChecked, jVertex);
-            pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+            std::vector<int> arcsChecked(numArcsAll, 0); // no arcs checked
+            std::vector<int> verticesChecked(numVerticesAll, 0); // no arcs checked
+            std::vector<int> pathArcsRoot; // start with no arcs
+            std::vector<std::vector<int>> pathArcsAll = depthFirstSearch(vVertexPropertiesAll, vArcPropertiesAll, pathArcsRoot, verticesCheckedAll, verticesChecked, arcsChecked, jVertex);
+            pathsAll.insert(std::end(pathsAll), std::begin(pathArcsAll), std::end(pathArcsAll));
         }
         
         verticesCheckedAll[jVertex] = 1; // never end with a vertex terminal that we already started with (redundant)
     }
     
-    // Then do branch vertices
+    // Then do arc vertices
     
     for (int iVertex = 0; iVertex < numVerticesAll; iVertex++) // loop through all (starting) vertices
     {
         if (verticesCheckedAll[iVertex] == 0)
         {
-            if (vVertexPropertiesAll[iVertex].connectedBranches.size() > 0) // ignore isolated nodes
+            if (vVertexPropertiesAll[iVertex].connectedArcs.size() > 0) // ignore isolated nodes
             {
-                std::vector<int> branchesChecked(numBranchesAll, 0); // no branches checked
-                std::vector<int> verticesChecked(numVerticesAll, 0); // no branches checked
-                std::vector<int> pathBranchesRoot; // start with no branches
-                std::vector<std::vector<int>> pathBranchesAll = depthFirstSearch(vVertexPropertiesAll, vBranchPropertiesAll, pathBranchesRoot, verticesCheckedAll, verticesChecked, branchesChecked, iVertex);
+                std::vector<int> arcsChecked(numArcsAll, 0); // no arcs checked
+                std::vector<int> verticesChecked(numVerticesAll, 0); // no arcs checked
+                std::vector<int> pathArcsRoot; // start with no arcs
+                std::vector<std::vector<int>> pathArcsAll = depthFirstSearch(vVertexPropertiesAll, vArcPropertiesAll, pathArcsRoot, verticesCheckedAll, verticesChecked, arcsChecked, iVertex);
 
                 // Check for cyclic path
                 if (vVertexPropertiesAll[iVertex].tag == 2) // only internal vertices can have cyclic path
                 {
-                    int numPaths = pathBranchesAll.size();
+                    int numPaths = pathArcsAll.size();
                     if (numPaths > 1)
                     {
                         int numPathsTotal = pathsAll.size();
                         for (int iPath = 0; iPath < numPaths; iPath++)
                         {
-                            std::vector<int> connectedBranches = vVertexPropertiesAll[iVertex].connectedBranches; // all branches vertex connects
-                            std::vector<int>::iterator itr = find(connectedBranches.begin(), connectedBranches.end(), pathBranchesAll[iPath].back()); // check if last added branch connects to starting vertex
-                            if (itr != connectedBranches.end()) { cyclicPaths.push_back(iPath + numPathsTotal); }
+                            std::vector<int> connectedArcs = vVertexPropertiesAll[iVertex].connectedArcs; // all arcs vertex connects
+                            std::vector<int>::iterator itr = find(connectedArcs.begin(), connectedArcs.end(), pathArcsAll[iPath].back()); // check if last added arc connects to starting vertex
+                            if (itr != connectedArcs.end()) { cyclicPaths.push_back(iPath + numPathsTotal); }
                         }
                     }
                 }
 
-                pathsAll.insert(std::end(pathsAll), std::begin(pathBranchesAll), std::end(pathBranchesAll));
+                pathsAll.insert(std::end(pathsAll), std::begin(pathArcsAll), std::end(pathArcsAll));
             }
         }
     }
@@ -1313,14 +1349,14 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
     
     double circumferencePrediction = mDetectionVariables.predictedCircumference;
     
-    // Get length of each branch
+    // Get length of each arc
     
-    for (int iBranch = 0; iBranch < numBranchesAll; iBranch++)
+    for (int iArc = 0; iArc < numArcsAll; iArc++)
     {
-        vBranchPropertiesAll[iBranch].length = vBranchPropertiesAll[iBranch].pointIndices.size();
+        vArcPropertiesAll[iArc].length = calculateEdgeLength(vArcPropertiesAll[iArc].pointIndices, mAOI);
     }
     
-    std::vector<int> pathBranchIndices;
+    std::vector<int> pathArcIndices;
     
     // First consider cyclic paths
     
@@ -1336,69 +1372,64 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
         
         std::vector<std::vector<int>> cyclicPathsAll(numCyclicPaths);
         for (int iPath = 0; iPath < numCyclicPaths; iPath++) { cyclicPathsAll[iPath] = pathsAll[cyclicPaths[iPath]]; }
-        
-        int acceptedPathIndex;
-        if (findPreferredPath(acceptedPathIndex, vBranchPropertiesAll, cyclicPathsAll, circumferencePrediction, circumferenceLowerLimit, circumferenceUpperLimit, true))
-        { pathBranchIndices = cyclicPathsAll[acceptedPathIndex]; }
+        pathArcIndices = findPreferredPath(vArcPropertiesAll, cyclicPathsAll, circumferencePrediction, circumferenceLowerLimit, circumferenceUpperLimit, true);
     }
     
-    int numBranchesPath = pathBranchIndices.size();
+    int numArcsPath = pathArcIndices.size();
     
     // If no cyclic path found, then take path closest to prediction length
     
-    if (numBranchesPath == 0)
+    if (numArcsPath == 0)
     {
-        int acceptedPathIndex;
-        findPreferredPath(acceptedPathIndex, vBranchPropertiesAll, pathsAll, circumferencePrediction);
-        pathBranchIndices = pathsAll[acceptedPathIndex];
-        numBranchesPath   = pathBranchIndices.size();
+        pathArcIndices = findPreferredPath(vArcPropertiesAll, pathsAll, circumferencePrediction);
+        numArcsPath    = pathArcIndices.size();
     }
     
-    // Grab branches for path
+    // Grab arcs for path
     
-    std::vector<branchProperties> vBranchPropertiesPath(numBranchesPath);
+    std::vector<arcProperties> vArcPropertiesPath(numArcsPath);
     
-    for (int iBranch = 0; iBranch < numBranchesPath; iBranch++)
+    for (int iArc = 0; iArc < numArcsPath; iArc++)
     {
-        vBranchPropertiesPath[iBranch] = vBranchPropertiesAll[pathBranchIndices[iBranch]];
+        vArcPropertiesPath[iArc] = vArcPropertiesAll[pathArcIndices[iArc]];
     }
     
     // Add vertices to path, and
-    // reverse branches that are not properly aligned
+    // reverse arcs that are not properly aligned
     
-    if (numBranchesPath > 1)
+    if (numArcsPath > 1)
     {
-        for (int iBranch = 0; iBranch < numBranchesPath - 1; iBranch++)
+        for (int iArc = 0; iArc < numArcsPath - 1; iArc++)
         {
-            branchProperties mBranchProperties_1 = vBranchPropertiesPath[iBranch];
-            branchProperties mBranchProperties_2 = vBranchPropertiesPath[iBranch + 1];
+            arcProperties mArcProperties_1 = vArcPropertiesPath[iArc];
+            arcProperties mArcProperties_2 = vArcPropertiesPath[iArc + 1];
             
             for (int iVertex = 0; iVertex < 2; iVertex++)
             {
-                int vertex_1 = mBranchProperties_1.connectedVertices[iVertex];
+                int vertex_1 = mArcProperties_1.connectedVertices[iVertex];
                 
                 for (int jVertex = 0; jVertex < 2; jVertex++)
                 {
-                    int vertex_2 = mBranchProperties_2.connectedVertices[jVertex];
-                    if (vertex_1 == vertex_2) // last vertex of current branch should be equal to first vertex of next branch
+                    int vertex_2 = mArcProperties_2.connectedVertices[jVertex];
+                    if (vertex_1 == vertex_2) // last vertex of current arc should be equal to first vertex of next arc
                     {
-                        if (iVertex == 0) { std::reverse(vBranchPropertiesPath[iBranch].pointIndices.begin(), vBranchPropertiesPath[iBranch].pointIndices.end()); }
-                        vBranchPropertiesPath[iBranch].pointIndices.insert(vBranchPropertiesPath[iBranch].pointIndices.begin(),
+                        if (iVertex == 0) { std::reverse(vArcPropertiesPath[iArc].pointIndices.begin(), vArcPropertiesPath[iArc].pointIndices.end()); }
+                        vArcPropertiesPath[iArc].pointIndices.insert(vArcPropertiesPath[iArc].pointIndices.begin(),
                                                                            vVertexPropertiesAll[vertex_1].pointIndices.begin(),
                                                                            vVertexPropertiesAll[vertex_1].pointIndices.end());
                         
-                        if (iBranch == 0)
+                        if (iArc == 0)
                         {
-                            int vertexIndex = mBranchProperties_1.connectedVertices[(iVertex + 1) % 2];
-                            vBranchPropertiesPath[iBranch].pointIndices.insert(vBranchPropertiesPath[iBranch].pointIndices.begin(),
+                            int vertexIndex = mArcProperties_1.connectedVertices[(iVertex + 1) % 2];
+                            vArcPropertiesPath[iArc].pointIndices.insert(vArcPropertiesPath[iArc].pointIndices.begin(),
                                                                                vVertexPropertiesAll[vertexIndex].pointIndices.begin(),
                                                                                vVertexPropertiesAll[vertexIndex].pointIndices.end());
                         }
                         
-                        if (iBranch == numBranchesPath - 2)
+                        if (iArc == numArcsPath - 2)
                         {
-                            int vertexIndex = mBranchProperties_2.connectedVertices[(jVertex + 1) % 2];
-                            vBranchPropertiesPath[iBranch + 1].pointIndices.insert(vBranchPropertiesPath[iBranch + 1].pointIndices.end(),
+                            int vertexIndex = mArcProperties_2.connectedVertices[(jVertex + 1) % 2];
+                            vArcPropertiesPath[iArc + 1].pointIndices.insert(vArcPropertiesPath[iArc + 1].pointIndices.end(),
                                     vVertexPropertiesAll[vertexIndex].pointIndices.begin(),
                                     vVertexPropertiesAll[vertexIndex].pointIndices.end());
                         }
@@ -1413,18 +1444,18 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
     {
         std::vector<int> dZ = {-1, -mAOI.wdth - 1, -mAOI.wdth, -mAOI.wdth + 1, 1, mAOI.wdth + 1,mAOI.wdth, mAOI.wdth - 1};
         
-        branchProperties mBranchPropertiesPath = vBranchPropertiesPath[0];
-        int numBranchPoints = mBranchPropertiesPath.pointIndices.size();
+        arcProperties mArcPropertiesPath = vArcPropertiesPath[0];
+        int numArcPoints = mArcPropertiesPath.pointIndices.size();
         
-        int vertex_1 = mBranchPropertiesPath.connectedVertices[0];
-        int vertex_2 = mBranchPropertiesPath.connectedVertices[1];
+        int vertex_1 = mArcPropertiesPath.connectedVertices[0];
+        int vertex_2 = mArcPropertiesPath.connectedVertices[1];
         std::vector<int> vertexPoints_1  = vVertexPropertiesAll[vertex_1].pointIndices;
         std::vector<int> vertexPoints_2  = vVertexPropertiesAll[vertex_2].pointIndices;
         
-        if (numBranchPoints > 0)
+        if (numArcPoints > 0)
         {
             std::vector<int> vertexPointsBegin, vertexPointsEnd;
-            int pointIndex = mBranchPropertiesPath.pointIndices[0];
+            int pointIndex = mArcPropertiesPath.pointIndices[0];
             for (int m = 0; m < 8; m++)
             {
                 int neighbourIndex = pointIndex + dZ[m];
@@ -1446,26 +1477,26 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
                 }
             }
             
-            mBranchPropertiesPath.pointIndices.insert(mBranchPropertiesPath.pointIndices.begin(), vertexPointsBegin.begin(), vertexPointsBegin.end());
-            mBranchPropertiesPath.pointIndices.insert(mBranchPropertiesPath.pointIndices.end(),   vertexPointsEnd.begin(),   vertexPointsEnd.end());
+            mArcPropertiesPath.pointIndices.insert(mArcPropertiesPath.pointIndices.begin(), vertexPointsBegin.begin(), vertexPointsBegin.end());
+            mArcPropertiesPath.pointIndices.insert(mArcPropertiesPath.pointIndices.end(),   vertexPointsEnd.begin(),   vertexPointsEnd.end());
         }
         else
         {
-            mBranchPropertiesPath.pointIndices.insert(mBranchPropertiesPath.pointIndices.begin(), vertexPoints_1.begin(), vertexPoints_1.end());
-            mBranchPropertiesPath.pointIndices.insert(mBranchPropertiesPath.pointIndices.end(),   vertexPoints_2.begin(), vertexPoints_2.end());
+            mArcPropertiesPath.pointIndices.insert(mArcPropertiesPath.pointIndices.begin(), vertexPoints_1.begin(), vertexPoints_1.end());
+            mArcPropertiesPath.pointIndices.insert(mArcPropertiesPath.pointIndices.end(),   vertexPoints_2.begin(), vertexPoints_2.end());
         }
         
-        vBranchPropertiesPath[0] = mBranchPropertiesPath; // update
+        vArcPropertiesPath[0] = mArcPropertiesPath; // update
     }
     
     // All path points
     
     std::vector<int> pathPoints;
     
-    for (int iBranch = 0; iBranch < numBranchesPath; iBranch++)
+    for (int iArc = 0; iArc < numArcsPath; iArc++)
     {
-        branchProperties mBranchProperties = vBranchPropertiesPath[iBranch];
-        pathPoints.insert(std::end(pathPoints), std::begin(mBranchProperties.pointIndices), std::end(mBranchProperties.pointIndices));
+        arcProperties mArcProperties = vArcPropertiesPath[iArc];
+        pathPoints.insert(std::end(pathPoints), std::begin(mArcProperties.pointIndices), std::end(mArcProperties.pointIndices));
     }
     
     return pathPoints;
@@ -1503,29 +1534,29 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
             {
                 int startIndex = allIndices.back();
                 
-                // Find all vertices and all connected branches (i.e. obtain graph tree)
+                // Find all vertices and all connected arcs (i.e. obtain graph tree)
                 
                 std::vector<vertexProperties> vVertexProperties = findGraphVertices(cannyEdgeVector, mAOI, startIndex);
-                std::vector<branchProperties> vBranchProperties = findGraphBranches(mDetectionParameters, vVertexProperties, cannyEdgeVector, mAOI);
+                std::vector<arcProperties> vArcProperties = findGraphArcs(mDetectionParameters, vVertexProperties, cannyEdgeVector, mAOI);
                 
                 // Find preferred path:
                 // Cyclic path that resembles pupil outline the most,
                 // otherwise take path closest to circumference prediction
                 
-                int numBranches = vBranchProperties.size();
+                int numArcs = vArcProperties.size();
                 int numVertices = vVertexProperties.size();
                 
                 std::vector<int> pathIndices;
 
-                if (numBranches > 0 && numVertices > 0)
+                if (numArcs > 0 && numVertices > 0)
                 {
-                    pathIndices = processGraphTree(mDetectionVariables, mDetectionParameters, vVertexProperties, vBranchProperties, mAOI);
+                    pathIndices = processGraphTree(mDetectionVariables, mDetectionParameters, vVertexProperties, vArcProperties, mAOI);
 
                     edgeProperties mEdgeProperties;
                     mEdgeProperties.pointIndices = pathIndices;
                     vEdgePropertiesAll.push_back(mEdgeProperties);
                 }
-                else if (numBranches == 0 && numVertices == 1)
+                else if (numArcs == 0 && numVertices == 1)
                 {
                     pathIndices = vVertexProperties[0].pointIndices;
                 }
@@ -1544,7 +1575,6 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
                     if (edgePointTag >= 2 && edgePointTag <= 6)
                     { cannyEdgeVector[edgePointIndex] = 1; }
                 }
-
             }
         }
     } while (numEdges > 1);
@@ -1758,40 +1788,6 @@ void calculateCurvatureStats(const detectionParameters& mDetectionParameters, ed
     mEdgeProperties.curvature    = curvatureAvg;
     mEdgeProperties.curvatureMax = curvatureMax;
     mEdgeProperties.curvatureMin = curvatureMin;
-}
-
-double calculateEdgeLength(const std::vector<int>& edgePoints, const AOIProperties& mAOI)
-{
-    int numEdgePoints = edgePoints.size();
-    double length   = 0;
-
-    if (numEdgePoints > 0)
-    {
-        int centreIndex = edgePoints[0];
-        int centreXPos  = centreIndex % mAOI.wdth;
-        int centreYPos  = (centreIndex - centreXPos) / mAOI.wdth;
-
-        for (int iEdgePoint = 0; iEdgePoint < numEdgePoints - 1; iEdgePoint++)
-        {
-            int neighbourIndex = edgePoints[iEdgePoint + 1];
-            int neighbourXPos  = neighbourIndex % mAOI.wdth;
-            int neighbourYPos  = (neighbourIndex - neighbourXPos) / mAOI.wdth;
-
-            double dX = std::abs(centreXPos - neighbourXPos);
-            double dY = std::abs(centreYPos - neighbourYPos);
-
-            double dR = 0;
-            if (dX == 0 || dY == 0) { dR = 1; }
-            else                    { dR = 1.414213562; }
-            length += dR;
-
-            centreIndex = neighbourIndex;
-            centreXPos  = neighbourXPos;
-            centreYPos  = neighbourYPos;
-        }
-    }
-
-    return length;
 }
 
 std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const edgeProperties& mEdgeProperties, const AOIProperties& mAOI)
@@ -2667,10 +2663,10 @@ std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables,
     {
         ellipseProperties mEllipseProperties = vEllipseProperties[iFit];
         
-        double errorAspectRatio   = std::abs(mEllipseProperties.aspectRatio - mDetectionVariables.predictedAspectRatio);
-        double errorAngle         = std::abs(mEllipseProperties.angle       - mDetectionVariables.predictedAngle);
-        double ratioCircumference = mEllipseProperties.circumference / mDetectionVariables.predictedCircumference;
-        double ratioLength        = mEllipseProperties.edgeLength    / mDetectionVariables.predictedCircumference;
+        double errorAspectRatio   = std::abs(mEllipseProperties.aspectRatio   - mDetectionVariables.predictedAspectRatio);
+        double errorAngle         = std::abs(mEllipseProperties.angle         - mDetectionVariables.predictedAngle);
+        double ratioCircumference = std::abs(mEllipseProperties.circumference - mDetectionVariables.predictedCircumference) / std::max(mEllipseProperties.circumference, mDetectionVariables.predictedCircumference);
+        double ratioLength        = std::abs(mEllipseProperties.edgeLength    - mDetectionVariables.predictedCircumference) / std::max(mEllipseProperties.edgeLength,    mDetectionVariables.predictedCircumference);
         double fitError           = mEllipseProperties.fitError;
         
         double factorAngleFunction = 1 - weightAngleFactor * mEllipseProperties.aspectRatio;
@@ -2833,20 +2829,36 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     
     if (mAdvancedOptions.CURVATURE_MEASUREMENT) { setCurvatureMeasurement(mDetectionParameters, imageWdth); }
 
+    detectionVariables mDetectionVariablesTemp = mDetectionVariables; // store variables
+
+    // Use average predictions when certainty is low
+
+    if (mDetectionVariables.certaintyAverages > mDetectionVariables.certaintyFeatures + certaintyOffset)
+    {
+        mDetectionVariables.certaintyFeatures      = certaintyReduction * mDetectionVariables.certaintyAverages;
+        mDetectionVariables.predictedAspectRatio   = mDetectionVariables.averageAspectRatio;
+        mDetectionVariables.predictedCircumference = mDetectionVariables.averageCircumference;
+        mDetectionVariables.predictedCurvature     = mDetectionVariables.averageCurvature;
+        mDetectionVariables.predictedGradient      = mDetectionVariables.averageGradient;
+        mDetectionVariables.predictedIntensity     = mDetectionVariables.averageIntensity;
+        mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
+        mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
+    }
+
     // Define search area
     
     double AOIOffset = mDetectionVariables.thresholdChangePosition + (mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference) / (2 * M_PI);
     
     AOIProperties searchAOI;
-    //    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset - 0.5 * mDetectionVariables.predictedWidth);  // needs to be uncommented
-    //    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
-    //    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset + 0.5 * mDetectionVariables.predictedWidth);
-    //    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
+    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset - 0.5 * mDetectionVariables.predictedWidth);
+    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
+    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset + 0.5 * mDetectionVariables.predictedWidth);
+    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
     
     searchAOI.xPos = 0; // needs to be removed
     searchAOI.yPos = 0;
-    int searchEndX = imageWdth;
-    int searchEndY = imageHght;
+    searchEndX = imageWdth;
+    searchEndY = imageHght;
     
     if (searchAOI.xPos < imageAOI.xPos)
     {   searchAOI.xPos = imageAOI.xPos; }
@@ -2915,7 +2927,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
         glintAOIResized.xPos = searchAOIResized.xPos + glintAOIResized.xPos;
         glintAOIResized.yPos = searchAOIResized.yPos + glintAOIResized.yPos;
         
-        mDataVariables.intensityInner.resize    (imgWdthResized * imgHghtResized);
+        mDataVariables.intensityInner.resize    (imgWdthResized * imgHghtResized); // needs to be removed
         mDataVariables.intensityOuterLeft.resize(imgWdthResized * imgHghtResized);
         mDataVariables.intensityOuterRght.resize(imgWdthResized * imgHghtResized);
         
@@ -3298,6 +3310,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     /////////////////////// SAVING DATA  ////////////////////////////
     /////////////////////////////////////////////////////////////////
     
+    mDetectionVariables = mDetectionVariablesTemp;
     detectionVariables mDetectionVariablesNew = mDetectionVariables; // properties for next frame
     
     mDataVariables.edgeData    = vEdgePropertiesAll;     // edge data
@@ -3311,7 +3324,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR, const AOIProperti
     
     int AOISize;
     if (imageAOI.wdth > imageAOI.hght) { AOISize = imageAOI.wdth; }
-    else                       { AOISize = imageAOI.hght; }
+    else                               { AOISize = imageAOI.hght; }
     
     double maxChangeThresholdAspectRatio   = 1.0 - mDetectionParameters.aspectRatioMin;
     double maxChangeThresholdCircumference = std::abs(mDetectionParameters.circumferenceMax - mDetectionParameters.circumferenceMin) / mDetectionParameters.circumferenceMax;

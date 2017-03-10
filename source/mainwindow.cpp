@@ -1966,16 +1966,8 @@ void MainWindow::onSetTrialOffline(int index)
             vDetectionVariablesEye.resize(imageTotalOffline + 1);
             vDetectionVariablesBead.resize(imageTotalOffline + 1);
 
-            if (index == 0)
-            {
-                resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-                resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
-            }
-            else
-            {
-                resetVariablesSoft(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-                resetVariablesSoft(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
-            }
+            resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+            resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
 
             vDetectionVariablesEye[0]  = mDetectionVariablesEye;
             vDetectionVariablesBead[0] = mDetectionVariablesBead;
@@ -2272,12 +2264,11 @@ void MainWindow::onDetectAllTrials()
 
         for (int iTrial = trialIndexOffline; iTrial < trialTotalOffline && PROCESSING_ALL_TRIALS; iTrial++)
         {
-            if (iTrial < 5)  { continue; }
-            if (iTrial > 15) { break; } // needs to be removed
+            if (iTrial < 5)  { continue; } // needs to be removed
+            if (iTrial > 24) { break; }
 
             OfflineTrialSlider->setValue(iTrial);
             onDetectAllFrames();
-
         }
     }
 
@@ -2335,6 +2326,9 @@ void MainWindow::onSaveTrialData()
         file << imageTotalOffline << ";";  // data samples
         if (timeMatrix.size() > 0) { file << (int) timeMatrix[trialIndexOffline][1] << ";"; } // system clock time
 
+        file << (int) Parameters::cameraAOI.wdth << ";";  // needs to be removed
+        file << (int) Parameters::cameraAOI.hght << ";";  // needs to be removed
+
         file << std::fixed;
         file << std::setprecision(3);
 
@@ -2377,6 +2371,28 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAngle         << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
+        }
+
+        file.close();
+    }
+
+    {
+        std::stringstream filename;
+        filename << dataDirectoryOffline.toStdString()
+                 << "/images/trial_"
+                 << trialIndexOffline
+                 << "/haar_data.dat";
+
+        std::ofstream file;
+        file.open(filename.str());
+
+        for (int i = 0; i < imageTotalOffline; i++)
+        {
+            int numPixels = vDataVariables[i].intensityInner.size();
+            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterLeft[j] << delimiter; }
+            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityInner    [j] << delimiter; }
+            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterRght[j] << delimiter; }
+            file << "\n";
         }
 
         file.close();
