@@ -1290,7 +1290,7 @@ void MainWindow::resetVariablesHard(detectionVariables& mDetectionVariables, con
     // Reset all variables
 
     mDetectionVariables.averageAspectRatio   = initialAspectRatio; // close to perfect circle
-    mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.circumferenceMax + mDetectionParameters.circumferenceMin); // calculate first
+    mDetectionVariables.averageCircumference = 0.5 * (mDetectionParameters.thresholdCircumferenceMax + mDetectionParameters.thresholdCircumferenceMin); // calculate first
     mDetectionVariables.averageCurvature     = initialCurvature;
     mDetectionVariables.averageGradient      = 0;
     mDetectionVariables.averageHeight        = mDetectionVariables.averageCircumference / M_PI;
@@ -1315,8 +1315,8 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
     mDetectionVariables.predictedIntensity     = mDetectionVariables.averageIntensity;
     mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
-    mDetectionVariables.predictedXPos          = 0.5 * mAOI.wdth; // centre of image
-    mDetectionVariables.predictedYPos          = 0.5 * mAOI.hght;
+    mDetectionVariables.predictedXPos          = 0.5 * (mAOI.wdth - 1); // centre of image
+    mDetectionVariables.predictedYPos          = 0.5 * (mAOI.hght - 1);
 
     mDetectionVariables.momentumAspectRatio   = 0;
     mDetectionVariables.momentumCircumference = 0;
@@ -1332,10 +1332,12 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
     else                       { AOISize = mAOI.hght; }
 
-    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 - mDetectionParameters.aspectRatioMin;
-    mDetectionVariables.thresholdChangeCircumference = std::abs(mDetectionParameters.circumferenceMax - mDetectionParameters.circumferenceMin) / mDetectionParameters.circumferenceMax;;
+    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 - mDetectionParameters.thresholdAspectRatioMin;
+    mDetectionVariables.thresholdChangeCircumference = std::abs(mDetectionParameters.thresholdCircumferenceMax - mDetectionParameters.thresholdCircumferenceMin) / mDetectionParameters.thresholdCircumferenceMax;
     mDetectionVariables.thresholdChangePosition      = AOISize;
-    mDetectionVariables.thresholdScore               = 0;
+
+    mDetectionVariables.thresholdScoreEdge = 0;
+    mDetectionVariables.thresholdScoreFit  = 0;
 
     mDetectionVariables.certaintyFeatures      = 0;
     mDetectionVariables.certaintyPosition      = 0;
@@ -2125,6 +2127,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         Parameters::cameraAOI.wdth = imageRaw.cols;
         Parameters::cameraAOI.hght = imageRaw.rows;
 
+        if (mAdvancedOptions.CURVATURE_MEASUREMENT) { setCurvatureMeasurement(mDetectionParametersEyeTemp, imageRaw.cols); }
+
         updateEyeAOIx();
         updateEyeAOIy();
 
@@ -2527,10 +2531,11 @@ void MainWindow::loadSettings(QString filename)
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
                                                        0.35,    // Circumference offset
-                                                       0.10,    // Circumference change threshold
-                                                       0.09,    // Aspect ratio change threshold
-                                                       12,      // Displacement change threshold
-                                                       0.30,    // Score threshold
+                                                       0.11,    // Circumference change threshold
+                                                       0.10,    // Aspect ratio  change threshold
+                                                       6,       // Displacement  change threshold
+                                                       0.41,    // Score threshold edge
+                                                       0.24,    // Score threshold edge
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length
@@ -2544,7 +2549,7 @@ void MainWindow::loadSettings(QString filename)
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       8,       // Curvature offset
+                                                       3,       // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        4,       // Maximum number of edges
                                                        0.60,    // Maximum fit error
@@ -2555,9 +2560,10 @@ void MainWindow::loadSettings(QString filename)
                                                        0.10,    // Circumference offset
                                                        0.05,    // Circumference change threshold
                                                        0.05,    // Aspect ratio change threshold
-                                                       10,      // Displacement change threshold
-                                                       0.30,    // Score threshold
-                                                       0.60,    // Score difference threshold
+                                                       4,       // Displacement change threshold
+                                                       0.41,    // Score threshold edge
+                                                       0.24,    // Score threshold edge
+                                                       0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length
                                                        6};      // Maximum number of fits
@@ -2633,18 +2639,18 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.fitEdgeMaximum                     = settings.value(prefix + "FitEdgeMaximum",                  parameters[10]).toInt();
     mDetectionParameters.thresholdFitError                  = settings.value(prefix + "ThresholdFitError",               parameters[11]).toDouble();
     mDetectionParameters.glintWdth                          = settings.value(prefix + "GlintSize",                       parameters[12]).toInt();
-    mDetectionParameters.circumferenceMax                   = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
-    mDetectionParameters.circumferenceMin                   = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
-    mDetectionParameters.aspectRatioMin                     = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
-    mDetectionParameters.circumferenceOffset                = settings.value(prefix + "CircumferenceOffset",             parameters[16]).toDouble();
+    mDetectionParameters.thresholdCircumferenceMax          = settings.value(prefix + "CircumferenceMax",                parameters[13]).toDouble();
+    mDetectionParameters.thresholdCircumferenceMin          = settings.value(prefix + "CircumferenceMin",                parameters[14]).toDouble();
+    mDetectionParameters.thresholdAspectRatioMin            = settings.value(prefix + "AspectRatioMin",                  parameters[15]).toDouble();
     mDetectionParameters.thresholdChangeCircumference       = settings.value(prefix + "CircumferenceChangeThreshold",    parameters[17]).toDouble();
     mDetectionParameters.thresholdChangeAspectRatio         = settings.value(prefix + "AspectRatioChangeThreshold",      parameters[18]).toDouble();
     mDetectionParameters.thresholdChangePosition            = settings.value(prefix + "DisplacementChangeThreshold",     parameters[19]).toDouble();
-    mDetectionParameters.thresholdScore                     = settings.value(prefix + "ScoreThreshold",                  parameters[20]).toDouble();
-    mDetectionParameters.thresholdScoreDiffEdge             = settings.value(prefix + "ScoreThresholdDiffEdge",          parameters[21]).toDouble();
-    mDetectionParameters.thresholdScoreDiffFit              = settings.value(prefix + "ScoreThresholdDiffFit",           parameters[22]).toDouble();
-    mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",                parameters[23]).toDouble();
-    mDetectionParameters.fitMaximum                         = settings.value(prefix + "FitMaximum",                      parameters[24]).toDouble();
+    mDetectionParameters.thresholdScoreEdge                 = settings.value(prefix + "ScoreThresholdEdge",              parameters[20]).toDouble();
+    mDetectionParameters.thresholdScoreFit                  = settings.value(prefix + "ScoreThresholdFit",               parameters[21]).toDouble();
+    mDetectionParameters.thresholdScoreDiffEdge             = settings.value(prefix + "ScoreThresholdDiffEdge",          parameters[22]).toDouble();
+    mDetectionParameters.thresholdScoreDiffFit              = settings.value(prefix + "ScoreThresholdDiffFit",           parameters[23]).toDouble();
+    mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",                parameters[24]).toDouble();
+    mDetectionParameters.fitMaximum                         = settings.value(prefix + "FitMaximum",                      parameters[25]).toDouble();
 
     return mDetectionParameters;
 }
@@ -2703,19 +2709,18 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CannyKernelSize",                mDetectionParameters.cannyKernelSize);
     settings.setValue(prefix + "CannyThresholdLow",              mDetectionParameters.cannyThresholdLow);
     settings.setValue(prefix + "CannyThresholdHigh",             mDetectionParameters.cannyThresholdHigh);
-    settings.setValue(prefix + "CircumferenceOffset",            mDetectionParameters.circumferenceOffset);
-    settings.setValue(prefix + "CircumferenceMax",               mDetectionParameters.circumferenceMax);
-    settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.circumferenceMin);
+    settings.setValue(prefix + "CircumferenceMax",               mDetectionParameters.thresholdCircumferenceMax);
+    settings.setValue(prefix + "CircumferenceMin",               mDetectionParameters.thresholdCircumferenceMin);
     settings.setValue(prefix + "CurvatureOffset",                mDetectionParameters.curvatureOffset);
     settings.setValue(prefix + "FitEdgeMaximum",                 mDetectionParameters.fitEdgeMaximum);
     settings.setValue(prefix + "FitMaximum",                     mDetectionParameters.fitMaximum);
     settings.setValue(prefix + "ThresholdFitError",              mDetectionParameters.thresholdFitError);
-    settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.aspectRatioMin);
+    settings.setValue(prefix + "AspectRatioMin",                 mDetectionParameters.thresholdAspectRatioMin);
     settings.setValue(prefix + "GlintSize",                      mDetectionParameters.glintWdth);
     settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.thresholdChangeCircumference);
     settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.thresholdChangeAspectRatio);
     settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.thresholdChangePosition);
-    settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.thresholdScore);
+    settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.thresholdScoreEdge);
     settings.setValue(prefix + "ScoreThresholdDiffEdge",         mDetectionParameters.thresholdScoreDiffEdge);
     settings.setValue(prefix + "ScoreThresholdDiffFit",          mDetectionParameters.thresholdScoreDiffFit);
     settings.setValue(prefix + "WindowLengthEdge",               mDetectionParameters.windowLengthEdge);
@@ -3103,6 +3108,17 @@ void MainWindow::onSetDrawEdge             (int state) { Parameters::drawFlags.e
 void MainWindow::onSetDrawElps             (int state) { Parameters::drawFlags.elps = state; }
 
 void MainWindow::onSetCurvatureMeasurement(int state) { mAdvancedOptions.CURVATURE_MEASUREMENT = state; }
+void MainWindow::setCurvatureMeasurement(detectionParameters& mDetectionParameters, int imgWdth)
+{
+    mDetectionParameters.thresholdAspectRatioMin    = 0.0;
+    mDetectionParameters.thresholdCircumferenceMax  = M_PI * imgWdth;
+    mDetectionParameters.thresholdCircumferenceMin  = 1.0; // 1.0 avoids inf
+    mDetectionParameters.thresholdScoreEdge         = 0.0;
+    mDetectionParameters.thresholdScoreFit          = 0.0;
+    mDetectionParameters.thresholdScoreDiffEdge     = 1.0;
+    mDetectionParameters.curvatureOffset            = 360;
+    mDetectionParameters.glintWdth                  = 0.0;
+}
 
 void MainWindow::onSetSaveDataEdge (int state) { SAVE_DATA_EDGE  = state; }
 void MainWindow::onSetSaveDataFit  (int state) { SAVE_DATA_FIT   = state; }

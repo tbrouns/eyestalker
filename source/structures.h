@@ -102,19 +102,19 @@ struct detectionParameters
     int    cannyBlurLevel;
     int    cannyKernelSize;
 
-    double aspectRatioMin;
-    double circumferenceMax;
-    double circumferenceMin;
-    double circumferenceOffset;
     int    glintWdth;
 
     double curvatureOffset;
 
+    double thresholdAspectRatioMin;
+    double thresholdCircumferenceMax;
+    double thresholdCircumferenceMin;
     double thresholdChangeAspectRatio;
     double thresholdChangeCircumference;
     double thresholdChangePosition;
     double thresholdFitError;
-    double thresholdScore;
+    double thresholdScoreEdge;
+    double thresholdScoreFit;
     double thresholdScoreDiffEdge;
     double thresholdScoreDiffFit;
 
@@ -127,6 +127,8 @@ struct detectionParameters
 
 struct detectionVariables
 {
+
+
     double averageAspectRatio;
     double averageCircumference;
     double averageCurvature;
@@ -161,10 +163,15 @@ struct detectionVariables
     double predictedYPos;
     double predictedXPosRelative;
     double predictedYPosRelative;
+    double thresholdAspectRatioMax;
+    double thresholdAspectRatioMin;
+    double thresholdCircumferenceMin;
+    double thresholdCircumferenceMax;
     double thresholdChangeAspectRatio;
     double thresholdChangeCircumference;
     double thresholdChangePosition;
-    double thresholdScore;
+    double thresholdScoreEdge;
+    double thresholdScoreFit;
 };
 
 struct dataVariables

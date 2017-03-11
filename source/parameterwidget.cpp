@@ -165,15 +165,25 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     ThresholdDisplacementSlider->setOrientation(Qt::Horizontal);
     QObject::connect(ThresholdDisplacementSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdDisplacement(double)));
 
-    QLabel *ThresholdScoreTextBox = new QLabel;
-    ThresholdScoreTextBox->setText("<b>Edge score</b>");
+    QLabel *ThresholdScoreEdgeTextBox = new QLabel;
+    ThresholdScoreEdgeTextBox->setText("<b>Edge score</b>");
 
-    ThresholdScoreLabel  = new QLabel;
-    ThresholdScoreSlider = new SliderDouble;
-    ThresholdScoreSlider->setPrecision(2);
-    ThresholdScoreSlider->setDoubleRange(0, 0.5);
-    ThresholdScoreSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdScoreSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScore(double)));
+    ThresholdScoreEdgeLabel  = new QLabel;
+    ThresholdScoreEdgeSlider = new SliderDouble;
+    ThresholdScoreEdgeSlider->setPrecision(2);
+    ThresholdScoreEdgeSlider->setDoubleRange(0, 0.5);
+    ThresholdScoreEdgeSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(ThresholdScoreEdgeSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreEdge(double)));
+
+    QLabel *ThresholdScoreFitTextBox = new QLabel;
+    ThresholdScoreFitTextBox->setText("<b>Fit score</b>");
+
+    ThresholdScoreFitLabel  = new QLabel;
+    ThresholdScoreFitSlider = new SliderDouble;
+    ThresholdScoreFitSlider->setPrecision(2);
+    ThresholdScoreFitSlider->setDoubleRange(0, 0.5);
+    ThresholdScoreFitSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(ThresholdScoreFitSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreFit(double)));
 
     QLabel *ThresholdScoreDiffEdgeTextBox = new QLabel;
     ThresholdScoreDiffEdgeTextBox->setText("<b>Edge score difference</b>");
@@ -301,17 +311,18 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdAspectRatioTextBox,      18, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdCircumferenceTextBox,    19, 0, 1, 1, Qt::AlignRight);
     MainLayout->addWidget(ThresholdDisplacementTextBox,     20, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreTextBox,            21, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreDiffEdgeTextBox,    22, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreDiffFitTextBox,     23, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdFitErrorTextBox,         24, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreEdgeTextBox,        21, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreFitTextBox,         22, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreDiffEdgeTextBox,    23, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreDiffFitTextBox,     24, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdFitErrorTextBox,         25, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(GlintSizeTextBox,                 26, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CurvatureOffsetTextBox,           27, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(WindowLengthEdgeTextBox,          28, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(FitEdgeFractionTextBox,           29, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(FitEdgeMaximumTextBox,            30, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(FitMaximumTextBox,                31, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GlintSizeTextBox,                 27, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CurvatureOffsetTextBox,           28, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(WindowLengthEdgeTextBox,          29, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitEdgeFractionTextBox,           30, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitEdgeMaximumTextBox,            31, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitMaximumTextBox,                32, 0, 1, 1, Qt::AlignRight);
 
     // Sliders and titles
 
@@ -340,19 +351,21 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdAspectRatioSlider,      18, 1);
     MainLayout->addWidget(ThresholdCircumferenceSlider,    19, 1);
     MainLayout->addWidget(ThresholdDisplacementSlider,     20, 1);
-    MainLayout->addWidget(ThresholdScoreSlider,            21, 1);
-    MainLayout->addWidget(ThresholdScoreDiffEdgeSlider,    22, 1);
-    MainLayout->addWidget(ThresholdScoreDiffFitSlider,     23, 1);
-    MainLayout->addWidget(ThresholdFitErrorSlider,         24, 1);
+    MainLayout->addWidget(ThresholdScoreEdgeSlider,        21, 1);
+    MainLayout->addWidget(ThresholdScoreFitSlider,         22, 1);
 
-    MainLayout->addWidget(TitleMiscTextBox,                25, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(ThresholdScoreDiffEdgeSlider,    23, 1);
+    MainLayout->addWidget(ThresholdScoreDiffFitSlider,     24, 1);
+    MainLayout->addWidget(ThresholdFitErrorSlider,         25, 1);
 
-    MainLayout->addWidget(GlintSizeSlider,                 26, 1);
-    MainLayout->addWidget(CurvatureOffsetSlider,           27, 1);
-    MainLayout->addWidget(WindowLengthEdgeSlider,          28, 1);
-    MainLayout->addWidget(FitEdgeFractionSlider,           29, 1);
-    MainLayout->addWidget(FitEdgeMaximumSlider,            30, 1);
-    MainLayout->addWidget(FitMaximumSlider,                31, 1);
+    MainLayout->addWidget(TitleMiscTextBox,                26, 1, 1, 1, Qt::AlignCenter);
+
+    MainLayout->addWidget(GlintSizeSlider,                 27, 1);
+    MainLayout->addWidget(CurvatureOffsetSlider,           28, 1);
+    MainLayout->addWidget(WindowLengthEdgeSlider,          29, 1);
+    MainLayout->addWidget(FitEdgeFractionSlider,           30, 1);
+    MainLayout->addWidget(FitEdgeMaximumSlider,            31, 1);
+    MainLayout->addWidget(FitMaximumSlider,                32, 1);
 
     // Value labels
 
@@ -373,17 +386,18 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MainLayout->addWidget(ThresholdAspectRatioLabel,     18, 2);
     MainLayout->addWidget(ThresholdCircumferenceLabel,   19, 2);
     MainLayout->addWidget(ThresholdDisplacementLabel,    20, 2);
-    MainLayout->addWidget(ThresholdScoreLabel,           21, 2);
-    MainLayout->addWidget(ThresholdScoreDiffEdgeLabel,   22, 2);
-    MainLayout->addWidget(ThresholdScoreDiffFitLabel,    23, 2);
-    MainLayout->addWidget(ThresholdFitErrorLabel,        24, 2);
+    MainLayout->addWidget(ThresholdScoreEdgeLabel,       21, 2);
+    MainLayout->addWidget(ThresholdScoreFitLabel,        22, 2);
+    MainLayout->addWidget(ThresholdScoreDiffEdgeLabel,   23, 2);
+    MainLayout->addWidget(ThresholdScoreDiffFitLabel,    24, 2);
+    MainLayout->addWidget(ThresholdFitErrorLabel,        25, 2);
 
-    MainLayout->addWidget(GlintSizeLabel,                26, 2);
-    MainLayout->addWidget(CurvatureOffsetLabel,          27, 2);
-    MainLayout->addWidget(WindowLengthEdgeLabel,         28, 2);
-    MainLayout->addWidget(FitEdgeFractionLabel,          29, 2);
-    MainLayout->addWidget(FitEdgeMaximumLabel,           30, 2);
-    MainLayout->addWidget(FitMaximumLabel,               31, 2);
+    MainLayout->addWidget(GlintSizeLabel,                27, 2);
+    MainLayout->addWidget(CurvatureOffsetLabel,          28, 2);
+    MainLayout->addWidget(WindowLengthEdgeLabel,         29, 2);
+    MainLayout->addWidget(FitEdgeFractionLabel,          30, 2);
+    MainLayout->addWidget(FitEdgeMaximumLabel,           31, 2);
+    MainLayout->addWidget(FitMaximumLabel,               32, 2);
 
     MainLayout->setColumnStretch(0,1);
     MainLayout->setColumnStretch(1,3);
@@ -422,14 +436,14 @@ void ParameterWidget::reset()
 {
     // Size and shape limits
 
-    CircumferenceMaxSlider->setDoubleValue(mDetectionParameters.circumferenceMax);
-    CircumferenceMaxLabel ->setText(QString::number(mDetectionParameters.circumferenceMax, 'f', 1));
+    CircumferenceMaxSlider->setDoubleValue(mDetectionParameters.thresholdCircumferenceMax);
+    CircumferenceMaxLabel ->setText(QString::number(mDetectionParameters.thresholdCircumferenceMax, 'f', 1));
 
-    CircumferenceMinSlider->setDoubleValue(mDetectionParameters.circumferenceMin);
-    CircumferenceMinLabel ->setText(QString::number(mDetectionParameters.circumferenceMin, 'f', 1));
+    CircumferenceMinSlider->setDoubleValue(mDetectionParameters.thresholdCircumferenceMin);
+    CircumferenceMinLabel ->setText(QString::number(mDetectionParameters.thresholdCircumferenceMin, 'f', 1));
 
-    AspectRatioMinSlider->setDoubleValue(mDetectionParameters.aspectRatioMin);
-    AspectRatioMinLabel ->setText(QString::number(mDetectionParameters.aspectRatioMin, 'f', 2));
+    AspectRatioMinSlider->setDoubleValue(mDetectionParameters.thresholdAspectRatioMin);
+    AspectRatioMinLabel ->setText(QString::number(mDetectionParameters.thresholdAspectRatioMin, 'f', 2));
 
     // Canny edge detection
 
@@ -470,8 +484,11 @@ void ParameterWidget::reset()
     ThresholdDisplacementSlider->setDoubleValue(mDetectionParameters.thresholdChangePosition);
     ThresholdDisplacementLabel ->setText(QString::number(mDetectionParameters.thresholdChangePosition, 'f', 1));
 
-    ThresholdScoreSlider->setDoubleValue(mDetectionParameters.thresholdScore);
-    ThresholdScoreLabel ->setText(QString::number(mDetectionParameters.thresholdScore, 'f', 2));
+    ThresholdScoreEdgeSlider->setDoubleValue(mDetectionParameters.thresholdScoreEdge);
+    ThresholdScoreEdgeLabel ->setText(QString::number(mDetectionParameters.thresholdScoreEdge, 'f', 2));
+
+    ThresholdScoreFitSlider->setDoubleValue(mDetectionParameters.thresholdScoreEdge);
+    ThresholdScoreFitLabel ->setText(QString::number(mDetectionParameters.thresholdScoreEdge, 'f', 2));
 
     ThresholdScoreDiffEdgeSlider->setDoubleValue(mDetectionParameters.thresholdScoreDiffEdge);
     ThresholdScoreDiffEdgeLabel ->setText(QString::number(mDetectionParameters.thresholdScoreDiffEdge, 'f', 2));
@@ -505,29 +522,29 @@ void ParameterWidget::reset()
 
 void ParameterWidget::setCircumferenceMin(double value)
 {
-    if (mDetectionParameters.circumferenceMax < value)
+    if (mDetectionParameters.thresholdCircumferenceMax < value)
     {
         CircumferenceMaxSlider->setDoubleValue(value);
     }
 
-    mDetectionParameters.circumferenceMin = value;
-    CircumferenceMinLabel->setText(QString::number(mDetectionParameters.circumferenceMin, 'f', 1));
+    mDetectionParameters.thresholdCircumferenceMin = value;
+    CircumferenceMinLabel->setText(QString::number(mDetectionParameters.thresholdCircumferenceMin, 'f', 1));
 }
 
 void ParameterWidget::setCircumferenceMax(double value)
 {
-    if (mDetectionParameters.circumferenceMin > value)
+    if (mDetectionParameters.thresholdCircumferenceMin > value)
     {
         CircumferenceMinSlider->setDoubleValue(value);
     }
 
-    mDetectionParameters.circumferenceMax = value;
-    CircumferenceMaxLabel->setText(QString::number(mDetectionParameters.circumferenceMax, 'f', 1));
+    mDetectionParameters.thresholdCircumferenceMax = value;
+    CircumferenceMaxLabel->setText(QString::number(mDetectionParameters.thresholdCircumferenceMax, 'f', 1));
 }
 
 void ParameterWidget::setAspectRatioMin(double value)
 {
-    mDetectionParameters.aspectRatioMin = value;
+    mDetectionParameters.thresholdAspectRatioMin = value;
     AspectRatioMinLabel->setText(QString::number(value, 'f', 2));
 }
 
@@ -615,10 +632,16 @@ void ParameterWidget::setThresholdDisplacement(double value)
     ThresholdDisplacementLabel->setText(QString::number(value, 'f', 1));
 }
 
-void ParameterWidget::setThresholdScore(double value)
+void ParameterWidget::setThresholdScoreEdge(double value)
 {
-    mDetectionParameters.thresholdScore = value;
-    ThresholdScoreLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.thresholdScoreEdge = value;
+    ThresholdScoreEdgeLabel->setText(QString::number(value, 'f', 2));
+}
+
+void ParameterWidget::setThresholdScoreFit(double value)
+{
+    mDetectionParameters.thresholdScoreFit = value;
+    ThresholdScoreFitLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setThresholdScoreDiffEdge(double value)

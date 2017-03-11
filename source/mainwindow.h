@@ -334,6 +334,8 @@ private:
     void detectCurrentFrame(int);
     void detectAllFrames();
 
+    void setCurvatureMeasurement(detectionParameters&, int);
+
     // Advanced
 
     developmentOptions mAdvancedOptions;
