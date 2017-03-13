@@ -2509,7 +2509,7 @@ void MainWindow::loadSettings(QString filename)
                                                        0.10,    // Aspect ratio  change threshold
                                                        6,       // Displacement  change threshold
                                                        0.41,    // Score threshold edge
-                                                       0.24,    // Score threshold fit
+                                                       0.29,    // Score threshold fit
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length
@@ -2536,7 +2536,7 @@ void MainWindow::loadSettings(QString filename)
                                                        0.05,    // Aspect ratio change threshold
                                                        4,       // Displacement change threshold
                                                        0.41,    // Score threshold edge
-                                                       0.24,    // Score threshold fit
+                                                       0.29,    // Score threshold fit
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length
