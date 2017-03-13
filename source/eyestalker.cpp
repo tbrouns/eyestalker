@@ -88,9 +88,9 @@ inline double calculateCertainty(double x, double midpoint)
     return (1 - 2 / (1 + exp(-k * (x - midpoint)))); // Logistic
 }
 
-inline double gaussian(double x, double b, double sigma)
+inline double gaussian(double x, double x0, double sigma)
 {
-    return exp(-pow((x-b)/sigma,2));
+    return exp(-pow((x-x0)/sigma,2));
 }
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& featureValues, bool USE_LENGTH, bool USE_CERTAINTY)
@@ -1395,8 +1395,19 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
                     int vertex_2 = mArcProperties_2.connectedVertices[jVertex];
                     if (vertex_1 == vertex_2) // last vertex of current arc should be equal to first vertex of next arc
                     {
-                        if (iVertex == 0) { std::reverse(vArcPropertiesPath[iArc].pointIndices.begin(), vArcPropertiesPath[iArc].pointIndices.end()); }
-                        vArcPropertiesPath[iArc].pointIndices.insert(vArcPropertiesPath[iArc].pointIndices.begin(),
+                        if (iVertex == 0)
+                        {
+                            std::reverse(vArcPropertiesPath[iArc].pointIndices.begin(),      vArcPropertiesPath[iArc].pointIndices.end());
+                            std::reverse(vArcPropertiesPath[iArc].connectedVertices.begin(), vArcPropertiesPath[iArc].connectedVertices.end());
+                        }
+
+                        if (jVertex == 1)
+                        {
+                            std::reverse(vArcPropertiesPath[iArc + 1].pointIndices.begin(),      vArcPropertiesPath[iArc + 1].pointIndices.end());
+                            std::reverse(vArcPropertiesPath[iArc + 1].connectedVertices.begin(), vArcPropertiesPath[iArc + 1].connectedVertices.end());
+                        }
+
+                        vArcPropertiesPath[iArc].pointIndices.insert(vArcPropertiesPath[iArc].pointIndices.end(),
                                                                      vVertexPropertiesAll[vertex_1].pointIndices.begin(),
                                                                      vVertexPropertiesAll[vertex_1].pointIndices.end());
                         
@@ -1412,8 +1423,8 @@ std::vector<int> processGraphTree(const detectionVariables& mDetectionVariables,
                         {
                             int vertexIndex = mArcProperties_2.connectedVertices[(jVertex + 1) % 2];
                             vArcPropertiesPath[iArc + 1].pointIndices.insert(vArcPropertiesPath[iArc + 1].pointIndices.end(),
-                                    vVertexPropertiesAll[vertexIndex].pointIndices.begin(),
-                                    vVertexPropertiesAll[vertexIndex].pointIndices.end());
+                                                                             vVertexPropertiesAll[vertexIndex].pointIndices.begin(),
+                                                                             vVertexPropertiesAll[vertexIndex].pointIndices.end());
                         }
                         
                         break;
@@ -1519,7 +1530,7 @@ std::vector<edgeProperties> edgeSelection(const detectionVariables& mDetectionVa
                 // Find all vertices and all connected arcs (i.e. obtain graph tree)
                 
                 std::vector<vertexProperties> vVertexProperties = findGraphVertices(cannyEdgeVector, mAOI, startIndex);
-                std::vector<arcProperties> vArcProperties = findGraphArcs(mDetectionParameters, vVertexProperties, cannyEdgeVector, mAOI);
+                std::vector<arcProperties> vArcProperties       = findGraphArcs(mDetectionParameters, vVertexProperties, cannyEdgeVector, mAOI);
                 
                 // Find preferred path:
                 // Cyclic path that resembles pupil outline the most,

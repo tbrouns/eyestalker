@@ -236,7 +236,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CurvatureOffsetLabel  = new QLabel;
     CurvatureOffsetSlider = new SliderDouble;
     CurvatureOffsetSlider->setPrecision(1);
-    CurvatureOffsetSlider->setDoubleRange(0, 40);
+    CurvatureOffsetSlider->setDoubleRange(0, 10);
     CurvatureOffsetSlider->setOrientation(Qt::Horizontal);
     QObject::connect(CurvatureOffsetSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setCurvatureOffset(double)));
 

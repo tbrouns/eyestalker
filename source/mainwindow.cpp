@@ -2505,11 +2505,11 @@ void MainWindow::loadSettings(QString filename)
                                                        60,      // Circumference min
                                                        0.4,     // Aspect ratio min
                                                        0.35,    // Circumference offset
-                                                       0.11,    // Circumference change threshold
+                                                       0.12,    // Circumference change threshold
                                                        0.10,    // Aspect ratio  change threshold
                                                        6,       // Displacement  change threshold
-                                                       0.41,    // Score threshold edge
-                                                       0.29,    // Score threshold fit
+                                                       0.30,    // Score threshold edge
+                                                       0.10,    // Score threshold fit
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length
