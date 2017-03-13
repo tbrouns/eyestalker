@@ -88,9 +88,9 @@ inline double calculateCertainty(double x, double midpoint)
     return (1 - 2 / (1 + exp(-k * (x - midpoint)))); // Logistic
 }
 
-inline double gaussian(double x, double sigma)
+inline double gaussian(double x, double b, double sigma)
 {
-    return exp(-pow(x/sigma,2));
+    return exp(-pow((x-b)/sigma,2));
 }
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& featureValues, bool USE_LENGTH, bool USE_CERTAINTY)
@@ -163,12 +163,12 @@ double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::v
     
     // Calculate scores
     
-    double scoreRadius        = factorRadius        * gaussian(featureValueRadius,        sigmaRadius       );
-    double scoreCircumference = factorCircumference * gaussian(featureValueCircumference, sigmaCircumference);
-    double scoreCurvature     = factorCurvature     * gaussian(featureValueCurvature,     sigmaCurvature    );
-    double scoreIntensity     = factorIntensity     * gaussian(featureValueIntensity,     sigmaIntensity    );
-    double scoreGradient      = factorGradient      * gaussian(featureValueGradient,      sigmaGradient     );
-    double scoreRadiusVar     = factorRadiusVar     * gaussian(featureValueRadiusVar,     sigmaRadiusVar    );
+    double scoreRadius        = factorRadius        * gaussian(featureValueRadius,        0, sigmaRadius       );
+    double scoreCircumference = factorCircumference * gaussian(featureValueCircumference, 0, sigmaCircumference);
+    double scoreCurvature     = factorCurvature     * gaussian(featureValueCurvature,     0, sigmaCurvature    );
+    double scoreIntensity     = factorIntensity     * gaussian(featureValueIntensity,     0, sigmaIntensity    );
+    double scoreGradient      = factorGradient      * gaussian(featureValueGradient,      0, sigmaGradient     );
+    double scoreRadiusVar     = factorRadiusVar     * gaussian(featureValueRadiusVar,     0, sigmaRadiusVar    );
     
     const double norm =  factorRadius + factorRadiusVar + factorCurvature + factorCircumference + factorIntensity + factorGradient;
     
@@ -2626,18 +2626,18 @@ std::vector<ellipseProperties> ellipseFitting(const detectionVariables& mDetecti
 
 std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<ellipseProperties> vEllipseProperties)
 {
-    static const double weightAspectRatio   = 0.4353;
-    static const double weightCircumference = 0.3444;
-    static const double weightLength        = 0.8980;
-    static const double weightError         = 0.6121;
-    static const double weightAngle         = 0.7163;
-    static const double weightAngleFactor   = 0.7052;
+    static const double weightCircumference = 0.4436;
+    static const double weightAspectRatio   = 0.8077;
+    static const double weightLength        = 1.8157;
+    static const double weightError         = 1.2019;
+    static const double weightAngle         = 1.4508;
+    static const double weightRho           = 0.6344;
 
-    static const double sigmaAspectRatio   = 0.012187;
-    static const double sigmaCircumference = 0.0067802;
-    static const double sigmaLength        = 0.26383;
-    static const double sigmaError         = 0.35359;
-    static const double sigmaAngle         = 0.065955;
+    static const double sigmaAspectRatio   = 0.011179;
+    static const double sigmaCircumference = 0.0057245;
+    static const double sigmaLength        = 0.22393;
+    static const double sigmaError         = 0.085488;
+    static const double sigmaAngle         = 0.062308;
     
     int numFits = vEllipseProperties.size();
 
@@ -2653,7 +2653,7 @@ std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables,
         double errorLength        = std::abs(mEllipseProperties.edgeLength    - mDetectionVariables.predictedCircumference) / std::max(mEllipseProperties.edgeLength,    mDetectionVariables.predictedCircumference);
         double errorFit           = mEllipseProperties.fitError;
         
-        double weightAngleNew = weightAngle * (1 - weightAngleFactor * mEllipseProperties.aspectRatio);
+        double weightAngleNew = weightAngle * (1 - weightRho * mEllipseProperties.aspectRatio);
         
         double factorAngle         = mDetectionVariables.certaintyFeatures * weightAngleNew;
         double factorAspectRatio   = mDetectionVariables.certaintyFeatures * weightAspectRatio;
@@ -2663,11 +2663,11 @@ std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables,
         
         // Calculate scores
         
-        double scoreAngle         = factorAngle         * gaussian(errorAngle,         sigmaAngle         );
-        double scoreAspectRatio   = factorAspectRatio   * gaussian(errorAspectRatio,   sigmaAspectRatio   );
-        double scoreCircumference = factorCircumference * gaussian(errorCircumference, sigmaCircumference );
-        double scoreLength        = factorLength        * gaussian(errorLength,        sigmaLength        );
-        double scoreFitError      = factorFitError      * gaussian(errorFit,           sigmaError         );
+        double scoreAngle         = factorAngle         * gaussian(errorAngle,         0,     sigmaAngle         );
+        double scoreAspectRatio   = factorAspectRatio   * gaussian(errorAspectRatio,   0,     sigmaAspectRatio   );
+        double scoreCircumference = factorCircumference * gaussian(errorCircumference, 0,     sigmaCircumference );
+        double scoreLength        = factorLength        * gaussian(errorLength,        0,     sigmaLength        );
+        double scoreFitError      = factorFitError      * gaussian(errorFit,           0.175, sigmaError         );
         
         double norm =  factorAngle + factorAspectRatio + factorCircumference + factorLength + factorFitError;
         
