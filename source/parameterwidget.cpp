@@ -487,8 +487,8 @@ void ParameterWidget::reset()
     ThresholdScoreEdgeSlider->setDoubleValue(mDetectionParameters.thresholdScoreEdge);
     ThresholdScoreEdgeLabel ->setText(QString::number(mDetectionParameters.thresholdScoreEdge, 'f', 2));
 
-    ThresholdScoreFitSlider->setDoubleValue(mDetectionParameters.thresholdScoreEdge);
-    ThresholdScoreFitLabel ->setText(QString::number(mDetectionParameters.thresholdScoreEdge, 'f', 2));
+    ThresholdScoreFitSlider->setDoubleValue(mDetectionParameters.thresholdScoreFit);
+    ThresholdScoreFitLabel ->setText(QString::number(mDetectionParameters.thresholdScoreFit, 'f', 2));
 
     ThresholdScoreDiffEdgeSlider->setDoubleValue(mDetectionParameters.thresholdScoreDiffEdge);
     ThresholdScoreDiffEdgeLabel ->setText(QString::number(mDetectionParameters.thresholdScoreDiffEdge, 'f', 2));

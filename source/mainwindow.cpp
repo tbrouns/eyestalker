@@ -1295,6 +1295,7 @@ void MainWindow::resetVariablesHard(detectionVariables& mDetectionVariables, con
     mDetectionVariables.averageGradient      = 0;
     mDetectionVariables.averageHeight        = mDetectionVariables.averageCircumference / M_PI;
     mDetectionVariables.averageIntensity     = initialIntensity;
+    mDetectionVariables.averageHaarResponse  = 0;
     mDetectionVariables.averageWidth         = mDetectionVariables.averageCircumference / M_PI;
 
     mDetectionVariables.certaintyAverages      = 0;
@@ -1312,6 +1313,7 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.predictedCircumference = mDetectionVariables.averageCircumference;
     mDetectionVariables.predictedCurvature     = mDetectionVariables.averageCurvature;
     mDetectionVariables.predictedGradient      = mDetectionVariables.averageGradient;
+    mDetectionVariables.predictedHaarResponse  = mDetectionVariables.averageHaarResponse;
     mDetectionVariables.predictedHeight        = mDetectionVariables.averageHeight;
     mDetectionVariables.predictedIntensity     = mDetectionVariables.averageIntensity;
     mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
@@ -1322,6 +1324,7 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.momentumCircumference = 0;
     mDetectionVariables.momentumCurvature     = 0;
     mDetectionVariables.momentumGradient      = 0;
+    mDetectionVariables.momentumHaarResponse  = 0;
     mDetectionVariables.momentumHeight        = 0;
     mDetectionVariables.momentumIntensity     = 0;
     mDetectionVariables.momentumWidth         = 0;
@@ -2268,9 +2271,6 @@ void MainWindow::onDetectAllTrials()
 
         for (int iTrial = trialIndexOffline; iTrial < trialTotalOffline && PROCESSING_ALL_TRIALS; iTrial++)
         {
-            if (iTrial < 5)  { continue; } // needs to be removed
-            if (iTrial > 24) { break; }
-
             OfflineTrialSlider->setValue(iTrial);
             onDetectAllFrames();
         }
@@ -2330,9 +2330,6 @@ void MainWindow::onSaveTrialData()
         file << imageTotalOffline << ";";  // data samples
         if (timeMatrix.size() > 0) { file << (int) timeMatrix[trialIndexOffline][1] << ";"; } // system clock time
 
-        file << (int) Parameters::cameraAOI.wdth << ";";  // needs to be removed
-        file << (int) Parameters::cameraAOI.hght << ";";  // needs to be removed
-
         file << std::fixed;
         file << std::setprecision(3);
 
@@ -2375,28 +2372,6 @@ void MainWindow::onSaveTrialData()
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedGradient      << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDetectionVariablesEye[i].predictedAngle         << delimiter; }
             for (int i = 0; i < imageTotalOffline; i++) { file << vDataVariables[i].duration                       << delimiter; }
-        }
-
-        file.close();
-    }
-
-    {
-        std::stringstream filename;
-        filename << dataDirectoryOffline.toStdString()
-                 << "/images/trial_"
-                 << trialIndexOffline
-                 << "/haar_data.dat";
-
-        std::ofstream file;
-        file.open(filename.str());
-
-        for (int i = 0; i < imageTotalOffline; i++)
-        {
-            int numPixels = vDataVariables[i].intensityInner.size();
-            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterLeft[j] << delimiter; }
-            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityInner    [j] << delimiter; }
-            for (int j = 0; j < numPixels; j++) { file << vDataVariables[i].intensityOuterRght[j] << delimiter; }
-            file << "\n";
         }
 
         file.close();
@@ -2447,7 +2422,6 @@ void MainWindow::onSaveTrialData()
         for (int i = 0; i < imageTotalOffline; i++)
         {
             int numFits = vDataVariables[i].ellipseData.size();
-
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].tag           << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].xPos          << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].yPos          << delimiter; }
@@ -2456,7 +2430,7 @@ void MainWindow::onSaveTrialData()
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].fitError      << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].edgeLength    << delimiter; }
             for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].angle         << delimiter; }
-
+            for (int j = 0; j < numFits; j++) { file << vDataVariables[i].ellipseData[j].edgeScore     << delimiter; }
             file << "\n";
         }
 
@@ -2535,7 +2509,7 @@ void MainWindow::loadSettings(QString filename)
                                                        0.10,    // Aspect ratio  change threshold
                                                        6,       // Displacement  change threshold
                                                        0.41,    // Score threshold edge
-                                                       0.24,    // Score threshold edge
+                                                       0.24,    // Score threshold fit
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length
@@ -2562,7 +2536,7 @@ void MainWindow::loadSettings(QString filename)
                                                        0.05,    // Aspect ratio change threshold
                                                        4,       // Displacement change threshold
                                                        0.41,    // Score threshold edge
-                                                       0.24,    // Score threshold edge
+                                                       0.24,    // Score threshold fit
                                                        0.60,    // Score difference threshold edge
                                                        0.10,    // Score difference threshold fit
                                                        7,       // Edge window length

@@ -260,9 +260,119 @@ AOIProperties detectGlint(const cv::Mat& img, AOIProperties searchAOI, AOIProper
     return glintAOI;
 }
 
-AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIProperties searchAOI, AOIProperties haarAOI, AOIProperties glintAOI, std::vector<double>& innerIntensities, std::vector<double>& outerIntensitiesLeft, std::vector<double>& outerIntensitiesRght, int imgWidth)
+inline double haarFeatureResponse(int x, int y, int area, const std::vector<unsigned int>& I, const  AOIProperties& searchAOI, const AOIProperties& haarAOI, const AOIProperties& glintAOI)
 {
-    double intensityInnerMin = std::numeric_limits<double>::max(); // set to maximum double value;
+    // vertices of inner square
+
+    int xTopLeft = x;
+    int yTopLeft = y;
+
+    int xBtmRght = xTopLeft + haarAOI.wdth - 1;
+    int yBtmRght = yTopLeft + haarAOI.hght - 1;
+
+    int iTopLeft = searchAOI.wdth * yTopLeft + xTopLeft;
+    int iTopRght = searchAOI.wdth * yTopLeft + xBtmRght;
+    int iBtmLeft = searchAOI.wdth * yBtmRght + xTopLeft;
+    int iBtmRght = searchAOI.wdth * yBtmRght + xBtmRght;
+
+    // calculate glint intensity
+
+    double glintIntensity = 0.0;
+    double glintArea      = 0.0;
+
+    bool GLINT_OVERLAP = false; // flag for glint overlap
+
+    int xTopLeftGlint = glintAOI.xPos;
+    int yTopLeftGlint = glintAOI.yPos;
+    int xBtmRghtGlint = glintAOI.xPos + glintAOI.wdth - 1;
+    int yBtmRghtGlint = glintAOI.yPos + glintAOI.hght - 1;
+
+    std::vector<int> X(2);
+    X[0] = xTopLeftGlint;
+    X[1] = xBtmRghtGlint;
+
+    std::vector<int> Y(2);
+    Y[0] = yTopLeftGlint;
+    Y[1] = yBtmRghtGlint;
+
+    // check if glint overlaps with Haar detector
+
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            if (X[i] > xTopLeft && X[i] < xBtmRght && Y[j] > yTopLeft && Y[j] < yBtmRght)
+            { GLINT_OVERLAP = true; }
+        }
+    }
+
+    if (GLINT_OVERLAP) // if yes, check how much it overlaps
+    {
+        // Check overlap with edges
+
+        if      (xTopLeftGlint < xTopLeft) { xTopLeftGlint = xTopLeft; } // left edge
+        else if (xBtmRghtGlint > xBtmRght) { xBtmRghtGlint = xBtmRght; } // right edge
+        if      (yTopLeftGlint < yTopLeft) { yTopLeftGlint = yTopLeft; } // top edge
+        else if (yBtmRghtGlint > yBtmRght) { yBtmRghtGlint = yBtmRght; } // bottom edge
+
+        // coordinates of corners of glint square
+
+        int iTopLeftGlint = searchAOI.wdth * yTopLeftGlint + xTopLeftGlint;
+        int iTopRghtGlint = searchAOI.wdth * yTopLeftGlint + xBtmRghtGlint;
+        int iBtmLeftGlint = searchAOI.wdth * yBtmRghtGlint + xTopLeftGlint;
+        int iBtmRghtGlint = searchAOI.wdth * yBtmRghtGlint + xBtmRghtGlint;
+
+        // calculate area and intensity of glint
+
+        glintIntensity = I[iBtmRghtGlint] - I[iBtmLeftGlint] - I[iTopRghtGlint] + I[iTopLeftGlint];
+
+        int glintWdth = xBtmRghtGlint - xTopLeftGlint;
+        int glintHght = yBtmRghtGlint - yTopLeftGlint;
+        glintArea = glintWdth * glintHght;
+    }
+
+    double intensityInner = I[iBtmRght] - I[iBtmLeft] - I[iTopRght] + I[iTopLeft];
+    intensityInner = intensityInner - glintIntensity; // adjust for glint
+    intensityInner = intensityInner / (area - glintArea);
+
+    int xTopLeftOuter = round(xTopLeft - 0.5 * haarAOI.wdth);
+    int xBtmRghtOuter = round(xBtmRght + 0.5 * haarAOI.wdth);
+
+    if (xTopLeftOuter <               0) { xTopLeftOuter =                  0; }
+    if (xBtmRghtOuter >= searchAOI.wdth) { xBtmRghtOuter = searchAOI.wdth - 1; }
+
+    int iTopLeftOuter = searchAOI.wdth * yTopLeft + xTopLeftOuter;
+    int iTopRghtOuter = searchAOI.wdth * yTopLeft + xBtmRghtOuter;
+    int iBtmLeftOuter = searchAOI.wdth * yBtmRght + xTopLeftOuter;
+    int iBtmRghtOuter = searchAOI.wdth * yBtmRght + xBtmRghtOuter;
+
+    double intensityOuterLeft = I[iBtmLeft]      - I[iBtmLeftOuter] - I[iTopLeft]      + I[iTopLeftOuter];
+    double intensityOuterRght = I[iBtmRghtOuter] - I[iBtmRght]      - I[iTopRghtOuter] + I[iTopRght];
+
+    int outerWdthLeft = xTopLeft - xTopLeftOuter;
+    int outerWdthRght = xBtmRghtOuter - xBtmRght;
+
+    if (outerWdthLeft > 0)
+    {
+        int outerAreaLeft  = outerWdthLeft * (haarAOI.hght - 1);
+        intensityOuterLeft = intensityOuterLeft / outerAreaLeft;
+    }
+    else { intensityOuterLeft = 0; }
+
+    if (outerWdthRght > 0)
+    {
+        int outerAreaRght  = outerWdthRght * (haarAOI.hght - 1);
+        intensityOuterRght = intensityOuterRght / outerAreaRght;
+    }
+    else { intensityOuterRght = 0; }
+
+    double response = -intensityInner + 0.3 * (0.5 * (intensityOuterLeft + intensityOuterRght) - intensityInner);
+    return response;
+}
+
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const  AOIProperties& searchAOI, AOIProperties& haarAOI, const AOIProperties& glintAOI)
+{
+    double responseMax = -std::numeric_limits<double>::max(); // set to minimum double value;
     
     haarAOI.xPos = 0;
     haarAOI.yPos = 0;
@@ -272,134 +382,18 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, AOIPropertie
     int wdth = searchAOI.wdth - haarAOI.wdth;
     int hght = searchAOI.hght - haarAOI.hght;
     
-    for (int iRow = 0; iRow < hght; iRow++)
+    for (int y = 0; y < hght; y++)
     {
-        for (int iCol = 0; iCol < wdth; iCol++)
+        for (int x = 0; x < wdth; x++)
         {
-            // vertices of inner square
-            
-            int xTopLeft = iCol;
-            int yTopLeft = iRow;
-            
-            int xBtmRght = xTopLeft + haarAOI.wdth - 1;
-            int yBtmRght = yTopLeft + haarAOI.hght - 1;
-            
-            int iTopLeft = searchAOI.wdth * yTopLeft + xTopLeft;
-            int iTopRght = searchAOI.wdth * yTopLeft + xBtmRght;
-            int iBtmLeft = searchAOI.wdth * yBtmRght + xTopLeft;
-            int iBtmRght = searchAOI.wdth * yBtmRght + xBtmRght;
-            
-            // calculate glint intensity
-            
-            double glintIntensity = 0.0;
-            double glintArea = 0.0;
-            
-            bool GLINT_OVERLAP = false; // flag for glint overlap
-            
-            int xTopLeftGlint = glintAOI.xPos;
-            int yTopLeftGlint = glintAOI.yPos;
-            int xBtmRghtGlint = glintAOI.xPos + glintAOI.wdth - 1;
-            int yBtmRghtGlint = glintAOI.yPos + glintAOI.hght - 1;
-            
-            std::vector<int> X(2);
-            X[0] = xTopLeftGlint;
-            X[1] = xBtmRghtGlint;
-            
-            std::vector<int> Y(2);
-            Y[0] = yTopLeftGlint;
-            Y[1] = yBtmRghtGlint;
-            
-            // check if glint overlaps with Haar detector
-            
-            for (int i = 0; i < 2; i++)
+            double response = haarFeatureResponse(x, y, innerArea, I, searchAOI, haarAOI, glintAOI);
+
+            if (response > responseMax)
             {
-                for (int j = 0; j < 2; j++)
-                {
-                    if (X[i] > xTopLeft && X[i] < xBtmRght && Y[j] > yTopLeft && Y[j] < yBtmRght)
-                    { GLINT_OVERLAP = true; }
-                }
+                haarAOI.xPos = x;
+                haarAOI.yPos = y;
+                responseMax = response;
             }
-            
-            if (GLINT_OVERLAP) // if yes, check how much it overlaps
-            {
-                // Check overlap with edges
-                
-                if      (xTopLeftGlint < xTopLeft) { xTopLeftGlint = xTopLeft; } // left edge
-                else if (xBtmRghtGlint > xBtmRght) { xBtmRghtGlint = xBtmRght; } // right edge
-                if      (yTopLeftGlint < yTopLeft) { yTopLeftGlint = yTopLeft; } // top edge
-                else if (yBtmRghtGlint > yBtmRght) { yBtmRghtGlint = yBtmRght; } // bottom edge
-                
-                // coordinates of corners of glint square
-                
-                int iTopLeftGlint = searchAOI.wdth * yTopLeftGlint + xTopLeftGlint;
-                int iTopRghtGlint = searchAOI.wdth * yTopLeftGlint + xBtmRghtGlint;
-                int iBtmLeftGlint = searchAOI.wdth * yBtmRghtGlint + xTopLeftGlint;
-                int iBtmRghtGlint = searchAOI.wdth * yBtmRghtGlint + xBtmRghtGlint;
-                
-                // calculate area and intensity of glint
-                
-                glintIntensity = I[iBtmRghtGlint] - I[iBtmLeftGlint] - I[iTopRghtGlint] + I[iTopLeftGlint];
-                
-                int glintWdth = xBtmRghtGlint - xTopLeftGlint;
-                int glintHght = yBtmRghtGlint - yTopLeftGlint;
-                glintArea = glintWdth * glintHght;
-            }
-            
-            double intensityInner = I[iBtmRght] - I[iBtmLeft] - I[iTopRght] + I[iTopLeft];
-            intensityInner = intensityInner - glintIntensity; // adjust for glint
-            intensityInner = intensityInner / (innerArea - glintArea);
-            
-            int xTopLeftOuter = round(xTopLeft - 0.5 * haarAOI.wdth);
-            int xBtmRghtOuter = round(xBtmRght + 0.5 * haarAOI.wdth);
-            
-            if (xTopLeftOuter <               0) { xTopLeftOuter =                  0; }
-            if (xBtmRghtOuter >= searchAOI.wdth) { xBtmRghtOuter = searchAOI.wdth - 1; }
-            
-            int iTopLeftOuter = searchAOI.wdth * yTopLeft + xTopLeftOuter;
-            int iTopRghtOuter = searchAOI.wdth * yTopLeft + xBtmRghtOuter;
-            int iBtmLeftOuter = searchAOI.wdth * yBtmRght + xTopLeftOuter;
-            int iBtmRghtOuter = searchAOI.wdth * yBtmRght + xBtmRghtOuter;
-            
-            double intensityOuterLeft = I[iBtmLeft]      - I[iBtmLeftOuter] - I[iTopLeft]      + I[iTopLeftOuter];
-            double intensityOuterRght = I[iBtmRghtOuter] - I[iBtmRght]      - I[iTopRghtOuter] + I[iTopRght];
-            
-            int outerWdthLeft = xTopLeft - xTopLeftOuter;
-            int outerWdthRght = xBtmRghtOuter - xBtmRght;
-            
-            if (outerWdthLeft > 0)
-            {
-                int outerAreaLeft  = outerWdthLeft * (haarAOI.hght - 1);
-                intensityOuterLeft = intensityOuterLeft / outerAreaLeft;
-            }
-            else { intensityOuterLeft = 0; }
-            
-            if (outerWdthRght > 0)
-            {
-                int outerAreaRght  = outerWdthRght * (haarAOI.hght - 1);
-                intensityOuterRght = intensityOuterRght / outerAreaRght;
-            }
-            else { intensityOuterRght = 0; }
-            
-            if (intensityInner < intensityInnerMin)
-            {
-                haarAOI.xPos = xTopLeft;
-                haarAOI.yPos = yTopLeft;
-                intensityInnerMin = intensityInner;
-            }
-            
-            // This section needs to be removed
-            
-            int x = iCol;
-            int y = iRow;
-            
-            x = round(x + searchAOI.xPos + 0.5 * (haarAOI.wdth - 1));
-            y = round(y + searchAOI.yPos + 0.5 * (haarAOI.hght - 1));
-            
-            int i = imgWidth * y + x;
-            
-            innerIntensities[i]     = intensityInner;
-            outerIntensitiesLeft[i] = intensityOuterLeft;
-            outerIntensitiesRght[i] = intensityOuterRght;
         }
     }
     
@@ -2201,15 +2195,14 @@ std::vector<edgeProperties> removeShortEdges(const detectionParameters& mDetecti
     return vEdgePropertiesNew;
 }
 
-std::vector<int> edgeClassification(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, const std::vector<edgeProperties>& vEdgePropertiesAll)
+std::vector<int> edgeClassification(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<edgeProperties>& vEdgePropertiesAll)
 {
     int numEdgesMax = mDetectionParameters.fitEdgeMaximum;
     int numEdges    = vEdgePropertiesAll.size();
     if (numEdgesMax > numEdges) { numEdgesMax = numEdges; }
     
     // Classify edges based on score
-    
-    std::vector<double> totalScores(numEdges);
+
     std::vector<int> pupilEdges;
     
     if (mDetectionVariables.certaintyFeatures > certaintyThreshold || mDetectionVariables.certaintyPosition > certaintyThreshold) // need to have enough certainty
@@ -2231,14 +2224,14 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
             featureValues[4] = std::abs(vEdgePropertiesAll[iEdge].gradient  - mDetectionVariables.predictedGradient);
             featureValues[5] = vEdgePropertiesAll[iEdge].radiusVar;
             
-            totalScores[iEdge] = calculateScoreTotal(mDetectionVariables, featureValues, true, true);
+            vEdgePropertiesAll[iEdge].score = calculateScoreTotal(mDetectionVariables, featureValues, true, true);
         }
         
         // Only pick edges above threshold
         
         for (int iEdge = 0; iEdge < numEdges; iEdge++)
         {
-            if (totalScores[iEdge] >= mDetectionVariables.thresholdScoreEdge)
+            if (vEdgePropertiesAll[iEdge].score >= mDetectionVariables.thresholdScoreEdge)
             {
                 pupilEdges.push_back(iEdge);
             }
@@ -2248,7 +2241,7 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
     {
         for (int iEdge = 0; iEdge < numEdges; iEdge++)
         {
-            totalScores[iEdge] = 1 / (vEdgePropertiesAll[iEdge].intensity + 1); // avoids inf
+            vEdgePropertiesAll[iEdge].score = 1 / (vEdgePropertiesAll[iEdge].intensity + 1); // avoids inf
             pupilEdges.push_back(iEdge);
         }
     }
@@ -2261,7 +2254,7 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
         
         for (int iEdge = 0; iEdge < numEdgesNew; iEdge++)
         {
-            totalScoresUnsorted.push_back(totalScores[pupilEdges[iEdge]]);
+            totalScoresUnsorted.push_back(vEdgePropertiesAll[pupilEdges[iEdge]].score);
         }
         
         std::vector<int> acceptedEdges(numEdgesMax);
@@ -2445,7 +2438,9 @@ std::vector<edgeProperties> edgeCollectionFilter(const detectionVariables& mDete
     std::vector<edgeProperties> vEdgeProperties; // properties of edge collections
     
     int numEdgesTotal = vEdgePropertiesAll.size(); // total number of edges
-    
+
+    std::vector<double> edgeScoresUnsorted;
+
     // First collect all ellipse fits
     
     for (int combiNumEdges = numEdgesTotal; combiNumEdges >= 1; combiNumEdges--) // loop through all possible edge set sizes
@@ -2455,15 +2450,16 @@ std::vector<edgeProperties> edgeCollectionFilter(const detectionVariables& mDete
         
         do // loop through all possible edge combinations for the current set size
         {
+            std::vector<double> combiEdgeScores(combiNumEdges);
             std::vector<int> combiEdgeIndices (combiNumEdges);
             std::vector<int> combiEdgeLengths (combiNumEdges);
-            
             std::vector<std::vector<int>> combiEdgePoints(combiNumEdges);
             
             for (int iEdge = 0, jEdge = 0; iEdge < numEdgesTotal; ++iEdge)
             {
                 if (edgeCombination[iEdge])
                 {
+                    combiEdgeScores [jEdge] = vEdgePropertiesAll[iEdge].score;
                     combiEdgeIndices[jEdge] = vEdgePropertiesAll[iEdge].index;
                     combiEdgeLengths[jEdge] = vEdgePropertiesAll[iEdge].length;
                     combiEdgePoints [jEdge] = vEdgePropertiesAll[iEdge].pointIndices;
@@ -2509,10 +2505,16 @@ std::vector<edgeProperties> edgeCollectionFilter(const detectionVariables& mDete
 
             if (combiWdth < fitMinRange * (mDetectionVariables.predictedWidth  - sizeChange)) { continue; }
             if (combiHght < fitMinRange * (mDetectionVariables.predictedHeight - sizeChange)) { continue; }
-            
+            if (combiWdth >                mDetectionVariables.predictedWidth  + sizeChange)  { continue; }
+            if (combiHght >                mDetectionVariables.predictedHeight + sizeChange)  { continue; }
+
+            double meanScore = calculateMean(combiEdgeScores);
+            edgeScoresUnsorted.push_back(meanScore);
+
             // Record edge collection
             
             edgeProperties mEdgeProperties;
+            mEdgeProperties.score        = meanScore;
             mEdgeProperties.edgeIndices  = combiEdgeIndices;
             mEdgeProperties.pointIndices = edgePointIndices;
             mEdgeProperties.length       = edgeSetLength;
@@ -2527,22 +2529,18 @@ std::vector<edgeProperties> edgeCollectionFilter(const detectionVariables& mDete
     if (numFits > mDetectionParameters.fitMaximum)
     {
         std::vector<edgeProperties> vEdgePropertiesTemp(mDetectionParameters.fitMaximum);
-        std::vector<double> lengthErrorUnsorted(numFits);
-        
-        for (int iFit = 0; iFit < numFits; iFit++)
-        { lengthErrorUnsorted[iFit] = std::abs(vEdgeProperties[iFit].length - mDetectionVariables.predictedCircumference); }
-        
-        std::vector<double> lengthErrorSorted = lengthErrorUnsorted;
-        std::sort(lengthErrorSorted.begin(), lengthErrorSorted.end());
-        
+        std::vector<double> edgeScoresSorted = edgeScoresUnsorted;
+        std::sort   (edgeScoresSorted.begin(), edgeScoresSorted.end());
+        std::reverse(edgeScoresSorted.begin(), edgeScoresSorted.end());
+
         for (int iFit = 0; iFit < mDetectionParameters.fitMaximum; iFit++)
         {
             for (int jFit = 0; jFit < numFits; jFit++)
             {
-                if (lengthErrorSorted[iFit] == lengthErrorUnsorted[jFit])
+                if (edgeScoresSorted[iFit] == edgeScoresUnsorted[jFit])
                 {
                     vEdgePropertiesTemp[iFit] = vEdgeProperties[jFit];
-                    lengthErrorUnsorted[jFit] = std::numeric_limits<double>::max();
+                    edgeScoresUnsorted[jFit]  = std::numeric_limits<double>::max();
                     break;
                 }
             }
@@ -2563,7 +2561,6 @@ std::vector<ellipseProperties> ellipseFitting(const detectionVariables& mDetecti
     for (int iEdge = 0; iEdge < numEdgesTotal; iEdge++)
     {
         std::vector<int> pointIndices = vEdgePropertiesAll[iEdge].pointIndices;
-        std::vector<int> edgeIndices  = vEdgePropertiesAll[iEdge].edgeIndices;
         double edgeSetLength          = vEdgePropertiesAll[iEdge].length;
 
         ellipseProperties mEllipseProperties = fitEllipse(pointIndices, mAOI);
@@ -2618,8 +2615,9 @@ std::vector<ellipseProperties> ellipseFitting(const detectionVariables& mDetecti
         // Save parameters of accepted fit
         
         mEllipseProperties.fitError    = fitErrorRelative;
-        mEllipseProperties.edgeIndices = edgeIndices;
         mEllipseProperties.edgeLength  = edgeSetLength;
+        mEllipseProperties.edgeIndices = vEdgePropertiesAll[iEdge].edgeIndices;
+        mEllipseProperties.edgeScore   = vEdgePropertiesAll[iEdge].score;
         vEllipsePropertiesAll.push_back(mEllipseProperties);
     }
     
@@ -2642,7 +2640,7 @@ std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables,
     static const double sigmaAngle         = 0.065955;
     
     int numFits = vEllipseProperties.size();
-    
+
     std::vector<double> scoreFits(numFits);
     
     for (int iFit = 0; iFit < numFits; iFit++)
@@ -2682,39 +2680,41 @@ std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables,
     // Find all accepted fits
     
     std::vector<int> acceptedIndices;
-    std::vector<double> scoreFitsSorted = scoreFits;
 
-    std::sort   (scoreFitsSorted.begin(), scoreFitsSorted.end());
-    std::reverse(scoreFitsSorted.begin(), scoreFitsSorted.end());
-
-    double scoreFitMax = scoreFitsSorted[0];
-    std::vector<double> acceptedScores = {scoreFitMax};
-
-    // Accept other fits if they are within score threshold difference
-
-    for (int iFit = 1; iFit < numFits; iFit++)
+    if (numFits > 0)
     {
-        double scoreFit = scoreFitsSorted[iFit];
-        if (scoreFit + mDetectionParameters.thresholdScoreDiffFit >= scoreFitMax)
-        {
-            acceptedScores.push_back(scoreFit);
-        }
-    }
+        std::vector<double> scoreFitsSorted = scoreFits;
+        std::sort   (scoreFitsSorted.begin(), scoreFitsSorted.end());
+        std::reverse(scoreFitsSorted.begin(), scoreFitsSorted.end());
+        double scoreFitMax = scoreFitsSorted[0];
+        std::vector<double> acceptedScores = {scoreFitMax};
 
-    // Actual accepted fits
+        // Accept other fits if they are within score threshold difference
 
-    int numFitsAccepted = acceptedScores.size();
-    for (int iFit = 0; iFit < numFitsAccepted; iFit++)
-    {
-        double scoreFit = acceptedScores[iFit];
-        if (scoreFit > mDetectionVariables.thresholdScoreFit)
+        for (int iFit = 1; iFit < numFits; iFit++)
         {
-            for (int jFit = 0; jFit < numFits; jFit++)
+            double scoreFit = scoreFitsSorted[iFit];
+            if (scoreFit + mDetectionParameters.thresholdScoreDiffFit >= scoreFitMax)
             {
-                if (scoreFit == scoreFits[jFit])
+                acceptedScores.push_back(scoreFit);
+            }
+        }
+
+        // Actual accepted fits
+
+        int numFitsAccepted = acceptedScores.size();
+        for (int iFit = 0; iFit < numFitsAccepted; iFit++)
+        {
+            double scoreFit = acceptedScores[iFit];
+            if (scoreFit > mDetectionVariables.thresholdScoreFit)
+            {
+                for (int jFit = 0; jFit < numFits; jFit++)
                 {
-                    acceptedIndices.push_back(jFit);
-                    scoreFits[jFit] = -std::numeric_limits<double>::max();
+                    if (scoreFit == scoreFits[jFit])
+                    {
+                        acceptedIndices.push_back(jFit);
+                        scoreFits[jFit] = -std::numeric_limits<double>::max();
+                    }
                 }
             }
         }
@@ -2835,12 +2835,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
     int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset + 0.5 * mDetectionVariables.predictedWidth);
     int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
-    
-    searchAOI.xPos = 0; // needs to be removed
-    searchAOI.yPos = 0;
-    searchEndX = imageWdth;
-    searchEndY = imageHght;
-    
+
     if (searchAOI.xPos < imageAOI.xPos)
     {   searchAOI.xPos = imageAOI.xPos; }
     if (searchAOI.yPos < imageAOI.yPos)
@@ -2865,92 +2860,93 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     cv::cvtColor(imageOriginalBGR, imageOriginalGray, cv::COLOR_BGR2GRAY);
     
     ////////////////////////////////////////////////////////////////////
-    /////////////////////// INITIAL DETECTION  /////////////////////////
+    ///////////////////// APPROXIMATE DETECTION  ///////////////////////
     ////////////////////////////////////////////////////////////////////
     
     AOIProperties glintAOI;
     
     double sizeFactorUp   = 2;
     double sizeFactorDown = 1 / sizeFactorUp;
-    
-    if (searchAOI.wdth > haarAOI.wdth || searchAOI.hght > haarAOI.hght)
-    {
-        // Down sample image
-        
-        int imgWdthResized = round(imageWdth * sizeFactorDown);
-        int imgHghtResized = round(imageHght * sizeFactorDown);
-        
-        cv::Size size(imgWdthResized, imgHghtResized);
-        cv::Mat imageResized;
-        cv::resize(imageOriginalGray, imageResized, size);
-        
-        AOIProperties searchAOIResized;
-        searchAOIResized.xPos = sizeFactorDown * searchAOI.xPos;
-        searchAOIResized.yPos = sizeFactorDown * searchAOI.yPos;
-        searchAOIResized.wdth = sizeFactorDown * searchAOI.wdth;
-        searchAOIResized.hght = sizeFactorDown * searchAOI.hght;
-        
-        AOIProperties haarAOIResized;
-        haarAOIResized.xPos = sizeFactorDown * haarAOI.xPos;
-        haarAOIResized.yPos = sizeFactorDown * haarAOI.yPos;
-        haarAOIResized.wdth = sizeFactorDown * haarAOI.wdth;
-        haarAOIResized.hght = sizeFactorDown * haarAOI.hght;
-        
-        AOIProperties glintAOIResized;
-        glintAOIResized.wdth = sizeFactorDown * mDetectionParameters.glintWdth;
-        glintAOIResized.hght = glintAOIResized.wdth;
-        
-        // Haar-like feature detection
-        
-        std::vector<unsigned int> integralImage = calculateIntImg(imageResized, searchAOIResized);
-        
-        glintAOIResized = detectGlint(imageResized, searchAOIResized, glintAOIResized);
-        glintAOIResized.xPos = searchAOIResized.xPos + glintAOIResized.xPos;
-        glintAOIResized.yPos = searchAOIResized.yPos + glintAOIResized.yPos;
-        
-        mDataVariables.intensityInner.resize    (imgWdthResized * imgHghtResized); // needs to be removed
-        mDataVariables.intensityOuterLeft.resize(imgWdthResized * imgHghtResized);
-        mDataVariables.intensityOuterRght.resize(imgWdthResized * imgHghtResized);
-        
-        haarAOIResized = detectPupilApprox(integralImage, searchAOIResized, haarAOIResized, glintAOIResized, mDataVariables.intensityInner, mDataVariables.intensityOuterLeft, mDataVariables.intensityOuterRght, imgWdthResized);
-        
-        // Upsample to original size
-        
-        glintAOI.xPos = sizeFactorUp * glintAOIResized.xPos;
-        glintAOI.yPos = sizeFactorUp * glintAOIResized.yPos;
-        glintAOI.wdth = sizeFactorUp * glintAOIResized.wdth;
-        glintAOI.hght = sizeFactorUp * glintAOIResized.hght;
-        
-        searchAOI.xPos = sizeFactorUp * searchAOIResized.xPos;
-        searchAOI.yPos = sizeFactorUp * searchAOIResized.yPos;
-        searchAOI.wdth = sizeFactorUp * searchAOIResized.wdth;
-        searchAOI.hght = sizeFactorUp * searchAOIResized.hght;
-        
-        haarAOI.xPos = sizeFactorUp * haarAOIResized.xPos;
-        haarAOI.yPos = sizeFactorUp * haarAOIResized.yPos;
-        haarAOI.wdth = sizeFactorUp * haarAOIResized.wdth;
-        haarAOI.hght = sizeFactorUp * haarAOIResized.hght;
-        
-        // Offset Haar AOI
-        
-        haarAOI.xPos = searchAOI.xPos + haarAOI.xPos;
-        haarAOI.yPos = searchAOI.yPos + haarAOI.yPos;
+
+    // Down sample image
+
+    int imgWdthResized = round(imageWdth * sizeFactorDown);
+    int imgHghtResized = round(imageHght * sizeFactorDown);
+
+    cv::Size size(imgWdthResized, imgHghtResized);
+    cv::Mat imageResized;
+    cv::resize(imageOriginalGray, imageResized, size);
+
+    AOIProperties searchAOIResized;
+    searchAOIResized.xPos = sizeFactorDown * searchAOI.xPos;
+    searchAOIResized.yPos = sizeFactorDown * searchAOI.yPos;
+    searchAOIResized.wdth = sizeFactorDown * searchAOI.wdth;
+    searchAOIResized.hght = sizeFactorDown * searchAOI.hght;
+
+    AOIProperties haarAOIResized;
+    haarAOIResized.xPos = sizeFactorDown * haarAOI.xPos;
+    haarAOIResized.yPos = sizeFactorDown * haarAOI.yPos;
+    haarAOIResized.wdth = sizeFactorDown * haarAOI.wdth;
+    haarAOIResized.hght = sizeFactorDown * haarAOI.hght;
+
+    AOIProperties glintAOIResized;
+    glintAOIResized.wdth = sizeFactorDown * mDetectionParameters.glintWdth;
+    glintAOIResized.hght = glintAOIResized.wdth;
+
+    // Haar-like feature detection
+
+    std::vector<unsigned int> integralImage = calculateIntImg(imageResized, searchAOIResized);
+
+    glintAOIResized = detectGlint(imageResized, searchAOIResized, glintAOIResized);
+    glintAOIResized.xPos = searchAOIResized.xPos + glintAOIResized.xPos;
+    glintAOIResized.yPos = searchAOIResized.yPos + glintAOIResized.yPos;
+
+    haarAOIResized = detectPupilApprox(integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+
+    // Upsample to original size
+
+    glintAOI.xPos = sizeFactorUp * glintAOIResized.xPos;
+    glintAOI.yPos = sizeFactorUp * glintAOIResized.yPos;
+    glintAOI.wdth = sizeFactorUp * glintAOIResized.wdth;
+    glintAOI.hght = sizeFactorUp * glintAOIResized.hght;
+
+    searchAOI.xPos = sizeFactorUp * searchAOIResized.xPos;
+    searchAOI.yPos = sizeFactorUp * searchAOIResized.yPos;
+    searchAOI.wdth = sizeFactorUp * searchAOIResized.wdth;
+    searchAOI.hght = sizeFactorUp * searchAOIResized.hght;
+
+    haarAOI.xPos = sizeFactorUp * haarAOIResized.xPos;
+    haarAOI.yPos = sizeFactorUp * haarAOIResized.yPos;
+    haarAOI.wdth = sizeFactorUp * haarAOIResized.wdth;
+    haarAOI.hght = sizeFactorUp * haarAOIResized.hght;
+
+    // Offset Haar AOI
+
+    haarAOI.xPos = searchAOI.xPos + haarAOI.xPos;
+    haarAOI.yPos = searchAOI.yPos + haarAOI.yPos;
+
+    { // Update position prediction using Haar-like feature detector response
+        int innerArea = (haarAOIResized.wdth - 1) * (haarAOIResized.hght - 1);
+        int predictionXPos = round(sizeFactorDown * (mDetectionVariables.predictedXPos - 0.5 * (haarAOI.wdth - 1) - searchAOI.xPos));
+        int predictionYPos = round(sizeFactorDown * (mDetectionVariables.predictedYPos - 0.5 * (haarAOI.hght - 1) - searchAOI.yPos));
+        if (predictionXPos < 0) { predictionXPos = 0; }
+        if (predictionYPos < 0) { predictionYPos = 0; }
+        double responseMaximum    = haarFeatureResponse(haarAOIResized.xPos, haarAOIResized.yPos, innerArea, integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+        double responsePrediction = haarFeatureResponse(     predictionXPos,      predictionYPos, innerArea, integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+
+        double AOIXPos   = haarAOI.xPos + 0.5 * (haarAOI.wdth - 1); // centre of haar-like detector
+        double AOIYPos   = haarAOI.yPos + 0.5 * (haarAOI.hght - 1);
+
+        double responseDeltaPrediction = mDetectionVariables.predictedHaarResponse - std::abs(mDetectionVariables.predictedHaarResponse - responsePrediction);
+        double responseDeltaMaximum    = mDetectionVariables.predictedHaarResponse - std::abs(mDetectionVariables.predictedHaarResponse - responseMaximum);
+
+        double responseFraction = 0;
+        if (responseDeltaMaximum > 0) { responseFraction = responseDeltaPrediction / responseDeltaMaximum; }
+        if     (responseFraction > 1) { responseFraction = 1; }
+
+        mDetectionVariables.predictedXPos = AOIXPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedXPos - AOIXPos);
+        mDetectionVariables.predictedYPos = AOIYPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedYPos - AOIYPos);
     }
-    else // search not required
-    {
-        haarAOI.xPos  = searchAOI.xPos;
-        haarAOI.yPos  = searchAOI.yPos;
-        haarAOI.flag  = false;
-        glintAOI.flag = false;
-    }
-    
-    double AOIXPos   = haarAOI.xPos + 0.5 * (haarAOI.wdth - 1); // centre of haar-like detector
-    double AOIYPos   = haarAOI.yPos + 0.5 * (haarAOI.hght - 1);
-
-    // Update position prediction using Haar feature detector response
-
-
-
 
     // Create new AOI for Canny edge deteciton
 
@@ -2961,8 +2957,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     }
     
     AOIProperties cannyAOI;
-    cannyAOI.xPos = round(AOIXPos - 0.5 * mDetectionVariables.predictedWidth  - AOIOffset);
-    cannyAOI.yPos = round(AOIYPos - 0.5 * mDetectionVariables.predictedHeight - AOIOffset);
+    cannyAOI.xPos = round(mDetectionVariables.predictedXPos - 0.5 * mDetectionVariables.predictedWidth  - AOIOffset);
+    cannyAOI.yPos = round(mDetectionVariables.predictedYPos - 0.5 * mDetectionVariables.predictedHeight - AOIOffset);
     cannyAOI.wdth = round(mDetectionVariables.predictedWidth  + 2 * AOIOffset);
     cannyAOI.hght = round(mDetectionVariables.predictedHeight + 2 * AOIOffset);
     
@@ -3005,12 +3001,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     /////////////////////////////////////////////////////////////////////////////
     //////////////////////////// EDGE SELECTION   ///////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
-    
-    { // calculate predicted positions relative to Canny edge AOI
-        mDetectionVariables.predictedXPosRelative = (1 - mDetectionVariables.certaintyPosition) * AOIXPos + mDetectionVariables.certaintyPosition * mDetectionVariables.predictedXPos - cannyAOI.xPos;
-        mDetectionVariables.predictedYPosRelative = (1 - mDetectionVariables.certaintyPosition) * AOIYPos + mDetectionVariables.certaintyPosition * mDetectionVariables.predictedYPos - cannyAOI.yPos;
-    }
-    
+
+    // calculate predicted positions relative to Canny edge AOI
+    mDetectionVariables.predictedXPosRelative = mDetectionVariables.predictedXPos - cannyAOI.xPos;
+    mDetectionVariables.predictedYPosRelative = mDetectionVariables.predictedYPos - cannyAOI.yPos;
+
     std::vector<edgeProperties> vEdgePropertiesAll = edgeSelection(mDetectionVariables, mDetectionParameters, cannyEdgesSharpened, cannyAOI);
     vEdgePropertiesAll = removeShortEdges(mDetectionParameters, vEdgePropertiesAll);
     
@@ -3173,61 +3168,55 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     
     ellipseProperties mEllipseProperties; // properties of accepted fit
     
-    int numFits = vEllipsePropertiesAll.size();
-    
+    std::vector<int> acceptedFitIndices = ellipseFitFilter(mDetectionVariables, mDetectionParameters, vEllipsePropertiesAll); // grab best fit
+    int numFits = acceptedFitIndices.size();
+
     if (numFits > 0)
     {
-        std::vector<int> acceptedFitIndices;
-        
-        if (numFits > 1) { acceptedFitIndices = ellipseFitFilter(mDetectionVariables, mDetectionParameters, vEllipsePropertiesAll); } // grab best fit
-        else             { acceptedFitIndices = {0}; }
-        
-        int numFitsAccepted = acceptedFitIndices.size();
-        
-        std::vector<ellipseProperties> vEllipsePropertiesNew(numFitsAccepted);
-        
+        std::vector<ellipseProperties> vEllipsePropertiesNew(numFits);
+
         // Tag fits
-        
-        for (int iFit = 0; iFit < numFitsAccepted; iFit++)
+
+        for (int iFit = 0; iFit < numFits; iFit++)
         {
             ellipseProperties mEllipsePropertiesTemp = vEllipsePropertiesAll[acceptedFitIndices[iFit]];
             vEllipsePropertiesNew[iFit] = mEllipsePropertiesTemp;
             vEllipsePropertiesAll[acceptedFitIndices[iFit]].tag = 1;
-            
+
             // Tag edges
-            
+
             for (int iEdge = 0, numEdges = mEllipsePropertiesTemp.edgeIndices.size(); iEdge < numEdges; iEdge++)
             {
                 int jEdge = mEllipsePropertiesTemp.edgeIndices[iEdge];
                 vEdgePropertiesAll[jEdge].tag = 2;
             }
         }
-        
+
         mEllipseProperties = vEllipsePropertiesNew[0]; // set equal to highest score fit
         mEllipseProperties.DETECTED = true;
-        
+
         // Get average properties if multiple fits are accepted
-        
-        if (numFitsAccepted > 1) { ellipseFitAverage(mEllipseProperties, vEllipsePropertiesNew); }
-        
+
+        if (numFits > 1) { ellipseFitAverage(mEllipseProperties, vEllipsePropertiesNew); }
+
         // Calculate average properties of fitted edges
-        
+
         std::vector<double> curvatures;
         std::vector<int> intensities;
         std::vector<int> gradients;
         std::vector<int> numEdgePoints_1;
         std::vector<int> numEdgePoints_2;
-        
+
         for (int iEdge = 0, numEdgesAll = vEdgePropertiesAll.size(); iEdge < numEdgesAll; iEdge++)
         {
             edgeProperties mEdgeProperties = vEdgePropertiesAll[iEdge];
-            
+
             if (mEdgeProperties.tag == 2)
             {
                 intensities.push_back(mEdgeProperties.intensity);
                 gradients.push_back(mEdgeProperties.gradient);
                 numEdgePoints_1.push_back(mEdgeProperties.length);
-                
+
                 if (std::isfinite(mEdgeProperties.curvature)) // ignore edges for which no curvature information is available
                 {
                     numEdgePoints_2.push_back(mEdgeProperties.length);
@@ -3235,13 +3224,13 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
                 }
             }
         }
-        
+
         // Calculate intensity and gradient means
-        
+
         double intensityMean = 0;
         double gradientMean  = 0;
         double numEdgePointsTotal_1 = std::accumulate(numEdgePoints_1.begin(), numEdgePoints_1.end(), 0.0);
-        
+
         if (numEdgePointsTotal_1 > 0)
         {
             for (int iEdge = 0, numEdges = intensities.size(); iEdge < numEdges; iEdge++)
@@ -3256,15 +3245,15 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
             intensityMean = mDetectionVariables.predictedIntensity;
             gradientMean  = mDetectionVariables.predictedGradient;
         }
-        
+
         mEllipseProperties.intensity = intensityMean;
         mEllipseProperties.gradient  =  gradientMean;
-        
+
         // Calculate curvature mean
-        
+
         double curvatureMean = 0;
         double numEdgePointsTotal_2 = std::accumulate(numEdgePoints_2.begin(), numEdgePoints_2.end(), 0.0);
-        
+
         if (numEdgePointsTotal_2 > 0)
         {
             for (int iEdge = 0, numEdges = curvatures.size(); iEdge < numEdges; iEdge++)
@@ -3274,8 +3263,9 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
             }
         }
         else { curvatureMean = mDetectionVariables.predictedCurvature; }
-        
+
         mEllipseProperties.curvature = curvatureMean;
+
     }
     else
     {
@@ -3330,6 +3320,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         double meanHeight        = meanCircumference / M_PI;
         double meanIntensity     = initialIntensity;
         double meanGradient      = 0;
+        double meanHaarResponse  = 0;
         
         double curvatureMax = getCurvatureUpperLimit(meanCircumference, meanAspectRatio, mDetectionParameters.windowLengthEdge);
         double curvatureMin = getCurvatureLowerLimit(meanCircumference, meanAspectRatio, mDetectionParameters.windowLengthEdge);
@@ -3345,6 +3336,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         mDetectionVariablesNew.momentumCurvature     = mDetectionVariables.momentumCurvature     * (1 - mDetectionParameters.alphaFeatures);
         mDetectionVariablesNew.momentumIntensity     = mDetectionVariables.momentumIntensity     * (1 - mDetectionParameters.alphaFeatures);
         mDetectionVariablesNew.momentumGradient      = mDetectionVariables.momentumGradient      * (1 - mDetectionParameters.alphaFeatures);
+        mDetectionVariablesNew.momentumHaarResponse  = mDetectionVariables.momentumHaarResponse  * (1 - mDetectionParameters.alphaFeatures);
         mDetectionVariablesNew.momentumXPos          = mDetectionVariables.momentumXPos          * (1 - mDetectionParameters.alphaPosition);
         mDetectionVariablesNew.momentumYPos          = mDetectionVariables.momentumYPos          * (1 - mDetectionParameters.alphaPosition);
         
@@ -3357,7 +3349,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         mDetectionVariablesNew.averageCurvature     = mDetectionVariables.averageCurvature     + mDetectionParameters.alphaAverages * (1 - mDetectionVariables.certaintyAverages) * (meanCurvature     - mDetectionVariables.averageCurvature);
         mDetectionVariablesNew.averageIntensity     = mDetectionVariables.averageIntensity     + mDetectionParameters.alphaAverages * (1 - mDetectionVariables.certaintyAverages) * (meanIntensity     - mDetectionVariables.averageIntensity);
         mDetectionVariablesNew.averageGradient      = mDetectionVariables.averageGradient      + mDetectionParameters.alphaAverages * (1 - mDetectionVariables.certaintyAverages) * (meanGradient      - mDetectionVariables.averageGradient);
-        
+        mDetectionVariablesNew.averageHaarResponse  = mDetectionVariables.averageHaarResponse  + mDetectionParameters.alphaAverages * (1 - mDetectionVariables.certaintyAverages) * (meanHaarResponse  - mDetectionVariables.averageHaarResponse);
+
         // Feature predictions should decay to average terms. Certainty term gives some latency.
         
         mDetectionVariablesNew.predictedAspectRatio   = mDetectionVariables.predictedAspectRatio   + mDetectionParameters.alphaFeatures * (1 - mDetectionVariables.certaintyFeatures) * (mDetectionVariables.averageAspectRatio   - mDetectionVariables.predictedAspectRatio)   + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumAspectRatio;
@@ -3367,13 +3360,14 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         mDetectionVariablesNew.predictedCurvature     = mDetectionVariables.predictedCurvature     + mDetectionParameters.alphaFeatures * (1 - mDetectionVariables.certaintyFeatures) * (mDetectionVariables.averageCurvature     - mDetectionVariables.predictedCurvature)     + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumCurvature;
         mDetectionVariablesNew.predictedIntensity     = mDetectionVariables.predictedIntensity     + mDetectionParameters.alphaFeatures * (1 - mDetectionVariables.certaintyFeatures) * (mDetectionVariables.averageIntensity     - mDetectionVariables.predictedIntensity)     + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumIntensity;
         mDetectionVariablesNew.predictedGradient      = mDetectionVariables.predictedGradient      + mDetectionParameters.alphaFeatures * (1 - mDetectionVariables.certaintyFeatures) * (mDetectionVariables.averageGradient      - mDetectionVariables.predictedGradient)      + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumGradient;
-        
+        mDetectionVariablesNew.predictedHaarResponse  = mDetectionVariables.predictedHaarResponse  + mDetectionParameters.alphaFeatures * (1 - mDetectionVariables.certaintyFeatures) * (mDetectionVariables.averageHaarResponse  - mDetectionVariables.predictedHaarResponse)  + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumHaarResponse;
+
         mDetectionVariablesNew.predictedAngle = mDetectionVariables.predictedAngle * (1 - mDetectionParameters.alphaFeatures * mDetectionVariables.certaintyFeatures); // reduce to zero
         
         // Position predictions should decay to approximate detection position. Certainty term gives some latency.
         
-        mDetectionVariablesNew.predictedXPos = mDetectionVariables.predictedXPos + mDetectionParameters.alphaPosition * (1 - mDetectionVariables.certaintyPosition) * (haarAOI.xPos + 0.5 * haarAOI.wdth - mDetectionVariables.predictedXPos) + mDetectionVariables.certaintyPosition * mDetectionVariables.momentumXPos;
-        mDetectionVariablesNew.predictedYPos = mDetectionVariables.predictedYPos + mDetectionParameters.alphaPosition * (1 - mDetectionVariables.certaintyPosition) * (haarAOI.yPos + 0.5 * haarAOI.hght - mDetectionVariables.predictedYPos) + mDetectionVariables.certaintyPosition * mDetectionVariables.momentumYPos;
+        mDetectionVariablesNew.predictedXPos = mDetectionVariables.predictedXPos + mDetectionVariables.certaintyPosition * mDetectionVariables.momentumXPos;
+        mDetectionVariablesNew.predictedYPos = mDetectionVariables.predictedYPos + mDetectionVariables.certaintyPosition * mDetectionVariables.momentumYPos;
         
         // Certainty decays to minimum value
         
@@ -3401,9 +3395,9 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         double errorIntensity     = mEllipseProperties.intensity     - mDetectionVariables.predictedIntensity;
         double errorGradient      = mEllipseProperties.gradient      - mDetectionVariables.predictedGradient;
         double errorAngle         = mEllipseProperties.angle         - mDetectionVariables.predictedAngle;
-        double errorXPosition     = mDataVariables.exactXPos         - mDetectionVariables.predictedXPos;
-        double errorYPosition     = mDataVariables.exactYPos         - mDetectionVariables.predictedYPos;
-        
+        double errorXPosition     = mEllipseProperties.xPos          - mDetectionVariables.predictedXPos;
+        double errorYPosition     = mEllipseProperties.yPos          - mDetectionVariables.predictedYPos;
+
         // Momentum. Rate of change approximation.
         
         mDetectionVariablesNew.momentumAspectRatio   =  mDetectionVariables.momentumAspectRatio   + mDetectionParameters.alphaFeatures * (errorAspectRatio   - mDetectionVariables.momentumAspectRatio);
@@ -3426,7 +3420,6 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         mDetectionVariablesNew.predictedIntensity     = mDetectionVariables.predictedIntensity     + mDetectionParameters.alphaFeatures * errorIntensity     + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumIntensity;
         mDetectionVariablesNew.predictedGradient      = mDetectionVariables.predictedGradient      + mDetectionParameters.alphaFeatures * errorGradient      + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumGradient;
         mDetectionVariablesNew.predictedAngle         = mDetectionVariables.predictedAngle         + mDetectionParameters.alphaFeatures * errorAngle;
-        
         mDetectionVariablesNew.predictedXPos          = mDetectionVariables.predictedXPos          + mDetectionParameters.alphaPosition * errorXPosition     + mDetectionVariables.certaintyPosition * mDetectionVariables.momentumXPos;
         mDetectionVariablesNew.predictedYPos          = mDetectionVariables.predictedYPos          + mDetectionParameters.alphaPosition * errorYPosition     + mDetectionVariables.certaintyPosition * mDetectionVariables.momentumYPos;
         
@@ -3440,6 +3433,21 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         mDetectionVariablesNew.averageIntensity     = mDetectionVariables.averageIntensity     + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedIntensity     - mDetectionVariables.averageIntensity);
         mDetectionVariablesNew.averageGradient      = mDetectionVariables.averageGradient      + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedGradient      - mDetectionVariables.averageGradient);
         
+        // Update Haar-like feature response
+
+        haarAOIResized.wdth = mDetectionVariablesNew.predictedWidth;
+        haarAOIResized.hght = mDetectionVariablesNew.predictedHeight;
+        int innerArea = (haarAOIResized.wdth - 1) * (haarAOIResized.hght - 1);
+        int predictionXPos = round(sizeFactorDown * (mDetectionVariables.predictedXPos - 0.5 * (haarAOI.wdth - 1) - searchAOI.xPos));
+        int predictionYPos = round(sizeFactorDown * (mDetectionVariables.predictedYPos - 0.5 * (haarAOI.hght - 1) - searchAOI.yPos));
+        if (predictionXPos < 0) { predictionXPos = 0; }
+        if (predictionYPos < 0) { predictionYPos = 0; }
+        double haarResponse      = haarFeatureResponse(predictionXPos, predictionYPos, innerArea, integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+        double errorHaarResponse = haarResponse - mDetectionVariables.predictedHaarResponse;
+        mDetectionVariablesNew.momentumHaarResponse  = mDetectionVariables.momentumHaarResponse  + mDetectionParameters.alphaFeatures * (errorHaarResponse - mDetectionVariables.momentumHaarResponse);
+        mDetectionVariablesNew.predictedHaarResponse = mDetectionVariables.predictedHaarResponse + mDetectionParameters.alphaFeatures *  errorHaarResponse + mDetectionVariables.certaintyFeatures * mDetectionVariables.momentumHaarResponse;
+        mDetectionVariablesNew.averageHaarResponse   = mDetectionVariables.averageHaarResponse   + mDetectionParameters.alphaAverages * (mDetectionVariables.predictedHaarResponse - mDetectionVariables.averageHaarResponse);
+
         // Determine certainty of current measurement
         
         double displacement                = sqrt(errorXPosition * errorXPosition + errorYPosition * errorYPosition);

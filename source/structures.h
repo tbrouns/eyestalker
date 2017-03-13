@@ -53,6 +53,7 @@ struct edgeProperties
     double radius;
     double radiusVar;
     double length;
+    double score;
     int index;
     int tag;
     std::vector<int> edgeIndices;
@@ -80,6 +81,7 @@ struct ellipseProperties
     double width;
     double height;
     double edgeLength;
+    double edgeScore;
     int tag = 0;
     std::vector<double> coefficients;
     std::vector<int> edgeIndices;
@@ -127,8 +129,6 @@ struct detectionParameters
 
 struct detectionVariables
 {
-
-
     double averageAspectRatio;
     double averageCircumference;
     double averageCurvature;
@@ -136,6 +136,7 @@ struct detectionVariables
     double averageWidth;
     double averageIntensity;
     double averageGradient;
+    double averageHaarResponse;
     double certaintyAverages;
     double certaintyFeatures;
     double certaintyPosition;
@@ -151,12 +152,14 @@ struct detectionVariables
     double momentumGradient;
     double momentumIntensity;
     double momentumCurvature;
+    double momentumHaarResponse;
     double predictedAngle;
     double predictedAspectRatio;
     double predictedCircumference;
     double predictedCurvature;
     double predictedIntensity;
     double predictedGradient;
+    double predictedHaarResponse;
     double predictedHeight;
     double predictedWidth;
     double predictedXPos;
@@ -187,10 +190,6 @@ struct dataVariables
     double exactXPos;
     double exactYPos;
     double timestamp;
-
-    std::vector<double> intensityInner;      // needs to be removed
-    std::vector<double> intensityOuterLeft;
-    std::vector<double> intensityOuterRght;
 };
 
 struct developmentOptions
