@@ -95,20 +95,20 @@ inline double gaussian(double x, double x0, double sigma)
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& featureValues, bool USE_LENGTH, bool USE_CERTAINTY)
 {   
-    static const double weightCircumference = 0.2443;
-    static const double weightIntensity     = 0.6628;
-    static const double weightCurvature     = 0.4192;
-    static const double weightRadius        = 0.6536;
-    static const double weightRadiusVar     = 0.2102;
-    static const double weightGradient      = 0.2419;
-    static const double weightBeta          = 0.4874;
+    static const double weightCircumference = 0.7072;
+    static const double weightRadius        = 0.8594;
+    static const double weightRadiusVar     = 1.1492;
+    static const double weightCurvature     = 1.3682;
+    static const double weightGradient      = 0.6608;
+    static const double weightIntensity     = 1.3662;
+    static const double weightBeta          = 0.9316;
     
-    static const double sigmaRadius        = 0.058444;
-    static const double sigmaCircumference = 0.63221;
-    static const double sigmaCurvature     = 0.0656;
-    static const double sigmaIntensity     = 10.8613;
-    static const double sigmaGradient      = 5.3169;
-    static const double sigmaRadiusVar     = 0.0058784;
+    static const double sigmaRadius        = 0.057042;
+    static const double sigmaCircumference = 0.599130;
+    static const double sigmaCurvature     = 0.057370;
+    static const double sigmaIntensity     = 9.904200;
+    static const double sigmaGradient      = 5.281300;
+    static const double sigmaRadiusVar     = 0.005819;
     
     for (int i = 0, vSize = featureValues.size(); i < vSize; i++) // check for NaNs or Infs
     {
@@ -2637,18 +2637,18 @@ std::vector<ellipseProperties> ellipseFitting(const detectionVariables& mDetecti
 
 std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables, const detectionParameters& mDetectionParameters, std::vector<ellipseProperties> vEllipseProperties)
 {
-    static const double weightCircumference = 0.4436;
-    static const double weightAspectRatio   = 0.8077;
-    static const double weightLength        = 1.8157;
-    static const double weightError         = 1.2019;
-    static const double weightAngle         = 1.4508;
-    static const double weightRho           = 0.6344;
+    static const double weightCircumference = 0.4193;
+    static const double weightAspectRatio   = 0.6182;
+    static const double weightLength        = 1.5930;
+    static const double weightError         = 1.2747;
+    static const double weightAngle         = 1.5433;
+    static const double weightRho           = 0.7174;
 
-    static const double sigmaAspectRatio   = 0.011179;
-    static const double sigmaCircumference = 0.0057245;
-    static const double sigmaLength        = 0.22393;
-    static const double sigmaError         = 0.085488;
-    static const double sigmaAngle         = 0.062308;
+    static const double sigmaAspectRatio   = 0.0103880;
+    static const double sigmaCircumference = 0.0051725;
+    static const double sigmaLength        = 0.2079400;
+    static const double sigmaError         = 0.0844150;
+    static const double sigmaAngle         = 0.0586360;
     
     int numFits = vEllipseProperties.size();
 
@@ -3174,11 +3174,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     //////////////////////////////////////////////////////////////////
     
     std::vector<edgeProperties> vEdgeCollectionProperties = edgeCollectionFilter(mDetectionVariables, mDetectionParameters, vEdgePropertiesNew, cannyAOI);
-
-    std::vector<ellipseProperties> vEllipsePropertiesAll = ellipseFitting(mDetectionVariables, mDetectionParameters, vEdgeCollectionProperties, cannyAOI); // ellipse fitting
-    
+    std::vector<ellipseProperties> vEllipsePropertiesAll  = ellipseFitting(mDetectionVariables, mDetectionParameters, vEdgeCollectionProperties, cannyAOI); // ellipse fitting
     ellipseProperties mEllipseProperties; // properties of accepted fit
-    
     std::vector<int> acceptedFitIndices = ellipseFitFilter(mDetectionVariables, mDetectionParameters, vEllipsePropertiesAll); // grab best fit
     int numFits = acceptedFitIndices.size();
 
