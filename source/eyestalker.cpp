@@ -95,82 +95,64 @@ inline double gaussian(double x, double x0, double sigma)
 
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& featureValues, bool USE_LENGTH, bool USE_CERTAINTY)
 {   
-    static const double weightCircumference = 0.7072;
-    static const double weightRadius        = 0.8594;
-    static const double weightRadiusVar     = 1.1492;
-    static const double weightCurvature     = 1.3682;
-    static const double weightGradient      = 0.6608;
-    static const double weightIntensity     = 1.3662;
-    static const double weightBeta          = 0.9316;
-    
-    static const double sigmaRadius        = 0.057042;
-    static const double sigmaCircumference = 0.599130;
-    static const double sigmaCurvature     = 0.057370;
-    static const double sigmaIntensity     = 9.904200;
-    static const double sigmaGradient      = 5.281300;
-    static const double sigmaRadiusVar     = 0.005819;
-    
+    // Circumference, radius, radius variance, curvature, gradient, intensity, beta
+    static const std::vector<double> weightVector = { 0.7072,   0.8594,   1.1492,   1.3682,   0.6608,   1.3662, 0.9316};
+
+    // Circumference, radius, radius variance, curvature, gradient, intensity
+    static const std::vector<double> sigmaVector  = {0.59913, 0.057042, 0.005819, 0.057370, 5.281300, 9.904200};
+
     for (int i = 0, vSize = featureValues.size(); i < vSize; i++) // check for NaNs or Infs
     {
         double val = featureValues[i];
-        if (!std::isfinite(val)) { featureValues[i] = 0; }
-        else if (val < 0)        { featureValues[i] = std::abs(val); }
+        if (!std::isfinite(val)) { featureValues[i] = std::numeric_limits<double>::max(); }
     }
     
+    std::vector<double> factorVector(6);
+
     // Do score calculation
-    
-    double featureValueRadius        = featureValues[0];
-    double featureValueCircumference = featureValues[1];
-    double featureValueCurvature     = featureValues[2];
-    double featureValueIntensity     = featureValues[3];
-    double featureValueGradient      = featureValues[4];
-    double featureValueRadiusVar     = featureValues[5];
-    
-    double certaintyFactorPosition = mDetectionVariables.certaintyPosition;
-    double certaintyFactorFeatures = mDetectionVariables.certaintyFeatures;
-    
-    double factorRadius        = certaintyFactorPosition  * weightRadius;
-    double factorCircumference = certaintyFactorFeatures  * weightCircumference;
+
+    factorVector[1] = mDetectionVariables.certaintyPosition  * weightVector[1];
+    factorVector[0] = mDetectionVariables.certaintyFeatures  * weightVector[0];
     
     double certaintyFactorIntensity;
     double certaintyFactorCurvature;
     double certaintyFactorGradient;
     
-    if (!USE_LENGTH) { factorCircumference = 0; }
+    if (!USE_LENGTH) { factorVector[0] = 0; }
     
     if (!USE_CERTAINTY) // true when comparing feature values with predicted values
     {
         certaintyFactorIntensity = 1.0;
         certaintyFactorCurvature = 1.0;
-        certaintyFactorGradient  = certaintyFactorPosition;
+        certaintyFactorGradient  = mDetectionVariables.certaintyPosition;
     }
     else
     {
-        certaintyFactorIntensity = certaintyFactorFeatures;
-        certaintyFactorCurvature = certaintyFactorFeatures;
-        certaintyFactorGradient  = certaintyFactorPosition * certaintyFactorFeatures;
+        certaintyFactorIntensity = mDetectionVariables.certaintyFeatures;
+        certaintyFactorCurvature = mDetectionVariables.certaintyFeatures;
+        certaintyFactorGradient  = mDetectionVariables.certaintyPosition * mDetectionVariables.certaintyFeatures;
     }
     
-    double factorIntensity = certaintyFactorIntensity * weightIntensity;
-    double factorGradient  = certaintyFactorGradient  * weightGradient;
+    factorVector[5] = certaintyFactorIntensity * weightVector[5];
+    factorVector[4] = certaintyFactorGradient  * weightVector[4];
     
     // Importance of curvature and radial variance should be dependent on length of edge
     
-    double factorLength = weightBeta * featureValueCircumference + (1 - weightBeta);
+    double factorLength = (1 - weightVector[6] * featureValues[0]);
     
-    double factorRadiusVar = certaintyFactorPosition  * weightRadiusVar * factorLength;
-    double factorCurvature = certaintyFactorCurvature * weightCurvature * factorLength;
+    factorVector[2] = mDetectionVariables.certaintyPosition * weightVector[2] * factorLength;
+    factorVector[3] = certaintyFactorCurvature * weightVector[3] * factorLength;
     
     // Calculate scores
-    
-    double scoreRadius        = factorRadius        * gaussian(featureValueRadius,        0, sigmaRadius       );
-    double scoreCircumference = factorCircumference * gaussian(featureValueCircumference, 0, sigmaCircumference);
-    double scoreCurvature     = factorCurvature     * gaussian(featureValueCurvature,     0, sigmaCurvature    );
-    double scoreIntensity     = factorIntensity     * gaussian(featureValueIntensity,     0, sigmaIntensity    );
-    double scoreGradient      = factorGradient      * gaussian(featureValueGradient,      0, sigmaGradient     );
-    double scoreRadiusVar     = factorRadiusVar     * gaussian(featureValueRadiusVar,     0, sigmaRadiusVar    );
-    
-    const double norm =  factorRadius + factorRadiusVar + factorCurvature + factorCircumference + factorIntensity + factorGradient;
+
+    double scoreCircumference = factorVector[0] * gaussian(featureValues[0], 0, sigmaVector[0]);
+    double scoreRadius        = factorVector[1] * gaussian(featureValues[1], 0, sigmaVector[1]);
+    double scoreRadiusVar     = factorVector[2] * gaussian(featureValues[2], 0, sigmaVector[2]);
+    double scoreCurvature     = factorVector[3] * gaussian(featureValues[3], 0, sigmaVector[3]);
+    double scoreGradient      = factorVector[4] * gaussian(featureValues[4], 0, sigmaVector[4]);
+    double scoreIntensity     = factorVector[5] * gaussian(featureValues[5], 0, sigmaVector[5]);
+
+    const double norm =  factorVector[0] + factorVector[1] + factorVector[2] + factorVector[3] + factorVector[4] + factorVector[5] ;
     
     double scoreTotal = 0;
     if (norm > 0) { scoreTotal = (scoreRadius + scoreRadiusVar + scoreGradient + scoreCurvature + scoreCircumference + scoreIntensity) / norm; }
@@ -1845,22 +1827,24 @@ std::vector<edgeProperties> edgeSegmentationLength(const detectionVariables& mDe
         // 1 = main section
         // 2 = end terminal
         
+        // Circumference, radius, radius variance, curvature, gradient, intensity
+
         std::vector<double> featureValues_1(6); // for start terminal
-        featureValues_1[0] = std::abs(vEdgeProperties[0].radius     - vEdgeProperties[1].radius)                  / std::max(vEdgeProperties[0].radius, vEdgeProperties[1].radius);
-        featureValues_1[1] = std::abs(vEdgeProperties[0].length     - mDetectionVariables.predictedCircumference) / std::max(vEdgeProperties[0].length, mDetectionVariables.predictedCircumference);
-        featureValues_1[2] = std::abs(vEdgeProperties[0].curvature  - vEdgeProperties[1].curvature);
-        featureValues_1[3] = std::abs(vEdgeProperties[0].intensity  - vEdgeProperties[1].intensity);
+        featureValues_1[0] = std::abs(vEdgeProperties[0].length     - mDetectionVariables.predictedCircumference) / std::max(vEdgeProperties[0].length, mDetectionVariables.predictedCircumference);
+        featureValues_1[1] = std::abs(vEdgeProperties[0].radius     - vEdgeProperties[1].radius)                  / std::max(vEdgeProperties[0].radius, vEdgeProperties[1].radius);
+        featureValues_1[2] = std::abs(vEdgeProperties[0].radiusVar  - vEdgeProperties[1].radiusVar);
+        featureValues_1[3] = std::abs(vEdgeProperties[0].curvature  - vEdgeProperties[1].curvature);
         featureValues_1[4] = std::abs(vEdgeProperties[0].gradient   - vEdgeProperties[1].gradient);
-        featureValues_1[5] = std::abs(vEdgeProperties[0].radiusVar  - vEdgeProperties[1].radiusVar);
-        
+        featureValues_1[5] = std::abs(vEdgeProperties[0].intensity  - vEdgeProperties[1].intensity);
+
         std::vector<double> featureValues_2(6); // for end terminal
-        featureValues_2[0] = std::abs(vEdgeProperties[2].radius     - vEdgeProperties[1].radius)                  / std::max(vEdgeProperties[2].radius, vEdgeProperties[1].radius);
-        featureValues_2[1] = std::abs(vEdgeProperties[2].length     - mDetectionVariables.predictedCircumference) / std::max(vEdgeProperties[2].length, mDetectionVariables.predictedCircumference);
-        featureValues_2[2] = std::abs(vEdgeProperties[2].curvature  - vEdgeProperties[1].curvature);
-        featureValues_2[3] = std::abs(vEdgeProperties[2].intensity  - vEdgeProperties[1].intensity);
+        featureValues_2[0] = std::abs(vEdgeProperties[2].length     - mDetectionVariables.predictedCircumference) / std::max(vEdgeProperties[2].length, mDetectionVariables.predictedCircumference);
+        featureValues_2[1] = std::abs(vEdgeProperties[2].radius     - vEdgeProperties[1].radius)                  / std::max(vEdgeProperties[2].radius, vEdgeProperties[1].radius);
+        featureValues_2[2] = std::abs(vEdgeProperties[2].radiusVar  - vEdgeProperties[1].radiusVar);
+        featureValues_2[3] = std::abs(vEdgeProperties[2].curvature  - vEdgeProperties[1].curvature);
         featureValues_2[4] = std::abs(vEdgeProperties[2].gradient   - vEdgeProperties[1].gradient);
-        featureValues_2[5] = std::abs(vEdgeProperties[2].radiusVar  - vEdgeProperties[1].radiusVar);
-        
+        featureValues_2[5] = std::abs(vEdgeProperties[2].intensity  - vEdgeProperties[1].intensity);
+
         double scoreTotal_1 = calculateScoreTotal(mDetectionVariables, featureValues_1, false, false);
         double scoreTotal_2 = calculateScoreTotal(mDetectionVariables, featureValues_2, false, false);
         
@@ -2058,24 +2042,26 @@ std::vector<edgeProperties> edgeSegmentationScore(const detectionVariables& mDet
                 }
                 
                 // Calculate score difference
-                
+
+                // Circumference, radius, radius variance, curvature, gradient, intensity
+
                 double predictedRadius = mDetectionVariables.predictedCircumference / (2 * M_PI);
                 
                 std::vector<double> featureValues_1(6);
-                featureValues_1[0] = std::abs(vEdgePropertiesTemp[0].radius    - predictedRadius)                            / std::max(vEdgePropertiesTemp[0].radius, predictedRadius);
-                featureValues_1[1] = std::abs(vEdgePropertiesTemp[0].length    - mDetectionVariables.predictedCircumference) / std::max(vEdgePropertiesTemp[0].length, mDetectionVariables.predictedCircumference);
-                featureValues_1[2] = std::abs(vEdgePropertiesTemp[0].curvature - mDetectionVariables.predictedCurvature);
-                featureValues_1[3] = std::abs(vEdgePropertiesTemp[0].intensity - mDetectionVariables.predictedIntensity);
+                featureValues_1[0] = std::abs(vEdgePropertiesTemp[0].length    - mDetectionVariables.predictedCircumference) / std::max(vEdgePropertiesTemp[0].length, mDetectionVariables.predictedCircumference);
+                featureValues_1[1] = std::abs(vEdgePropertiesTemp[0].radius    - predictedRadius)                            / std::max(vEdgePropertiesTemp[0].radius, predictedRadius);
+                featureValues_1[2] = std::abs(vEdgePropertiesTemp[0].radiusVar);
+                featureValues_1[3] = std::abs(vEdgePropertiesTemp[0].curvature - mDetectionVariables.predictedCurvature);
                 featureValues_1[4] = std::abs(vEdgePropertiesTemp[0].gradient  - mDetectionVariables.predictedGradient);
-                featureValues_1[5] = std::abs(vEdgePropertiesTemp[0].radiusVar);
+                featureValues_1[5] = std::abs(vEdgePropertiesTemp[0].intensity - mDetectionVariables.predictedIntensity);
                 
                 std::vector<double> featureValues_2(6);
-                featureValues_2[0] = std::abs(vEdgePropertiesTemp[1].radius    - predictedRadius)                            / std::max(vEdgePropertiesTemp[1].radius, predictedRadius);
-                featureValues_2[1] = std::abs(vEdgePropertiesTemp[1].length    - mDetectionVariables.predictedCircumference) / std::max(vEdgePropertiesTemp[1].length, mDetectionVariables.predictedCircumference);
-                featureValues_2[2] = std::abs(vEdgePropertiesTemp[1].curvature - mDetectionVariables.predictedCurvature);
-                featureValues_2[3] = std::abs(vEdgePropertiesTemp[1].intensity - mDetectionVariables.predictedIntensity);
+                featureValues_2[0] = std::abs(vEdgePropertiesTemp[1].length    - mDetectionVariables.predictedCircumference) / std::max(vEdgePropertiesTemp[1].length, mDetectionVariables.predictedCircumference);
+                featureValues_2[1] = std::abs(vEdgePropertiesTemp[1].radius    - predictedRadius)                            / std::max(vEdgePropertiesTemp[1].radius, predictedRadius);
+                featureValues_2[2] = std::abs(vEdgePropertiesTemp[1].radiusVar);
+                featureValues_2[3] = std::abs(vEdgePropertiesTemp[1].curvature - mDetectionVariables.predictedCurvature);
                 featureValues_2[4] = std::abs(vEdgePropertiesTemp[1].gradient  - mDetectionVariables.predictedGradient);
-                featureValues_2[5] = std::abs(vEdgePropertiesTemp[1].radiusVar);
+                featureValues_2[5] = std::abs(vEdgePropertiesTemp[1].intensity - mDetectionVariables.predictedIntensity);
                 
                 double score_1 = calculateScoreTotal(mDetectionVariables, featureValues_1, false, true);
                 double score_2 = calculateScoreTotal(mDetectionVariables, featureValues_2, false, true);
@@ -2228,13 +2214,15 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
             double lengthPredicted = mDetectionVariables.predictedCircumference;
             double radiusPredicted = lengthPredicted / (2 * M_PI);
 
-            featureValues[0] = std::abs(radius - radiusPredicted) / std::max(radius, radiusPredicted);
-            featureValues[1] = std::abs(length - lengthPredicted) / std::max(length, lengthPredicted);
-            featureValues[2] = std::abs(vEdgePropertiesAll[iEdge].curvature - mDetectionVariables.predictedCurvature);
-            featureValues[3] = std::abs(vEdgePropertiesAll[iEdge].intensity - mDetectionVariables.predictedIntensity);
+            // Circumference, radius, radius variance, curvature, gradient, intensity
+
+            featureValues[0] = std::abs(length - lengthPredicted) / std::max(length, lengthPredicted);
+            featureValues[1] = std::abs(radius - radiusPredicted) / std::max(radius, radiusPredicted);
+            featureValues[2] = vEdgePropertiesAll[iEdge].radiusVar;
+            featureValues[3] = std::abs(vEdgePropertiesAll[iEdge].curvature - mDetectionVariables.predictedCurvature);
             featureValues[4] = std::abs(vEdgePropertiesAll[iEdge].gradient  - mDetectionVariables.predictedGradient);
-            featureValues[5] = vEdgePropertiesAll[iEdge].radiusVar;
-            
+            featureValues[5] = std::abs(vEdgePropertiesAll[iEdge].intensity - mDetectionVariables.predictedIntensity);
+
             vEdgePropertiesAll[iEdge].score = calculateScoreTotal(mDetectionVariables, featureValues, true, true);
         }
         
