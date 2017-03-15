@@ -3019,11 +3019,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     
     cv::Mat imageAOIGray;
     cv::cvtColor(imageAOIBGR, imageAOIGray, cv::COLOR_BGR2GRAY);
-    
+
     ///////////////////////////////////////////////////////////////////////
     /////////////////////// CANNY EDGE DETECTION  /////////////////////////
     ///////////////////////////////////////////////////////////////////////
-    
+
     cv::Mat imageAOIGrayBlurred;
     int cannyBlurLevel = 2 * mDetectionParameters.cannyBlurLevel - 1; // should be odd
     if (cannyBlurLevel > 0) { cv::GaussianBlur(imageAOIGray, imageAOIGrayBlurred, cv::Size(cannyBlurLevel, cannyBlurLevel), 0, 0);
@@ -3031,14 +3031,14 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     
     cv::Mat imageCannyEdges;
     cv::Canny(imageAOIGrayBlurred, imageCannyEdges, mDetectionParameters.cannyThresholdHigh, mDetectionParameters.cannyThresholdLow, 5);
-    
+
     std::vector<int> cannyEdgesOriginal  = cannyConversion(imageCannyEdges, cannyAOI); // convert to binary vector
     std::vector<int> cannyEdgesSharpened = cannyEdgesOriginal;
     std::vector<int> edgePointsOriginal  = getEdgeIndices(cannyEdgesOriginal, 1);
     std::vector<int> edgePointsSharpened;
     edgePointsSharpened = sharpenEdges_1(cannyEdgesSharpened, edgePointsOriginal,  cannyAOI);
     edgePointsSharpened = sharpenEdges_2(cannyEdgesSharpened, edgePointsSharpened, cannyAOI);
-    
+
     /////////////////////////////////////////////////////////////////////////////
     //////////////////////////// EDGE SELECTION   ///////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
@@ -3049,11 +3049,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
 
     std::vector<edgeProperties> vEdgePropertiesAll = edgeSelection(mDetectionVariables, cannyEdgesSharpened, cannyAOI);
     vEdgePropertiesAll = removeShortEdges(mDetectionVariables, vEdgePropertiesAll);
-    
+
     /////////////////////////////////////////////////////////////////////////////
     //////////////////////////// EDGE SEGMENTATION   ////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
-    
+
     // Curvature calculation
     
     for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
@@ -3098,7 +3098,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     }
     
     vEdgePropertiesAll = removeShortEdges(mDetectionVariables, vEdgePropertiesAll);
-    
+
     // Calculate additional edge properties
     
     for (int iEdge = 0, numEdges = vEdgePropertiesAll.size(); iEdge < numEdges; iEdge++)
@@ -3112,7 +3112,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         
         vEdgePropertiesAll[iEdge] = mEdgeProperties;
     }
-    
+
     // Length segmentation
     
     if (!(mAdvancedOptions.CURVATURE_MEASUREMENT))
@@ -3129,7 +3129,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     }
     
     vEdgePropertiesAll = removeShortEdges(mDetectionVariables, vEdgePropertiesAll);
-    
+
     // Score segmentation
     
     if (mDetectionVariables.certaintyPosition > certaintyThreshold || mDetectionVariables.certaintyFeatures > certaintyThreshold)
@@ -3148,11 +3148,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     }
     
     vEdgePropertiesAll = removeShortEdges(mDetectionVariables, vEdgePropertiesAll);
-    
+
     ///////////////////////////////////////////////////////////////////////////
     ////////////////////////// EDGE CLASSIFICATION  ///////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    
+
     // Calculate some edge properties
     
     { std::vector<edgeProperties> vEdgePropertiesNew;
@@ -3198,11 +3198,11 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         vEdgePropertiesAll[jEdge].tag = 1; // new tag
         vEdgePropertiesNew.push_back(vEdgePropertiesAll[jEdge]);
     }
-    
+
     //////////////////////////////////////////////////////////////////
     /////////////////////// ELLIPSE FITTING  /////////////////////////
     //////////////////////////////////////////////////////////////////
-    
+
     std::vector<edgeProperties> vEdgeCollectionProperties = edgeCollectionFilter(mDetectionVariables, mDetectionParameters, vEdgePropertiesNew, cannyAOI);
     std::vector<ellipseProperties> vEllipsePropertiesAll  = ellipseFitting(mDetectionVariables, mDetectionParameters, vEdgeCollectionProperties, cannyAOI); // ellipse fitting
     ellipseProperties mEllipseProperties; // properties of accepted fit
@@ -3521,7 +3521,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     mDrawVariables.cannyEdgeIndices    = edgePointsSharpened;
     mDrawVariables.edgeData            = vEdgePropertiesAll;
     mDrawVariables.ellipseCoefficients = mEllipseProperties.coefficients;
-    
+
     return mDetectionVariablesNew; // use these variables for next frame
 }
 
