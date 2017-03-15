@@ -175,6 +175,7 @@ struct detectionVariables
     double thresholdChangePosition;
     double thresholdScoreEdge;
     double thresholdScoreFit;
+    int windowLengthEdge;
 };
 
 struct dataVariables

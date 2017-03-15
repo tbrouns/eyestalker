@@ -245,7 +245,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     WindowLengthEdgeLabel  = new QLabel;
     WindowLengthEdgeSlider = new QSlider;
-    WindowLengthEdgeSlider->setRange(5, 11);
+    WindowLengthEdgeSlider->setRange(windowLengthMin, 11);
     WindowLengthEdgeSlider->setOrientation(Qt::Horizontal);
     QObject::connect(WindowLengthEdgeSlider, SIGNAL(valueChanged(int)), this, SLOT(setWindowLengthEdge(int)));
 

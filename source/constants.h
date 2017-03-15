@@ -31,12 +31,17 @@ const double initialIntensity   =  60;
 
 // Other
 
-const double fitMinRange      = 0.40;
+const double fitMinRange      = 0.30;
 const double fitMinEdgeLength = 0.30;
 const double scoreStepSize    = 0.20;
 const double aspectRatioSlope = 154;
 
 // Functions
+
+const double windowLengthFraction = 0.04;
+const int    windowLengthMin      = 5;
+
+const double thresholdModifier = 0.5;
 
 const double certaintyAsymptoteX = 0.50;
 const double certaintyAsymptoteY = 0.99;

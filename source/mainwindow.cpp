@@ -1277,10 +1277,7 @@ void MainWindow::findCamera()
             emit startTimer(round(1000 / guiUpdateFrequency));
         }
     }
-    else
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    }
+    else { std::this_thread::sleep_for(std::chrono::milliseconds(2000)); }
 }
 
 // Variables
@@ -1331,13 +1328,9 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.momentumXPos          = 0;
     mDetectionVariables.momentumYPos          = 0;
 
-    int AOISize;
-    if (mAOI.wdth > mAOI.hght) { AOISize = mAOI.wdth; }
-    else                       { AOISize = mAOI.hght; }
-
     mDetectionVariables.thresholdChangeAspectRatio   = 1.0 - mDetectionParameters.thresholdAspectRatioMin;
     mDetectionVariables.thresholdChangeCircumference = std::abs(mDetectionParameters.thresholdCircumferenceMax - mDetectionParameters.thresholdCircumferenceMin) / mDetectionParameters.thresholdCircumferenceMax;
-    mDetectionVariables.thresholdChangePosition      = AOISize;
+    mDetectionVariables.thresholdChangePosition      = mDetectionParameters.thresholdCircumferenceMax / M_PI + mDetectionParameters.thresholdChangePosition;;
 
     mDetectionVariables.thresholdScoreEdge = 0;
     mDetectionVariables.thresholdScoreFit  = 0;
@@ -1346,7 +1339,6 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.certaintyPosition      = 0;
     mDetectionVariables.certaintyFeaturesPrime = 0;
     mDetectionVariables.certaintyPositionPrime = 0;
-
 }
 
 // General functions
@@ -1769,7 +1761,6 @@ void MainWindow::onFlashStandbySlider(int val)
             }
 
             // display real-time eye-tracking
-
             EyeQImage       ->setVisible(true);
             EyeWdthAOISlider->setVisible(true);
             EyeHghtAOISlider->setVisible(true);
@@ -2490,13 +2481,13 @@ void MainWindow::loadSettings(QString filename)
 {
     static const std::vector<double> parametersEye  = {0.005,   // Alpha average
                                                        0.40,    // Alpha features
-                                                       0.20,    // Alpha certainty
+                                                       0.25,    // Alpha certainty
                                                        0.75,    // Alpha position
                                                        4,       // Canny blur level
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       3,       // Curvature offset
+                                                       2.5,     // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        4,       // Maximum number of edges
                                                        0.60,    // Maximum fit error
@@ -2517,13 +2508,13 @@ void MainWindow::loadSettings(QString filename)
 
     static const std::vector<double> parametersBead = {0.005,   // Alpha average
                                                        0.40,    // Alpha features
-                                                       0.20,    // Alpha certainty
+                                                       0.25,    // Alpha certainty
                                                        0.75,    // Alpha predicted
                                                        4,       // Canny blur level
                                                        5,       // Canny kernel size
                                                        300.0,   // Canny threshold low
                                                        600.0,   // Canny threshold high
-                                                       3,       // Curvature offset
+                                                       2.5,     // Curvature offset
                                                        0.05,    // Ellipse edge fraction
                                                        4,       // Maximum number of edges
                                                        0.60,    // Maximum fit error
