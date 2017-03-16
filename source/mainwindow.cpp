@@ -1340,8 +1340,8 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     double rangeChangeThresholdCircumference = maxChangeThresholdCircumference - mDetectionParameters.thresholdChangeCircumference;
     mDetectionVariables.thresholdChangeCircumference = rangeChangeThresholdCircumference + mDetectionParameters.thresholdChangeCircumference;
 
-    double maxChangeThresholdPositionX = mAOI.wdth - mDetectionVariables.predictedWidth  + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
-    double maxChangeThresholdPositionY = mAOI.hght - mDetectionVariables.predictedHeight + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
+    double maxChangeThresholdPositionX = mAOI.wdth - mDetectionVariables.predictedWidth;
+    double maxChangeThresholdPositionY = mAOI.hght - mDetectionVariables.predictedHeight;
     double maxChangeThresholdPosition  = std::max(maxChangeThresholdPositionX, maxChangeThresholdPositionY);
     double rangeChangeThresholdPosition = maxChangeThresholdPosition - mDetectionParameters.thresholdChangePosition;
     mDetectionVariables.thresholdChangePosition = rangeChangeThresholdPosition + mDetectionParameters.thresholdChangePosition;

@@ -3339,8 +3339,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     double maxChangeThresholdCircumference_2 = (mDetectionVariables.predictedCircumference - mDetectionParameters.thresholdCircumferenceMin) / mDetectionVariables.predictedCircumference;
     double maxChangeThresholdCircumference   = std::max(maxChangeThresholdCircumference_1, maxChangeThresholdCircumference_2);
     
-    double maxChangeThresholdPositionX = imageAOI.wdth - mDetectionVariables.predictedWidth  + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
-    double maxChangeThresholdPositionY = imageAOI.hght - mDetectionVariables.predictedHeight + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
+    double maxChangeThresholdPositionX = imageAOI.wdth - mDetectionVariables.predictedWidth;
+    double maxChangeThresholdPositionY = imageAOI.hght - mDetectionVariables.predictedHeight;
     double maxChangeThresholdPosition  = std::max(maxChangeThresholdPositionX,maxChangeThresholdPositionY);
 
     double rangeChangeThresholdAspectRatio   = maxChangeThresholdAspectRatio   - mDetectionParameters.thresholdChangeAspectRatio;
