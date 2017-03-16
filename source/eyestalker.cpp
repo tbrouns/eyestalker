@@ -536,7 +536,7 @@ std::vector<int> findEdges(const detectionVariables& mDetectionVariables, std::v
     std::vector<int> dX = { -1, -1,  0,  1,  1,  1,  0, -1};
     std::vector<int> dY = {  0, -1, -1, -1,  0,  1,  1,  1};
     
-    double radiusMax = mDetectionVariables.thresholdChangePosition + mDetectionVariables.thresholdCircumferenceMax;
+    double radiusMax = mDetectionVariables.thresholdCircumferenceMax;
 
     // Find a starting edge point using Starburst-like algorithm
     
@@ -2867,14 +2867,14 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     }
 
     // Define search area
-    
-    double AOIOffset = mDetectionVariables.thresholdChangePosition + (mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference) / (2 * M_PI);
+
+    double searchAOIOffset = mDetectionVariables.thresholdChangePosition + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / (2 * M_PI);
     
     AOIProperties searchAOI;
-    searchAOI.xPos = round(mDetectionVariables.predictedXPos - AOIOffset - 0.5 * mDetectionVariables.predictedWidth);
-    searchAOI.yPos = round(mDetectionVariables.predictedYPos - AOIOffset - 0.5 * mDetectionVariables.predictedHeight);
-    int searchEndX = round(mDetectionVariables.predictedXPos + AOIOffset + 0.5 * mDetectionVariables.predictedWidth);
-    int searchEndY = round(mDetectionVariables.predictedYPos + AOIOffset + 0.5 * mDetectionVariables.predictedHeight);
+    searchAOI.xPos = round(mDetectionVariables.predictedXPos - searchAOIOffset - 0.5 * mDetectionVariables.predictedWidth);
+    searchAOI.yPos = round(mDetectionVariables.predictedYPos - searchAOIOffset - 0.5 * mDetectionVariables.predictedHeight);
+    int searchEndX = round(mDetectionVariables.predictedXPos + searchAOIOffset + 0.5 * mDetectionVariables.predictedWidth);
+    int searchEndY = round(mDetectionVariables.predictedYPos + searchAOIOffset + 0.5 * mDetectionVariables.predictedHeight);
 
     if (searchAOI.xPos < imageAOI.xPos)
     {   searchAOI.xPos = imageAOI.xPos; }
@@ -2991,17 +2991,19 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
 
     // Create new AOI for Canny edge deteciton
 
-    if (AOIOffset > searchAOI.wdth || AOIOffset > searchAOI.hght)
+    double cannyAOIOffset = mDetectionParameters.thresholdChangePosition + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / (2 * M_PI);
+
+    if (cannyAOIOffset > searchAOI.wdth || cannyAOIOffset > searchAOI.hght)
     {
-        if (searchAOI.wdth > searchAOI.hght) { AOIOffset = searchAOI.wdth; }
-        else                                 { AOIOffset = searchAOI.hght; }
+        if (searchAOI.wdth > searchAOI.hght) { cannyAOIOffset = searchAOI.wdth; }
+        else                                 { cannyAOIOffset = searchAOI.hght; }
     }
     
     AOIProperties cannyAOI;
-    cannyAOI.xPos = round(mDetectionVariables.predictedXPos - 0.5 * mDetectionVariables.predictedWidth  - AOIOffset);
-    cannyAOI.yPos = round(mDetectionVariables.predictedYPos - 0.5 * mDetectionVariables.predictedHeight - AOIOffset);
-    cannyAOI.wdth = round(mDetectionVariables.predictedWidth  + 2 * AOIOffset);
-    cannyAOI.hght = round(mDetectionVariables.predictedHeight + 2 * AOIOffset);
+    cannyAOI.xPos = round(mDetectionVariables.predictedXPos - 0.5 * mDetectionVariables.predictedWidth  - cannyAOIOffset);
+    cannyAOI.yPos = round(mDetectionVariables.predictedYPos - 0.5 * mDetectionVariables.predictedHeight - cannyAOIOffset);
+    cannyAOI.wdth = round(mDetectionVariables.predictedWidth  + 2 * cannyAOIOffset);
+    cannyAOI.hght = round(mDetectionVariables.predictedHeight + 2 * cannyAOIOffset);
     
     // Check limits
     
@@ -3329,18 +3331,26 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     
     // Calculate new threshold limits. Thresholds are harsher with higher certainties (= lower certainty factors)
 
-    double maxChangeThresholdAspectRatio   = 1.0 - mDetectionParameters.thresholdAspectRatioMin;
-    double maxChangeThresholdCircumference = std::abs(mDetectionParameters.thresholdCircumferenceMax - mDetectionParameters.thresholdCircumferenceMin) / mDetectionParameters.thresholdCircumferenceMax;
-    double maxChangeThresholdPosition      = mDetectionParameters.thresholdCircumferenceMax / M_PI + mDetectionParameters.thresholdChangePosition;
+    double maxChangeThresholdAspectRatio_1 = mDetectionVariables.predictedAspectRatio - mDetectionParameters.thresholdAspectRatioMin;
+    double maxChangeThresholdAspectRatio_2 = 1.0 - mDetectionVariables.predictedAspectRatio;
+    double maxChangeThresholdAspectRatio   = std::max(maxChangeThresholdAspectRatio_1,   maxChangeThresholdAspectRatio_2  );
+
+    double maxChangeThresholdCircumference_1 = (mDetectionParameters.thresholdCircumferenceMax - mDetectionVariables.predictedCircumference) / mDetectionParameters.thresholdCircumferenceMax;
+    double maxChangeThresholdCircumference_2 = (mDetectionVariables.predictedCircumference - mDetectionParameters.thresholdCircumferenceMin) / mDetectionVariables.predictedCircumference;
+    double maxChangeThresholdCircumference   = std::max(maxChangeThresholdCircumference_1, maxChangeThresholdCircumference_2);
     
+    double maxChangeThresholdPositionX = imageAOI.wdth - mDetectionVariables.predictedWidth  + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
+    double maxChangeThresholdPositionY = imageAOI.hght - mDetectionVariables.predictedHeight + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
+    double maxChangeThresholdPosition  = std::max(maxChangeThresholdPositionX,maxChangeThresholdPositionY);
+
     double rangeChangeThresholdAspectRatio   = maxChangeThresholdAspectRatio   - mDetectionParameters.thresholdChangeAspectRatio;
     double rangeChangeThresholdCircumference = maxChangeThresholdCircumference - mDetectionParameters.thresholdChangeCircumference;
     double rangeChangeThresholdPosition      = maxChangeThresholdPosition      - mDetectionParameters.thresholdChangePosition;
-    
+
     mDetectionVariablesNew.thresholdChangeAspectRatio   = rangeChangeThresholdAspectRatio   * (1 - mDetectionVariables.certaintyFeatures) + mDetectionParameters.thresholdChangeAspectRatio;
     mDetectionVariablesNew.thresholdChangeCircumference = rangeChangeThresholdCircumference * (1 - mDetectionVariables.certaintyFeatures) + mDetectionParameters.thresholdChangeCircumference;
     mDetectionVariablesNew.thresholdChangePosition      = rangeChangeThresholdPosition      * (1 - mDetectionVariables.certaintyPosition) + mDetectionParameters.thresholdChangePosition;
-    
+
     mDetectionVariablesNew.thresholdScoreEdge = mDetectionVariables.certaintyFeatures * mDetectionVariables.certaintyPosition * mDetectionParameters.thresholdScoreEdge;
     mDetectionVariablesNew.thresholdScoreFit  = mDetectionVariables.certaintyFeatures * mDetectionVariables.certaintyPosition * mDetectionParameters.thresholdScoreFit;
 

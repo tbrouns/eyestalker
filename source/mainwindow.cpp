@@ -1328,9 +1328,23 @@ void MainWindow::resetVariablesSoft(detectionVariables& mDetectionVariables, con
     mDetectionVariables.momentumXPos          = 0;
     mDetectionVariables.momentumYPos          = 0;
 
-    mDetectionVariables.thresholdChangeAspectRatio   = 1.0 - mDetectionParameters.thresholdAspectRatioMin;
-    mDetectionVariables.thresholdChangeCircumference = std::abs(mDetectionParameters.thresholdCircumferenceMax - mDetectionParameters.thresholdCircumferenceMin) / mDetectionParameters.thresholdCircumferenceMax;
-    mDetectionVariables.thresholdChangePosition      = mDetectionParameters.thresholdCircumferenceMax / M_PI + mDetectionParameters.thresholdChangePosition;;
+    double maxChangeThresholdAspectRatio_1 = mDetectionVariables.predictedAspectRatio - mDetectionParameters.thresholdAspectRatioMin;
+    double maxChangeThresholdAspectRatio_2 = 1.0 - mDetectionVariables.predictedAspectRatio;
+    double maxChangeThresholdAspectRatio   = std::max(maxChangeThresholdAspectRatio_1, maxChangeThresholdAspectRatio_2);
+    double rangeChangeThresholdAspectRatio = maxChangeThresholdAspectRatio   - mDetectionParameters.thresholdChangeAspectRatio;
+    mDetectionVariables.thresholdChangeAspectRatio   = rangeChangeThresholdAspectRatio   + mDetectionParameters.thresholdChangeAspectRatio;
+
+    double maxChangeThresholdCircumference_1 = (mDetectionParameters.thresholdCircumferenceMax - mDetectionVariables.predictedCircumference) / mDetectionParameters.thresholdCircumferenceMax;
+    double maxChangeThresholdCircumference_2 = (mDetectionVariables.predictedCircumference - mDetectionParameters.thresholdCircumferenceMin) / mDetectionVariables.predictedCircumference;
+    double maxChangeThresholdCircumference   = std::max(maxChangeThresholdCircumference_1, maxChangeThresholdCircumference_2);
+    double rangeChangeThresholdCircumference = maxChangeThresholdCircumference - mDetectionParameters.thresholdChangeCircumference;
+    mDetectionVariables.thresholdChangeCircumference = rangeChangeThresholdCircumference + mDetectionParameters.thresholdChangeCircumference;
+
+    double maxChangeThresholdPositionX = mAOI.wdth - mDetectionVariables.predictedWidth  + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
+    double maxChangeThresholdPositionY = mAOI.hght - mDetectionVariables.predictedHeight + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumference / M_PI;
+    double maxChangeThresholdPosition  = std::max(maxChangeThresholdPositionX, maxChangeThresholdPositionY);
+    double rangeChangeThresholdPosition = maxChangeThresholdPosition - mDetectionParameters.thresholdChangePosition;
+    mDetectionVariables.thresholdChangePosition = rangeChangeThresholdPosition + mDetectionParameters.thresholdChangePosition;
 
     mDetectionVariables.thresholdScoreEdge = 0;
     mDetectionVariables.thresholdScoreFit  = 0;
@@ -2685,7 +2699,8 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "CircumferenceChangeThreshold",   mDetectionParameters.thresholdChangeCircumference);
     settings.setValue(prefix + "AspectRatioChangeThreshold",     mDetectionParameters.thresholdChangeAspectRatio);
     settings.setValue(prefix + "DisplacementChangeThreshold",    mDetectionParameters.thresholdChangePosition);
-    settings.setValue(prefix + "ScoreThreshold",                 mDetectionParameters.thresholdScoreEdge);
+    settings.setValue(prefix + "ScoreThresholdEdge",             mDetectionParameters.thresholdScoreEdge);
+    settings.setValue(prefix + "ScoreThresholdFit",              mDetectionParameters.thresholdScoreFit);
     settings.setValue(prefix + "ScoreThresholdDiffEdge",         mDetectionParameters.thresholdScoreDiffEdge);
     settings.setValue(prefix + "ScoreThresholdDiffFit",          mDetectionParameters.thresholdScoreDiffFit);
     settings.setValue(prefix + "WindowLengthEdge",               mDetectionParameters.windowLengthEdge);
