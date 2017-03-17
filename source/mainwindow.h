@@ -175,7 +175,6 @@ private:
     int trialTimeLength;
 
     QImageOpenCV *CamQImage;
-    QImageOpenCV *EyeQImage;
     QLabel *CameraBlackLevelOffsetLabel;
     QLabel *CameraExposureLabel;
     QLabel *CameraFrameRateLabel;
@@ -234,13 +233,15 @@ private:
 
     // AOIs
 
-    SliderDouble *CamEyeAOIHghtSlider;
-    SliderDouble *CamEyeAOIWdthSlider;
-    SliderDouble *CamEyeAOIXPosSlider;
-    SliderDouble *CamEyeAOIYPosSlider;
+    QWidget* AOIEyeOptionsWidget;
 
-    SliderDouble *EyeHghtAOISlider;
-    SliderDouble *EyeWdthAOISlider;
+    SliderDouble *CamAOIHghtSlider;
+    SliderDouble *CamAOIWdthSlider;
+    SliderDouble *CamAOIXPosSlider;
+    SliderDouble *CamAOIYPosSlider;
+
+    SliderDouble *EyeAOIHghtSlider;
+    SliderDouble *EyeAOIWdthSlider;
 
     void updateCamAOIx();
     void updateCamAOIy();
@@ -320,8 +321,7 @@ private:
 
     // Offline interface
 
-    QWidget *OfflineModeMainWidget;
-    QWidget *OfflineModeHeaderWidget;
+    QWidget *OfflineModeWidget;
 
     // Offline functions and variables
 
@@ -383,10 +383,10 @@ private slots:
     void onSetAOIEyeLeft            ();
     void onSetAOIEyeRght            ();
     void onSetBeadDetection         (int);
-    void onSetCamEyeAOIHght         (double);
-    void onSetCamEyeAOIWdth         (double);
-    void onSetCamEyeAOIXPos         (double);
-    void onSetCamEyeAOIYPos         (double);
+    void onSetCamAOIHght         (double);
+    void onSetCamAOIWdth         (double);
+    void onSetCamAOIXPos         (double);
+    void onSetCamAOIYPos         (double);
     void onSetCameraAutoGain        (int);
     void onSetCameraBlackLevelMode  (int);
     void onSetCameraBlackLevelOffset(int);
@@ -416,7 +416,6 @@ private slots:
     void onSetSaveDataPosition      (int);
     void onSetTrialIndex            (int);
     void onSetTrialOffline          (int);
-    void onStartOfflineSession      ();
     void onStartRecordingManual     ();
     void onUpdateCameraImage        ();
     void onUpdateImageProcessed     (int);

@@ -155,7 +155,7 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
     cv::Vec3b blue  (255,   0,   0);
     cv::Vec3b green (  0, 255,   0);
     cv::Vec3b red   (  0,   0, 255);
-    cv::Vec3b cyan  (255, 255,   0);
+//    cv::Vec3b cyan  (255, 255,   0);
     cv::Vec3b orange(  0, 165, 255);
     cv::Vec3b yellow(  0, 255, 255);
     cv::Vec3b white (255, 255, 255);
@@ -175,7 +175,7 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
             drawOutline(I, mDrawVariables.cannyAOI, green, yellow, orange, mDrawVariables.edgeData);
         }
 
-        drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
+//        drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
 
         if (Parameters::drawFlags.elps)
         {
@@ -185,6 +185,5 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
                 drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, white);
             }
         }
-
     }
 }

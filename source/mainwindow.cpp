@@ -78,9 +78,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     camImageHght = 200;
     camImageWdth = 400; // size of image in widget
 
-    eyeImageHght = 200;
-    eyeImageWdth = 400; // size of image in widget
-
     eyeAOIHghtMin = 75;
     eyeAOIWdthMin = 100;
 
@@ -111,27 +108,27 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     LastUsedSettingsFileName = "config_user.ini";
 
-    CamEyeAOIWdthSlider = new SliderDouble;
-    CamEyeAOIWdthSlider->setPrecision(2);
-    CamEyeAOIWdthSlider->setDoubleRange(0, 1.0);
-    CamEyeAOIWdthSlider->setOrientation(Qt::Horizontal);
+    CamAOIWdthSlider = new SliderDouble;
+    CamAOIWdthSlider->setPrecision(2);
+    CamAOIWdthSlider->setDoubleRange(0, 1.0);
+    CamAOIWdthSlider->setOrientation(Qt::Horizontal);
 
-    CamEyeAOIHghtSlider = new SliderDouble;
-    CamEyeAOIHghtSlider->setPrecision(2);
-    CamEyeAOIHghtSlider->setDoubleRange(0, 1.0);
-    CamEyeAOIHghtSlider->setOrientation(Qt::Vertical);
-    CamEyeAOIHghtSlider->setInvertedAppearance(true);
+    CamAOIHghtSlider = new SliderDouble;
+    CamAOIHghtSlider->setPrecision(2);
+    CamAOIHghtSlider->setDoubleRange(0, 1.0);
+    CamAOIHghtSlider->setOrientation(Qt::Vertical);
+    CamAOIHghtSlider->setInvertedAppearance(true);
 
-    CamEyeAOIXPosSlider = new SliderDouble;
-    CamEyeAOIXPosSlider->setPrecision(2);
-    CamEyeAOIXPosSlider->setDoubleRange(0, 1.0);
-    CamEyeAOIXPosSlider->setOrientation(Qt::Horizontal);
+    CamAOIXPosSlider = new SliderDouble;
+    CamAOIXPosSlider->setPrecision(2);
+    CamAOIXPosSlider->setDoubleRange(0, 1.0);
+    CamAOIXPosSlider->setOrientation(Qt::Horizontal);
 
-    CamEyeAOIYPosSlider = new SliderDouble;
-    CamEyeAOIYPosSlider->setPrecision(2);
-    CamEyeAOIYPosSlider->setDoubleRange(0, 1.0);
-    CamEyeAOIYPosSlider->setOrientation(Qt::Vertical);
-    CamEyeAOIYPosSlider->setInvertedAppearance(true);
+    CamAOIYPosSlider = new SliderDouble;
+    CamAOIYPosSlider->setPrecision(2);
+    CamAOIYPosSlider->setDoubleRange(0, 1.0);
+    CamAOIYPosSlider->setOrientation(Qt::Vertical);
+    CamAOIYPosSlider->setInvertedAppearance(true);
 
     CameraHardwareGainAutoCheckBox  = new QCheckBox;
     CameraHardwareGainBoostCheckBox = new QCheckBox;
@@ -145,7 +142,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // Camera feed
 
     cv::Mat imgCam(camImageWdth, camImageWdth, CV_8UC3, cv::Scalar(150, 150, 150));
-    cv::Mat imgEye(eyeImageWdth, eyeImageHght, CV_8UC3, cv::Scalar(150, 150, 150));
 
     CamQImage = new QImageOpenCV(1);
     CamQImage->setSize(camImageWdth, camImageHght);
@@ -158,41 +154,34 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CamQImage->setImage();
     QObject::connect(CamQImage, SIGNAL(updateImage(int)), this , SLOT(onUpdateImageRaw(int)));
 
-    EyeQImage  = new QImageOpenCV(2);
-    EyeQImage->setSize(eyeImageWdth, eyeImageHght);
-    EyeQImage->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    EyeQImage->loadImage(imgEye);
-    EyeQImage->setImage();
-    QObject::connect(EyeQImage, SIGNAL(imageMouseClick(double, double)), this, SLOT(onSetPupilPosition(double, double)));
-
     // Cam AOI sliders
 
-    CamEyeAOIWdthSlider->setDoubleValue(cameraAOIFractionWdth);
-    CamEyeAOIHghtSlider->setDoubleValue(cameraAOIFractionHght);
-    CamEyeAOIXPosSlider->setDoubleValue(cameraAOIFractionXPos);
-    CamEyeAOIYPosSlider->setDoubleValue(cameraAOIFractionYPos);
+    CamAOIWdthSlider->setDoubleValue(cameraAOIFractionWdth);
+    CamAOIHghtSlider->setDoubleValue(cameraAOIFractionHght);
+    CamAOIXPosSlider->setDoubleValue(cameraAOIFractionXPos);
+    CamAOIYPosSlider->setDoubleValue(cameraAOIFractionYPos);
 
-    QObject::connect(CamEyeAOIWdthSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamEyeAOIWdth(double)));
-    QObject::connect(CamEyeAOIHghtSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamEyeAOIHght(double)));
-    QObject::connect(CamEyeAOIXPosSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamEyeAOIXPos(double)));
-    QObject::connect(CamEyeAOIYPosSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamEyeAOIYPos(double)));
+    QObject::connect(CamAOIWdthSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamAOIWdth(double)));
+    QObject::connect(CamAOIHghtSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamAOIHght(double)));
+    QObject::connect(CamAOIXPosSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamAOIXPos(double)));
+    QObject::connect(CamAOIYPosSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamAOIYPos(double)));
 
     // Eye AOI sliders
 
-    EyeWdthAOISlider = new SliderDouble;
-    EyeWdthAOISlider->setPrecision(2);
-    EyeWdthAOISlider->setDoubleRange(0, 1.0);
-    EyeWdthAOISlider->setOrientation(Qt::Horizontal);
-    QObject::connect(EyeWdthAOISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetEyeAOIWdth(double)));
+    EyeAOIWdthSlider = new SliderDouble;
+    EyeAOIWdthSlider->setPrecision(2);
+    EyeAOIWdthSlider->setDoubleRange(0, 1.0);
+    EyeAOIWdthSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(EyeAOIWdthSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetEyeAOIWdth(double)));
 
-    EyeHghtAOISlider = new SliderDouble;
-    EyeHghtAOISlider->setPrecision(2);
-    EyeHghtAOISlider->setDoubleRange(0, 1.0);
-    EyeHghtAOISlider->setOrientation(Qt::Vertical);
-    QObject::connect(EyeHghtAOISlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetEyeAOIHght(double)));
+    EyeAOIHghtSlider = new SliderDouble;
+    EyeAOIHghtSlider->setPrecision(2);
+    EyeAOIHghtSlider->setDoubleRange(0, 1.0);
+    EyeAOIHghtSlider->setOrientation(Qt::Vertical);
+    QObject::connect(EyeAOIHghtSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetEyeAOIHght(double)));
 
-    EyeWdthAOISlider->setDoubleValue(eyeAOIWdthFraction);
-    EyeHghtAOISlider->setDoubleValue(eyeAOIHghtFraction);
+    EyeAOIWdthSlider->setDoubleValue(eyeAOIWdthFraction);
+    EyeAOIHghtSlider->setDoubleValue(eyeAOIHghtFraction);
 
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(onCropAOI()));
@@ -241,7 +230,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     /////////////////// Options checkboxes ///////////////////////
 
     QLabel *RealTimeEyeTrackingTextBox = new QLabel;
-    RealTimeEyeTrackingTextBox->setText("Real-time eye tracking:");
+    RealTimeEyeTrackingTextBox->setText("Real-time tracking:");
 
     RealTimeEyeTrackingCheckBox = new QCheckBox;
     RealTimeEyeTrackingCheckBox->setChecked(!SAVE_EYE_IMAGE);
@@ -277,15 +266,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton *AOIRghtEyeButton = new QPushButton("&Right eye");
     QObject::connect(AOIRghtEyeButton, SIGNAL(clicked()), this, SLOT(onSetAOIEyeRght()));
 
-    QHBoxLayout *EyeDetectionsLayout = new QHBoxLayout;
-    EyeDetectionsLayout->addStretch();
-    EyeDetectionsLayout->addWidget(AOILeftEyeButton);
-    EyeDetectionsLayout->addWidget(AOIRghtEyeButton);
-    EyeDetectionsLayout->addWidget(AOICropButton);
-    EyeDetectionsLayout->addStretch();
+    AOIEyeOptionsWidget = new QWidget;
+    QHBoxLayout* AOIEyeOptionsLayout = new QHBoxLayout(AOIEyeOptionsWidget);
+    AOIEyeOptionsLayout->addStretch();
+    AOIEyeOptionsLayout->addWidget(AOILeftEyeButton);
+    AOIEyeOptionsLayout->addWidget(AOIRghtEyeButton);
+    AOIEyeOptionsLayout->addWidget(AOICropButton);
+    AOIEyeOptionsLayout->addStretch();
 
-    QPushButton *ResetParametersPushButton = new QPushButton("Reset parameters");
-    QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(onResetParameters()));
+    QPushButton *ResetPushButton = new QPushButton("Reset parameters");
+    QObject::connect(ResetPushButton, SIGNAL(clicked()), this, SLOT(onResetParameters()));
 
     /////////////////// Offline mode ///////////////////////
 
@@ -308,20 +298,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton *OfflineNextImageButton = new QPushButton(">");
     QObject::connect(OfflineNextImageButton, SIGNAL(clicked(bool)), this, SLOT(onImageNext()));
 
-    QLabel *OfflineDetectionTextBox = new QLabel;
-    OfflineDetectionTextBox->setText("<b>Detect pupil in:</b>");
+    QLabel *OfflineTextBox = new QLabel;
+    OfflineTextBox->setText("<b>Detect pupil in:</b>");
 
-    QPushButton *OfflineDetectOneFrameButton = new QPushButton("One frame");
-    QObject::connect(OfflineDetectOneFrameButton, SIGNAL(clicked(bool)), this, SLOT(onDetectCurrentFrame()));
+    QPushButton *OfflineOneFrameButton  = new QPushButton("One frame");
+    QPushButton *OfflineAllFramesButton = new QPushButton("All frames");
+    QPushButton *OfflineAllTrialsButton = new QPushButton("All trials");
+    QPushButton *OfflineAllExpsButton   = new QPushButton("All experiments");
 
-    QPushButton *OfflineDetectAllFramesButton = new QPushButton("All frames");
-    QObject::connect(OfflineDetectAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllFrames()));
-
-    QPushButton *OfflineDetectAllTrialsButton = new QPushButton("All trials");
-    QObject::connect(OfflineDetectAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllTrials()));
-
-    QPushButton *OfflineDetectAllExperimentsButton = new QPushButton("All experiments");
-    QObject::connect(OfflineDetectAllExperimentsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllExperiments()));
+    QObject::connect(OfflineOneFrameButton,  SIGNAL(clicked(bool)), this, SLOT(onDetectCurrentFrame()));
+    QObject::connect(OfflineAllFramesButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllFrames()));
+    QObject::connect(OfflineAllTrialsButton, SIGNAL(clicked(bool)), this, SLOT(onDetectAllTrials()));
+    QObject::connect(OfflineAllExpsButton,   SIGNAL(clicked(bool)), this, SLOT(onDetectAllExperiments()));
 
     QPushButton *SavePupilDataButton = new QPushButton("Save");
     QObject::connect(SavePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(onSaveTrialData()));
@@ -329,24 +317,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QPushButton *CombinePupilDataButton = new QPushButton("Combine");
     QObject::connect(CombinePupilDataButton, SIGNAL(clicked(bool)), this, SLOT(onCombineData()));
 
-    OfflineModeMainWidget = new QWidget;
-    QHBoxLayout *EyeTrackingOfflineLayout = new QHBoxLayout(OfflineModeMainWidget);
-    EyeTrackingOfflineLayout->addStretch();
-    EyeTrackingOfflineLayout->addWidget(OfflineLoadSessionButton);
-    EyeTrackingOfflineLayout->addWidget(SavePupilDataButton);
-    EyeTrackingOfflineLayout->addWidget(CombinePupilDataButton);
-    EyeTrackingOfflineLayout->addWidget(OfflinePrevImageButton);
-    EyeTrackingOfflineLayout->addWidget(OfflineImageSlider);
-    EyeTrackingOfflineLayout->addWidget(OfflineNextImageButton);
-    EyeTrackingOfflineLayout->addWidget(OfflineImageFrameTextBox);
-    EyeTrackingOfflineLayout->addWidget(OfflineDetectionTextBox);
-    EyeTrackingOfflineLayout->addWidget(OfflineDetectOneFrameButton);
-    EyeTrackingOfflineLayout->addWidget(OfflineDetectAllFramesButton);
-    EyeTrackingOfflineLayout->addWidget(OfflineDetectAllTrialsButton);
-    EyeTrackingOfflineLayout->addWidget(OfflineDetectAllExperimentsButton);
-    EyeTrackingOfflineLayout->addStretch();
+    OfflineModeWidget = new QWidget;
+    QVBoxLayout *EyeTrackingOfflineLayout = new QVBoxLayout(OfflineModeWidget);
 
-    OfflineModeMainWidget->setVisible(false);
+    QHBoxLayout *OfflineOptionsLayout = new QHBoxLayout;
+    OfflineOptionsLayout->addWidget(OfflineLoadSessionButton);
+    OfflineOptionsLayout->addWidget(SavePupilDataButton);
+    OfflineOptionsLayout->addWidget(CombinePupilDataButton);
+    OfflineOptionsLayout->addWidget(OfflinePrevImageButton);
+    OfflineOptionsLayout->addWidget(OfflineImageSlider);
+    OfflineOptionsLayout->addWidget(OfflineNextImageButton);
+    OfflineOptionsLayout->addWidget(OfflineImageFrameTextBox);
+
+    QHBoxLayout *OfflineDetectionLayout = new QHBoxLayout;
+    OfflineDetectionLayout->addWidget(OfflineTextBox);
+    OfflineDetectionLayout->addWidget(OfflineOneFrameButton);
+    OfflineDetectionLayout->addWidget(OfflineAllFramesButton);
+    OfflineDetectionLayout->addWidget(OfflineAllTrialsButton);
+    OfflineDetectionLayout->addWidget(OfflineAllExpsButton);
 
     QLabel* OfflineTrialTitle = new QLabel;
     OfflineTrialTitle->setText("<b>Offline mode - Trial:</b>");
@@ -359,43 +347,42 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineTrialSlider->setValue(0);
     OfflineTrialSlider->setOrientation(Qt::Horizontal);
 
-    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this, SLOT(onSetTrialOffline(int)));
+    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), this,                SLOT(onSetTrialOffline(int)));
+    QObject::connect(OfflineTrialSlider,  SIGNAL(valueChanged(int)), OfflineTrialSpinBox, SLOT(setValue(int)));
+    QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)), OfflineTrialSlider,  SLOT(setValue(int)));
 
-    QObject::connect( OfflineTrialSlider, SIGNAL(valueChanged(int)), OfflineTrialSpinBox, SLOT(setValue(int)));
-    QObject::connect(OfflineTrialSpinBox, SIGNAL(valueChanged(int)),  OfflineTrialSlider, SLOT(setValue(int)));
-
-    OfflineModeHeaderWidget = new QWidget;
-    QGridLayout *OfflineSessionTitleLayout = new QGridLayout(OfflineModeHeaderWidget);
-    OfflineSessionTitleLayout->addWidget(OfflineTrialTitle, 0, 1);
-    OfflineSessionTitleLayout->addWidget(OfflineTrialSpinBox, 0, 2);
-    OfflineSessionTitleLayout->addWidget(OfflineTrialSlider, 0, 3);
+    QGridLayout *OfflineSessionTitleLayout = new QGridLayout;
+    OfflineSessionTitleLayout->addWidget(OfflineTrialTitle,     0, 1);
+    OfflineSessionTitleLayout->addWidget(OfflineTrialSpinBox,   0, 2);
+    OfflineSessionTitleLayout->addWidget(OfflineTrialSlider,    0, 3);
     OfflineSessionTitleLayout->setColumnStretch(0, 1);
     OfflineSessionTitleLayout->setColumnStretch(1, 3);
     OfflineSessionTitleLayout->setColumnStretch(2, 1);
     OfflineSessionTitleLayout->setColumnStretch(3, 3);
     OfflineSessionTitleLayout->setColumnStretch(4, 1);
 
-    OfflineModeHeaderWidget->setVisible(false);
+    EyeTrackingOfflineLayout->addLayout(OfflineSessionTitleLayout);
+    EyeTrackingOfflineLayout->addLayout(OfflineOptionsLayout);
+    EyeTrackingOfflineLayout->addLayout(OfflineDetectionLayout);
+
+    OfflineModeWidget->setVisible(false);
 
     QWidget *CameraSettings = new QWidget;
     QGridLayout* CameraOutputLayout = new QGridLayout(CameraSettings);
 
-    CameraOutputLayout->addWidget(OfflineModeHeaderWidget, 0, 2, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(OfflineModeMainWidget, 5, 1, 1, 4, Qt::AlignCenter);
-
-    CameraOutputLayout->addWidget(CamEyeAOIXPosSlider, 0, 2);
-    CameraOutputLayout->addWidget(CamEyeAOIYPosSlider, 1, 1);
-    CameraOutputLayout->addWidget(CamQImage,           1, 2, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(CamEyeAOIWdthSlider, 2, 2);
-    CameraOutputLayout->addWidget(CamEyeAOIHghtSlider, 1, 3);
-    CameraOutputLayout->addWidget(EyeHghtAOISlider,    1, 5);
-    CameraOutputLayout->addWidget(EyeQImage,           1, 4, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(mQwtPlotWidget,      0, 4, 3, 2);
-    CameraOutputLayout->addWidget(EyeWdthAOISlider,    2, 4);
-    CameraOutputLayout->addLayout(OptionsLayout,       4, 2);
-    CameraOutputLayout->addLayout(EyeDetectionsLayout, 3, 2);
-    CameraOutputLayout->addLayout(DrawFunctionsLayout, 3, 4, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(ResetParametersPushButton, 4, 4, Qt::AlignCenter);
+    CameraOutputLayout->addLayout(OptionsLayout,       0, 2);
+    CameraOutputLayout->addWidget(CamAOIXPosSlider,    1, 2);
+    CameraOutputLayout->addWidget(CamAOIYPosSlider,    2, 1);
+    CameraOutputLayout->addWidget(CamQImage,           2, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(CamAOIWdthSlider,    3, 2);
+    CameraOutputLayout->addWidget(EyeAOIWdthSlider,    4, 2);
+    CameraOutputLayout->addWidget(CamAOIHghtSlider,    2, 3);
+    CameraOutputLayout->addWidget(EyeAOIHghtSlider,    2, 4);
+    CameraOutputLayout->addWidget(mQwtPlotWidget,      2, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(OfflineModeWidget,   3, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(AOIEyeOptionsWidget, 5, 2);
+    CameraOutputLayout->addLayout(DrawFunctionsLayout, 6, 2, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(ResetPushButton,     7, 2, Qt::AlignCenter);
 
     CameraOutputLayout->setColumnStretch(0, 1);
     CameraOutputLayout->setColumnStretch(6, 1);
@@ -675,7 +662,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FlashHghtTextBox->setText("<i>H:</i>");
 
     QHBoxLayout* FlashCoordinatesLayout = new QHBoxLayout;
-    FlashCoordinatesLayout->addWidget(FlashCoordsTextBox);
     FlashCoordinatesLayout->addWidget(FlashXPosTextBox);
     FlashCoordinatesLayout->addWidget(FlashXPosSpinBox);
     FlashCoordinatesLayout->addWidget(FlashYPosTextBox);
@@ -708,7 +694,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // Data save
 
     QLabel* SaveDataTextBox = new QLabel;
-    SaveDataTextBox->setText("<b>Data to be saved:</b>");
+    SaveDataTextBox->setText("<b>Save data:</b>");
 
     QLabel* SaveDataAspectRatioTextBox = new QLabel;
     SaveDataAspectRatioTextBox->setText("Aspect ratio:");
@@ -731,56 +717,49 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(SaveDataCircumferenceCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetSaveDataCircumference(int)));
     QObject::connect(SaveDataPositionCheckBox,      SIGNAL(stateChanged(int)), this, SLOT(onSetSaveDataPosition(int)));
 
+    QHBoxLayout* ExperimentSaveLayout = new QHBoxLayout;
+    ExperimentSaveLayout->addWidget(SaveDataPositionTextBox);
+    ExperimentSaveLayout->addWidget(SaveDataPositionCheckBox);
+    ExperimentSaveLayout->addWidget(SaveDataCircumferenceTextBox);
+    ExperimentSaveLayout->addWidget(SaveDataCircumferenceCheckBox);
+    ExperimentSaveLayout->addWidget(SaveDataAspectRatioTextBox);
+    ExperimentSaveLayout->addWidget(SaveDataAspectRatioCheckBox);
+
     // Set-up layouts
 
     QWidget* ExperimentTabWidget     = new QWidget;
-    QHBoxLayout *ExperimentTabLayout = new QHBoxLayout(ExperimentTabWidget);
+    QGridLayout *ExperimentTabLayout = new QGridLayout(ExperimentTabWidget);
 
-    QGridLayout *ExperimentTabLeftLayout = new QGridLayout;
-    QGridLayout *ExperimentTabRghtLayout = new QGridLayout;
+    ExperimentTabLayout->addWidget(NameInputTextBox,            0, 0);
+    ExperimentTabLayout->addWidget(NameInputLineEdit,           0, 1);
+    ExperimentTabLayout->addWidget(DataDirectoryTitleTextBox,   1, 0);
+    ExperimentTabLayout->addWidget(DataDirectoryTextBox,        1, 1);
+    ExperimentTabLayout->addWidget(DataDirectoryButton,         1, 2);
+    ExperimentTabLayout->addWidget(DataFilenameTextBox,         2, 0);
+    ExperimentTabLayout->addWidget(DataFilenameLineEdit,        2, 1);
+    ExperimentTabLayout->addWidget(TrialIndexTextBox,           3, 0);
+    ExperimentTabLayout->addLayout(TrialIndexSpinBoxLayout,     3, 1);
+    ExperimentTabLayout->addWidget(TrialTimeLengthTextBox,      4, 0);
+    ExperimentTabLayout->addWidget(TrialTimeLengthLineEdit,     4, 1);
+    ExperimentTabLayout->addWidget(StartRecordingButton,        4, 2);
+    ExperimentTabLayout->addWidget(FlashStandbyTextBox,         5, 0);
+    ExperimentTabLayout->addWidget(FlashStandbySlider,          5, 1);
+    ExperimentTabLayout->addWidget(FlashStandbyLabel,           5, 2);
+    ExperimentTabLayout->addWidget(FlashThresholdTextBox,       6, 0);
+    ExperimentTabLayout->addWidget(FlashThresholdSlider,        6, 1);
+    ExperimentTabLayout->addWidget(FlashThresholdLabel,         6, 2);
+    ExperimentTabLayout->addWidget(FlashThresholdResetButton,   6, 3, Qt::AlignLeft);
+    ExperimentTabLayout->addWidget(FlashCoordsTextBox,          7, 0);
+    ExperimentTabLayout->addLayout(FlashCoordinatesLayout,      7, 1, 1, 3);
+    ExperimentTabLayout->addWidget(SaveDataTextBox,             8, 0);
+    ExperimentTabLayout->addLayout(ExperimentSaveLayout,        8, 1, 1, 3);
 
-    ExperimentTabLeftLayout->addWidget(NameInputTextBox,            0, 0);
-    ExperimentTabLeftLayout->addWidget(NameInputLineEdit,           0, 1);
-    ExperimentTabLeftLayout->addWidget(DataDirectoryTitleTextBox,   1, 0);
-    ExperimentTabLeftLayout->addWidget(DataDirectoryTextBox,        1, 1);
-    ExperimentTabLeftLayout->addWidget(DataDirectoryButton,         1, 2);
-    ExperimentTabLeftLayout->addWidget(DataFilenameTextBox,         2, 0);
-    ExperimentTabLeftLayout->addWidget(DataFilenameLineEdit,        2, 1);
-    ExperimentTabLeftLayout->addWidget(TrialIndexTextBox,           3, 0);
-    ExperimentTabLeftLayout->addLayout(TrialIndexSpinBoxLayout,     3, 1);
-    ExperimentTabLeftLayout->addWidget(TrialTimeLengthTextBox,      4, 0);
-    ExperimentTabLeftLayout->addWidget(TrialTimeLengthLineEdit,     4, 1);
-    ExperimentTabLeftLayout->addWidget(StartRecordingButton,        4, 2);
-    ExperimentTabLeftLayout->addWidget(FlashStandbyTextBox,         5, 0);
-    ExperimentTabLeftLayout->addWidget(FlashStandbySlider,          5, 1);
-    ExperimentTabLeftLayout->addWidget(FlashStandbyLabel,           5, 2);
-    ExperimentTabLeftLayout->addWidget(FlashThresholdTextBox,       6, 0);
-    ExperimentTabLeftLayout->addWidget(FlashThresholdSlider,        6, 1);
-    ExperimentTabLeftLayout->addWidget(FlashThresholdLabel,         6, 2);
-    ExperimentTabLeftLayout->addWidget(FlashThresholdResetButton,   6, 3, Qt::AlignLeft);
-    ExperimentTabLeftLayout->addLayout(FlashCoordinatesLayout,      8, 0, 1, 3);
-
-    ExperimentTabLeftLayout->setColumnStretch(0, 1);
-    ExperimentTabLeftLayout->setColumnStretch(1, 2);
-    ExperimentTabLeftLayout->setColumnStretch(2, 1);
-    ExperimentTabLeftLayout->setColumnStretch(3, 1);
-    ExperimentTabLeftLayout->setColumnStretch(4, 5);
-
-    ExperimentTabRghtLayout->addWidget(SaveDataTextBox,               0, 0);
-    ExperimentTabRghtLayout->addWidget(SaveDataPositionTextBox,       1, 0);
-    ExperimentTabRghtLayout->addWidget(SaveDataPositionCheckBox,      1, 1);
-    ExperimentTabRghtLayout->addWidget(SaveDataCircumferenceTextBox,  2, 0);
-    ExperimentTabRghtLayout->addWidget(SaveDataCircumferenceCheckBox, 2, 1);
-    ExperimentTabRghtLayout->addWidget(SaveDataAspectRatioTextBox,    3, 0);
-    ExperimentTabRghtLayout->addWidget(SaveDataAspectRatioCheckBox,   3, 1);
-
-    ExperimentTabRghtLayout->setColumnStretch(0, 2);
-    ExperimentTabRghtLayout->setColumnStretch(1, 1);
-    ExperimentTabRghtLayout->setColumnStretch(2, 3);
-    ExperimentTabRghtLayout->setRowStretch(4, 3);
-
-    ExperimentTabLayout->addLayout(ExperimentTabLeftLayout);
-    ExperimentTabLayout->addLayout(ExperimentTabRghtLayout);
+    ExperimentTabLayout->setColumnStretch(0, 1);
+    ExperimentTabLayout->setColumnStretch(1, 2);
+    ExperimentTabLayout->setColumnStretch(2, 1);
+    ExperimentTabLayout->setColumnStretch(3, 1);
+    ExperimentTabLayout->setColumnStretch(4, 1);
+    ExperimentTabLayout->setColumnStretch(5, 5);
 
     ///////////////////////////////////////////////////////////////
     //////////////////// DEVELOPMENT TAB  /////////////////////////
@@ -1146,20 +1125,17 @@ void MainWindow::onUpdateCameraImage()
                     } else { return; }
                 }
 
-                CamQImage->loadImage(imageOriginal);
-                CamQImage->setAOIEye  (  eyeAOITemp);
-                CamQImage->setAOIBead ( beadAOITemp);
-                CamQImage->setAOIFlash(AOIFlashTemp);
-                CamQImage->setImage();
-
                 if (eyeAOITemp.wdth >= eyeAOIWdthMin && eyeAOITemp.hght >= eyeAOIHghtMin)
                 {
                     cv::Mat imageProcessed = imageOriginal.clone();
                     drawAll(imageProcessed, mDrawVariablesTemp);
-                    EyeQImage->loadImage(imageProcessed);
-                    EyeQImage->setImage();
+                    CamQImage->loadImage(imageProcessed);
+                    CamQImage->setAOIEye  (  eyeAOITemp);
+                    CamQImage->setAOIBead ( beadAOITemp);
+                    CamQImage->setAOIFlash(AOIFlashTemp);
+                    CamQImage->setImage();
                 }
-                else { EyeQImage->setAOIError(); }
+                else { CamQImage->setAOIError(); }
 
                 mVariableWidgetEye->setWidgets(mDataVariablesTemp); // update sliders
 
@@ -1194,7 +1170,7 @@ void MainWindow::onUpdateCameraImage()
             else if (!Parameters::CAMERA_RUNNING)
             {
                 CamQImage->setFindingCamera();
-                EyeQImage->setSpinner();
+                CamQImage->setSpinner();
             }
         }
     }
@@ -1388,27 +1364,29 @@ void MainWindow::onSetOfflineMode(int state)
 {
     MainTabWidget->setTabEnabled(0, state);
 
+    CamAOIWdthSlider->setVisible(!state);
+    CamAOIHghtSlider->setVisible(!state);
+    CamAOIXPosSlider->setVisible(!state);
+    CamAOIYPosSlider->setVisible(!state);
+    EyeAOIWdthSlider->setVisible(!state);
+    EyeAOIHghtSlider->setVisible(!state);
+
+    AOIEyeOptionsWidget->setVisible(!state);
+    OfflineModeWidget  ->setVisible(state);
+
+    Parameters::ONLINE_PROCESSING = !state;
+    Parameters::CAMERA_RUNNING    = !state;
+    Parameters::CAMERA_READY      = !state;
+
+    trialIndexOffline = 0;
+    imageIndexOffline = 0;
+
     if (!state)
     {
-        imageIndexOffline = 0;
-
-        CamEyeAOIWdthSlider->setVisible(true);
-        CamEyeAOIHghtSlider->setVisible(true);
-        CamEyeAOIXPosSlider->setVisible(true);
-        CamEyeAOIYPosSlider->setVisible(true);
-
-        OfflineModeHeaderWidget->setVisible(false);
-        OfflineModeMainWidget  ->setVisible(false);
-
-        Parameters::ONLINE_PROCESSING = true;
-        Parameters::CAMERA_RUNNING    = true;
-        Parameters::CAMERA_READY      = true;
-
         if (mUEyeOpencvCam.startVideoCapture())
         {
             std::thread pupilTrackingThread(&MainWindow::pupilTracking, this);
             pupilTrackingThread.detach();
-
             getCameraParameters();
         }
         else
@@ -1421,7 +1399,18 @@ void MainWindow::onSetOfflineMode(int state)
     }
     else
     {
-        onStartOfflineSession();
+        { // unlock frame grabbing threads
+            std::unique_lock<std::mutex> frameCaptureMutexLock(Parameters::frameCaptureMutex);
+            Parameters::frameCaptureCV.notify_all(); // unlock getFrame() thread
+        }
+
+        { // wait for threads to finish
+            std::unique_lock<std::mutex> lck(mtx);
+            while (Parameters::CAMERA_RUNNING) cv.wait(lck);
+        }
+
+        CamQImage->clearImage();
+        setupOfflineSession();
     }
 }
 
@@ -1756,11 +1745,20 @@ void MainWindow::onPlotTrialData()
     }
 }
 
-void MainWindow::onFlashStandbySlider(int val)
+void MainWindow::onFlashStandbySlider(int state)
 {
     if (Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
     {
-        if (val == 0)
+        CamQImage       ->setVisible(!state);
+        CamAOIXPosSlider->setVisible(!state);
+        CamAOIYPosSlider->setVisible(!state);
+        CamAOIWdthSlider->setVisible(!state);
+        CamAOIHghtSlider->setVisible(!state);
+        EyeAOIWdthSlider->setVisible(!state);
+        EyeAOIHghtSlider->setVisible(!state);
+        mQwtPlotWidget  ->setVisible(state);
+
+        if (state == 0)
         {
             {
                 std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
@@ -1773,12 +1771,6 @@ void MainWindow::onFlashStandbySlider(int val)
             {
                 mUEyeOpencvCam.setAutoGain(true);
             }
-
-            // display real-time eye-tracking
-            EyeQImage       ->setVisible(true);
-            EyeWdthAOISlider->setVisible(true);
-            EyeHghtAOISlider->setVisible(true);
-            mQwtPlotWidget  ->setVisible(false);
         }
         else
         {
@@ -1814,13 +1806,6 @@ void MainWindow::onFlashStandbySlider(int val)
             {
                 mUEyeOpencvCam.setAutoGain(false);
             }
-
-            // display plot window
-
-            EyeQImage       ->setVisible(false);
-            EyeWdthAOISlider->setVisible(false);
-            EyeHghtAOISlider->setVisible(false);
-            mQwtPlotWidget  ->setVisible(true);
         }
     }
     else
@@ -1832,37 +1817,6 @@ void MainWindow::onFlashStandbySlider(int val)
 ///////////////////////////////////////////////////////////////
 ///////////////// OFFLINE MODE FUNCTIONS  /////////////////////
 ///////////////////////////////////////////////////////////////
-
-void MainWindow::onStartOfflineSession()
-{
-    trialIndexOffline = 0;
-    imageIndexOffline = 0;
-    Parameters::ONLINE_PROCESSING = false; // turn off pupil tracking
-
-    { // unlock frame grabbing threads
-        std::unique_lock<std::mutex> frameCaptureMutexLock(Parameters::frameCaptureMutex);
-        Parameters::frameCaptureCV.notify_all(); // unlock getFrame() thread
-    }
-
-    { // wait for threads to finish
-        std::unique_lock<std::mutex> lck(mtx);
-        while (Parameters::CAMERA_RUNNING) cv.wait(lck);
-    }
-
-    // hide camera AOI sliders
-    CamEyeAOIWdthSlider->setVisible(false);
-    CamEyeAOIHghtSlider->setVisible(false);
-    CamEyeAOIXPosSlider->setVisible(false);
-    CamEyeAOIYPosSlider->setVisible(false);
-
-    OfflineModeMainWidget  ->setVisible(true);
-    OfflineModeHeaderWidget->setVisible(true);
-
-    CamQImage->clearImage();
-    EyeQImage->clearImage();
-
-    setupOfflineSession();
-}
 
 void MainWindow::countNumTrials()
 {
@@ -2042,12 +1996,12 @@ void MainWindow::onUpdateImageProcessed(int imgIndex)
     if (boost::filesystem::exists(fileName.str()))
     {
         cv::Mat eyeImage = cv::imread(fileName.str(), CV_LOAD_IMAGE_COLOR);
-        EyeQImage->loadImage(eyeImage);
-        EyeQImage->setImage();
+        CamQImage->loadImage(eyeImage);
+        CamQImage->setImage();
     }
     else
     {
-        EyeQImage->clearImage();
+        CamQImage->clearImage();
     }
 }
 
@@ -2091,7 +2045,6 @@ void MainWindow::onSetOfflineImage(int imgIndex)
     else
     {
         CamQImage->clearImage();
-        EyeQImage->clearImage();
         OfflineImageFrameTextBox->setText("<b>0 / 0</b>");
     }
 }
@@ -2869,17 +2822,17 @@ void MainWindow::onCropAOI()
     eyeAOIWdthFraction = 1.0;
     eyeAOIHghtFraction = 1.0;
 
-    CamEyeAOIXPosSlider->setDoubleValue(fracXPos);
-    CamEyeAOIYPosSlider->setDoubleValue(fracYPos);
-    CamEyeAOIWdthSlider->setDoubleValue(fracWdth);
-    CamEyeAOIHghtSlider->setDoubleValue(fracHght);
+    CamAOIXPosSlider->setDoubleValue(fracXPos);
+    CamAOIYPosSlider->setDoubleValue(fracYPos);
+    CamAOIWdthSlider->setDoubleValue(fracWdth);
+    CamAOIHghtSlider->setDoubleValue(fracHght);
 }
 
 void MainWindow::updateCamAOIx()
 {
     Parameters::cameraAOI.wdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
     Parameters::cameraAOI.xPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-    CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
+    CamAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         updateEyeAOIx(); }
@@ -2889,7 +2842,7 @@ void MainWindow::updateCamAOIy()
 {
     Parameters::cameraAOI.hght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
     Parameters::cameraAOI.yPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-    CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
+    CamAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
 
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         updateEyeAOIy(); }
@@ -2925,7 +2878,7 @@ void MainWindow::updateEyeAOIy()
     {   Parameters::beadAOI.yPos = Parameters::cameraAOI.hght - Parameters::beadAOI.hght; }
 }
 
-void MainWindow::onSetCamEyeAOIWdth(double fraction)
+void MainWindow::onSetCamAOIWdth(double fraction)
 {
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         cameraAOIFractionWdth = fraction;
@@ -2947,10 +2900,10 @@ void MainWindow::onSetCamEyeAOIWdth(double fraction)
         }
     }
 
-    CamEyeAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
+    CamAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
 }
 
-void MainWindow::onSetCamEyeAOIHght(double fraction)
+void MainWindow::onSetCamAOIHght(double fraction)
 {
     { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
         cameraAOIFractionHght = fraction;
@@ -2972,10 +2925,10 @@ void MainWindow::onSetCamEyeAOIHght(double fraction)
         }
     }
 
-    CamEyeAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
+    CamAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
 }
 
-void MainWindow::onSetCamEyeAOIXPos(double fraction)
+void MainWindow::onSetCamAOIXPos(double fraction)
 {
     cameraAOIFractionXPos = fraction;
 
@@ -2988,7 +2941,7 @@ void MainWindow::onSetCamEyeAOIXPos(double fraction)
     }
 }
 
-void MainWindow::onSetCamEyeAOIYPos(double fraction)
+void MainWindow::onSetCamAOIYPos(double fraction)
 {
     cameraAOIFractionYPos = fraction;
 
@@ -3065,18 +3018,18 @@ void MainWindow::onSetFlashThreshold(int val)
 
 void MainWindow::onSetAOIEyeLeft()
 {
-    CamEyeAOIXPosSlider->setDoubleValue(cameraAOIFractionXPosDefaultLeft);
-    CamEyeAOIYPosSlider->setDoubleValue(cameraAOIFractionYPosDefaultLeft);
-    CamEyeAOIWdthSlider->setDoubleValue(cameraAOIFractionWdthDefaultLeft);
-    CamEyeAOIHghtSlider->setDoubleValue(cameraAOIFractionHghtDefaultLeft);
+    CamAOIXPosSlider->setDoubleValue(cameraAOIFractionXPosDefaultLeft);
+    CamAOIYPosSlider->setDoubleValue(cameraAOIFractionYPosDefaultLeft);
+    CamAOIWdthSlider->setDoubleValue(cameraAOIFractionWdthDefaultLeft);
+    CamAOIHghtSlider->setDoubleValue(cameraAOIFractionHghtDefaultLeft);
 }
 
 void MainWindow::onSetAOIEyeRght()
 {
-    CamEyeAOIXPosSlider->setDoubleValue(cameraAOIFractionXPosDefaultRght);
-    CamEyeAOIYPosSlider->setDoubleValue(cameraAOIFractionYPosDefaultRght);
-    CamEyeAOIWdthSlider->setDoubleValue(cameraAOIFractionWdthDefaultRght);
-    CamEyeAOIHghtSlider->setDoubleValue(cameraAOIFractionHghtDefaultRght);
+    CamAOIXPosSlider->setDoubleValue(cameraAOIFractionXPosDefaultRght);
+    CamAOIYPosSlider->setDoubleValue(cameraAOIFractionYPosDefaultRght);
+    CamAOIWdthSlider->setDoubleValue(cameraAOIFractionWdthDefaultRght);
+    CamAOIHghtSlider->setDoubleValue(cameraAOIFractionHghtDefaultRght);
 }
 
 void MainWindow::onSetTrialIndex           (int val)   { trialIndex = val; }
