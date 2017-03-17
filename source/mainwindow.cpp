@@ -76,10 +76,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     cameraAOIFractionYPosDefaultRght = 0.37;
 
     camImageHght = 200;
-    camImageWdth = 480; // size of image in widget
+    camImageWdth = 400; // size of image in widget
 
     eyeImageHght = 200;
-    eyeImageWdth = 320; // size of image in widget
+    eyeImageWdth = 400; // size of image in widget
 
     eyeAOIHghtMin = 75;
     eyeAOIWdthMin = 100;
@@ -254,9 +254,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OfflineModeCheckBox->setChecked(false);
     QObject::connect(OfflineModeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetOfflineMode(int)));
 
-    QPushButton *ResetParametersPushButton = new QPushButton("Reset parameters");
-    QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(onResetParameters()));
-
     QLabel *BeadDetectionTextBox = new QLabel;
     BeadDetectionTextBox->setText("Bead detection:");
 
@@ -272,7 +269,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     OptionsLayout->addWidget(OfflineModeCheckBox);
     OptionsLayout->addWidget(BeadDetectionTextBox);
     OptionsLayout->addWidget(BeadDetectionCheckBox);
-    OptionsLayout->addWidget(ResetParametersPushButton);
     OptionsLayout->addStretch();
 
     QPushButton *AOILeftEyeButton = new QPushButton("&Left eye");
@@ -287,6 +283,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeDetectionsLayout->addWidget(AOIRghtEyeButton);
     EyeDetectionsLayout->addWidget(AOICropButton);
     EyeDetectionsLayout->addStretch();
+
+    QPushButton *ResetParametersPushButton = new QPushButton("Reset parameters");
+    QObject::connect(ResetParametersPushButton, SIGNAL(clicked()), this, SLOT(onResetParameters()));
 
     /////////////////// Offline mode ///////////////////////
 
@@ -396,6 +395,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraOutputLayout->addLayout(OptionsLayout,       4, 2);
     CameraOutputLayout->addLayout(EyeDetectionsLayout, 3, 2);
     CameraOutputLayout->addLayout(DrawFunctionsLayout, 3, 4, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(ResetParametersPushButton, 4, 4, Qt::AlignCenter);
 
     CameraOutputLayout->setColumnStretch(0, 1);
     CameraOutputLayout->setColumnStretch(6, 1);
@@ -561,8 +561,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CameraParametersLayout->addLayout(CameraHardwareGainOptionsLayout, 7, 1);
 
-    CameraParametersLayout->addWidget(CameraSubSamplingTextBox,  8, 0);
-    CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 8, 1);
+//    CameraParametersLayout->addWidget(CameraSubSamplingTextBox,  8, 0);
+//    CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 8, 1);
 
     ///////////////////////////////////////////////////////////////
     ///////////////////// EXPERIMENT TAB  /////////////////////////
