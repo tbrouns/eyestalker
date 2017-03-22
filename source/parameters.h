@@ -44,28 +44,26 @@ public:
 
     static double ellipseDrawOutlineWidth;
 
-    static double eyeAOIXPosFraction;
-    static double eyeAOIYPosFraction;
+    static AOIProperties camAOI;
     static AOIProperties eyeAOI;
-
-    static double beadAOIXPosFraction;
-    static double beadAOIYPosFraction;
     static AOIProperties beadAOI;
+
+    static AOIPropertiesDouble eyeAOIRatio;
+    static AOIPropertiesDouble beadAOIRatio;
 
     static drawBooleans drawFlags;
 
     static int cameraXResolution;
     static int cameraYResolution;
-    static AOIProperties cameraAOI;
 
-    static int cannyKernelSize;
     static int ellipseDrawCrossSize;
 
     static std::condition_variable frameCaptureCV;
 
     static std::mutex frameCaptureMutex;
-    static std::mutex mainMutex;
-
+    static std::mutex AOICamMutex;
+    static std::mutex AOIEyeMutex;
+    static std::mutex AOIBeadMutex;
 };
 
 #endif // PARAMETERS_H

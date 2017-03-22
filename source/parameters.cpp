@@ -19,17 +19,15 @@ bool Parameters::CAMERA_READY;
 bool Parameters::CAMERA_RUNNING;
 bool Parameters::ONLINE_PROCESSING;
 
-double Parameters::eyeAOIXPosFraction;
-double Parameters::eyeAOIYPosFraction;
 AOIProperties Parameters::eyeAOI;
+AOIPropertiesDouble Parameters::eyeAOIRatio;
 
-double Parameters::beadAOIXPosFraction;
-double Parameters::beadAOIYPosFraction;
 AOIProperties Parameters::beadAOI;
+AOIPropertiesDouble Parameters::beadAOIRatio;
 
 int Parameters::cameraXResolution;
 int Parameters::cameraYResolution;
-AOIProperties Parameters::cameraAOI;
+AOIProperties Parameters::camAOI;
 
 double Parameters::ellipseDrawOutlineWidth;
 int    Parameters::ellipseDrawCrossSize;
@@ -39,4 +37,7 @@ drawBooleans Parameters::drawFlags;
 std::condition_variable Parameters::frameCaptureCV;
 
 std::mutex Parameters::frameCaptureMutex;
-std::mutex Parameters::mainMutex;
+
+std::mutex Parameters::AOICamMutex;
+std::mutex Parameters::AOIEyeMutex;
+std::mutex Parameters::AOIBeadMutex;

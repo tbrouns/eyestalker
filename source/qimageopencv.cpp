@@ -15,15 +15,11 @@
 
 #include "qimageopencv.h"
 
-QImageOpenCV::QImageOpenCV(int type, QWidget *parent) : QLabel(parent)
-{    
-    imageType = type;
-
+QImageOpenCV::QImageOpenCV(QWidget *parent) : QLabel(parent)
+{
     spinnerDegrees = 0;
-
-    imageWdth = 0;
-    imageHght = 0;
-
+    imageWdth  = 0;
+    imageHght  = 0;
     widgetWdth = 0;
     widgetHght = 0;
 
@@ -44,8 +40,8 @@ QImageOpenCV::~QImageOpenCV()
 
 void QImageOpenCV::setSize(int W, int H)
 {
-    widgetWdth = W;
-    widgetHght = H;
+    widgetWdth  = W;
+    widgetHght  = H;
     aspectRatio = W / (double) H;
 }
 
@@ -76,23 +72,19 @@ void QImageOpenCV::resizeImage()
 {
     if (imageWdth > widgetWdth || imageHght > widgetHght)
     {
-        imageScaled = image.scaled(QSize(widgetWdth, widgetHght), Qt::KeepAspectRatio);
-
-        imageWdthScaled = imageScaled.width();
-        imageHghtScaled = imageScaled.height();
-
-        imageScaleFactorX = imageWdthScaled / (double) imageWdth;
-        imageScaleFactorY = imageHghtScaled / (double) imageHght;
+        imageScaled         = image.scaled(QSize(widgetWdth, widgetHght), Qt::KeepAspectRatio);
+        imageWdthScaled     = imageScaled.width();
+        imageHghtScaled     = imageScaled.height();
+        imageScaleFactorX   = imageWdthScaled / (double) imageWdth;
+        imageScaleFactorY   = imageHghtScaled / (double) imageHght;
     }
     else
     {
-        imageScaled = image;
-
-        imageWdthScaled = imageWdth;
-        imageHghtScaled = imageHght;
-
-        imageScaleFactorX = 1.0;
-        imageScaleFactorY = 1.0;
+        imageScaled         = image;
+        imageWdthScaled     = imageWdth;
+        imageHghtScaled     = imageHght;
+        imageScaleFactorX   = 1.0;
+        imageScaleFactorY   = 1.0;
     }
 }
 
@@ -102,7 +94,6 @@ void QImageOpenCV::drawAOI(QPixmap& img, AOIProperties mAOI, QColor col)
     {
         mAOI.xPos = round(imageScaleFactorX * mAOI.xPos);
         mAOI.wdth = round(imageScaleFactorX * mAOI.wdth);
-
         mAOI.yPos = round(imageScaleFactorY * mAOI.yPos);
         mAOI.hght = round(imageScaleFactorY * mAOI.hght);
 
@@ -111,12 +102,10 @@ void QImageOpenCV::drawAOI(QPixmap& img, AOIProperties mAOI, QColor col)
         int lineWidth = round(0.003 * (widgetWdth + widgetHght));
 
         painter.setPen(QPen(col, round(lineWidth)));
-
         painter.drawLine(QPoint(mAOI.xPos, mAOI.yPos),             QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos));
         painter.drawLine(QPoint(mAOI.xPos, mAOI.yPos + mAOI.hght), QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos + mAOI.hght));
 
         painter.setPen(QPen(col, round(lineWidth)));
-
         painter.drawLine(QPoint(mAOI.xPos,             mAOI.yPos), QPoint(mAOI.xPos,             mAOI.yPos + mAOI.hght));
         painter.drawLine(QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos), QPoint(mAOI.xPos + mAOI.wdth, mAOI.yPos + mAOI.hght));
     }
@@ -124,65 +113,26 @@ void QImageOpenCV::drawAOI(QPixmap& img, AOIProperties mAOI, QColor col)
 
 void QImageOpenCV::setImage()
 {
-    if (imageType == 1)
+    if (imageWdthScaled > 0)
     {
-        if (imageWdthScaled > 0)
-        {
-            QPixmap imageEdited = imageScaled;
-            drawAOI(imageEdited,   eyeAOI, QColor(255,   0,   0));
-            drawAOI(imageEdited, flashAOI, QColor(  0,   0, 255));
-
-            if (SHOW_BEAD_AOI)
-            {
-                drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0));
-            }
-
-            this->setPixmap(imageEdited);
-        }
+        QPixmap imageEdited = imageScaled;
+        drawAOI(imageEdited,   eyeAOI, QColor(255,   0,   0));
+        drawAOI(imageEdited, flashAOI, QColor(  0,   0, 255));
+        if (SHOW_BEAD_AOI) { drawAOI(imageEdited,  beadAOI, QColor(  0, 255,   0)); }
+        this->setPixmap(imageEdited);
     }
-    else if (imageWdthScaled > 0) { this->setPixmap(imageScaled); }
 }
 
-void QImageOpenCV::clearImage()
-{
-    this->clear();
-}
+void QImageOpenCV::clearImage() { this->clear(); }
 
-void QImageOpenCV::setFindingCamera()
-{
-    QPixmap pic(widgetWdth, widgetHght);
-    pic.fill(backgroundColour);
-
-    QRect rec(0, 0, round(0.9 * widgetWdth), round(0.5 * widgetHght));
-    rec.moveCenter(rect().center());
-
-    QPainter painter(&pic);
-
-    QFont font = painter.font();
-    font.setPointSize(round(0.032 * widgetWdth));
-    font.setWeight(QFont::DemiBold);
-    painter.setFont(font);
-
-    painter.setPen(textColour);
-    painter.drawText(rec, Qt::AlignCenter, QString("NO CAMERA DETECTED"));
-    this->setPixmap(pic);
-}
-
-void QImageOpenCV::setAOIEye(AOIProperties eyeAOINew)
-{
-    eyeAOI = eyeAOINew;
-}
-
-void QImageOpenCV::setAOIBead(AOIProperties beadAOINew)
-{
-    beadAOI = beadAOINew;
-}
+void QImageOpenCV::setAOIEye (AOIProperties eyeAOINew)  { eyeAOI  = eyeAOINew; }
+void QImageOpenCV::setAOIBead(AOIProperties beadAOINew) { beadAOI = beadAOINew; }
 
 void QImageOpenCV::setAOIFlash(AOIProperties flashAOINew)
 {
     flashAOI = flashAOINew;
-    flashAOI.xPos = flashAOI.xPos - Parameters::cameraAOI.xPos;
-    flashAOI.yPos = flashAOI.xPos - Parameters::cameraAOI.yPos;
+    flashAOI.xPos = flashAOI.xPos - Parameters::camAOI.xPos;
+    flashAOI.yPos = flashAOI.xPos - Parameters::camAOI.yPos;
 
     if (flashAOI.xPos < 0)
     {
@@ -231,8 +181,6 @@ void QImageOpenCV::setAOIError()
     this->setPixmap(pic);
 }
 
-
-
 void QImageOpenCV::setSpinner()
 {
     QPixmap pic(widgetWdth, widgetHght);
@@ -262,91 +210,63 @@ void QImageOpenCV::setSpinner()
 
 void QImageOpenCV::mousePressEvent(QMouseEvent *event)
 {
-    if (imageType == 1)
+    int imageScaledXOffset = 0.5 * (widgetWdth - imageWdthScaled);
+    int imageScaledYOffset = 0.5 * (widgetHght - imageHghtScaled);
+
+    if (event->button() == Qt::LeftButton)
     {
-        int imageScaledXOffset = 0.5 * (widgetWdth - imageWdthScaled);
-        int imageScaledYOffset = 0.5 * (widgetHght - imageHghtScaled);
+        std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+        std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
 
-        if (event->button() == Qt::LeftButton)
-        {
-            { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+        double mouseXPos = (event->x()) - imageScaledXOffset;
 
-                double mouseXPos = (event->x()) - imageScaledXOffset;
+        Parameters::eyeAOI.xPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::eyeAOI.wdth);
+        if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth >= imageWdth)
+        {   Parameters::eyeAOI.xPos = imageWdth - Parameters::eyeAOI.wdth; }
+        else if (Parameters::eyeAOI.xPos < 0)
+        {        Parameters::eyeAOI.xPos = 0; }
+        Parameters::eyeAOIRatio.xPos = Parameters::eyeAOI.xPos / (double) imageWdth;
 
-                Parameters::eyeAOI.xPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::eyeAOI.wdth);
+        double mouseYPos = (event->y()) - imageScaledYOffset;
 
-                if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth >= imageWdth)
-                {   Parameters::eyeAOI.xPos = imageWdth - Parameters::eyeAOI.wdth; }
-                else if (Parameters::eyeAOI.xPos < 0)
-                {        Parameters::eyeAOI.xPos = 0; }
+        Parameters::eyeAOI.yPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::eyeAOI.hght);
+        if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght >= imageHght)
+        {   Parameters::eyeAOI.yPos = imageHght - Parameters::eyeAOI.hght; }
+        else if (Parameters::eyeAOI.yPos < 0)
+        {        Parameters::eyeAOI.yPos = 0; }
+        Parameters::eyeAOIRatio.yPos = Parameters::eyeAOI.yPos / (double) imageHght;
 
-                Parameters::eyeAOIXPosFraction = Parameters::eyeAOI.xPos / (double) imageWdth;
+        setAOIEye(Parameters::eyeAOI);
+        setImage();
 
-                double mouseYPos = (event->y()) - imageScaledYOffset;
-
-                Parameters::eyeAOI.yPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::eyeAOI.hght);
-
-                if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght >= imageHght)
-                {   Parameters::eyeAOI.yPos = imageHght - Parameters::eyeAOI.hght; }
-                else if (Parameters::eyeAOI.yPos < 0)
-                {        Parameters::eyeAOI.yPos = 0; }
-
-                Parameters::eyeAOIYPosFraction = Parameters::eyeAOI.yPos / (double) imageHght;
-
-                setAOIEye(Parameters::eyeAOI);
-                setImage();
-            }
-
-            emit updateImage(-1);
-        }
-        else if (event->button() == Qt::RightButton)
-        {
-            { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
-                double mouseXPos = (event->x()) - imageScaledXOffset;
-
-                Parameters::beadAOI.xPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::beadAOI.wdth);
-
-                if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth >= imageWdth)
-                {   Parameters::beadAOI.xPos = imageWdth - Parameters::beadAOI.wdth; }
-                else if (Parameters::beadAOI.xPos < 0)
-                {        Parameters::beadAOI.xPos = 0; }
-
-                Parameters::beadAOIXPosFraction = Parameters::beadAOI.xPos / (double) imageWdth;
-
-                double mouseYPos = (event->y()) - imageScaledYOffset;
-
-                Parameters::beadAOI.yPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::beadAOI.hght);
-
-                if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght >= imageHght)
-                {   Parameters::beadAOI.yPos = imageHght - Parameters::beadAOI.hght; }
-                else if (Parameters::beadAOI.yPos < 0)
-                {        Parameters::beadAOI.yPos = 0; }
-
-                Parameters::beadAOIYPosFraction = Parameters::beadAOI.yPos / (double) imageHght;
-
-                setAOIBead(Parameters::beadAOI);
-                setImage();
-            }
-
-            emit updateImage(-1);
-        }
+        emit updateImage(-1);
     }
-    else if (imageType == 2)
+    else if (event->button() == Qt::RightButton)
     {
-        int imageScaledXOffset = 0.5 * (widgetWdth - imageWdthScaled);
-        int imageScaledYOffset = 0.5 * (widgetHght - imageHghtScaled);
+        std::lock_guard<std::mutex> AOICamLock (Parameters::AOICamMutex);
+        std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
 
-        if (event->button() == Qt::LeftButton)
-        {
-            double mouseXPos = (event->x()) - imageScaledXOffset;
-            double mouseYPos = (event->y()) - imageScaledYOffset;
+        double mouseXPos = (event->x()) - imageScaledXOffset;
 
-            double XPos = mouseXPos * (Parameters::eyeAOI.wdth / (double) imageWdthScaled);
-            double YPos = mouseYPos * (Parameters::eyeAOI.hght / (double) imageHghtScaled);
+        Parameters::beadAOI.xPos = round(mouseXPos * (imageWdth / (double) imageWdthScaled) - 0.5 * Parameters::beadAOI.wdth);
+        if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth >= imageWdth)
+        {   Parameters::beadAOI.xPos = imageWdth - Parameters::beadAOI.wdth; }
+        else if (Parameters::beadAOI.xPos < 0)
+        {        Parameters::beadAOI.xPos = 0; }
+        Parameters::beadAOIRatio.xPos = Parameters::beadAOI.xPos / (double) imageWdth;
 
-            emit imageMouseClick(XPos, YPos);
-        }
+        double mouseYPos = (event->y()) - imageScaledYOffset;
+
+        Parameters::beadAOI.yPos = round(mouseYPos * (imageHght / (double) imageHghtScaled) - 0.5 * Parameters::beadAOI.hght);
+        if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght >= imageHght)
+        {   Parameters::beadAOI.yPos = imageHght - Parameters::beadAOI.hght; }
+        else if (Parameters::beadAOI.yPos < 0)
+        {        Parameters::beadAOI.yPos = 0; }
+        Parameters::beadAOIRatio.yPos = Parameters::beadAOI.yPos / (double) imageHght;
+
+        setAOIBead(Parameters::beadAOI);
+        setImage();
+
+        emit updateImage(-1);
     }
 }
-

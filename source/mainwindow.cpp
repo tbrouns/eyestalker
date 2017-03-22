@@ -66,14 +66,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     Parameters::cameraXResolution = 1280;
     Parameters::cameraYResolution = 1024;
 
-    cameraAOIFractionHghtDefaultLeft = 0.19;
-    cameraAOIFractionHghtDefaultRght = 0.22;
-    cameraAOIFractionWdthDefaultLeft = 0.25;
-    cameraAOIFractionWdthDefaultRght = 0.31;
-    cameraAOIFractionXPosDefaultLeft = 0.20;
-    cameraAOIFractionXPosDefaultRght = 0.52;
-    cameraAOIFractionYPosDefaultLeft = 0.41;
-    cameraAOIFractionYPosDefaultRght = 0.37;
+    camAOIRatioLeft.hght = 0.19;
+    camAOIRatioRght.hght = 0.22;
+    camAOIRatioLeft.wdth = 0.25;
+    camAOIRatioRght.wdth = 0.31;
+    camAOIRatioLeft.xPos = 0.20;
+    camAOIRatioRght.xPos = 0.52;
+    camAOIRatioLeft.yPos = 0.41;
+    camAOIRatioRght.yPos = 0.37;
 
     camImageHght = 200;
     camImageWdth = 400; // size of image in widget
@@ -141,9 +141,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Camera feed
 
+    camAOITemp = Parameters::camAOI;
+
     cv::Mat imgCam(camImageWdth, camImageWdth, CV_8UC3, cv::Scalar(150, 150, 150));
 
-    CamQImage = new QImageOpenCV(1);
+    CamQImage = new QImageOpenCV();
     CamQImage->setSize(camImageWdth, camImageHght);
     CamQImage->setAOIEye  (Parameters::eyeAOI);
     CamQImage->setAOIBead (Parameters::beadAOI);
@@ -156,10 +158,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // Cam AOI sliders
 
-    CamAOIWdthSlider->setDoubleValue(cameraAOIFractionWdth);
-    CamAOIHghtSlider->setDoubleValue(cameraAOIFractionHght);
-    CamAOIXPosSlider->setDoubleValue(cameraAOIFractionXPos);
-    CamAOIYPosSlider->setDoubleValue(cameraAOIFractionYPos);
+    CamAOIWdthSlider->setDoubleValue(camAOIRatio.wdth);
+    CamAOIHghtSlider->setDoubleValue(camAOIRatio.hght);
+    CamAOIXPosSlider->setDoubleValue(camAOIRatio.xPos);
+    CamAOIYPosSlider->setDoubleValue(camAOIRatio.yPos);
 
     QObject::connect(CamAOIWdthSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamAOIWdth(double)));
     QObject::connect(CamAOIHghtSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCamAOIHght(double)));
@@ -178,10 +180,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     EyeAOIHghtSlider->setPrecision(2);
     EyeAOIHghtSlider->setDoubleRange(0, 1.0);
     EyeAOIHghtSlider->setOrientation(Qt::Vertical);
+    EyeAOIHghtSlider->setInvertedAppearance(true);
     QObject::connect(EyeAOIHghtSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetEyeAOIHght(double)));
 
-    EyeAOIWdthSlider->setDoubleValue(eyeAOIWdthFraction);
-    EyeAOIHghtSlider->setDoubleValue(eyeAOIHghtFraction);
+    EyeAOIWdthSlider->setDoubleValue(Parameters::eyeAOIRatio.wdth);
+    EyeAOIHghtSlider->setDoubleValue(Parameters::eyeAOIRatio.hght);
+
+    QPushButton *AOISetButton = new QPushButton("&Set AOI");
+    QObject::connect(AOISetButton,  SIGNAL(clicked()), this, SLOT(onSetCamAOI()));
 
     QPushButton* AOICropButton = new QPushButton("&Crop AOI");
     QObject::connect(AOICropButton, SIGNAL(clicked()), this, SLOT(onCropAOI()));
@@ -271,6 +277,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AOIEyeOptionsLayout->addStretch();
     AOIEyeOptionsLayout->addWidget(AOILeftEyeButton);
     AOIEyeOptionsLayout->addWidget(AOIRghtEyeButton);
+    AOIEyeOptionsLayout->addWidget(AOISetButton);
     AOIEyeOptionsLayout->addWidget(AOICropButton);
     AOIEyeOptionsLayout->addStretch();
 
@@ -548,8 +555,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     CameraParametersLayout->addLayout(CameraHardwareGainOptionsLayout, 7, 1);
 
-//    CameraParametersLayout->addWidget(CameraSubSamplingTextBox,  8, 0);
-//    CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 8, 1);
+    //    CameraParametersLayout->addWidget(CameraSubSamplingTextBox,  8, 0);
+    //    CameraParametersLayout->addWidget(CameraSubSamplingCheckBox, 8, 1);
 
     ///////////////////////////////////////////////////////////////
     ///////////////////// EXPERIMENT TAB  /////////////////////////
@@ -926,11 +933,18 @@ MainWindow::~MainWindow()
 
 void MainWindow::pupilTracking()
 {   
-    resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-    resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+    { std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+        resetVariablesHard(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
+    }
+
+    { std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+        resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
+    }
 
     while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
     {
+        std::lock_guard<std::mutex> AOILock_1(mutexAOI_1);
+
         detectionVariables mDetectionVariablesTemp;
         detectionParameters mDetectionParametersTemp;
 
@@ -939,6 +953,7 @@ void MainWindow::pupilTracking()
 
         AOIProperties AOICameraTemp;
         AOIProperties AOIFlashTemp;
+        AOIProperties AOIBeadTemp;
         AOIProperties AOIEyeTemp;
 
         imageInfo mImageInfo = mUEyeOpencvCam.getFrame(); // get new frame from camera
@@ -952,120 +967,125 @@ void MainWindow::pupilTracking()
 
         relativeTime = relativeTimeNew;
 
-        { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
+        { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
             imageCamera = imageOriginal.clone();
-
             mDetectionVariablesTemp  = mDetectionVariablesEye;
             mDetectionParametersTemp = mParameterWidgetEye->getStructure();
-
             AOIFlashTemp  = flashAOI;
-            AOICameraTemp = Parameters::cameraAOI;
-            AOIEyeTemp    = Parameters::eyeAOI;
+            AOICameraTemp = Parameters::camAOI;
+        }
+
+        { std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+            AOIEyeTemp = Parameters::eyeAOI;
+        }
+
+        { std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+            AOIBeadTemp = Parameters::beadAOI;
         }
 
         AOIProperties AOIFlashRelative;
-        bool FLASH_AOI_VISIBLE = false;
 
-        if (!TRIAL_RECORDING)
-        {
-            FLASH_AOI_VISIBLE = checkFlashAOI(AOIFlashRelative, AOIFlashTemp, AOICameraTemp);
-        }
+        bool FLASH_AOI_VISIBLE = false;
+        if (!TRIAL_RECORDING) { FLASH_AOI_VISIBLE = checkFlashAOI(AOIFlashRelative, AOIFlashTemp, AOICameraTemp); }
 
         // Check limits
 
         int imgWdth = imageOriginal.cols;
         int imgHght = imageOriginal.rows;
 
-        if (imgWdth < (AOIEyeTemp.xPos + AOIEyeTemp.wdth)) { continue; }
-        if (imgHght < (AOIEyeTemp.yPos + AOIEyeTemp.hght)) { continue; }
-
-        if (!TRIAL_RECORDING)
+        if
+                (imgWdth         >= eyeAOIWdthMin &&
+                 imgHght         >= eyeAOIHghtMin &&
+                 AOIEyeTemp.wdth >= eyeAOIWdthMin &&
+                 AOIEyeTemp.hght >= eyeAOIHghtMin)
         {
-            double avgIntensity = 0;
-
-            if (FLASH_AOI_VISIBLE)
+            if (!TRIAL_RECORDING)
             {
-                cv::Rect flashRegion(AOIFlashRelative.xPos, AOIFlashRelative.yPos, AOIFlashRelative.wdth, AOIFlashRelative.hght);
-                avgIntensity = flashDetection(imageOriginal(flashRegion));
-            }
+                double avgIntensity = 0;
 
-            if (FLASH_STANDBY)
-            {
-                if (avgIntensity > flashThreshold)
+                if (FLASH_AOI_VISIBLE)
                 {
-                    resetVariablesSoft(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), Parameters::eyeAOI);
-                    resetVariablesSoft(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
-
-                    startTime = mImageInfo.time;
-                    startTrialRecording();
-                }
-            }
-            else // Default mode
-            {
-                if (avgIntensity > flashMinIntensity)
-                {
-                    flashMinIntensity = avgIntensity;
-                    FlashThresholdSlider->setMinimum(flashMinIntensity);
+                    cv::Rect flashRegion(AOIFlashRelative.xPos, AOIFlashRelative.yPos, AOIFlashRelative.wdth, AOIFlashRelative.hght);
+                    avgIntensity = flashDetection(imageOriginal(flashRegion));
                 }
 
-                mDetectionVariablesTemp = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesTemp, mDetectionParametersTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
+                if (FLASH_STANDBY)
+                {
+                    if (avgIntensity > flashThreshold)
+                    {
+                        resetVariablesSoft(mDetectionVariablesEye,  mParameterWidgetEye ->getStructure(), AOIEyeTemp);
+                        resetVariablesSoft(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), AOIBeadTemp);
+
+                        startTime = mImageInfo.time;
+                        startTrialRecording();
+                    }
+                }
+                else // Default mode
+                {
+                    if (avgIntensity > flashMinIntensity)
+                    {
+                        flashMinIntensity = avgIntensity;
+                        FlashThresholdSlider->setMinimum(flashMinIntensity);
+                    }
+
+                    mDetectionVariablesTemp = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesTemp, mDetectionParametersTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
+                }
             }
-        }
-        else // Trial recording
-        {
-            if (!SAVE_EYE_IMAGE)
+            else // Trial recording
             {
-                mDetectionVariablesTemp         = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesTemp, mDetectionParametersTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
-                mDataVariablesTemp.absoluteXPos = mDataVariablesTemp.exactXPos + AOIEyeTemp.xPos + AOICameraTemp.xPos;
-                mDataVariablesTemp.absoluteYPos = mDataVariablesTemp.exactYPos + AOIEyeTemp.yPos + AOICameraTemp.yPos;
-                mDataVariablesTemp.timestamp    = relativeTime; // save time stamps
-                vDataVariables[frameCount]      = mDataVariablesTemp;
-                frameCount++;
-            }
-            else
-            {
-                vDataVariables[frameCount].timestamp = relativeTime; // save time stamps
+                if (!SAVE_EYE_IMAGE)
+                {
+                    mDetectionVariablesTemp         = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesTemp, mDetectionParametersTemp, mDataVariablesTemp, mDrawVariablesTemp); // Pupil tracking algorithm
+                    mDataVariablesTemp.absoluteXPos = mDataVariablesTemp.exactXPos + AOIEyeTemp.xPos + AOICameraTemp.xPos;
+                    mDataVariablesTemp.absoluteYPos = mDataVariablesTemp.exactYPos + AOIEyeTemp.yPos + AOICameraTemp.yPos;
+                    mDataVariablesTemp.timestamp    = relativeTime; // save time stamps
+                    vDataVariables[frameCount]      = mDataVariablesTemp;
+                    frameCount++;
+                }
+                else
+                {
+                    vDataVariables[frameCount].timestamp = relativeTime; // save time stamps
 
-                // Saving camera frame
+                    // Saving camera frame
 
-                std::stringstream filename;
-                filename << dataDirectory << "/"
-                         << currentDate   << "/"
-                         << (NameInputLineEdit->text()).toStdString()
-                         << "/trial_"
-                         << trialIndex
-                         << "/raw/"
-                         << frameCount
-                         << ".png";
+                    std::stringstream filename;
+                    filename << dataDirectory << "/"
+                             << currentDate   << "/"
+                             << (NameInputLineEdit->text()).toStdString()
+                             << "/trial_"
+                             << trialIndex
+                             << "/raw/"
+                             << frameCount
+                             << ".png";
 
-                std::vector<int> compression_params;
-                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-                compression_params.push_back(0);
+                    std::vector<int> compression_params;
+                    compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+                    compression_params.push_back(0);
 
-                cv::Mat imageOriginalGray;
-                cv::cvtColor(imageOriginal, imageOriginalGray, cv::COLOR_BGR2GRAY);
-                cv::imwrite(filename.str(), imageOriginalGray, compression_params);
+                    cv::Mat imageOriginalGray;
+                    cv::cvtColor(imageOriginal, imageOriginalGray, cv::COLOR_BGR2GRAY);
+                    cv::imwrite(filename.str(), imageOriginalGray, compression_params);
 
-                frameCount++;
-            }
+                    frameCount++;
+                }
 
-            if (frameCount >= trialFrameTotal)
-            {
-                mUEyeOpencvCam.stopRecording();
-                saveTrialData();
-                trialIndex++;
-                TrialIndexSpinBox->setValue(trialIndex);
-                TRIAL_RECORDING = false;
-                if (!SAVE_EYE_IMAGE) { emit showPlot(); }
-                emit startTimer(round(1000 / guiUpdateFrequency));
+                if (frameCount >= trialFrameTotal)
+                {
+                    mUEyeOpencvCam.stopRecording();
+                    saveTrialData();
+                    trialIndex++;
+                    TrialIndexSpinBox->setValue(trialIndex);
+                    TRIAL_RECORDING = false;
+                    if (!SAVE_EYE_IMAGE) { emit showPlot(); }
+                    emit startTimer(round(1000 / guiUpdateFrequency));
+                }
             }
         }
 
         // Update structures
 
         {
-            std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+            std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
 
             mDetectionVariablesEye = mDetectionVariablesTemp;
             mDrawVariables         = mDrawVariablesTemp;
@@ -1075,13 +1095,13 @@ void MainWindow::pupilTracking()
 
     if (!APP_RUNNING)
     {
-        std::unique_lock<std::mutex> mtxLock(mtx);
+        std::unique_lock<std::mutex> mtxLock(mutexQuit);
         APP_EXIT = true;
         cv.notify_all();
     }
     else if (!Parameters::ONLINE_PROCESSING)
     {
-        std::unique_lock<std::mutex> mtxLock(mtx);
+        std::unique_lock<std::mutex> mtxLock(mutexQuit);
         Parameters::CAMERA_RUNNING = false;
         cv.notify_all();
     }
@@ -1101,75 +1121,97 @@ void MainWindow::onUpdateCameraImage()
         {
             if (Parameters::CAMERA_RUNNING)
             {
+                std::lock_guard<std::mutex> AOILock_2(mutexAOI_2);
+
                 drawVariables mDrawVariablesTemp;
                 dataVariables mDataVariablesTemp;
 
                 cv::Mat imageOriginal;
 
-                AOIProperties   eyeAOITemp;
-                AOIProperties  beadAOITemp;
+                int imgWdth = 0;
+                int imgHght = 0;
+
+                AOIProperties AOIEyeTemp;
+                AOIProperties AOIBeadTemp;
                 AOIProperties AOIFlashTemp;
 
-                { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+                { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
                     if (!imageCamera.empty())
                     {
                         imageOriginal = imageCamera.clone();
 
+                        imgWdth = imageOriginal.cols;
+                        imgHght = imageOriginal.rows;
+
                         mDrawVariablesTemp = mDrawVariables;
                         mDataVariablesTemp = mDataVariables;
-
-                        eyeAOITemp   = Parameters::eyeAOI;
-                        beadAOITemp  = Parameters::beadAOI;
-                        AOIFlashTemp = flashAOI;
+                        AOIFlashTemp       = flashAOI;
 
                     } else { return; }
                 }
 
-                if (eyeAOITemp.wdth >= eyeAOIWdthMin && eyeAOITemp.hght >= eyeAOIHghtMin)
+                { std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+                    AOIEyeTemp = Parameters::eyeAOI;
+                }
+
+                { std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+                    AOIBeadTemp  = Parameters::beadAOI;
+                }
+
+                if
+                        (imgWdth         >= eyeAOIWdthMin &&
+                         imgHght         >= eyeAOIHghtMin &&
+                         AOIEyeTemp.wdth >= eyeAOIWdthMin &&
+                         AOIEyeTemp.hght >= eyeAOIHghtMin)
                 {
+
+                    { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+
+                        // Increase pixel clock if desired frame-rate has not been reached
+
+                        int desiredFrameRate = CameraFrameRateDesiredSpinBox->value();
+
+                        if ((cameraPixelClock < CameraPixelClockSlider->maximum()) && (desiredFrameRate > cameraFrameRate))
+                        {
+                            cameraPixelClock = cameraPixelClock + 1;
+                            CameraPixelClockSlider->setValue(cameraPixelClock);
+
+                            if (cameraFrameRate > desiredFrameRate)
+                            {
+                                CameraFrameRateSlider->setDoubleValue(desiredFrameRate);
+                            }
+                        }
+
+                        if (desiredFrameRate < cameraFrameRate - 1.0)
+                        {
+                            cameraPixelClock = cameraPixelClock - 1;
+                            CameraPixelClockSlider->setValue(cameraPixelClock);
+                        }
+
+                        // For flash
+
+                        if (CameraHardwareGainAutoCheckBox->checkState())
+                        {
+                            int hardwareGain = mUEyeOpencvCam.getHardwareGain();
+                            CameraHardwareGainSlider->setValue(hardwareGain);
+                            CameraHardwareGainLabel->setText(QString::number(hardwareGain));
+                        }
+                    }
+
+                    mVariableWidgetEye->setWidgets(mDataVariablesTemp); // update sliders
+
                     cv::Mat imageProcessed = imageOriginal.clone();
                     drawAll(imageProcessed, mDrawVariablesTemp);
                     CamQImage->loadImage(imageProcessed);
-                    CamQImage->setAOIEye  (  eyeAOITemp);
-                    CamQImage->setAOIBead ( beadAOITemp);
+                    CamQImage->setAOIEye  (  AOIEyeTemp);
+                    CamQImage->setAOIBead ( AOIBeadTemp);
                     CamQImage->setAOIFlash(AOIFlashTemp);
                     CamQImage->setImage();
                 }
                 else { CamQImage->setAOIError(); }
-
-                mVariableWidgetEye->setWidgets(mDataVariablesTemp); // update sliders
-
-                if (CameraHardwareGainAutoCheckBox->checkState())
-                {
-                    int hardwareGain = mUEyeOpencvCam.getHardwareGain();
-                    CameraHardwareGainSlider->setValue(hardwareGain);
-                    CameraHardwareGainLabel->setText(QString::number(hardwareGain));
-                }
-
-                // increase pixel clock if desired frame-rate has not been reached
-                int desiredFrameRate = CameraFrameRateDesiredSpinBox->value();
-
-                if ((cameraPixelClock < CameraPixelClockSlider->maximum()) && (desiredFrameRate > cameraFrameRate))
-                {
-                    cameraPixelClock = cameraPixelClock + 1;
-                    CameraPixelClockSlider->setValue(cameraPixelClock);
-
-                    if (cameraFrameRate > desiredFrameRate)
-                    {
-                        CameraFrameRateSlider->setDoubleValue(desiredFrameRate);
-                    }
-                }
-
-                if (desiredFrameRate < cameraFrameRate - 1.0)
-                {
-                    cameraPixelClock = cameraPixelClock - 1;
-                    CameraPixelClockSlider->setValue(cameraPixelClock);
-                }
-
             }
             else if (!Parameters::CAMERA_RUNNING)
             {
-                CamQImage->setFindingCamera();
                 CamQImage->setSpinner();
             }
         }
@@ -1225,9 +1267,9 @@ void MainWindow::findCamera()
 
             if (mUEyeOpencvCam.setSubSampling(cameraSubSamplingFactor))
             {
-                if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
+                if (mUEyeOpencvCam.allocateMemory(Parameters::camAOI.wdth, Parameters::camAOI.hght))
                 {
-                    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
+                    if (mUEyeOpencvCam.setAOI(Parameters::camAOI.xPos, Parameters::camAOI.yPos, Parameters::camAOI.wdth, Parameters::camAOI.hght))
                     {
                         CAMERA_START = true;
                         break;
@@ -1349,7 +1391,7 @@ void MainWindow::onQuitButtonClicked()
     if (Parameters::CAMERA_RUNNING)
     {
         APP_RUNNING = false;
-        std::unique_lock<std::mutex> lck(mtx);
+        std::unique_lock<std::mutex> lck(mutexQuit);
         while (!APP_EXIT) cv.wait(lck);
     }
 
@@ -1405,7 +1447,7 @@ void MainWindow::onSetOfflineMode(int state)
         }
 
         { // wait for threads to finish
-            std::unique_lock<std::mutex> lck(mtx);
+            std::unique_lock<std::mutex> lck(mutexQuit);
             while (Parameters::CAMERA_RUNNING) cv.wait(lck);
         }
 
@@ -1469,7 +1511,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::onSetPupilPosition(double xPos, double yPos)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+    std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
 
     if (xPos > 0 && xPos < Parameters::eyeAOI.wdth && yPos > 0 && yPos < Parameters::eyeAOI.hght)
     {
@@ -1734,8 +1776,8 @@ void MainWindow::onPlotTrialData()
         {
             if (vDataVariables[i].DETECTED)
             {
-                x.push_back(vDataVariables[i].absoluteXPos - Parameters::cameraAOI.xPos);
-                y.push_back(Parameters::eyeAOI.hght - (vDataVariables[i].absoluteYPos - Parameters::cameraAOI.yPos));
+                x.push_back(vDataVariables[i].absoluteXPos - Parameters::camAOI.xPos);
+                y.push_back(Parameters::eyeAOI.hght - (vDataVariables[i].absoluteYPos - Parameters::camAOI.yPos));
                 t.push_back(0.001 * vDataVariables[i].timestamp);
             }
         }
@@ -1761,7 +1803,7 @@ void MainWindow::onFlashStandbySlider(int state)
         if (state == 0)
         {
             {
-                std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+                std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
                 FLASH_STANDBY = false;
             }
 
@@ -1796,7 +1838,7 @@ void MainWindow::onFlashStandbySlider(int state)
             }
 
             {
-                std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+                std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
                 FLASH_STANDBY = true;
             }
 
@@ -1971,14 +2013,14 @@ void MainWindow::onUpdateImageRaw(int imgIndex) // for signal from qimageopencv
     {
         cv::Mat eyeImageRaw = cv::imread(imagePath.str(), CV_LOAD_IMAGE_COLOR);
         CamQImage->loadImage(eyeImageRaw);
-        { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-            Parameters::cameraAOI.wdth = eyeImageRaw.cols;
-            Parameters::cameraAOI.hght = eyeImageRaw.rows;
-            updateEyeAOIx();
-            updateEyeAOIy();
-            CamQImage->setAOIEye (Parameters::eyeAOI);
-            CamQImage->setAOIBead(Parameters::beadAOI);
+        { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+            Parameters::camAOI.wdth = eyeImageRaw.cols;
+            Parameters::camAOI.hght = eyeImageRaw.rows;
         }
+        updateEyeAOIx();
+        updateEyeAOIy();
+        CamQImage->setAOIEye (Parameters::eyeAOI);
+        CamQImage->setAOIBead(Parameters::beadAOI);
         CamQImage->setImage();
     } else { CamQImage->clearImage(); }
 }
@@ -2027,7 +2069,7 @@ void MainWindow::onSetOfflineImage(int imgIndex)
 {
     if (!PROCESSING_ALL_IMAGES) { imageIndexOffline = imgIndex; }
 
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+    { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
         mVariableWidgetEye ->setWidgets(vDataVariables    [imgIndex]);
         mVariableWidgetBead->setWidgets(vDataVariablesBead[imgIndex]);
     }
@@ -2077,7 +2119,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
     AOIProperties AOIEyeTemp;
     AOIProperties AOIBeadTemp;
 
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+    { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
 
         mDetectionVariablesEyeTemp  = vDetectionVariablesEye[imageIndex];
         mDetectionParametersEyeTemp = mParameterWidgetEye->getStructure();
@@ -2085,8 +2127,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         mDetectionVariablesBeadTemp  = vDetectionVariablesBead[imageIndex];
         mDetectionParametersBeadTemp = mParameterWidgetBead->getStructure();
 
-        Parameters::cameraAOI.wdth = imageRaw.cols;
-        Parameters::cameraAOI.hght = imageRaw.rows;
+        Parameters::camAOI.wdth = imageRaw.cols;
+        Parameters::camAOI.hght = imageRaw.rows;
 
         if (mAdvancedOptions.CURVATURE_MEASUREMENT) { setCurvatureMeasurement(mDetectionParametersEyeTemp, imageRaw.cols); }
 
@@ -2143,7 +2185,7 @@ void MainWindow::detectCurrentFrame(int imageIndex)
 
     // Record variables for next frame(s)
 
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
+    { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
         mDetectionVariablesEye = mDetectionVariablesEyeNew;
         vDetectionVariablesEye[imageIndex + 1] = mDetectionVariablesEye;
         if (mParameterWidgetBead->getState())
@@ -2183,12 +2225,12 @@ void MainWindow::onDetectAllFrames()
     }
 
     {
-        std::unique_lock<std::mutex> lck(mtxOffline);
+        std::unique_lock<std::mutex> lck(mutexOffline);
         PROCESSING_ALL_IMAGES = false;
         cvOffline.notify_one(); // notify save-thread that (this) main-thread has exited while loop
     }
     {
-        std::unique_lock<std::mutex> lck(mtxOffline);
+        std::unique_lock<std::mutex> lck(mutexOffline);
         while (OFFLINE_SAVE_DATA) cvOffline.wait(lck); // wait for save-thread to complete saving
     }
 }
@@ -2208,12 +2250,12 @@ void MainWindow::detectAllFrames()
     {
         OFFLINE_SAVE_DATA = true;
 
-        { std::unique_lock<std::mutex> lck(mtxOffline);
+        { std::unique_lock<std::mutex> lck(mutexOffline);
             while (PROCESSING_ALL_IMAGES) cvOffline.wait(lck); } // wait for main-thread to exit while loop
 
         onSaveTrialData();
 
-        { std::unique_lock<std::mutex> lck(mtxOffline);
+        { std::unique_lock<std::mutex> lck(mutexOffline);
             OFFLINE_SAVE_DATA = false;
             cvOffline.notify_one(); } // notify main-thread that saving has been completed
 
@@ -2502,10 +2544,10 @@ void MainWindow::loadSettings(QString filename)
 
     QSettings settings(filename, QSettings::IniFormat);
 
-    cameraAOIFractionHght           = settings.value("CamAOIHghtFraction",          cameraAOIFractionHghtDefaultLeft).toDouble();
-    cameraAOIFractionWdth           = settings.value("CamAOIWdthFraction",          cameraAOIFractionWdthDefaultLeft).toDouble();
-    cameraAOIFractionXPos           = settings.value("CamAOIXPosFraction",          cameraAOIFractionXPosDefaultLeft).toDouble();
-    cameraAOIFractionYPos           = settings.value("CamAOIYPosFraction",          cameraAOIFractionYPosDefaultLeft).toDouble();
+    camAOIRatio.hght                = settings.value("CamAOIHghtFraction",          camAOIRatioLeft.hght).toDouble();
+    camAOIRatio.wdth                = settings.value("CamAOIWdthFraction",          camAOIRatioLeft.wdth).toDouble();
+    camAOIRatio.xPos                = settings.value("CamAOIXPosFraction",          camAOIRatioLeft.xPos).toDouble();
+    camAOIRatio.yPos                = settings.value("CamAOIYPosFraction",          camAOIRatioLeft.yPos).toDouble();
     cameraFrameRateDesired          = settings.value("CameraFrameRateDesired",      250).toInt();
     cameraSubSamplingFactor         = settings.value("SubSamplingFactor",           1).toInt();
     dataDirectory                   = settings.value("DataDirectory",               "").toString().toStdString();
@@ -2514,15 +2556,15 @@ void MainWindow::loadSettings(QString filename)
     trialIndexOffline               = settings.value("trialIndexOffline",           0).toInt();
     imageTotalOffline               = settings.value("imageTotalOffline",           0).toInt();
     subjectIdentifier               = settings.value("SubjectName",                 "").toString();
-    eyeAOIHghtFraction              = settings.value("AOIHghtFraction",             1.0).toDouble();
-    eyeAOIWdthFraction              = settings.value("AOIWdthFraction",             1.0).toDouble();
-    beadAOIHghtFraction             = settings.value("AOIBeadHghtFraction",         0.6).toDouble();
-    beadAOIWdthFraction             = settings.value("AOIBeadWdthFraction",         0.3).toDouble();
     flashThreshold                  = settings.value("FlashThreshold",              230).toInt();
-    Parameters::eyeAOIXPosFraction  = settings.value("AOIXPosRelative",             0.0).toDouble();
-    Parameters::eyeAOIYPosFraction  = settings.value("AOIYPosRelative",             0.0).toDouble();
-    Parameters::beadAOIXPosFraction = settings.value("AOIBeadXPosRelative",         0.2).toDouble();
-    Parameters::beadAOIYPosFraction = settings.value("AOIBeadYPosRelative",         0.5).toDouble();
+    Parameters::eyeAOIRatio.xPos    = settings.value("AOIXPosRatio",                0.0).toDouble();
+    Parameters::eyeAOIRatio.yPos    = settings.value("AOIYPosRatio",                0.0).toDouble();
+    Parameters::eyeAOIRatio.hght    = settings.value("AOIHghtRatio",                1.0).toDouble();
+    Parameters::eyeAOIRatio.wdth    = settings.value("AOIWdthRatio",                1.0).toDouble();
+    Parameters::beadAOIRatio.xPos   = settings.value("AOIBeadXPosRatio",            0.2).toDouble();
+    Parameters::beadAOIRatio.yPos   = settings.value("AOIBeadYPosRatio",            0.5).toDouble();
+    Parameters::beadAOIRatio.hght   = settings.value("AOIBeadHghtRatio",            0.6).toDouble();
+    Parameters::beadAOIRatio.wdth   = settings.value("AOIBeadWdthRatio",            0.3).toDouble();
     flashAOI.hght                   = settings.value("FlashAOIHght",                100).toInt();
     flashAOI.wdth                   = settings.value("FlashAOIWdth",                60).toInt();
     flashAOI.xPos                   = settings.value("FlashAOIXPos",                227).toInt();
@@ -2591,22 +2633,22 @@ void MainWindow::saveSettings(QString filename)
 {
     QSettings settings(filename, QSettings::IniFormat);
 
-    settings.setValue("AOIHghtFraction",        eyeAOIHghtFraction);
-    settings.setValue("AOIWdthFraction",        eyeAOIWdthFraction);
-    settings.setValue("AOIXPosRelative",        Parameters::eyeAOIXPosFraction);
-    settings.setValue("AOIYPosRelative",        Parameters::eyeAOIYPosFraction);
-    settings.setValue("AOIBeadHghtFraction",    beadAOIHghtFraction);
-    settings.setValue("AOIBeadWdthFraction",    beadAOIWdthFraction);
-    settings.setValue("AOIBeadXPosRelative",    Parameters::beadAOIXPosFraction);
-    settings.setValue("AOIBeadYPosRelative",    Parameters::beadAOIYPosFraction);
+    settings.setValue("AOIHghtRatio",           Parameters::eyeAOIRatio.hght);
+    settings.setValue("AOIWdthRatio",           Parameters::eyeAOIRatio.wdth);
+    settings.setValue("AOIXPosRatio",           Parameters::eyeAOIRatio.xPos);
+    settings.setValue("AOIYPosRatio",           Parameters::eyeAOIRatio.yPos);
+    settings.setValue("AOIBeadHghtRatio",       Parameters::beadAOIRatio.hght);
+    settings.setValue("AOIBeadWdthRatio",       Parameters::beadAOIRatio.wdth);
+    settings.setValue("AOIBeadXPosRatio",       Parameters::beadAOIRatio.xPos);
+    settings.setValue("AOIBeadYPosRatio",       Parameters::beadAOIRatio.yPos);
     settings.setValue("DataDirectory",          QString::fromStdString(dataDirectory));
     settings.setValue("DataDirectoryOffline",   dataDirectoryOffline);
     settings.setValue("GainAuto",               CameraHardwareGainAutoCheckBox ->checkState());
     settings.setValue("GainBoost",              CameraHardwareGainBoostCheckBox->checkState());
-    settings.setValue("CamAOIHghtFraction",     cameraAOIFractionHght);
-    settings.setValue("CamAOIWdthFraction",     cameraAOIFractionWdth);
-    settings.setValue("CamAOIXPosFraction",     cameraAOIFractionXPos);
-    settings.setValue("CamAOIYPosFraction",     cameraAOIFractionYPos);
+    settings.setValue("CamAOIHghtFraction",     camAOIRatio.hght);
+    settings.setValue("CamAOIWdthFraction",     camAOIRatio.wdth);
+    settings.setValue("CamAOIXPosFraction",     camAOIRatio.xPos);
+    settings.setValue("CamAOIYPosFraction",     camAOIRatio.yPos);
     settings.setValue("CameraFrameRateDesired", cameraFrameRateDesired);
     settings.setValue("DataFilename",           QString::fromStdString(dataFilename));
     settings.setValue("FlashAOIHght",           flashAOI.hght);
@@ -2795,9 +2837,9 @@ void MainWindow::onSetCameraSubSampling(int state)
         {
             if (mUEyeOpencvCam.setSubSampling(cameraSubSamplingFactor))
             {
-                if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
+                if (mUEyeOpencvCam.allocateMemory(Parameters::camAOI.wdth, Parameters::camAOI.hght))
                 {
-                    mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght);
+                    mUEyeOpencvCam.setAOI(Parameters::camAOI.xPos, Parameters::camAOI.yPos, Parameters::camAOI.wdth, Parameters::camAOI.hght);
                     Parameters::CAMERA_READY = true;
                 }
             }
@@ -2809,203 +2851,184 @@ void MainWindow::onSetCameraSubSampling(int state)
 
 void MainWindow::onCropAOI()
 {
-    int absXPos = Parameters::eyeAOI.xPos + Parameters::cameraAOI.xPos;
-    int absYPos = Parameters::eyeAOI.yPos + Parameters::cameraAOI.yPos;
+    double fracXPos;
+    double fracYPos;
+    double fracWdth;
+    double fracHght;
 
-    double fracXPos = absXPos / (double) cameraAOIWdthMax;
-    double fracYPos = absYPos / (double) cameraAOIHghtMax;
-    double fracWdth = (Parameters::eyeAOI.wdth - cameraAOIWdthMin) / (double) (cameraAOIWdthMax - cameraAOIWdthMin);
-    double fracHght = (Parameters::eyeAOI.hght - cameraAOIHghtMin) / (double) (cameraAOIHghtMax - cameraAOIHghtMin);
+    {
+        std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+        std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
 
-    Parameters::eyeAOIXPosFraction = 1.0;
-    Parameters::eyeAOIYPosFraction = 1.0;
-    eyeAOIWdthFraction = 1.0;
-    eyeAOIHghtFraction = 1.0;
+        int absXPos = Parameters::eyeAOI.xPos + Parameters::camAOI.xPos;
+        int absYPos = Parameters::eyeAOI.yPos + Parameters::camAOI.yPos;
+
+        fracXPos = absXPos / (double) cameraAOIWdthMax;
+        fracYPos = absYPos / (double) cameraAOIHghtMax;
+        fracWdth = (Parameters::eyeAOI.wdth - cameraAOIWdthMin) / (double) (cameraAOIWdthMax - cameraAOIWdthMin);
+        fracHght = (Parameters::eyeAOI.hght - cameraAOIHghtMin) / (double) (cameraAOIHghtMax - cameraAOIHghtMin);
+
+        Parameters::eyeAOIRatio.xPos = 1.0;
+        Parameters::eyeAOIRatio.yPos = 1.0;
+        Parameters::eyeAOIRatio.wdth = 1.0;
+        Parameters::eyeAOIRatio.hght = 1.0;
+    }
 
     CamAOIXPosSlider->setDoubleValue(fracXPos);
     CamAOIYPosSlider->setDoubleValue(fracYPos);
     CamAOIWdthSlider->setDoubleValue(fracWdth);
     CamAOIHghtSlider->setDoubleValue(fracHght);
+    onSetCamAOI();
 }
 
 void MainWindow::updateCamAOIx()
 {
-    Parameters::cameraAOI.wdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-    Parameters::cameraAOI.xPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-    CamAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
-
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-        updateEyeAOIx(); }
+    std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+    Parameters::camAOI.wdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * camAOIRatio.wdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+    Parameters::camAOI.xPos = floor((cameraAOIWdthMax * camAOIRatio.xPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+    CamAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::camAOI.wdth) / (double) cameraAOIWdthMax);
+    updateEyeAOIx();
 }
 
 void MainWindow::updateCamAOIy()
 {
-    Parameters::cameraAOI.hght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-    Parameters::cameraAOI.yPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-    CamAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
-
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-        updateEyeAOIy(); }
+    std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+    Parameters::camAOI.hght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * camAOIRatio.hght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+    Parameters::camAOI.yPos = floor((cameraAOIHghtMax * camAOIRatio.yPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+    CamAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::camAOI.hght) / (double) cameraAOIHghtMax);
+    updateEyeAOIy();
 }
 
 void MainWindow::updateEyeAOIx()
 {
-    Parameters::eyeAOI.wdth = round(Parameters::cameraAOI.wdth * eyeAOIWdthFraction);
-    Parameters::eyeAOI.xPos = round(Parameters::cameraAOI.wdth * Parameters::eyeAOIXPosFraction);
+    {
+        std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+        Parameters::eyeAOI.wdth = round(Parameters::camAOI.wdth * Parameters::eyeAOIRatio.wdth);
+        Parameters::eyeAOI.xPos = round(Parameters::camAOI.wdth * Parameters::eyeAOIRatio.xPos);
+        if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::camAOI.wdth)
+        {   Parameters::eyeAOI.xPos = Parameters::camAOI.wdth - Parameters::eyeAOI.wdth; }
+    }
 
-    if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::cameraAOI.wdth)
-    {   Parameters::eyeAOI.xPos = Parameters::cameraAOI.wdth - Parameters::eyeAOI.wdth; }
-
-    Parameters::beadAOI.wdth = round(Parameters::cameraAOI.wdth * beadAOIWdthFraction);
-    Parameters::beadAOI.xPos = round(Parameters::cameraAOI.wdth * Parameters::beadAOIXPosFraction);
-
-    if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth > Parameters::cameraAOI.wdth)
-    {   Parameters::beadAOI.xPos = Parameters::cameraAOI.wdth - Parameters::beadAOI.wdth; }
+    {
+        std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+        Parameters::beadAOI.wdth = round(Parameters::camAOI.wdth * Parameters::beadAOIRatio.wdth);
+        Parameters::beadAOI.xPos = round(Parameters::camAOI.wdth * Parameters::beadAOIRatio.xPos);
+        if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth > Parameters::camAOI.wdth)
+        {   Parameters::beadAOI.xPos = Parameters::camAOI.wdth - Parameters::beadAOI.wdth; }
+    }
 }
 
 void MainWindow::updateEyeAOIy()
 {
-    Parameters::eyeAOI.hght = round(Parameters::cameraAOI.hght * eyeAOIHghtFraction);
-    Parameters::eyeAOI.yPos = round(Parameters::cameraAOI.hght * Parameters::eyeAOIYPosFraction);
+    {
+        std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+        Parameters::eyeAOI.hght = round(Parameters::camAOI.hght * Parameters::eyeAOIRatio.hght);
+        Parameters::eyeAOI.yPos = round(Parameters::camAOI.hght * Parameters::eyeAOIRatio.yPos);
+        if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::camAOI.hght)
+        {   Parameters::eyeAOI.yPos = Parameters::camAOI.hght - Parameters::eyeAOI.hght; }
+    }
 
-    if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::cameraAOI.hght)
-    {   Parameters::eyeAOI.yPos = Parameters::cameraAOI.hght - Parameters::eyeAOI.hght; }
+    {
+        std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+        Parameters::beadAOI.hght = round(Parameters::camAOI.hght * Parameters::beadAOIRatio.hght);
+        Parameters::beadAOI.yPos = round(Parameters::camAOI.hght * Parameters::beadAOIRatio.yPos);
+        if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght > Parameters::camAOI.hght)
+        {   Parameters::beadAOI.yPos = Parameters::camAOI.hght - Parameters::beadAOI.hght; }
+    }
+}
 
-    Parameters::beadAOI.hght = round(Parameters::cameraAOI.hght * beadAOIHghtFraction);
-    Parameters::beadAOI.yPos = round(Parameters::cameraAOI.hght * Parameters::beadAOIYPosFraction);
+void MainWindow::onSetCamAOI()
+{
+    std::lock_guard<std::mutex> AOILock_1(mutexAOI_1);
+    std::lock_guard<std::mutex> AOILock_2(mutexAOI_2);
 
-    if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght > Parameters::cameraAOI.hght)
-    {   Parameters::beadAOI.yPos = Parameters::cameraAOI.hght - Parameters::beadAOI.hght; }
+    Parameters::camAOI = camAOITemp;
+
+    updateEyeAOIx();
+    updateEyeAOIy();
+
+    if (mUEyeOpencvCam.freeImageMemory())
+    {
+        if (mUEyeOpencvCam.allocateMemory(Parameters::camAOI.wdth, Parameters::camAOI.hght))
+        {
+            if
+                    (Parameters::camAOI.xPos + Parameters::camAOI.wdth <= cameraAOIWdthMax &&
+                     Parameters::camAOI.yPos + Parameters::camAOI.hght <= cameraAOIHghtMax)
+            {
+                if (mUEyeOpencvCam.setAOI(Parameters::camAOI.xPos, Parameters::camAOI.yPos, Parameters::camAOI.wdth, Parameters::camAOI.hght))
+                {
+                    Parameters::CAMERA_READY = true;
+                    getCameraParameters();
+                }
+            }
+        }
+    }
 }
 
 void MainWindow::onSetCamAOIWdth(double fraction)
 {
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-        cameraAOIFractionWdth = fraction;
-        Parameters::cameraAOI.wdth = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * cameraAOIFractionWdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-        updateEyeAOIx(); }
-
-    if (mUEyeOpencvCam.freeImageMemory())
-    {
-        if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
-        {
-            if (Parameters::cameraAOI.xPos + Parameters::cameraAOI.wdth <= cameraAOIWdthMax)
-            {
-                if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
-                {
-                    Parameters::CAMERA_READY = true;
-                    getCameraParameters();
-                }
-            }
-        }
-    }
-
-    CamAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - Parameters::cameraAOI.wdth) / (double) cameraAOIWdthMax);
+    camAOIRatio.wdth = fraction;
+    camAOITemp.wdth  = floor(((cameraAOIWdthMax - cameraAOIWdthMin) * camAOIRatio.wdth + cameraAOIWdthMin) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
+    CamAOIXPosSlider->setDoubleMaximum((cameraAOIWdthMax - camAOITemp.wdth) / (double) cameraAOIWdthMax);
 }
 
 void MainWindow::onSetCamAOIHght(double fraction)
 {
-    { std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-        cameraAOIFractionHght = fraction;
-        Parameters::cameraAOI.hght = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * cameraAOIFractionHght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-        updateEyeAOIy(); }
-
-    if (mUEyeOpencvCam.freeImageMemory())
-    {
-        if (mUEyeOpencvCam.allocateMemory(Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
-        {
-            if (Parameters::cameraAOI.yPos + Parameters::cameraAOI.hght <= cameraAOIHghtMax)
-            {
-                if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
-                {
-                    Parameters::CAMERA_READY = true;
-                    getCameraParameters();
-                }
-            }
-        }
-    }
-
-    CamAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - Parameters::cameraAOI.hght) / (double) cameraAOIHghtMax);
+    camAOIRatio.hght = fraction;
+    camAOITemp.hght  = floor(((cameraAOIHghtMax - cameraAOIHghtMin) * camAOIRatio.hght + cameraAOIHghtMin) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
+    CamAOIYPosSlider->setDoubleMaximum((cameraAOIHghtMax - camAOITemp.hght) / (double) cameraAOIHghtMax);
 }
 
 void MainWindow::onSetCamAOIXPos(double fraction)
 {
-    cameraAOIFractionXPos = fraction;
-
-    Parameters::cameraAOI.xPos = floor((cameraAOIWdthMax * cameraAOIFractionXPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
-
-    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
-    {
-        Parameters::CAMERA_READY = true;
-        getCameraParameters();
-    }
+    camAOIRatio.xPos = fraction;
+    camAOITemp.xPos  = floor((cameraAOIWdthMax * camAOIRatio.xPos) / (double) cameraAOIWdthStepSize) * cameraAOIWdthStepSize;
 }
 
 void MainWindow::onSetCamAOIYPos(double fraction)
 {
-    cameraAOIFractionYPos = fraction;
-
-    Parameters::cameraAOI.yPos = floor((cameraAOIHghtMax * cameraAOIFractionYPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
-
-    if (mUEyeOpencvCam.setAOI(Parameters::cameraAOI.xPos, Parameters::cameraAOI.yPos, Parameters::cameraAOI.wdth, Parameters::cameraAOI.hght))
-    {
-        Parameters::CAMERA_READY = true;
-        getCameraParameters();
-    }
+    camAOIRatio.yPos = fraction;
+    camAOITemp.yPos  = floor((cameraAOIHghtMax * camAOIRatio.yPos) / (double) cameraAOIHghtStepSize) * cameraAOIHghtStepSize;
 }
 
-void MainWindow::onSetEyeAOIWdth(double fraction)
+void MainWindow::onSetEyeAOIWdth(double ratio)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
-    eyeAOIWdthFraction = fraction;
-
-    Parameters::eyeAOI.wdth = round(Parameters::cameraAOI.wdth * eyeAOIWdthFraction);
-
-    if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::cameraAOI.wdth)
-    {   Parameters::eyeAOI.xPos = Parameters::cameraAOI.wdth - Parameters::eyeAOI.wdth; }
+    std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+    Parameters::eyeAOIRatio.wdth = ratio;
+    Parameters::eyeAOI.wdth = round(Parameters::camAOI.wdth * Parameters::eyeAOIRatio.wdth);
+    if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::camAOI.wdth)
+    {   Parameters::eyeAOI.xPos = Parameters::camAOI.wdth - Parameters::eyeAOI.wdth; }
 }
 
-void MainWindow::onSetEyeAOIHght(double fraction)
+void MainWindow::onSetEyeAOIHght(double ratio)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
-    eyeAOIHghtFraction = fraction;
-
-    Parameters::eyeAOI.hght = round(Parameters::cameraAOI.hght * eyeAOIHghtFraction);
-
-    if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::cameraAOI.hght)
-    {   Parameters::eyeAOI.yPos = Parameters::cameraAOI.hght - Parameters::eyeAOI.hght; }
+    std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+    Parameters::eyeAOIRatio.hght    = ratio;
+    Parameters::eyeAOI.hght         = round(Parameters::camAOI.hght * Parameters::eyeAOIRatio.hght);
+    if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::camAOI.hght)
+    {   Parameters::eyeAOI.yPos = Parameters::camAOI.hght - Parameters::eyeAOI.hght; }
 }
 
 void MainWindow::onSetFlashAOIXPos(int val)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
     flashAOI.xPos = val;
     CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::onSetFlashAOIYPos(int val)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
     flashAOI.yPos = val;
     CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::onSetFlashAOIWdth(int val)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
     flashAOI.wdth = val;
     CamQImage->setAOIFlash(flashAOI);
 }
 
 void MainWindow::onSetFlashAOIHght(int val)
 {
-    std::lock_guard<std::mutex> mainMutexLock(Parameters::mainMutex);
-
     flashAOI.hght = val;
     CamQImage->setAOIFlash(flashAOI);
 }
@@ -3018,18 +3041,20 @@ void MainWindow::onSetFlashThreshold(int val)
 
 void MainWindow::onSetAOIEyeLeft()
 {
-    CamAOIXPosSlider->setDoubleValue(cameraAOIFractionXPosDefaultLeft);
-    CamAOIYPosSlider->setDoubleValue(cameraAOIFractionYPosDefaultLeft);
-    CamAOIWdthSlider->setDoubleValue(cameraAOIFractionWdthDefaultLeft);
-    CamAOIHghtSlider->setDoubleValue(cameraAOIFractionHghtDefaultLeft);
+    CamAOIXPosSlider->setDoubleValue(camAOIRatioLeft.xPos);
+    CamAOIYPosSlider->setDoubleValue(camAOIRatioLeft.yPos);
+    CamAOIWdthSlider->setDoubleValue(camAOIRatioLeft.wdth);
+    CamAOIHghtSlider->setDoubleValue(camAOIRatioLeft.hght);
+    onSetCamAOI();
 }
 
 void MainWindow::onSetAOIEyeRght()
 {
-    CamAOIXPosSlider->setDoubleValue(cameraAOIFractionXPosDefaultRght);
-    CamAOIYPosSlider->setDoubleValue(cameraAOIFractionYPosDefaultRght);
-    CamAOIWdthSlider->setDoubleValue(cameraAOIFractionWdthDefaultRght);
-    CamAOIHghtSlider->setDoubleValue(cameraAOIFractionHghtDefaultRght);
+    CamAOIXPosSlider->setDoubleValue(camAOIRatioRght.xPos);
+    CamAOIYPosSlider->setDoubleValue(camAOIRatioRght.yPos);
+    CamAOIWdthSlider->setDoubleValue(camAOIRatioRght.wdth);
+    CamAOIHghtSlider->setDoubleValue(camAOIRatioRght.hght);
+    onSetCamAOI();
 }
 
 void MainWindow::onSetTrialIndex           (int val)   { trialIndex = val; }

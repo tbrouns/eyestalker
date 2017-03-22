@@ -126,23 +126,11 @@ private:
 
     char currentDate[80];
 
-    double cameraAOIFractionHghtDefaultLeft;
-    double cameraAOIFractionWdthDefaultLeft;
-    double cameraAOIFractionXPosDefaultLeft;
-    double cameraAOIFractionYPosDefaultLeft;
-    double cameraAOIFractionHghtDefaultRght;
-    double cameraAOIFractionWdthDefaultRght;
-    double cameraAOIFractionXPosDefaultRght;
-    double cameraAOIFractionYPosDefaultRght;
-    double cameraAOIFractionHght;
-    double cameraAOIFractionWdth;
-    double cameraAOIFractionXPos;
-    double cameraAOIFractionYPos;
+    AOIPropertiesDouble camAOIRatioLeft;
+    AOIPropertiesDouble camAOIRatioRght;
+    AOIPropertiesDouble camAOIRatio;
+
     double cameraFrameRate;
-    double eyeAOIHghtFraction;
-    double eyeAOIWdthFraction;
-    double beadAOIHghtFraction;
-    double beadAOIWdthFraction;
     double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime;       // in ms
@@ -209,9 +197,12 @@ private:
     std::condition_variable cv;
     std::condition_variable saveConditionVariable;
     std::condition_variable cvOffline;
-    std::mutex mtx;
-    std::mutex mtxOffline;
-    std::mutex saveMutex;
+
+    std::mutex mutexAOI_1;
+    std::mutex mutexAOI_2;
+    std::mutex mutexQuit;
+    std::mutex mutexOffline;
+
     std::string dataDirectory;
     std::string dataFilename;
 
@@ -232,6 +223,8 @@ private:
     QString subjectIdentifier;
 
     // AOIs
+
+    AOIProperties camAOITemp;
 
     QWidget* AOIEyeOptionsWidget;
 
@@ -364,6 +357,7 @@ public slots:
 private slots:
 
     void onCombineData              ();
+    void onSetCamAOI                ();
     void onCropAOI                  ();
     void onDetectAllExperiments     ();
     void onDetectAllFrames          ();

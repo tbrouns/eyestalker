@@ -137,10 +137,7 @@ bool UEyeOpencvCam::setAOI(int xAOI, int yAOI, int wAOI, int hAOI)
 
     int retInt = is_AOI(hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
 
-    if (retInt != IS_SUCCESS)
-    {
-        return false;
-    }
+    if (retInt != IS_SUCCESS) { return false; }
 
     return true;
 }

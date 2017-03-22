@@ -15,35 +15,32 @@
 
 #include "drawfunctions.h"
 
-void drawAOI(cv::Mat& I, const AOIProperties &mAOI, const cv::Vec3b &col)
+void drawAOI(cv::Mat& I, const AOIProperties& mAOI, const cv::Vec3b &col)
 {
-    if (mAOI.flag)
+    int imgWdth = I.cols;
+    int imgHght = I.rows;
+
+    int AOIXPos = mAOI.xPos;
+    int AOIYPos = mAOI.yPos;
+    int AOIWdth = mAOI.wdth;
+    int AOIHght = mAOI.hght;
+
+    if (AOIXPos >= imgWdth || AOIYPos >= imgHght || AOIWdth <= 0 || AOIHght <= 0) { return; }
+    if (AOIXPos < 0) { AOIXPos = 0; }
+    if (AOIYPos < 0) { AOIYPos = 0; }
+    if (AOIXPos + AOIWdth >= imgWdth) { AOIWdth = imgWdth - AOIXPos - 1; }
+    if (AOIYPos + AOIHght >= imgHght) { AOIHght = imgHght - AOIYPos - 1; }
+
+    for (int x = AOIXPos; x < AOIXPos + AOIWdth; x++) // left to right
     {
-        int imgWdth = I.cols;
-        int imgHght = I.rows;
+        I.at<cv::Vec3b>(AOIYPos,           x) = col; // top
+        I.at<cv::Vec3b>(AOIYPos + AOIHght, x) = col; // bottom
+    }
 
-        int AOIXPos = mAOI.xPos;
-        int AOIYPos = mAOI.yPos;
-        int AOIWdth = mAOI.wdth;
-        int AOIHght = mAOI.hght;
-
-        if (AOIXPos >= imgWdth || AOIYPos >= imgHght || AOIWdth <= 0 || AOIHght <= 0) { return; }
-        if (AOIXPos < 0) { AOIXPos = 0; }
-        if (AOIYPos < 0) { AOIYPos = 0; }
-        if (AOIXPos + AOIWdth >= imgWdth) { AOIWdth = imgWdth - AOIXPos - 1; }
-        if (AOIYPos + AOIHght >= imgHght) { AOIHght = imgHght - AOIYPos - 1; }
-
-        for (int x = AOIXPos; x < AOIXPos + AOIWdth; x++) // left to right
-        {
-            I.at<cv::Vec3b>(AOIYPos,           x) = col; // top
-            I.at<cv::Vec3b>(AOIYPos + AOIHght, x) = col; // bottom
-        }
-
-        for (int y = AOIYPos; y < AOIYPos + AOIHght; y++) // top to bottom
-        {
-            I.at<cv::Vec3b>(y, AOIXPos)           = col; // left
-            I.at<cv::Vec3b>(y, AOIXPos + AOIWdth) = col; // right
-        }
+    for (int y = AOIYPos; y < AOIYPos + AOIHght; y++) // top to bottom
+    {
+        I.at<cv::Vec3b>(y, AOIXPos)           = col; // left
+        I.at<cv::Vec3b>(y, AOIXPos + AOIWdth) = col; // right
     }
 }
 
@@ -152,37 +149,40 @@ void drawCross(cv::Mat& I, double crossX, double crossY, int ellipseDrawCrossSiz
 
 void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
 {
-    cv::Vec3b blue  (255,   0,   0);
-    cv::Vec3b green (  0, 255,   0);
-    cv::Vec3b red   (  0,   0, 255);
-//    cv::Vec3b cyan  (255, 255,   0);
-    cv::Vec3b orange(  0, 165, 255);
-    cv::Vec3b yellow(  0, 255, 255);
-    cv::Vec3b white (255, 255, 255);
-
-    if (I.cols > 0 && I.rows > 0)
+    if (mDrawVariables.PROCESSED)
     {
-        if (Parameters::drawFlags.haar)
-        {
-            drawAOI(I, mDrawVariables.haarAOI,  blue);
-            drawAOI(I, mDrawVariables.glintAOI, blue);
-            drawAOI(I, mDrawVariables.cannyAOI, blue);
-        }
+        cv::Vec3b blue  (255,   0,   0);
+        cv::Vec3b green (  0, 255,   0);
+        cv::Vec3b red   (  0,   0, 255);
+        //    cv::Vec3b cyan  (255, 255,   0);
+        cv::Vec3b orange(  0, 165, 255);
+        cv::Vec3b yellow(  0, 255, 255);
+        cv::Vec3b white (255, 255, 255);
 
-        if (Parameters::drawFlags.edge)
+        if (I.cols > 0 && I.rows > 0)
         {
-            drawEdges  (I, mDrawVariables.cannyAOI, red, mDrawVariables.cannyEdgeIndices);
-            drawOutline(I, mDrawVariables.cannyAOI, green, yellow, orange, mDrawVariables.edgeData);
-        }
-
-//        drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
-
-        if (Parameters::drawFlags.elps)
-        {
-            if (mDrawVariables.DETECTED)
+            if (Parameters::drawFlags.haar)
             {
-                drawEllipse(I, mDrawVariables.cannyAOI, white, mDrawVariables.ellipseCoefficients);
-                drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, white);
+                drawAOI(I, mDrawVariables.haarAOI,  blue);
+                drawAOI(I, mDrawVariables.glintAOI, blue);
+                drawAOI(I, mDrawVariables.cannyAOI, blue);
+            }
+
+            if (Parameters::drawFlags.edge)
+            {
+                drawEdges  (I, mDrawVariables.cannyAOI, red, mDrawVariables.cannyEdgeIndices);
+                drawOutline(I, mDrawVariables.cannyAOI, green, yellow, orange, mDrawVariables.edgeData);
+            }
+
+            //        drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
+
+            if (Parameters::drawFlags.elps)
+            {
+                if (mDrawVariables.DETECTED)
+                {
+                    drawEllipse(I, mDrawVariables.cannyAOI, white, mDrawVariables.ellipseCoefficients);
+                    drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, white);
+                }
             }
         }
     }

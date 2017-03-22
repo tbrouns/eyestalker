@@ -34,13 +34,18 @@
 
 struct AOIProperties
 {
-    AOIProperties(): flag(true) { }
-
     int xPos;
     int yPos;
     int wdth;
     int hght;
-    int flag;
+};
+
+struct AOIPropertiesDouble
+{
+    double xPos;
+    double yPos;
+    double wdth;
+    double hght;
 };
 
 struct edgeProperties
@@ -203,6 +208,7 @@ struct developmentOptions
 struct drawVariables
 {
     bool DETECTED;
+    bool PROCESSED;
     int exactXPos;
     int exactYPos;
     int predictedXPos;

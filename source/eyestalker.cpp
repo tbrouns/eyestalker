@@ -2845,6 +2845,9 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
                               drawVariables& mDrawVariables,
                               const developmentOptions& mAdvancedOptions)
 {
+    mDataVariables.DETECTED  = false;
+    mDrawVariables.PROCESSED = false;
+
     int imageWdth = imageOriginalBGR.cols;
     int imageHght = imageOriginalBGR.rows;
     
@@ -2902,7 +2905,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     ////////////////////////////////////////////////////////////////////
     ///////////////////// APPROXIMATE DETECTION  ///////////////////////
     ////////////////////////////////////////////////////////////////////
-    
+
     AOIProperties glintAOI;
     
     double sizeFactorUp   = 2;
@@ -3012,6 +3015,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     if (cannyAOI.xPos + cannyAOI.wdth >= imageAOI.xPos + imageAOI.wdth) { cannyAOI.wdth = imageAOI.xPos + imageAOI.wdth - cannyAOI.xPos; }
     if (cannyAOI.yPos + cannyAOI.hght >= imageAOI.yPos + imageAOI.hght) { cannyAOI.hght = imageAOI.yPos + imageAOI.hght - cannyAOI.yPos; }
     
+    if (cannyAOI.wdth < 0 || cannyAOI.hght < 0) { return mDetectionVariablesTemp; } // image AOI is too small
+
     // Crop image to new AOI
     
     cv::Rect outerRect(cannyAOI.xPos, cannyAOI.yPos, cannyAOI.wdth, cannyAOI.hght);
@@ -3305,7 +3310,6 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         else { curvatureMean = mDetectionVariables.predictedCurvature; }
 
         mEllipseProperties.curvature = curvatureMean;
-
     }
     else
     {
@@ -3517,7 +3521,9 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     
     // For drawing
     
-    mDrawVariables.DETECTED = mEllipseProperties.DETECTED;
+    mDrawVariables.PROCESSED = true;
+    mDrawVariables.DETECTED  = mEllipseProperties.DETECTED;
+
     mDrawVariables.haarAOI  = haarAOI;
     mDrawVariables.glintAOI = glintAOI;
     mDrawVariables.cannyAOI = cannyAOI;
@@ -3551,7 +3557,6 @@ double flashDetection(const cv::Mat& imgBGR)
 }
 
 // Look-up tables
-
 
 double getCurvatureUpperLimit(double circumference, double aspectRatio, int windowLength)
 {

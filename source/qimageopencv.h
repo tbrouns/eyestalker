@@ -47,7 +47,7 @@ class QImageOpenCV : public QLabel
 
 public:
 
-    explicit QImageOpenCV(int type = 0, QWidget *parent = 0);
+    explicit QImageOpenCV(QWidget *parent = 0);
     ~QImageOpenCV();
 
     QSize sizeHint() const;
@@ -56,8 +56,6 @@ public:
     void loadImage(const cv::Mat& cvimage);
     void resizeImage();
     void setImage();
-
-    void setFindingCamera();
 
     void setAOIError();
     void setAOIBead (AOIProperties beadAOINew);
@@ -85,7 +83,6 @@ private:
     int imageHght;
     int imageHghtScaled;
     int imageWdthScaled;
-    int imageType;
     int imageWdth;
     int widgetHght;
     int widgetWdth;
@@ -102,7 +99,6 @@ protected:
 
 signals:
 
-    void imageMouseClick(double, double);
     void updateImage(int);
 
 };
