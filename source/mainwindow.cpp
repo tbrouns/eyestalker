@@ -1790,20 +1790,13 @@ void MainWindow::onFlashStandbySlider(int state)
         EyeAOIHghtSlider->setVisible(!state);
         mQwtPlotWidget  ->setVisible(state);
 
-        if (state == 0)
-        {
-            {
-                std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
-                FLASH_STANDBY = false;
-            }
+        if (CameraHardwareGainAutoCheckBox->isChecked()) { mUEyeOpencvCam.setAutoGain(!state); }
 
-            FlashStandbyLabel->setText("<font color='red'><b>OFF</b></font>");
-
-            if (CameraHardwareGainAutoCheckBox->isChecked())
-            {
-                mUEyeOpencvCam.setAutoGain(true);
-            }
+        { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
+            FLASH_STANDBY = state;
         }
+
+        if (state == 0) { FlashStandbyLabel->setText("<font color='red'><b>OFF</b></font>"); }
         else
         {
             dataFilename = (DataFilenameLineEdit->text()).toStdString();
@@ -1827,17 +1820,7 @@ void MainWindow::onFlashStandbySlider(int state)
                 }
             }
 
-            {
-                std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
-                FLASH_STANDBY = true;
-            }
-
             FlashStandbyLabel->setText("<font color='green'><b>ON</b></font>");
-
-            if (CameraHardwareGainAutoCheckBox->isChecked())
-            {
-                mUEyeOpencvCam.setAutoGain(false);
-            }
         }
     }
     else
