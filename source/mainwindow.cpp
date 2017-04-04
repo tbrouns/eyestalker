@@ -52,7 +52,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     relativeTime       = 0;
 
     startTime         = 0;
-    subjectIdentifier = "";
     trialIndex        = 0;
 
     mParameterWidgetEye  = new ParameterWidget;
@@ -561,15 +560,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ///////////////////////////////////////////////////////////////
     ///////////////////// EXPERIMENT TAB  /////////////////////////
     ///////////////////////////////////////////////////////////////
-
-    // Subject input
-
-    NameInputLineEdit = new QLineEdit;
-    NameInputLineEdit->setAlignment(Qt::AlignRight);
-    NameInputLineEdit->setText(subjectIdentifier);
-
-    QLabel *NameInputTextBox = new QLabel;
-    NameInputTextBox->setText("<b>Subject identifier:</b>");
 
     // Data directory
 
@@ -2555,7 +2545,6 @@ void MainWindow::loadSettings(QString filename)
     dataFilename                    = settings.value("DataFilename",                "experiment_data").toString().toStdString();
     trialIndexOffline               = settings.value("trialIndexOffline",           0).toInt();
     imageTotalOffline               = settings.value("imageTotalOffline",           0).toInt();
-    subjectIdentifier               = settings.value("SubjectName",                 "").toString();
     flashThreshold                  = settings.value("FlashThreshold",              230).toInt();
     Parameters::eyeAOIRatio.xPos    = settings.value("AOIXPosRatio",                0.0).toDouble();
     Parameters::eyeAOIRatio.yPos    = settings.value("AOIYPosRatio",                0.0).toDouble();
@@ -2573,7 +2562,6 @@ void MainWindow::loadSettings(QString filename)
     SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           true).toBool();
     SAVE_POSITION                   = settings.value("SavePosition",                true).toBool();
     SAVE_EYE_IMAGE                  = settings.value("SaveEyeImage",                true).toBool();
-    subjectIdentifier               = settings.value("SubjectIdentifier",           "").toString();
     trialTimeLength                 = settings.value("TrialTimeLength",             1500).toInt();
 
     CameraHardwareGainAutoCheckBox ->setChecked(settings.value("GainAuto",   true).toBool());
@@ -2660,7 +2648,6 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("SaveCircumference",      SAVE_CIRCUMFERENCE);
     settings.setValue("SavePosition",           SAVE_POSITION);
     settings.setValue("SaveEyeImage",           SAVE_EYE_IMAGE);
-    settings.setValue("SubjectName",            subjectIdentifier);
     settings.setValue("SubSamplingFactor",      cameraSubSamplingFactor);
     settings.setValue("TrialTimeLength",        TrialTimeLengthLineEdit->text().toInt());
 

@@ -220,8 +220,6 @@ private:
     QScrollArea *BeadTrackingScrollArea;
     QScrollArea *AdvancedScrollArea;
 
-    QString subjectIdentifier;
-
     // AOIs
 
     AOIProperties camAOITemp;
