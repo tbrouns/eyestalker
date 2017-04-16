@@ -729,8 +729,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QWidget* ExperimentTabWidget     = new QWidget;
     QGridLayout *ExperimentTabLayout = new QGridLayout(ExperimentTabWidget);
 
-    ExperimentTabLayout->addWidget(NameInputTextBox,            0, 0);
-    ExperimentTabLayout->addWidget(NameInputLineEdit,           0, 1);
     ExperimentTabLayout->addWidget(DataDirectoryTitleTextBox,   1, 0);
     ExperimentTabLayout->addWidget(DataDirectoryTextBox,        1, 1);
     ExperimentTabLayout->addWidget(DataDirectoryButton,         1, 2);
@@ -993,7 +991,7 @@ void MainWindow::pupilTracking()
         {
             if (!TRIAL_RECORDING)
             {
-                double avgIntensity;
+                double avgIntensity = 0;
 
                 if (FLASH_AOI_VISIBLE)
                 {

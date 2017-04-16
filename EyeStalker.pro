@@ -55,9 +55,10 @@ INCLUDEPATH += $$PWD/../../../../usr/local/include
 DEPENDPATH  += $$PWD/../../../../usr/local/include
 
 # Qwt
-LIBS        += -L$$PWD/../../../../usr/local/qwt-6.1.3/lib/ -lqwt
-INCLUDEPATH += $$PWD/../../../../usr/local/qwt-6.1.3/include
-DEPENDPATH  += $$PWD/../../../../usr/local/qwt-6.1.3/include
+LIBS        += -L$$PWD/../libs/qwt-6.1.3/lib/ -lqwt
+INCLUDEPATH += $$PWD/../libs/qwt-6.1.3/include
+DEPENDPATH  += $$PWD/../libs/qwt-6.1.3/include
+
 
 # UEye
 LIBS        += -L$$PWD/../../../../../usr/lib/ -lueye_api
