@@ -1,17 +1,19 @@
+//  EyeStalker: robust video-based eye tracking
 //  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
-//  This program is free software: you can redistribute it and/or modify
+//  EyeStalker is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 
-//  This program is distributed in the hope that it will be useful,
+//  EyeStalker is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
 
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
+
 
 #include "mainwindow.h"
 
@@ -234,12 +236,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     /////////////////// Options checkboxes ///////////////////////
 
-    QLabel *RealTimeEyeTrackingTextBox = new QLabel;
-    RealTimeEyeTrackingTextBox->setText("Real-time tracking:");
+    QLabel *OnlineProcessingTextBox = new QLabel;
+    OnlineProcessingTextBox->setText("Online processing:");
 
-    RealTimeEyeTrackingCheckBox = new QCheckBox;
-    RealTimeEyeTrackingCheckBox->setChecked(!SAVE_EYE_IMAGE);
-    QObject::connect(RealTimeEyeTrackingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetRealTimeTracking(int)));
+    OnlineProcessingCheckBox = new QCheckBox;
+    OnlineProcessingCheckBox->setChecked(!SAVE_EYE_IMAGE);
+    QObject::connect(OnlineProcessingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetOnlineProcessing(int)));
 
     QLabel *OfflineModeTextBox = new QLabel;
     OfflineModeTextBox->setText("Offline mode:");
@@ -257,8 +259,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QHBoxLayout *OptionsLayout = new QHBoxLayout;
     OptionsLayout->addStretch();
-    OptionsLayout->addWidget(RealTimeEyeTrackingTextBox);
-    OptionsLayout->addWidget(RealTimeEyeTrackingCheckBox);
+    OptionsLayout->addWidget(OnlineProcessingTextBox);
+    OptionsLayout->addWidget(OnlineProcessingCheckBox);
     OptionsLayout->addWidget(OfflineModeTextBox);
     OptionsLayout->addWidget(OfflineModeCheckBox);
     OptionsLayout->addWidget(BeadDetectionTextBox);
@@ -827,8 +829,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     MainTabWidget = new QTabWidget;
     MainTabWidget->addTab(CameraParametersWidget,  tr("Camera"));
     MainTabWidget->addTab(ExperimentTabWidget,     tr("Experimental"));
-    MainTabWidget->addTab(EyeTrackingScrollArea,   tr("Eye-tracking"));
-    MainTabWidget->addTab(BeadTrackingScrollArea,  tr("Bead-tracking"));
+    MainTabWidget->addTab(EyeTrackingScrollArea,   tr("Eye tracking"));
+    MainTabWidget->addTab(BeadTrackingScrollArea,  tr("Bead tracking"));
     MainTabWidget->addTab(AdvancedScrollArea,   tr("Advanced"));
 
     MainTabWidget->setTabEnabled(3, 0); // disable bead-tracking
@@ -991,12 +993,13 @@ void MainWindow::pupilTracking()
         {
             if (!TRIAL_RECORDING)
             {
-                double avgIntensity = 0;
+                double avgIntensity;
 
                 if (FLASH_AOI_VISIBLE)
                 {
                     cv::Rect flashRegion(AOIFlashRelative.xPos, AOIFlashRelative.yPos, AOIFlashRelative.wdth, AOIFlashRelative.hght);
                     avgIntensity = flashDetection(imageOriginal(flashRegion));
+                    flashThresholdMin = flashThresholdMin + (1 / (cameraFrameRate * 60)) * (flashThresholdMin - avgIntensity);
                 }
 
                 if (FLASH_STANDBY)
@@ -1012,9 +1015,9 @@ void MainWindow::pupilTracking()
                 }
                 else // Default mode
                 {
-                    if (avgIntensity > flashMinIntensity)
+                    if (flashThresholdMin > flashMinIntensity)
                     {
-                        flashMinIntensity = avgIntensity;
+                        flashMinIntensity = floor(flashThresholdMin);
                         FlashThresholdSlider->setMinimum(flashMinIntensity);
                     }
 
@@ -1467,11 +1470,14 @@ void MainWindow::onDirectorySelect()
 
 void MainWindow::onDialogueOpen()
 {
-    QString text = "Copyright 2016 - 2017 Terence Brouns, t.s.n.brouns@gmail.com. <br> <br> "
-                   "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; <br> "
+    QString text = "EyeStalker: robust video-based eye tracking <br> <br>"
+                   "Copyright 2016 - 2017 Terence Brouns, t.s.n.brouns@gmail.com <br> <br> "
+                   "EyeStalker is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; <br> "
                    "without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. <br><br>"
                    "See the GNU General Public License for more details. <br><br>"
                    "Included 3rd party libraries: <br><br>"
+                   "<b>Qt:</b> <br><br>"
+                   "(c) 2017 The Qt Company Ltd. https://www.qt.io/ <br><br>"
                    "<b>OpenCV:</b> <br><br>"
                    "Intel License Agreement <br>"
                    "For Open Source Computer Vision Library <br>"
@@ -1484,9 +1490,10 @@ void MainWindow::onDialogueOpen()
                    "Distributed under the Boost Software License, Version 1.0. <br>"
                    "(See accompanying file LICENSE_1_0.txt or copy at <br>"
                    "http://www.boost.org/LICENSE_1_0.txt) <br><br>"
-                   "<b>UEye:</b> <br><br> (c) 2016, IDS Imaging Advanced Systems GmbH <br><br>"
+                   "<b>UEye API:</b> <br><br> (c) 2016, IDS Imaging Advanced Systems GmbH, https://en.ids-imaging.com/<br><br>"
                    "<b>libusb:</b> <br><br> libusb is released under version 2.1 of the GNU Lesser General Public License (LGPL).<br>"
-                   "http://libusb.info/ <br>";
+                   "http://libusb.info/ <br><br>"
+                   "<b>QDarkStyleSheet:</b>: Copyright (c) <2013-2014> <Colin Duquesnoy> Released under the MIT license. <br>";
 
     ConfirmationWindow mConfirmationWindow(text, false);
     mConfirmationWindow.setWindowTitle("About EyeStalker");
@@ -2301,6 +2308,7 @@ void MainWindow::onSaveTrialData()
 
         if (timeMatrix.size() > 0) { file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";"; } // trial index
         file << imageTotalOffline << ";";  // data samples
+        file << cameraFrameRate   << ";";  // sampling rate
         if (timeMatrix.size() > 0) { file << (int) timeMatrix[trialIndexOffline][1] << ";"; } // system clock time
 
         file << std::fixed;
@@ -2707,7 +2715,7 @@ void MainWindow::onSetBeadDetection(int state)
     }
 }
 
-void MainWindow::onSetRealTimeTracking(int state)
+void MainWindow::onSetOnlineProcessing(int state)
 {
     if (Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
     {
@@ -2716,7 +2724,7 @@ void MainWindow::onSetRealTimeTracking(int state)
     }
     else
     {
-        RealTimeEyeTrackingCheckBox->setChecked(false);
+        OnlineProcessingCheckBox->setChecked(false);
     }
 }
 
@@ -2767,8 +2775,8 @@ void MainWindow::onSetCameraBlackLevelOffset(int value)
 }
 
 void MainWindow::onSetCameraBlackLevelMode(int state) { mUEyeOpencvCam.setBlackLevelMode(state); }
-void MainWindow::onSetCameraGainBoost     (int state) { mUEyeOpencvCam.setGainBoost(state); }
-void MainWindow::onSetCameraAutoGain      (int state) { mUEyeOpencvCam.setAutoGain(state); }
+void MainWindow::onSetCameraGainBoost     (int state) { mUEyeOpencvCam.setGainBoost(state);      }
+void MainWindow::onSetCameraAutoGain      (int state) { mUEyeOpencvCam.setAutoGain(state);       }
 
 void MainWindow::onSetCameraHardwareGain(int val)
 {
@@ -2871,16 +2879,14 @@ void MainWindow::updateCamAOIy()
 
 void MainWindow::updateEyeAOIx()
 {
-    {
-        std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+    { std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
         Parameters::eyeAOI.wdth = round(Parameters::camAOI.wdth * Parameters::eyeAOIRatio.wdth);
         Parameters::eyeAOI.xPos = round(Parameters::camAOI.wdth * Parameters::eyeAOIRatio.xPos);
         if (Parameters::eyeAOI.xPos + Parameters::eyeAOI.wdth > Parameters::camAOI.wdth)
         {   Parameters::eyeAOI.xPos = Parameters::camAOI.wdth - Parameters::eyeAOI.wdth; }
     }
 
-    {
-        std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+    { std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
         Parameters::beadAOI.wdth = round(Parameters::camAOI.wdth * Parameters::beadAOIRatio.wdth);
         Parameters::beadAOI.xPos = round(Parameters::camAOI.wdth * Parameters::beadAOIRatio.xPos);
         if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth > Parameters::camAOI.wdth)
@@ -2890,16 +2896,14 @@ void MainWindow::updateEyeAOIx()
 
 void MainWindow::updateEyeAOIy()
 {
-    {
-        std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
+    { std::lock_guard<std::mutex> AOIEyeLock(Parameters::AOIEyeMutex);
         Parameters::eyeAOI.hght = round(Parameters::camAOI.hght * Parameters::eyeAOIRatio.hght);
         Parameters::eyeAOI.yPos = round(Parameters::camAOI.hght * Parameters::eyeAOIRatio.yPos);
         if (Parameters::eyeAOI.yPos + Parameters::eyeAOI.hght > Parameters::camAOI.hght)
         {   Parameters::eyeAOI.yPos = Parameters::camAOI.hght - Parameters::eyeAOI.hght; }
     }
 
-    {
-        std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
+    { std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
         Parameters::beadAOI.hght = round(Parameters::camAOI.hght * Parameters::beadAOIRatio.hght);
         Parameters::beadAOI.yPos = round(Parameters::camAOI.hght * Parameters::beadAOIRatio.yPos);
         if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght > Parameters::camAOI.hght)

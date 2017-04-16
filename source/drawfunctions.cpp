@@ -1,11 +1,12 @@
+//  EyeStalker: robust video-based eye tracking
 //  Copyright (C) 2016  Terence Brouns, t.s.n.brouns@gmail.com
 
-//  This program is free software: you can redistribute it and/or modify
+//  EyeStalker is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
 
-//  This program is distributed in the hope that it will be useful,
+//  EyeStalker is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
@@ -154,10 +155,9 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
         cv::Vec3b blue  (255,   0,   0);
         cv::Vec3b green (  0, 255,   0);
         cv::Vec3b red   (  0,   0, 255);
-        //    cv::Vec3b cyan  (255, 255,   0);
+        cv::Vec3b cyan  (255, 255,   0);
         cv::Vec3b orange(  0, 165, 255);
         cv::Vec3b yellow(  0, 255, 255);
-        cv::Vec3b white (255, 255, 255);
 
         if (I.cols > 0 && I.rows > 0)
         {
@@ -174,14 +174,12 @@ void drawAll(cv::Mat &I, const drawVariables &mDrawVariables)
                 drawOutline(I, mDrawVariables.cannyAOI, green, yellow, orange, mDrawVariables.edgeData);
             }
 
-            //        drawCross(I, mDrawVariables.predictedXPos, mDrawVariables.predictedYPos, Parameters::ellipseDrawCrossSize, cyan);
-
             if (Parameters::drawFlags.elps)
             {
                 if (mDrawVariables.DETECTED)
                 {
-                    drawEllipse(I, mDrawVariables.cannyAOI, white, mDrawVariables.ellipseCoefficients);
-                    drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, white);
+                    drawEllipse(I, mDrawVariables.cannyAOI, cyan, mDrawVariables.ellipseCoefficients);
+                    drawCross(I, mDrawVariables.exactXPos, mDrawVariables.exactYPos, Parameters::ellipseDrawCrossSize, cyan);
                 }
             }
         }
