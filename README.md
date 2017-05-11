@@ -1,4 +1,4 @@
-# EyeStalker
+# EyeStalker (UEye version)
 
 This repository contains source code and release version of the EyeStalker application for users who wish to use the program in conjuction with an UEye USB camera. 
 
