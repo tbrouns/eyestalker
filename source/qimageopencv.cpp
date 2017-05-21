@@ -133,7 +133,7 @@ void QImageOpenCV::setAOIFlash(AOIProperties flashAOINew)
 {
     flashAOI = flashAOINew;
     flashAOI.xPos = flashAOI.xPos - Parameters::camAOI.xPos;
-    flashAOI.yPos = flashAOI.xPos - Parameters::camAOI.yPos;
+    flashAOI.yPos = flashAOI.yPos - Parameters::camAOI.yPos;
 
     if (flashAOI.xPos < 0)
     {

@@ -103,86 +103,119 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     CannyKernelSizeSlider->setSingleStep(1);
     QObject::connect(CannyKernelSizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setCannyKernelSize(int)));
 
-    // Learning rate parameters
+    // Gain parameters
 
-    QLabel *LearningRatesTextBox = new QLabel;
-    LearningRatesTextBox->setText("<b>Learning rates</b>");
-    LearningRatesTextBox->setAlignment(Qt::AlignCenter);
+    QLabel *GainTextBox = new QLabel;
+    GainTextBox->setText("<b>Gains</b>");
+    GainTextBox->setAlignment(Qt::AlignCenter);
 
-    QLabel *AlphaAveragesTextBox  = new QLabel;
-    AlphaAveragesTextBox->setText("<b>Averages:</b>");
+    QLabel *GainAveragesTextBox  = new QLabel;
+    GainAveragesTextBox->setText("<b>Averages:</b>");
 
-    AlphaAveragesLabel  = new QLabel;
-    AlphaAveragesSlider = new SliderDouble;
-    AlphaAveragesSlider->setPrecision(3);
-    AlphaAveragesSlider->setDoubleRange(0, 0.1);
-    AlphaAveragesSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(AlphaAveragesSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaAverages(double)));
+    GainAveragesLabel  = new QLabel;
+    GainAveragesSlider = new SliderDouble;
+    GainAveragesSlider->setPrecision(3);
+    GainAveragesSlider->setDoubleRange(0, 0.1);
+    GainAveragesSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(GainAveragesSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setGainAverages(double)));
 
-    QLabel *AlphaPositionTextBox = new QLabel;
-    AlphaPositionTextBox->setText("<b>Position:</b>");
+    QLabel *GainPositionTextBox = new QLabel;
+    GainPositionTextBox->setText("<b>Position:</b>");
 
-    AlphaPositionLabel  = new QLabel;
-    AlphaPositionSlider = new SliderDouble;
-    AlphaPositionSlider->setPrecision(2);
-    AlphaPositionSlider->setDoubleRange(0, 1.0);
-    AlphaPositionSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(AlphaPositionSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaPosition(double)));
+    GainPositionLabel  = new QLabel;
+    GainPositionSlider = new SliderDouble;
+    GainPositionSlider->setPrecision(2);
+    GainPositionSlider->setDoubleRange(0, 1.0);
+    GainPositionSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(GainPositionSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setGainPosition(double)));
 
-    QLabel *AlphaFeaturesTextBox = new QLabel;
-    AlphaFeaturesTextBox->setText("<b>Features:</b>");
+    QLabel *GainAppearanceTextBox = new QLabel;
+    GainAppearanceTextBox->setText("<b>Appearance:</b>");
 
-    AlphaFeaturesLabel  = new QLabel;
-    AlphaFeaturesSlider = new SliderDouble;
-    AlphaFeaturesSlider->setPrecision(2);
-    AlphaFeaturesSlider->setDoubleRange(0, 1.0);
-    AlphaFeaturesSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(AlphaFeaturesSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaFeatures(double)));
+    GainAppearanceLabel  = new QLabel;
+    GainAppearanceSlider = new SliderDouble;
+    GainAppearanceSlider->setPrecision(2);
+    GainAppearanceSlider->setDoubleRange(0, 1.0);
+    GainAppearanceSlider->setOrientation(Qt::Horizontal);
+    QObject::connect(GainAppearanceSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setGainAppearance(double)));
 
-    QLabel *AlphaCertaintyTextBox = new QLabel;
-    AlphaCertaintyTextBox->setText("<b>Certainty:</b>");
+    QLabel *GainCertaintyTextBox = new QLabel;
+    GainCertaintyTextBox->setText("<b>Certainty:</b>");
 
-    AlphaCertaintyLabel  = new QLabel;
-    AlphaCertaintySlider = new SliderDouble;
-    AlphaCertaintySlider->setPrecision(2);
-    AlphaCertaintySlider->setDoubleRange(0, 1.0);
-    AlphaCertaintySlider->setOrientation(Qt::Horizontal);
-    QObject::connect(AlphaCertaintySlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setAlphaCertainty(double)));
+    GainCertaintyLabel  = new QLabel;
+    GainCertaintySlider = new SliderDouble;
+    GainCertaintySlider->setPrecision(2);
+    GainCertaintySlider->setDoubleRange(0, 1.0);
+    GainCertaintySlider->setOrientation(Qt::Horizontal);
+    QObject::connect(GainCertaintySlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setGainCertainty(double)));
 
     // Threshold parameters
 
-    QLabel *ThresholdCircumferenceTextBox = new QLabel;
-    ThresholdCircumferenceTextBox->setText("<b>Circumference change</b>");
+    QLabel *ThresholdCircumferenceUpperTextBox = new QLabel;
+    QLabel *ThresholdCircumferenceLowerTextBox = new QLabel;
 
-    QLabel *ThresholdAspectRatioTextBox = new QLabel;
-    ThresholdAspectRatioTextBox->setText("<b>Aspect ratio change</b>");
+    QLabel *ThresholdAspectRatioUpperTextBox = new QLabel;
+    QLabel *ThresholdAspectRatioLowerTextBox = new QLabel;
 
-    QLabel *ThresholdDisplacementTextBox = new QLabel;
-    ThresholdDisplacementTextBox->setText("<b>Displacement change</b>");
+    QLabel *ThresholdDisplacementUpperTextBox = new QLabel;
+    QLabel *ThresholdDisplacementLowerTextBox = new QLabel;
 
-    ThresholdAspectRatioLabel  = new QLabel;
-    ThresholdAspectRatioSlider = new SliderDouble;
-    ThresholdAspectRatioSlider->setPrecision(2);
-    ThresholdAspectRatioSlider->setDoubleRange(0.0, 0.5);
-    ThresholdAspectRatioSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdAspectRatioSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatio(double)));
+    ThresholdCircumferenceUpperTextBox->setText("<b>Circumference upper change:</b>");
+    ThresholdCircumferenceLowerTextBox->setText("<b>Circumference lower change:</b>");
 
-    ThresholdCircumferenceLabel  = new QLabel;
-    ThresholdCircumferenceSlider = new SliderDouble;
-    ThresholdCircumferenceSlider->setPrecision(2);
-    ThresholdCircumferenceSlider->setDoubleRange(0.0, 0.5);
-    ThresholdCircumferenceSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdCircumferenceSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumference(double)));
+    ThresholdAspectRatioUpperTextBox->setText("<b>Aspect ratio upper change:</b>");
+    ThresholdAspectRatioLowerTextBox->setText("<b>Aspect ratio lower change:</b>");
 
-    ThresholdDisplacementLabel  = new QLabel;
-    ThresholdDisplacementSlider = new SliderDouble;
-    ThresholdDisplacementSlider->setPrecision(1);
-    ThresholdDisplacementSlider->setDoubleRange(0, 25);
-    ThresholdDisplacementSlider->setOrientation(Qt::Horizontal);
-    QObject::connect(ThresholdDisplacementSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdDisplacement(double)));
+    ThresholdDisplacementUpperTextBox->setText("<b>Displacement upper change:</b>");
+    ThresholdDisplacementLowerTextBox->setText("<b>Displacement lower change:</b>");
+
+    ThresholdAspectRatioUpperLabel  = new QLabel;
+    ThresholdAspectRatioUpperSlider = new SliderDouble;
+    ThresholdAspectRatioUpperSlider->setPrecision(3);
+    ThresholdAspectRatioUpperSlider->setDoubleRange(0.0, 0.2);
+    ThresholdAspectRatioUpperSlider->setOrientation(Qt::Horizontal);
+
+    ThresholdCircumferenceUpperLabel  = new QLabel;
+    ThresholdCircumferenceUpperSlider = new SliderDouble;
+    ThresholdCircumferenceUpperSlider->setPrecision(3);
+    ThresholdCircumferenceUpperSlider->setDoubleRange(0.0, 0.2);
+    ThresholdCircumferenceUpperSlider->setOrientation(Qt::Horizontal);
+
+    ThresholdDisplacementUpperLabel  = new QLabel;
+    ThresholdDisplacementUpperSlider = new SliderDouble;
+    ThresholdDisplacementUpperSlider->setPrecision(2);
+    ThresholdDisplacementUpperSlider->setDoubleRange(0, 20);
+    ThresholdDisplacementUpperSlider->setOrientation(Qt::Horizontal);
+
+    ThresholdAspectRatioLowerLabel  = new QLabel;
+    ThresholdAspectRatioLowerSlider = new SliderDouble;
+    ThresholdAspectRatioLowerSlider->setPrecision(3);
+    ThresholdAspectRatioLowerSlider->setDoubleRange(0.0, 0.2);
+    ThresholdAspectRatioLowerSlider->setOrientation(Qt::Horizontal);
+
+    ThresholdCircumferenceLowerLabel  = new QLabel;
+    ThresholdCircumferenceLowerSlider = new SliderDouble;
+    ThresholdCircumferenceLowerSlider->setPrecision(3);
+    ThresholdCircumferenceLowerSlider->setDoubleRange(0.0, 0.2);
+    ThresholdCircumferenceLowerSlider->setOrientation(Qt::Horizontal);
+
+    ThresholdDisplacementLowerLabel  = new QLabel;
+    ThresholdDisplacementLowerSlider = new SliderDouble;
+    ThresholdDisplacementLowerSlider->setPrecision(2);
+    ThresholdDisplacementLowerSlider->setDoubleRange(0, 20);
+    ThresholdDisplacementLowerSlider->setOrientation(Qt::Horizontal);
+
+    QObject::connect(ThresholdAspectRatioUpperSlider,   SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatioUpper(double)));
+    QObject::connect(ThresholdAspectRatioLowerSlider,   SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdAspectRatioLower(double)));
+
+    QObject::connect(ThresholdCircumferenceUpperSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumferenceUpper(double)));
+    QObject::connect(ThresholdCircumferenceLowerSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdCircumferenceLower(double)));
+
+    QObject::connect(ThresholdDisplacementUpperSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdDisplacementUpper(double)));
+    QObject::connect(ThresholdDisplacementLowerSlider,  SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdDisplacementLower(double)));
 
     QLabel *ThresholdScoreEdgeTextBox = new QLabel;
-    ThresholdScoreEdgeTextBox->setText("<b>Edge score</b>");
+    ThresholdScoreEdgeTextBox->setText("<b>Edge score:</b>");
 
     ThresholdScoreEdgeLabel  = new QLabel;
     ThresholdScoreEdgeSlider = new SliderDouble;
@@ -192,7 +225,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     QObject::connect(ThresholdScoreEdgeSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreEdge(double)));
 
     QLabel *ThresholdScoreFitTextBox = new QLabel;
-    ThresholdScoreFitTextBox->setText("<b>Fit score</b>");
+    ThresholdScoreFitTextBox->setText("<b>Fit score:</b>");
 
     ThresholdScoreFitLabel  = new QLabel;
     ThresholdScoreFitSlider = new SliderDouble;
@@ -202,7 +235,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     QObject::connect(ThresholdScoreFitSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreFit(double)));
 
     QLabel *ThresholdScoreDiffEdgeTextBox = new QLabel;
-    ThresholdScoreDiffEdgeTextBox->setText("<b>Edge score difference</b>");
+    ThresholdScoreDiffEdgeTextBox->setText("<b>Edge score difference:</b>");
 
     ThresholdScoreDiffEdgeLabel  = new QLabel;
     ThresholdScoreDiffEdgeSlider = new SliderDouble;
@@ -212,7 +245,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     QObject::connect(ThresholdScoreDiffEdgeSlider, SIGNAL(doubleValueChanged(double)), this, SLOT(setThresholdScoreDiffEdge(double)));
 
     QLabel *ThresholdScoreDiffFitTextBox = new QLabel;
-    ThresholdScoreDiffFitTextBox->setText("<b>Fit score difference</b>");
+    ThresholdScoreDiffFitTextBox->setText("<b>Fit score difference:</b>");
 
     ThresholdScoreDiffFitLabel  = new QLabel;
     ThresholdScoreDiffFitSlider = new SliderDouble;
@@ -238,7 +271,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
     MiscParametersTextBox->setAlignment(Qt::AlignCenter);
 
     QLabel *GlintSizeTextBox = new QLabel;
-    GlintSizeTextBox->setText("<b>Glint size</b>");
+    GlintSizeTextBox->setText("<b>Glint size:</b>");
 
     GlintSizeLabel  = new QLabel;
     GlintSizeSlider = new QSlider;
@@ -301,7 +334,7 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     TitleLimitTextBox ->setText("<b>Variable limits</b>");
     TitleCannyTextBox ->setText("<b>Canny edge detection</b>");
-    TitleLearnTextBox ->setText("<b>Learning rates</b>");
+    TitleLearnTextBox ->setText("<b>Gains</b>");
     TitleChangeTextBox->setText("<b>Thresholds</b>");
     TitleMiscTextBox  ->setText("<b>Miscellaneous</b>");
 
@@ -310,110 +343,118 @@ ParameterWidget::ParameterWidget(QWidget *parent) : QWidget(parent)
 
     // Text labels
 
-    MainLayout->addWidget(CircumferenceMaxTextBox,          1, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CircumferenceMinTextBox,          2, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AspectRatioMinTextBox,            3, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CircumferenceMaxTextBox,              1, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CircumferenceMinTextBox,              2, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(AspectRatioMinTextBox,                3, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(CannyThresholdHighTextBox,        6, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CannyThresholdLowTextBox,         7, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CannyKernelSizeTextBox,           8, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CannyBlurLevelTextBox,            9, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CannyThresholdHighTextBox,            5, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CannyThresholdLowTextBox,             6, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CannyKernelSizeTextBox,               7, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CannyBlurLevelTextBox,                8, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(AlphaAveragesTextBox,             11, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AlphaPositionTextBox,             12, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AlphaFeaturesTextBox,             13, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(AlphaCertaintyTextBox,            15, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GainAveragesTextBox,                  10, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GainPositionTextBox,                  11, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GainAppearanceTextBox,                  12, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GainCertaintyTextBox,                 13, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(ThresholdAspectRatioTextBox,      18, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdCircumferenceTextBox,    19, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdDisplacementTextBox,     20, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreEdgeTextBox,        21, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreFitTextBox,         22, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreDiffEdgeTextBox,    23, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdScoreDiffFitTextBox,     24, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(ThresholdFitErrorTextBox,         25, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdAspectRatioLowerTextBox,     15, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdAspectRatioUpperTextBox,     16, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdCircumferenceLowerTextBox,   17, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdCircumferenceUpperTextBox,   18, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdDisplacementLowerTextBox,    19, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdDisplacementUpperTextBox,    20, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreEdgeTextBox,            21, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreFitTextBox,             22, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreDiffEdgeTextBox,        23, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdScoreDiffFitTextBox,         24, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(ThresholdFitErrorTextBox,             25, 0, 1, 1, Qt::AlignRight);
 
-    MainLayout->addWidget(GlintSizeTextBox,                 27, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(CurvatureOffsetTextBox,           28, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(WindowLengthEdgeTextBox,          29, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(FitEdgeFractionTextBox,           30, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(FitEdgeMaximumTextBox,            31, 0, 1, 1, Qt::AlignRight);
-    MainLayout->addWidget(FitMaximumTextBox,                32, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(GlintSizeTextBox,                     27, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(CurvatureOffsetTextBox,               28, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(WindowLengthEdgeTextBox,              29, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitEdgeFractionTextBox,               30, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitEdgeMaximumTextBox,                31, 0, 1, 1, Qt::AlignRight);
+    MainLayout->addWidget(FitMaximumTextBox,                    32, 0, 1, 1, Qt::AlignRight);
 
     // Sliders and titles
 
-    MainLayout->addWidget(TitleLimitTextBox,                0, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(TitleLimitTextBox,                    0, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(CircumferenceMaxSlider,           1, 1);
-    MainLayout->addWidget(CircumferenceMinSlider,           2, 1);
-    MainLayout->addWidget(AspectRatioMinSlider,             3, 1);
+    MainLayout->addWidget(CircumferenceMaxSlider,               1, 1);
+    MainLayout->addWidget(CircumferenceMinSlider,               2, 1);
+    MainLayout->addWidget(AspectRatioMinSlider,                 3, 1);
 
-    MainLayout->addWidget(TitleCannyTextBox,                5, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(TitleCannyTextBox,                    4, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(CannyThresholdHighSlider,         6, 1);
-    MainLayout->addWidget(CannyThresholdLowSlider,          7, 1);
-    MainLayout->addWidget(CannyKernelSizeSlider,            8, 1);
-    MainLayout->addWidget(CannyBlurLevelSlider,             9, 1);
+    MainLayout->addWidget(CannyThresholdHighSlider,             5, 1);
+    MainLayout->addWidget(CannyThresholdLowSlider,              6, 1);
+    MainLayout->addWidget(CannyKernelSizeSlider,                7, 1);
+    MainLayout->addWidget(CannyBlurLevelSlider,                 8, 1);
 
-    MainLayout->addWidget(TitleLearnTextBox,               10, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(TitleLearnTextBox,                    9, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(AlphaAveragesSlider,             11, 1);
-    MainLayout->addWidget(AlphaPositionSlider,             12, 1);
-    MainLayout->addWidget(AlphaFeaturesSlider,             13, 1);
-    MainLayout->addWidget(AlphaCertaintySlider,            15, 1);
+    MainLayout->addWidget(GainAveragesSlider,                   10, 1);
+    MainLayout->addWidget(GainPositionSlider,                   11, 1);
+    MainLayout->addWidget(GainAppearanceSlider,                   12, 1);
+    MainLayout->addWidget(GainCertaintySlider,                  13, 1);
 
-    MainLayout->addWidget(TitleChangeTextBox,              17, 1, 1, 1, Qt::AlignCenter);
+    MainLayout->addWidget(TitleChangeTextBox,                   14, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(ThresholdAspectRatioSlider,      18, 1);
-    MainLayout->addWidget(ThresholdCircumferenceSlider,    19, 1);
-    MainLayout->addWidget(ThresholdDisplacementSlider,     20, 1);
-    MainLayout->addWidget(ThresholdScoreEdgeSlider,        21, 1);
-    MainLayout->addWidget(ThresholdScoreFitSlider,         22, 1);
+    MainLayout->addWidget(ThresholdAspectRatioLowerSlider,      15, 1);
+    MainLayout->addWidget(ThresholdAspectRatioUpperSlider,      16, 1);
+    MainLayout->addWidget(ThresholdCircumferenceLowerSlider,    17, 1);
+    MainLayout->addWidget(ThresholdCircumferenceUpperSlider,    18, 1);
+    MainLayout->addWidget(ThresholdDisplacementLowerSlider,     19, 1);
+    MainLayout->addWidget(ThresholdDisplacementUpperSlider,     20, 1);
+    MainLayout->addWidget(ThresholdScoreEdgeSlider,             21, 1);
+    MainLayout->addWidget(ThresholdScoreFitSlider,              22, 1);
+    MainLayout->addWidget(ThresholdScoreDiffEdgeSlider,         23, 1);
+    MainLayout->addWidget(ThresholdScoreDiffFitSlider,          24, 1);
+    MainLayout->addWidget(ThresholdFitErrorSlider,              25, 1);
 
-    MainLayout->addWidget(ThresholdScoreDiffEdgeSlider,    23, 1);
-    MainLayout->addWidget(ThresholdScoreDiffFitSlider,     24, 1);
-    MainLayout->addWidget(ThresholdFitErrorSlider,         25, 1);
+    MainLayout->addWidget(TitleMiscTextBox,                     26, 1, 1, 1, Qt::AlignCenter);
 
-    MainLayout->addWidget(TitleMiscTextBox,                26, 1, 1, 1, Qt::AlignCenter);
-
-    MainLayout->addWidget(GlintSizeSlider,                 27, 1);
-    MainLayout->addWidget(CurvatureOffsetSlider,           28, 1);
-    MainLayout->addWidget(WindowLengthEdgeSlider,          29, 1);
-    MainLayout->addWidget(FitEdgeFractionSlider,           30, 1);
-    MainLayout->addWidget(FitEdgeMaximumSlider,            31, 1);
-    MainLayout->addWidget(FitMaximumSlider,                32, 1);
+    MainLayout->addWidget(GlintSizeSlider,                      27, 1);
+    MainLayout->addWidget(CurvatureOffsetSlider,                28, 1);
+    MainLayout->addWidget(WindowLengthEdgeSlider,               29, 1);
+    MainLayout->addWidget(FitEdgeFractionSlider,                30, 1);
+    MainLayout->addWidget(FitEdgeMaximumSlider,                 31, 1);
+    MainLayout->addWidget(FitMaximumSlider,                     32, 1);
 
     // Value labels
 
-    MainLayout->addWidget(CircumferenceMaxLabel,         1, 2);
-    MainLayout->addWidget(CircumferenceMinLabel,         2, 2);
-    MainLayout->addWidget(AspectRatioMinLabel,           3, 2);
+    MainLayout->addWidget(CircumferenceMaxLabel,                1, 2);
+    MainLayout->addWidget(CircumferenceMinLabel,                2, 2);
+    MainLayout->addWidget(  AspectRatioMinLabel,                3, 2);
 
-    MainLayout->addWidget(CannyThresholdHighLabel,       6, 2);
-    MainLayout->addWidget(CannyThresholdLowLabel,        7, 2);
-    MainLayout->addWidget(CannyKernelSizeLabel,          8, 2);
-    MainLayout->addWidget(CannyBlurLevelLabel,           9, 2);
+    MainLayout->addWidget(CannyThresholdHighLabel,              5, 2);
+    MainLayout->addWidget(CannyThresholdLowLabel,               6, 2);
+    MainLayout->addWidget(CannyKernelSizeLabel,                 7, 2);
+    MainLayout->addWidget(CannyBlurLevelLabel,                  8, 2);
 
-    MainLayout->addWidget(AlphaAveragesLabel,            11, 2);
-    MainLayout->addWidget(AlphaPositionLabel,            12, 2);
-    MainLayout->addWidget(AlphaFeaturesLabel,            13, 2);
-    MainLayout->addWidget(AlphaCertaintyLabel,           15, 2);
+    MainLayout->addWidget(GainAveragesLabel,                    10, 2);
+    MainLayout->addWidget(GainPositionLabel,                    11, 2);
+    MainLayout->addWidget(GainAppearanceLabel,                    12, 2);
+    MainLayout->addWidget(GainCertaintyLabel,                   13, 2);
 
-    MainLayout->addWidget(ThresholdAspectRatioLabel,     18, 2);
-    MainLayout->addWidget(ThresholdCircumferenceLabel,   19, 2);
-    MainLayout->addWidget(ThresholdDisplacementLabel,    20, 2);
-    MainLayout->addWidget(ThresholdScoreEdgeLabel,       21, 2);
-    MainLayout->addWidget(ThresholdScoreFitLabel,        22, 2);
-    MainLayout->addWidget(ThresholdScoreDiffEdgeLabel,   23, 2);
-    MainLayout->addWidget(ThresholdScoreDiffFitLabel,    24, 2);
-    MainLayout->addWidget(ThresholdFitErrorLabel,        25, 2);
+    MainLayout->addWidget(ThresholdAspectRatioLowerLabel,       15, 2);
+    MainLayout->addWidget(ThresholdAspectRatioUpperLabel,       16, 2);
+    MainLayout->addWidget(ThresholdCircumferenceLowerLabel,     17, 2);
+    MainLayout->addWidget(ThresholdCircumferenceUpperLabel,     18, 2);
+    MainLayout->addWidget(ThresholdDisplacementLowerLabel,      19, 2);
+    MainLayout->addWidget(ThresholdDisplacementUpperLabel,      20, 2);
+    MainLayout->addWidget(ThresholdScoreEdgeLabel,              21, 2);
+    MainLayout->addWidget(ThresholdScoreFitLabel,               22, 2);
+    MainLayout->addWidget(ThresholdScoreDiffEdgeLabel,          23, 2);
+    MainLayout->addWidget(ThresholdScoreDiffFitLabel,           24, 2);
+    MainLayout->addWidget(ThresholdFitErrorLabel,               25, 2);
 
-    MainLayout->addWidget(GlintSizeLabel,                27, 2);
-    MainLayout->addWidget(CurvatureOffsetLabel,          28, 2);
-    MainLayout->addWidget(WindowLengthEdgeLabel,         29, 2);
-    MainLayout->addWidget(FitEdgeFractionLabel,          30, 2);
-    MainLayout->addWidget(FitEdgeMaximumLabel,           31, 2);
-    MainLayout->addWidget(FitMaximumLabel,               32, 2);
+    MainLayout->addWidget(GlintSizeLabel,                       27, 2);
+    MainLayout->addWidget(CurvatureOffsetLabel,                 28, 2);
+    MainLayout->addWidget(WindowLengthEdgeLabel,                29, 2);
+    MainLayout->addWidget(FitEdgeFractionLabel,                 30, 2);
+    MainLayout->addWidget(FitEdgeMaximumLabel,                  31, 2);
+    MainLayout->addWidget(FitMaximumLabel,                      32, 2);
 
     MainLayout->setColumnStretch(0,1);
     MainLayout->setColumnStretch(1,3);
@@ -475,30 +516,37 @@ void ParameterWidget::reset()
     CannyKernelSizeSlider->setValue(ceil(0.5 * mDetectionParameters.cannyKernelSize));
     CannyKernelSizeLabel ->setText(QString::number(mDetectionParameters.cannyKernelSize));
 
-    // Learning rates
+    // Gains
 
-    AlphaAveragesSlider->setDoubleValue(mDetectionParameters.alphaAverages);
-    AlphaAveragesLabel ->setText(QString::number(mDetectionParameters.alphaAverages, 'f', 3));
+    GainAveragesSlider  ->setDoubleValue(mDetectionParameters.gainAverages);
+    GainPositionSlider  ->setDoubleValue(mDetectionParameters.gainPosition);
+    GainAppearanceSlider->setDoubleValue(mDetectionParameters.gainAppearance);
+    GainCertaintySlider ->setDoubleValue(mDetectionParameters.gainCertainty);
 
-    AlphaPositionSlider->setDoubleValue(mDetectionParameters.alphaPosition);
-    AlphaPositionLabel ->setText(QString::number(mDetectionParameters.alphaPosition, 'f', 2));
-
-    AlphaFeaturesSlider->setDoubleValue(mDetectionParameters.alphaFeatures);
-    AlphaFeaturesLabel ->setText(QString::number(mDetectionParameters.alphaFeatures, 'f', 2));
-
-    AlphaCertaintySlider->setDoubleValue(mDetectionParameters.alphaCertainty);
-    AlphaCertaintyLabel->setText(QString::number(mDetectionParameters.alphaCertainty, 'f', 2));
+    GainAveragesLabel  ->setText(QString::number(mDetectionParameters.gainAverages,   'f', 3));
+    GainPositionLabel  ->setText(QString::number(mDetectionParameters.gainPosition,   'f', 2));
+    GainAppearanceLabel->setText(QString::number(mDetectionParameters.gainAppearance, 'f', 2));
+    GainCertaintyLabel ->setText(QString::number(mDetectionParameters.gainCertainty,  'f', 2));
 
     // Thresholds
 
-    ThresholdCircumferenceSlider->setDoubleValue(mDetectionParameters.thresholdChangeCircumference);
-    ThresholdCircumferenceLabel ->setText(QString::number(mDetectionParameters.thresholdChangeCircumference, 'f', 2));
+    ThresholdCircumferenceLowerSlider->setDoubleValue(mDetectionParameters.thresholdChangeCircumferenceLower);
+    ThresholdCircumferenceUpperSlider->setDoubleValue(mDetectionParameters.thresholdChangeCircumferenceUpper);
 
-    ThresholdAspectRatioSlider->setDoubleValue(mDetectionParameters.thresholdChangeAspectRatio);
-    ThresholdAspectRatioLabel ->setText(QString::number(mDetectionParameters.thresholdChangeAspectRatio, 'f', 2));
+    ThresholdCircumferenceLowerLabel ->setText(QString::number(mDetectionParameters.thresholdChangeCircumferenceLower, 'f', 3));
+    ThresholdCircumferenceUpperLabel ->setText(QString::number(mDetectionParameters.thresholdChangeCircumferenceUpper, 'f', 3));
 
-    ThresholdDisplacementSlider->setDoubleValue(mDetectionParameters.thresholdChangePosition);
-    ThresholdDisplacementLabel ->setText(QString::number(mDetectionParameters.thresholdChangePosition, 'f', 1));
+    ThresholdAspectRatioLowerSlider->setDoubleValue(mDetectionParameters.thresholdChangeAspectRatioLower);
+    ThresholdAspectRatioUpperSlider->setDoubleValue(mDetectionParameters.thresholdChangeAspectRatioUpper);
+
+    ThresholdAspectRatioLowerLabel ->setText(QString::number(mDetectionParameters.thresholdChangeAspectRatioLower, 'f', 3));
+    ThresholdAspectRatioUpperLabel ->setText(QString::number(mDetectionParameters.thresholdChangeAspectRatioUpper, 'f', 3));
+
+    ThresholdDisplacementLowerSlider->setDoubleValue(mDetectionParameters.thresholdChangePositionLower);
+    ThresholdDisplacementUpperSlider->setDoubleValue(mDetectionParameters.thresholdChangePositionUpper);
+
+    ThresholdDisplacementLowerLabel ->setText(QString::number(mDetectionParameters.thresholdChangePositionLower, 'f', 2));
+    ThresholdDisplacementUpperLabel ->setText(QString::number(mDetectionParameters.thresholdChangePositionUpper, 'f', 2));
 
     ThresholdScoreEdgeSlider->setDoubleValue(mDetectionParameters.thresholdScoreEdge);
     ThresholdScoreEdgeLabel ->setText(QString::number(mDetectionParameters.thresholdScoreEdge, 'f', 2));
@@ -539,9 +587,7 @@ void ParameterWidget::reset()
 void ParameterWidget::setCircumferenceMin(double value)
 {
     if (mDetectionParameters.thresholdCircumferenceMax < value)
-    {
-        CircumferenceMaxSlider->setDoubleValue(value);
-    }
+    {   CircumferenceMaxSlider->setDoubleValue(value); }
 
     mDetectionParameters.thresholdCircumferenceMin = value;
     CircumferenceMinLabel->setText(QString::number(mDetectionParameters.thresholdCircumferenceMin, 'f', 1));
@@ -550,9 +596,7 @@ void ParameterWidget::setCircumferenceMin(double value)
 void ParameterWidget::setCircumferenceMax(double value)
 {
     if (mDetectionParameters.thresholdCircumferenceMin > value)
-    {
-        CircumferenceMinSlider->setDoubleValue(value);
-    }
+    {   CircumferenceMinSlider->setDoubleValue(value); }
 
     mDetectionParameters.thresholdCircumferenceMax = value;
     CircumferenceMaxLabel->setText(QString::number(mDetectionParameters.thresholdCircumferenceMax, 'f', 1));
@@ -573,21 +617,16 @@ void ParameterWidget::setFitEdgeFraction(double value)
 void ParameterWidget::setCannyThresholdLow(double value)
 {
     if (value > mDetectionParameters.cannyThresholdHigh)
-    {
-        CannyThresholdHighSlider->setDoubleValue(value);
-    }
+    {   CannyThresholdHighSlider->setDoubleValue(value); }
 
     mDetectionParameters.cannyThresholdLow = value;
     CannyThresholdLowLabel->setText(QString::number(value, 'f', 1));
-
 }
 
 void ParameterWidget::setCannyThresholdHigh(double value)
 {
     if (value < mDetectionParameters.cannyThresholdLow)
-    {
-        CannyThresholdLowSlider->setDoubleValue(value);
-    }
+    {   CannyThresholdLowSlider->setDoubleValue(value); }
 
     mDetectionParameters.cannyThresholdHigh = value;
     CannyThresholdHighLabel->setText(QString::number(value, 'f', 1));
@@ -606,46 +645,82 @@ void ParameterWidget::setCannyBlurLevel(int value)
     CannyBlurLevelLabel->setText(QString::number(value));
 }
 
-void ParameterWidget::setAlphaAverages(double value)
+void ParameterWidget::setGainAverages(double value)
 {
-    mDetectionParameters.alphaAverages = value;
-    AlphaAveragesLabel->setText(QString::number(value, 'f', 3));
+    mDetectionParameters.gainAverages = value;
+    GainAveragesLabel->setText(QString::number(value, 'f', 3));
 }
 
-void ParameterWidget::setAlphaPosition(double value)
+void ParameterWidget::setGainPosition(double value)
 {
-    mDetectionParameters.alphaPosition = value;
-    AlphaPositionLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.gainPosition = value;
+    GainPositionLabel->setText(QString::number(value, 'f', 2));
 }
 
-void ParameterWidget::setAlphaFeatures(double value)
+void ParameterWidget::setGainAppearance(double value)
 {
-    mDetectionParameters.alphaFeatures = value;
-    AlphaFeaturesLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.gainAppearance = value;
+    GainAppearanceLabel->setText(QString::number(value, 'f', 2));
 }
 
-void ParameterWidget::setAlphaCertainty(double value)
+void ParameterWidget::setGainCertainty(double value)
 {
-    mDetectionParameters.alphaCertainty = value;
-    AlphaCertaintyLabel->setText(QString::number(value, 'f', 2));
+    mDetectionParameters.gainCertainty = value;
+    GainCertaintyLabel->setText(QString::number(value, 'f', 2));
 }
 
-void ParameterWidget::setThresholdCircumference(double value)
+void ParameterWidget::setThresholdCircumferenceLower(double value)
 {
-    mDetectionParameters.thresholdChangeCircumference = value;
-    ThresholdCircumferenceLabel->setText(QString::number(value, 'f', 2));
+    if (value > mDetectionParameters.thresholdChangeCircumferenceUpper)
+    {   ThresholdCircumferenceUpperSlider->setDoubleValue(value); }
+
+    mDetectionParameters.thresholdChangeCircumferenceLower = value;
+    ThresholdCircumferenceLowerLabel->setText(QString::number(value, 'f', 3));
 }
 
-void ParameterWidget::setThresholdAspectRatio(double value)
+void ParameterWidget::setThresholdCircumferenceUpper(double value)
 {
-    mDetectionParameters.thresholdChangeAspectRatio = value;
-    ThresholdAspectRatioLabel->setText(QString::number(value, 'f', 2));
+    if (value < mDetectionParameters.thresholdChangeCircumferenceLower)
+    {   ThresholdCircumferenceLowerSlider->setDoubleValue(value); }
+
+    mDetectionParameters.thresholdChangeCircumferenceUpper = value;
+    ThresholdCircumferenceUpperLabel->setText(QString::number(value, 'f', 3));
 }
 
-void ParameterWidget::setThresholdDisplacement(double value)
+void ParameterWidget::setThresholdAspectRatioLower(double value)
 {
-    mDetectionParameters.thresholdChangePosition = value;
-    ThresholdDisplacementLabel->setText(QString::number(value, 'f', 1));
+    if (value > mDetectionParameters.thresholdChangeAspectRatioUpper)
+    {   ThresholdAspectRatioUpperSlider->setDoubleValue(value); }
+
+    mDetectionParameters.thresholdChangeAspectRatioLower = value;
+    ThresholdAspectRatioLowerLabel->setText(QString::number(value, 'f', 3));
+}
+
+void ParameterWidget::setThresholdAspectRatioUpper(double value)
+{
+    if (value < mDetectionParameters.thresholdChangeAspectRatioLower)
+    {   ThresholdAspectRatioLowerSlider->setDoubleValue(value); }
+
+    mDetectionParameters.thresholdChangeAspectRatioUpper = value;
+    ThresholdAspectRatioUpperLabel->setText(QString::number(value, 'f', 3));
+}
+
+void ParameterWidget::setThresholdDisplacementLower(double value)
+{
+    if (value > mDetectionParameters.thresholdChangePositionUpper)
+    {   ThresholdDisplacementUpperSlider->setDoubleValue(value); }
+
+    mDetectionParameters.thresholdChangePositionLower = value;
+    ThresholdDisplacementLowerLabel->setText(QString::number(value, 'f', 2));
+}
+
+void ParameterWidget::setThresholdDisplacementUpper(double value)
+{
+    if (value < mDetectionParameters.thresholdChangePositionLower)
+    {   ThresholdDisplacementLowerSlider->setDoubleValue(value); }
+
+    mDetectionParameters.thresholdChangePositionUpper = value;
+    ThresholdDisplacementUpperLabel->setText(QString::number(value, 'f', 2));
 }
 
 void ParameterWidget::setThresholdScoreEdge(double value)
@@ -708,5 +783,3 @@ void ParameterWidget::setThresholdFitError(double value)
     mDetectionParameters.thresholdFitError = value;
     ThresholdFitErrorLabel->setText(QString::number(value, 'f', 2));
 }
-
-

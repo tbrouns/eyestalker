@@ -47,14 +47,14 @@ public:
 
 private:
 
-    QLabel      *AlphaAveragesLabel;
-    SliderDouble*AlphaAveragesSlider;
-    QLabel      *AlphaCertaintyLabel;
-    SliderDouble*AlphaCertaintySlider;
-    QLabel      *AlphaFeaturesLabel;
-    SliderDouble*AlphaFeaturesSlider;
-    QLabel      *AlphaPositionLabel;
-    SliderDouble*AlphaPositionSlider;
+    QLabel      *GainAveragesLabel;
+    SliderDouble*GainAveragesSlider;
+    QLabel      *GainCertaintyLabel;
+    SliderDouble*GainCertaintySlider;
+    QLabel      *GainAppearanceLabel;
+    SliderDouble*GainAppearanceSlider;
+    QLabel      *GainPositionLabel;
+    SliderDouble*GainPositionSlider;
     QLabel      *AspectRatioMinLabel;
     SliderDouble*AspectRatioMinSlider;
     QLabel      *CannyBlurLevelLabel;
@@ -79,12 +79,18 @@ private:
     QSlider     *FitMaximumSlider;
     QLabel      *GlintSizeLabel;
     QSlider     *GlintSizeSlider;
-    QLabel      *ThresholdAspectRatioLabel;
-    SliderDouble*ThresholdAspectRatioSlider;
-    QLabel      *ThresholdCircumferenceLabel;
-    SliderDouble*ThresholdCircumferenceSlider;
-    QLabel      *ThresholdDisplacementLabel;
-    SliderDouble*ThresholdDisplacementSlider;
+    QLabel      *ThresholdAspectRatioUpperLabel;
+    SliderDouble*ThresholdAspectRatioUpperSlider;
+    QLabel      *ThresholdCircumferenceUpperLabel;
+    SliderDouble*ThresholdCircumferenceUpperSlider;
+    QLabel      *ThresholdDisplacementUpperLabel;
+    SliderDouble*ThresholdDisplacementUpperSlider;
+    QLabel      *ThresholdAspectRatioLowerLabel;
+    SliderDouble*ThresholdAspectRatioLowerSlider;
+    QLabel      *ThresholdCircumferenceLowerLabel;
+    SliderDouble*ThresholdCircumferenceLowerSlider;
+    QLabel      *ThresholdDisplacementLowerLabel;
+    SliderDouble*ThresholdDisplacementLowerSlider;
     QLabel      *ThresholdScoreEdgeLabel;
     SliderDouble*ThresholdScoreEdgeSlider;
     QLabel      *ThresholdScoreFitLabel;
@@ -104,31 +110,34 @@ signals:
 
 private slots:
 
-    void setAlphaFeatures           (double);
-    void setAlphaAverages           (double);
-    void setAlphaPosition           (double);
-    void setAlphaCertainty          (double);
-    void setCannyBlurLevel          (int);
-    void setCannyKernelSize         (int);
-    void setCannyThresholdLow       (double);
-    void setCannyThresholdHigh      (double);
-    void setCurvatureOffset         (double);
-    void setFitEdgeFraction         (double);
-    void setFitEdgeMaximum          (int);
-    void setFitMaximum              (int);
-    void setThresholdFitError       (double);
-    void setGlintSize               (int);
-    void setCircumferenceMin        (double);
-    void setCircumferenceMax        (double);
-    void setAspectRatioMin          (double);
-    void setThresholdCircumference  (double);
-    void setThresholdAspectRatio    (double);
-    void setThresholdDisplacement   (double);
-    void setThresholdScoreEdge      (double);
-    void setThresholdScoreFit       (double);
-    void setThresholdScoreDiffEdge  (double);
-    void setThresholdScoreDiffFit   (double);
-    void setWindowLengthEdge        (int);
+    void setGainAppearance                    (double);
+    void setGainAverages                    (double);
+    void setGainPosition                    (double);
+    void setGainCertainty                   (double);
+    void setCannyBlurLevel                  (int);
+    void setCannyKernelSize                 (int);
+    void setCannyThresholdLow               (double);
+    void setCannyThresholdHigh              (double);
+    void setCurvatureOffset                 (double);
+    void setFitEdgeFraction                 (double);
+    void setFitEdgeMaximum                  (int);
+    void setFitMaximum                      (int);
+    void setThresholdFitError               (double);
+    void setGlintSize                       (int);
+    void setCircumferenceMin                (double);
+    void setCircumferenceMax                (double);
+    void setAspectRatioMin                  (double);
+    void setThresholdCircumferenceLower     (double);
+    void setThresholdCircumferenceUpper     (double);
+    void setThresholdAspectRatioLower       (double);
+    void setThresholdAspectRatioUpper       (double);
+    void setThresholdDisplacementLower      (double);
+    void setThresholdDisplacementUpper      (double);
+    void setThresholdScoreEdge              (double);
+    void setThresholdScoreFit               (double);
+    void setThresholdScoreDiffEdge          (double);
+    void setThresholdScoreDiffFit           (double);
+    void setWindowLengthEdge                (int);
 
 public slots:
 };

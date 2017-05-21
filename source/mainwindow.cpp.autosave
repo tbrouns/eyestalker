@@ -2663,8 +2663,8 @@ void MainWindow::loadSettings(QString filename)
     flashAOILeft.yPos               = settings.value("FlashAOIYPosLeft",            500).toInt();
     flashAOIRght.hght               = settings.value("FlashAOIHghtRght",            100).toInt();
     flashAOIRght.wdth               = settings.value("FlashAOIWdthRght",             60).toInt();
-    flashAOIRght.xPos               = settings.value("FlashAOIXPosRght",            600).toInt();
-    flashAOIRght.yPos               = settings.value("FlashAOIYPosRght",            500).toInt();
+    flashAOIRght.xPos               = settings.value("FlashAOIXPosRght",           1020).toInt();
+    flashAOIRght.yPos               = settings.value("FlashAOIYPosRght",            450).toInt();
     SAVE_ASPECT_RATIO               = settings.value("SaveAspectRatio",             true).toBool();
     SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           true).toBool();
     SAVE_POSITION                   = settings.value("SavePosition",                true).toBool();

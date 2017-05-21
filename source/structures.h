@@ -98,39 +98,35 @@ struct detectionParameters
 {
     detectionParameters(): DETECTION_ON(false) { }
 
-    bool DETECTION_ON;
-
-    double alphaAverages;
-    double alphaCertainty;
-    double alphaFeatures;
-    double alphaPosition;
-
+    bool   DETECTION_ON;
+    double gainAverages;
+    double gainCertainty;
+    double gainAppearance;
+    double gainPosition;
     double cannyThresholdHigh;
     double cannyThresholdLow;
     int    cannyBlurLevel;
     int    cannyKernelSize;
-
     int    glintWdth;
-
     double curvatureOffset;
-
     double thresholdAspectRatioMin;
     double thresholdCircumferenceMax;
     double thresholdCircumferenceMin;
-    double thresholdChangeAspectRatio;
-    double thresholdChangeCircumference;
-    double thresholdChangePosition;
+    double thresholdChangeAspectRatioUpper;
+    double thresholdChangeAspectRatioLower;
+    double thresholdChangeCircumferenceUpper;
+    double thresholdChangeCircumferenceLower;
+    double thresholdChangePositionUpper;
+    double thresholdChangePositionLower;
     double thresholdFitError;
     double thresholdScoreEdge;
     double thresholdScoreFit;
     double thresholdScoreDiffEdge;
     double thresholdScoreDiffFit;
-
     int    fitMaximum;
     int    fitEdgeMaximum;
     double fitEdgeFraction;
-
-    int windowLengthEdge;
+    int    windowLengthEdge;
 };
 
 struct detectionVariables
@@ -174,11 +170,14 @@ struct detectionVariables
     double predictedYPosRelative;
     double thresholdAspectRatioMax;
     double thresholdAspectRatioMin;
-    double thresholdCircumferenceMin;
     double thresholdCircumferenceMax;
-    double thresholdChangeAspectRatio;
-    double thresholdChangeCircumference;
-    double thresholdChangePosition;
+    double thresholdCircumferenceMin;
+    double thresholdChangeAspectRatioUpper;
+    double thresholdChangeAspectRatioLower;
+    double thresholdChangeCircumferenceUpper;
+    double thresholdChangeCircumferenceLower;
+    double thresholdChangePositionUpper;
+    double thresholdChangePositionLower;
     double thresholdScoreEdge;
     double thresholdScoreFit;
     int windowLengthEdge;

@@ -115,7 +115,6 @@ public:
 
 private:
 
-    AOIProperties flashAOI;
     bool APP_EXIT;
     bool APP_RUNNING;
     bool TRIAL_RECORDING;
@@ -130,6 +129,10 @@ private:
     AOIPropertiesDouble camAOIRatioLeft;
     AOIPropertiesDouble camAOIRatioRght;
     AOIPropertiesDouble camAOIRatio;
+
+    AOIProperties flashAOI;
+    AOIProperties flashAOILeft;
+    AOIProperties flashAOIRght;
 
     double cameraFrameRate;
     double flashMinIntensity;
@@ -236,10 +239,13 @@ private:
     SliderDouble *EyeAOIHghtSlider;
     SliderDouble *EyeAOIWdthSlider;
 
+    SliderDouble *BeadAOIHghtSlider;
+    SliderDouble *BeadAOIWdthSlider;
+
     void updateCamAOIx();
     void updateCamAOIy();
-    void updateEyeAOIx();
-    void updateEyeAOIy();
+    void updateAOIx();
+    void updateAOIy();
 
     // AOI Flash
 
@@ -273,7 +279,7 @@ private:
     std::vector<detectionVariables> vDetectionVariablesBead;
     std::vector<detectionVariables> vDetectionVariablesEye;
 
-    std::vector<dataVariables> vDataVariables;
+    std::vector<dataVariables> vDataVariablesEye;
     std::vector<dataVariables> vDataVariablesBead;
 
     drawVariables mDrawVariables;
@@ -377,10 +383,12 @@ private slots:
     void onSetAOIEyeLeft            ();
     void onSetAOIEyeRght            ();
     void onSetBeadDetection         (int);
-    void onSetCamAOIHght         (double);
-    void onSetCamAOIWdth         (double);
-    void onSetCamAOIXPos         (double);
-    void onSetCamAOIYPos         (double);
+    void onSetBeadAOIHght           (double);
+    void onSetBeadAOIWdth           (double);
+    void onSetCamAOIHght            (double);
+    void onSetCamAOIWdth            (double);
+    void onSetCamAOIXPos            (double);
+    void onSetCamAOIYPos            (double);
     void onSetCameraAutoGain        (int);
     void onSetCameraBlackLevelMode  (int);
     void onSetCameraBlackLevelOffset(int);
@@ -390,16 +398,20 @@ private slots:
     void onSetCameraHardwareGain    (int);
     void onSetCameraPixelClock      (int);
     void onSetCameraSubSampling     (int);
-    void onSetAdvancedMode       (bool);
+    void onSetAdvancedMode          (bool);
     void onSetDrawEdge              (int);
     void onSetDrawElps              (int);
     void onSetDrawHaar              (int);
     void onSetEyeAOIHght            (double);
     void onSetEyeAOIWdth            (double);
-    void onSetFlashAOIHght          (int);
-    void onSetFlashAOIWdth          (int);
-    void onSetFlashAOIXPos          (int);
-    void onSetFlashAOIYPos          (int);
+    void onSetFlashAOIHghtLeft      (int);
+    void onSetFlashAOIWdthLeft      (int);
+    void onSetFlashAOIXPosLeft      (int);
+    void onSetFlashAOIYPosLeft      (int);
+    void onSetFlashAOIHghtRght      (int);
+    void onSetFlashAOIWdthRght      (int);
+    void onSetFlashAOIXPosRght      (int);
+    void onSetFlashAOIYPosRght      (int);
     void onSetFlashThreshold        (int);
     void onSetOfflineImage          (int);
     void onSetOfflineMode           (int);
