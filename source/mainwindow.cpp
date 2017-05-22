@@ -36,13 +36,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     APP_EXIT    = false;
     APP_RUNNING = true;
 
-    Parameters::CAMERA_READY      = false;
-    Parameters::CAMERA_RUNNING    = false;
-    Parameters::ONLINE_PROCESSING = true;
+    Parameters::CAMERA_READY    = false;
+    Parameters::CAMERA_RUNNING  = false;
+    Parameters::ONLINE_MODE     = true;
 
     TRIAL_RECORDING = false;
-    SAVE_EYE_IMAGE  = true;
     FLASH_STANDBY   = false;
+
+    flashThresholdMin = 0;
 
     Parameters::ellipseDrawCrossSize    = 5;
     Parameters::ellipseDrawOutlineWidth = 0.032;
@@ -135,10 +136,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraHardwareGainBoostCheckBox = new QCheckBox;
 
     loadSettings(LastUsedSettingsFileName);
-
-    Parameters::drawFlags.haar = true;
-    Parameters::drawFlags.edge = true;
-    Parameters::drawFlags.elps = true;
 
     // Camera feed
 
@@ -236,9 +233,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QCheckBox *EdgeCheckBox = new QCheckBox;
     QCheckBox *ElpsCheckBox = new QCheckBox;
 
-    HaarCheckBox->setChecked(true);
-    EdgeCheckBox->setChecked(true);
-    ElpsCheckBox->setChecked(true);
+    HaarCheckBox->setChecked(Parameters::drawFlags.haar); // Haar-like features
+    EdgeCheckBox->setChecked(Parameters::drawFlags.edge); // Canny edges
+    ElpsCheckBox->setChecked(Parameters::drawFlags.elps); // Ellipse fit
 
     QObject::connect(HaarCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetDrawHaar(int)));
     QObject::connect(EdgeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onSetDrawEdge(int)));
@@ -668,7 +665,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(FlashHghtSpinBoxLeft, SIGNAL(valueChanged(int)), this, SLOT(onSetFlashAOIHghtLeft(int)));
 
     QLabel* FlashCoordsTextBoxLeft = new QLabel;
-    FlashCoordsTextBoxLeft->setText("<b>Flash AOI Left</b>");
+    FlashCoordsTextBoxLeft->setText("<b>Flash AOI left</b>");
 
     QLabel* FlashXPosTextBoxLeft = new QLabel;
     FlashXPosTextBoxLeft->setText("<i>X:</i>");
@@ -715,7 +712,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QObject::connect(FlashHghtSpinBoxRght, SIGNAL(valueChanged(int)), this, SLOT(onSetFlashAOIHghtRght(int)));
 
     QLabel* FlashCoordsTextBoxRght = new QLabel;
-    FlashCoordsTextBoxRght->setText("<b>Flash AOI Right</b>");
+    FlashCoordsTextBoxRght->setText("<b>Flash AOI right</b>");
 
     QLabel* FlashXPosTextBoxRght = new QLabel;
     FlashXPosTextBoxRght->setText("<i>X:</i>");
@@ -1023,7 +1020,7 @@ void MainWindow::pupilTracking()
         resetVariablesHard(mDetectionVariablesBead, mParameterWidgetBead->getStructure(), Parameters::beadAOI);
     }
 
-    while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
+    while(APP_RUNNING && Parameters::CAMERA_RUNNING && Parameters::ONLINE_MODE)
     {
         std::lock_guard<std::mutex> AOILock_1(mutexAOI_1);
 
@@ -1100,7 +1097,6 @@ void MainWindow::pupilTracking()
                 {
                     cv::Rect flashRegion(AOIFlashRelative.xPos, AOIFlashRelative.yPos, AOIFlashRelative.wdth, AOIFlashRelative.hght);
                     avgIntensity = flashDetection(imageOriginal(flashRegion));
-                    flashThresholdMin = flashThresholdMin + (1 / (cameraFrameRate * 60)) * (flashThresholdMin - avgIntensity);
                 }
 
                 if (FLASH_STANDBY)
@@ -1115,10 +1111,10 @@ void MainWindow::pupilTracking()
                 }
                 else // Default mode
                 {
-                    if (flashThresholdMin > flashMinIntensity)
+                    if (avgIntensity > flashThreshold)
                     {
-                        flashMinIntensity = floor(flashThresholdMin);
-                        FlashThresholdSlider->setMinimum(flashMinIntensity);
+                        FlashThresholdSlider->setMinimum(floor(avgIntensity));
+                        FlashThresholdSlider->setValue(  floor(avgIntensity));
                     }
 
                     mDetectionVariablesEyeTemp = eyeStalker(imageOriginal, AOIEyeTemp, mDetectionVariablesEyeTemp, mDetectionParametersEyeTemp, mDataVariablesEyeTemp, mDrawVariablesEyeTemp); // Pupil tracking algorithm
@@ -1157,9 +1153,9 @@ void MainWindow::pupilTracking()
                     // Saving camera frame
 
                     std::stringstream filename;
-                    filename << dataDirectory << "/"
-                             << currentDate   << "/"
-                             << (NameInputLineEdit->text()).toStdString()
+                    filename << dataDirectory
+                             << "/"
+                             << currentDate
                              << "/trial_"
                              << trialIndex
                              << "/raw/"
@@ -1184,6 +1180,7 @@ void MainWindow::pupilTracking()
                     trialIndex++;
                     TrialIndexSpinBox->setValue(trialIndex);
                     TRIAL_RECORDING = false;
+                    Parameters::frameCaptureCV.notify_all(); // continue regular frame capture
                     if (!SAVE_EYE_IMAGE) { emit showPlot(); }
                     emit startTimer(round(1000 / guiUpdateFrequency));
                 }
@@ -1196,8 +1193,10 @@ void MainWindow::pupilTracking()
             std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
 
             mDetectionVariablesEye = mDetectionVariablesEyeTemp;
-            mDrawVariables         = mDrawVariablesEyeTemp;
-            mDataVariables         = mDataVariablesEyeTemp;
+            mDrawVariablesEye      = mDrawVariablesEyeTemp;
+            mDataVariablesEye      = mDataVariablesEyeTemp;
+            mDrawVariablesBead     = mDrawVariablesBeadTemp;
+            mDataVariablesBead     = mDataVariablesBeadTemp;
         }
     }
 
@@ -1207,7 +1206,7 @@ void MainWindow::pupilTracking()
         APP_EXIT = true;
         cv.notify_all();
     }
-    else if (!Parameters::ONLINE_PROCESSING)
+    else if (!Parameters::ONLINE_MODE)
     {
         std::unique_lock<std::mutex> mtxLock(mutexQuit);
         Parameters::CAMERA_RUNNING = false;
@@ -1223,7 +1222,7 @@ void MainWindow::pupilTracking()
 
 void MainWindow::onUpdateCameraImage()
 {
-    if (Parameters::ONLINE_PROCESSING)
+    if (Parameters::ONLINE_MODE)
     {
         if (!TRIAL_RECORDING)
         {
@@ -1231,8 +1230,11 @@ void MainWindow::onUpdateCameraImage()
             {
                 std::lock_guard<std::mutex> AOILock_2(mutexAOI_2);
 
-                drawVariables mDrawVariablesTemp;
-                dataVariables mDataVariablesTemp;
+                drawVariables mDrawVariablesEyeTemp;
+                dataVariables mDataVariablesEyeTemp;
+
+                drawVariables mDrawVariablesBeadTemp;
+                dataVariables mDataVariablesBeadTemp;
 
                 cv::Mat imageOriginal;
 
@@ -1243,6 +1245,8 @@ void MainWindow::onUpdateCameraImage()
                 AOIProperties AOIBeadTemp;
                 AOIProperties AOIFlashTemp;
 
+                bool DRAW_BEAD = false;
+
                 { std::lock_guard<std::mutex> AOICamLock(Parameters::AOICamMutex);
                     if (!imageCamera.empty())
                     {
@@ -1251,8 +1255,15 @@ void MainWindow::onUpdateCameraImage()
                         imgWdth = imageOriginal.cols;
                         imgHght = imageOriginal.rows;
 
-                        mDrawVariablesTemp = mDrawVariables;
-                        mDataVariablesTemp = mDataVariables;
+                        mDrawVariablesEyeTemp = mDrawVariablesEye;
+                        mDataVariablesEyeTemp = mDataVariablesEye;
+
+                        mDrawVariablesBeadTemp = mDrawVariablesBead;
+                        mDataVariablesBeadTemp = mDataVariablesBead;
+
+                        detectionParameters mDetectionParameters = mParameterWidgetBead->getStructure();
+                        DRAW_BEAD = mDetectionParameters.DETECTION_ON;
+
                         AOIFlashTemp       = flashAOI;
 
                     } else { return; }
@@ -1306,10 +1317,11 @@ void MainWindow::onUpdateCameraImage()
                         }
                     }
 
-                    mVariableWidgetEye->setWidgets(mDataVariablesTemp); // update sliders
+                    mVariableWidgetEye->setWidgets(mDataVariablesEyeTemp); // update sliders
 
                     cv::Mat imageProcessed = imageOriginal.clone();
-                    drawAll(imageProcessed, mDrawVariablesTemp);
+                    drawAll(imageProcessed, mDrawVariablesEyeTemp);  // draw eye features
+                    if (DRAW_BEAD) { drawAll(imageProcessed, mDrawVariablesBeadTemp); } // draw bead features
                     CamQImage->loadImage(imageProcessed);
                     CamQImage->setAOIEye  (  AOIEyeTemp);
                     CamQImage->setAOIBead ( AOIBeadTemp);
@@ -1355,7 +1367,7 @@ void MainWindow::findCamera()
 {
     bool CAMERA_START = false;
 
-    while (APP_RUNNING && !Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING)
+    while (APP_RUNNING && !Parameters::CAMERA_RUNNING && Parameters::ONLINE_MODE)
     {
         if (mUEyeOpencvCam.findCamera())
         {
@@ -1524,7 +1536,7 @@ void MainWindow::onSetOfflineMode(int state)
     AOIEyeOptionsWidget->setVisible(!state);
     OfflineModeWidget  ->setVisible(state);
 
-    Parameters::ONLINE_PROCESSING = !state;
+    Parameters::ONLINE_MODE = !state;
     Parameters::CAMERA_RUNNING    = !state;
     Parameters::CAMERA_READY      = !state;
 
@@ -1701,15 +1713,6 @@ void MainWindow::startTrialRecording()
     {
         if (!TRIAL_RECORDING)
         {
-            if (!boost::filesystem::exists(dataDirectory))
-            {
-                QString text = "Data directory does not exist. Please choose a valid path.";
-                ConfirmationWindow mConfirmationWindow(text, false);
-                mConfirmationWindow.setWindowTitle("Warning");
-                mConfirmationWindow.exec();
-                return;
-            }
-
             emit stopTimer(); // stop showing camera feed
 
             // start recording
@@ -1743,12 +1746,6 @@ void MainWindow::startTrialRecording()
             {
                 std::stringstream directoryName;
                 directoryName << dataDirectory << "/" << currentDate;
-
-                if (!boost::filesystem::exists(directoryName.str()))
-                {    boost::filesystem::create_directory(directoryName.str().c_str()); }
-
-                if (!NameInputLineEdit->text().isEmpty())
-                { directoryName << "-" << (NameInputLineEdit->text()).toStdString(); }
 
                 if (!boost::filesystem::exists(directoryName.str()))
                 {    boost::filesystem::create_directory(directoryName.str().c_str()); }
@@ -1847,8 +1844,7 @@ void MainWindow::saveTrialData()
         std::stringstream filename;
         filename << dataDirectory << "/"
                  << currentDate   << "/"
-                 << (NameInputLineEdit->text()).toStdString()
-                 << "/trial_"     << trialIndex
+                 << "trial_"      << trialIndex
                  << "/"
                  << "timestamps.dat";
 
@@ -1895,7 +1891,7 @@ void MainWindow::onPlotTrialData()
 
 void MainWindow::onFlashStandbySlider(int state)
 {
-    if (Parameters::CAMERA_RUNNING && Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
+    if (Parameters::CAMERA_RUNNING && Parameters::ONLINE_MODE && !TRIAL_RECORDING)
     {
         CamQImage       ->setVisible(!state);
         CamAOIXPosSlider->setVisible(!state);
@@ -1915,6 +1911,16 @@ void MainWindow::onFlashStandbySlider(int state)
         if (state == 0) { FlashStandbyLabel->setText("<font color='red'><b>OFF</b></font>"); }
         else
         {
+            if (!boost::filesystem::exists(dataDirectory)) // check if data directory is valid
+            {
+                QString text = "Data directory does not exist. Please choose a valid path.";
+                ConfirmationWindow mConfirmationWindow(text, false);
+                mConfirmationWindow.setWindowTitle("Warning");
+                mConfirmationWindow.exec();
+                FlashStandbySlider->setValue(0);
+                return;
+            }
+
             dataFilename = (DataFilenameLineEdit->text()).toStdString();
 
             std::stringstream filename;
@@ -1923,7 +1929,7 @@ void MainWindow::onFlashStandbySlider(int state)
                      << dataFilename
                      << ".dat";
 
-            if (boost::filesystem::exists(filename.str()))
+            if (boost::filesystem::exists(filename.str())) // check if DAT file already exists
             {
                 QString text = "The file <b>" + QString::fromStdString(dataFilename) + ".dat</b> already exists in <b>" + QString::fromStdString(dataDirectory) + "/</b>. Do you wish to add data to the end of this file?";
                 ConfirmationWindow mConfirmationWindow(text);
@@ -2233,21 +2239,21 @@ void MainWindow::detectCurrentFrame(int imageIndex)
                                                               AOIEyeTemp,
                                                               mDetectionVariablesEyeTemp,
                                                               mDetectionParametersEyeTemp,
-                                                              mDataVariables,
-                                                              mDrawVariables,
+                                                              mDataVariablesEye,
+                                                              mDrawVariablesEye,
                                                               mAdvancedOptions);
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
     // Save data
 
-    mDataVariables.duration         = fp_ms.count();
-    mDataVariables.absoluteXPos     = mDataVariables.exactXPos;
-    mDataVariables.absoluteYPos     = mDataVariables.exactYPos;
-    vDataVariablesEye[imageIndex]   = mDataVariables;
+    mDataVariablesEye.duration         = fp_ms.count();
+    mDataVariablesEye.absoluteXPos     = mDataVariablesEye.exactXPos;
+    mDataVariablesEye.absoluteYPos     = mDataVariablesEye.exactYPos;
+    vDataVariablesEye[imageIndex]   = mDataVariablesEye;
 
     cv::Mat imageProcessed = imageRaw.clone();
-    drawAll(imageProcessed, mDrawVariables);
+    drawAll(imageProcessed, mDrawVariablesEye);
 
     detectionVariables mDetectionVariablesBeadNew;
 
@@ -2646,6 +2652,9 @@ void MainWindow::loadSettings(QString filename)
     dataDirectory                   = settings.value("DataDirectory",                "").toString().toStdString();
     dataDirectoryOffline            = settings.value("DataDirectoryOffline",         "").toString();
     dataFilename                    = settings.value("DataFilename",                "experiment_data").toString().toStdString();
+    Parameters::drawFlags.haar      = settings.value("DrawHaar",                  false).toBool();
+    Parameters::drawFlags.edge      = settings.value("DrawEdge",                  false).toBool();
+    Parameters::drawFlags.elps      = settings.value("DrawElps",                   true).toBool();
     trialIndexOffline               = settings.value("trialIndexOffline",             0).toInt();
     imageTotalOffline               = settings.value("imageTotalOffline",             0).toInt();
     flashThreshold                  = settings.value("FlashThreshold",              230).toInt();
@@ -2668,7 +2677,7 @@ void MainWindow::loadSettings(QString filename)
     SAVE_ASPECT_RATIO               = settings.value("SaveAspectRatio",             true).toBool();
     SAVE_CIRCUMFERENCE              = settings.value("SaveCircumference",           true).toBool();
     SAVE_POSITION                   = settings.value("SavePosition",                true).toBool();
-    SAVE_EYE_IMAGE                  = settings.value("SaveEyeImage",                true).toBool();
+    SAVE_EYE_IMAGE                  = settings.value("SaveEyeImage",                false).toBool();
     trialTimeLength                 = settings.value("TrialTimeLength",             1500).toInt();
 
     CameraHardwareGainAutoCheckBox ->setChecked(settings.value("GainAuto",   true).toBool());
@@ -2741,6 +2750,9 @@ void MainWindow::saveSettings(QString filename)
     settings.setValue("AOIBeadYPosRatio",       Parameters::beadAOIRatio.yPos);
     settings.setValue("DataDirectory",          QString::fromStdString(dataDirectory));
     settings.setValue("DataDirectoryOffline",   dataDirectoryOffline);
+    settings.setValue("DrawHaar",               Parameters::drawFlags.haar);
+    settings.setValue("DrawEdge",               Parameters::drawFlags.edge);
+    settings.setValue("DrawElps",               Parameters::drawFlags.elps);
     settings.setValue("GainAuto",               CameraHardwareGainAutoCheckBox ->checkState());
     settings.setValue("GainBoost",              CameraHardwareGainBoostCheckBox->checkState());
     settings.setValue("CamAOIHghtFraction",     camAOIRatio.hght);
@@ -2843,7 +2855,7 @@ void MainWindow::onSetBeadDetection(int state)
 
 void MainWindow::onSetOnlineProcessing(int state)
 {
-    if (Parameters::ONLINE_PROCESSING && !TRIAL_RECORDING)
+    if (Parameters::ONLINE_MODE && !TRIAL_RECORDING)
     {
         if (state) { SAVE_EYE_IMAGE = false; }
         else       { SAVE_EYE_IMAGE = true;  }
@@ -3113,7 +3125,7 @@ void MainWindow::onSetBeadAOIWdth(double ratio)
 {
     std::lock_guard<std::mutex> AOIBeadLock(Parameters::AOIBeadMutex);
     Parameters::beadAOIRatio.wdth = ratio;
-    Parameters::beadAOI.wdth = round(Parameters::camAOI.wdth * Parameters::beadAOIRatio.wdth);
+    Parameters::beadAOI.wdth      = round(Parameters::camAOI.wdth * Parameters::beadAOIRatio.wdth);
     if (Parameters::beadAOI.xPos + Parameters::beadAOI.wdth > Parameters::camAOI.wdth)
     {   Parameters::beadAOI.xPos = Parameters::camAOI.wdth - Parameters::beadAOI.wdth; }
 }
@@ -3124,7 +3136,7 @@ void MainWindow::onSetBeadAOIHght(double ratio)
     Parameters::beadAOIRatio.hght = ratio;
     Parameters::beadAOI.hght      = round(Parameters::camAOI.hght * Parameters::beadAOIRatio.hght);
     if (Parameters::beadAOI.yPos + Parameters::beadAOI.hght > Parameters::camAOI.hght)
-    {   Parameters::beadAOI.yPos = Parameters::camAOI.hght - Parameters::beadAOI.hght; }
+    {   Parameters::beadAOI.yPos = Parameters::camAOI.hght  - Parameters::beadAOI.hght; }
 }
 
 void MainWindow::onSetFlashAOIXPosLeft(int val) { flashAOILeft.xPos = val; }
@@ -3190,3 +3202,18 @@ void MainWindow::setCurvatureMeasurement(detectionParameters& mDetectionParamete
 void MainWindow::onSetSaveDataEdge (int state) { SAVE_DATA_EDGE  = state; }
 void MainWindow::onSetSaveDataFit  (int state) { SAVE_DATA_FIT   = state; }
 void MainWindow::onSetSaveDataExtra(int state) { SAVE_DATA_EXTRA = state; }
+
+double MainWindow::flashDetection(const cv::Mat& imgBGR)
+{
+    int imgSize = imgBGR.cols * imgBGR.rows;
+
+    if (imgSize > 0)
+    {
+        unsigned long long intensityTotal = 0;
+        cv::Mat img;
+        cv::cvtColor(imgBGR, img, cv::COLOR_BGR2GRAY);
+        uchar *ptr = img.data;
+        for (int iPixel = 0; iPixel < imgSize; iPixel++) { intensityTotal += ptr[iPixel]; }
+        return (intensityTotal / (double) imgSize);
+    } else { return 0; }
+}

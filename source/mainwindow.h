@@ -134,6 +134,8 @@ private:
     AOIProperties flashAOILeft;
     AOIProperties flashAOIRght;
 
+    double flashDetection(const cv::Mat&);
+
     double cameraFrameRate;
     double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
@@ -179,7 +181,6 @@ private:
     QLabel *FlashThresholdLabel;
     QLabel *OfflineImageFrameTextBox;
     QLineEdit *DataFilenameLineEdit;
-    QLineEdit *NameInputLineEdit;
     QLineEdit *TrialTimeLengthLineEdit;
 
     QSlider *CameraBlackLevelOffsetSlider;
@@ -282,8 +283,8 @@ private:
     std::vector<dataVariables> vDataVariablesEye;
     std::vector<dataVariables> vDataVariablesBead;
 
-    drawVariables mDrawVariables;
-    dataVariables mDataVariables;
+    drawVariables mDrawVariablesEye;
+    dataVariables mDataVariablesEye;
 
     drawVariables mDrawVariablesBead;
     dataVariables mDataVariablesBead;

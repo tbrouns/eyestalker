@@ -18,7 +18,7 @@
 
 bool Parameters::CAMERA_READY;
 bool Parameters::CAMERA_RUNNING;
-bool Parameters::ONLINE_PROCESSING;
+bool Parameters::ONLINE_MODE;
 
 AOIProperties Parameters::eyeAOI;
 AOIPropertiesDouble Parameters::eyeAOIRatio;

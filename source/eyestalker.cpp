@@ -2600,17 +2600,18 @@ std::vector<ellipseProperties> ellipseFitting(const detectionVariables& mDetecti
         
         if (edgeSetLength < fitMinEdgeLength * mEllipseProperties.circumference) { continue; } // minimum number of edge points required
         
-        // Size and shape filter
+        // Size and shape relative filter
         
         if (mEllipseProperties.circumference < mDetectionVariables.thresholdCircumferenceMin) { continue; }
         if (mEllipseProperties.circumference > mDetectionVariables.thresholdCircumferenceMax) { continue; }
         if (mEllipseProperties.aspectRatio   < mDetectionVariables.thresholdAspectRatioMin)   { continue; }
         if (mEllipseProperties.aspectRatio   > mDetectionVariables.thresholdAspectRatioMax)   { continue; }
 
-        // Size and shape combination filter
+        // Size and shape absolute filter
         
         double circumferenceUpperLimit = aspectRatioSlope * (mEllipseProperties.aspectRatio - 1) + mDetectionParameters.thresholdCircumferenceMax;
-        if (mEllipseProperties.circumference > circumferenceUpperLimit) { continue; } // no large ellipse
+        if (mEllipseProperties.circumference > circumferenceUpperLimit)                      { continue; } // no large ellipse
+        if (mEllipseProperties.aspectRatio   < mDetectionParameters.thresholdAspectRatioMin) { continue; } // no large deviations from circular shape
 
         // Calculate error between fit and every edge point
         
@@ -3540,21 +3541,6 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     mDrawVariables.ellipseCoefficients = mEllipseProperties.coefficients;
 
     return mDetectionVariablesNew; // use these variables for next frame
-}
-
-double flashDetection(const cv::Mat& imgBGR)
-{
-    int imgSize = imgBGR.cols * imgBGR.rows;
-    
-    if (imgSize > 0)
-    {
-        unsigned long long intensityTotal = 0;
-        cv::Mat img;
-        cv::cvtColor(imgBGR, img, cv::COLOR_BGR2GRAY);
-        uchar *ptr = img.data;
-        for (int iPixel = 0; iPixel < imgSize; iPixel++) { intensityTotal += ptr[iPixel]; }
-        return (intensityTotal / (double) imgSize);
-    } else { return 0; }
 }
 
 // Look-up tables

@@ -41,7 +41,7 @@ public:
 
     static bool CAMERA_READY;
     static bool CAMERA_RUNNING;
-    static bool ONLINE_PROCESSING;
+    static bool ONLINE_MODE;
 
     static double ellipseDrawOutlineWidth;
 
