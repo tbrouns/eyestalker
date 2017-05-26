@@ -37,12 +37,12 @@ const double fitMinEdgeLength = 0.30;
 const double scoreStepSize    = 0.20;
 const double aspectRatioSlope = 154;
 
+const double frameRateOffset = 1.0; // frequency that camera frame-rate should be within (in Hz)
+
 // Functions
 
 const double windowLengthFraction = 0.04;
 const int    windowLengthMin      = 5;
-
-const double thresholdModifier = 0.5;
 
 const double certaintyAsymptoteX = 0.50;
 const double certaintyAsymptoteY = 0.99;
@@ -51,6 +51,5 @@ const double certaintyReduction = 0.90;
 const double certaintyOffset    = 0.10;
 const double certaintyThreshold = 0.75;
 const double certaintyLatency   = 10.0; // turn into adjustable parameter.
-
 
 #endif

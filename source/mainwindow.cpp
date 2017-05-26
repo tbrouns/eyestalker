@@ -43,6 +43,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     TRIAL_RECORDING = false;
     FLASH_STANDBY   = false;
 
+    SET_FRAME_RATE = true;
+
     flashThresholdMin = 0;
 
     Parameters::ellipseDrawCrossSize    = 5;
@@ -452,6 +454,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraFrameRateDesiredSpinBox->setRange(0, 500);
     CameraFrameRateDesiredSpinBox->setValue(cameraFrameRateDesired);
     CameraFrameRateDesiredSpinBox->setAlignment(Qt::AlignRight);
+    QObject::connect(CameraFrameRateDesiredSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onSetCameraFrameRateDesired(int)));
+
+    QPushButton* CameraFrameRateButton = new QPushButton("Set");
+    QObject::connect(CameraFrameRateButton, SIGNAL(clicked(bool)), this, SLOT(onCalibrateFrameRate()));
 
     // Exposure
 
@@ -541,6 +547,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QHBoxLayout *CameraFrameRateDesiredLayout = new QHBoxLayout;
     CameraFrameRateDesiredLayout->addWidget(CameraFrameRateDesiredTextBox);
     CameraFrameRateDesiredLayout->addWidget(CameraFrameRateDesiredSpinBox);
+    CameraFrameRateDesiredLayout->addWidget(CameraFrameRateButton);
     CameraFrameRateDesiredLayout->addStretch();
 
     CameraParametersLayout->addLayout(CameraFrameRateDesiredLayout, 2, 1);
@@ -1288,23 +1295,43 @@ void MainWindow::onUpdateCameraImage()
 
                         // Increase pixel clock if desired frame-rate has not been reached
 
-                        int desiredFrameRate = CameraFrameRateDesiredSpinBox->value();
-
-                        if ((cameraPixelClock < CameraPixelClockSlider->maximum()) && (desiredFrameRate > cameraFrameRate))
+                        if (SET_FRAME_RATE)
                         {
-                            cameraPixelClock = cameraPixelClock + 1;
-                            CameraPixelClockSlider->setValue(cameraPixelClock);
+                            int desiredFrameRate = CameraFrameRateDesiredSpinBox->value();
 
-                            if (cameraFrameRate > desiredFrameRate)
+                            if (desiredFrameRate > cameraFrameRate + frameRateOffset)
                             {
-                                CameraFrameRateSlider->setDoubleValue(desiredFrameRate);
-                            }
-                        }
+                                if (cameraPixelClock < CameraPixelClockSlider->maximum())
+                                {
+                                    cameraPixelClock = cameraPixelClock + 1;
+                                    CameraPixelClockSlider->setValue(cameraPixelClock);
 
-                        if (desiredFrameRate < cameraFrameRate - 1.0)
-                        {
-                            cameraPixelClock = cameraPixelClock - 1;
-                            CameraPixelClockSlider->setValue(cameraPixelClock);
+                                    CameraFrameRateSlider->setDoubleValue(desiredFrameRate);
+                                }
+                                else
+                                {
+                                    CameraFrameRateSlider->setDoubleValue(CameraFrameRateSlider->maximum());
+                                    SET_FRAME_RATE = false; // frame-rate is accepted
+                                }
+                            }
+
+                            if (desiredFrameRate < cameraFrameRate - frameRateOffset) // frame-rate should be within 1 Hz
+                            {
+                                if (cameraPixelClock > CameraPixelClockSlider->minimum())
+                                {
+                                    cameraPixelClock = cameraPixelClock - 1;
+                                    CameraPixelClockSlider->setValue(cameraPixelClock);
+                                }
+                                else
+                                {
+                                    CameraFrameRateSlider->setDoubleValue(desiredFrameRate);
+                                }
+                            }
+
+                            if (desiredFrameRate >= cameraFrameRate - frameRateOffset && desiredFrameRate <= cameraFrameRate + frameRateOffset)
+                            {
+                                SET_FRAME_RATE = false; // frame-rate is accepted
+                            }
                         }
 
                         // For flash
@@ -1788,7 +1815,8 @@ void MainWindow::saveTrialData()
         std::stringstream filename;
         filename << dataDirectory
                  << "/"
-                 << dataFilename;
+                 << dataFilename
+                 << ".dat";
 
         std::ofstream file;
 
@@ -2855,15 +2883,8 @@ void MainWindow::onSetBeadDetection(int state)
 
 void MainWindow::onSetOnlineProcessing(int state)
 {
-    if (Parameters::ONLINE_MODE && !TRIAL_RECORDING)
-    {
-        if (state) { SAVE_EYE_IMAGE = false; }
-        else       { SAVE_EYE_IMAGE = true;  }
-    }
-    else
-    {
-        OnlineProcessingCheckBox->setChecked(false);
-    }
+    if (state) { SAVE_EYE_IMAGE = false; }
+    else       { SAVE_EYE_IMAGE = true;  }
 }
 
 void MainWindow::onResetFlashIntensity()
@@ -2898,6 +2919,16 @@ void MainWindow::onSetCameraFrameRate(double value)
     CameraExposureSlider->setDoubleRange(exposureRange[0], exposureRange[1]);
     CameraExposureSlider->setDoubleValue(exposureRange[1]);
     onSetCameraExposure(exposureRange[1]);
+}
+
+void MainWindow::onSetCameraFrameRateDesired(int value)
+{
+    cameraFrameRateDesired = value;
+}
+
+void MainWindow::onCalibrateFrameRate()
+{
+    SET_FRAME_RATE = true;
 }
 
 void MainWindow::onSetCameraExposure(double value)

@@ -124,6 +124,8 @@ private:
     bool PROCESSING_ALL_TRIALS;
     bool PROCESSING_ALL_EXPS;
 
+    bool SET_FRAME_RATE;
+
     char currentDate[80];
 
     AOIPropertiesDouble camAOIRatioLeft;
@@ -365,6 +367,7 @@ private slots:
 
     void onCombineData              ();
     void onSetCamAOI                ();
+    void onCalibrateFrameRate       ();
     void onCropAOI                  ();
     void onDetectAllExperiments     ();
     void onDetectAllFrames          ();
@@ -395,6 +398,7 @@ private slots:
     void onSetCameraBlackLevelOffset(int);
     void onSetCameraExposure        (double);
     void onSetCameraFrameRate       (double);
+    void onSetCameraFrameRateDesired(int);
     void onSetCameraGainBoost       (int);
     void onSetCameraHardwareGain    (int);
     void onSetCameraPixelClock      (int);
