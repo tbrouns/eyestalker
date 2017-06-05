@@ -173,11 +173,8 @@ struct detectionVariables
     double thresholdCircumferenceMax;
     double thresholdCircumferenceMin;
     double thresholdChangeAspectRatioUpper;
-    double thresholdChangeAspectRatioLower;
     double thresholdChangeCircumferenceUpper;
-    double thresholdChangeCircumferenceLower;
     double thresholdChangePositionUpper;
-    double thresholdChangePositionLower;
     double thresholdScoreEdge;
     double thresholdScoreFit;
     int windowLengthEdge;

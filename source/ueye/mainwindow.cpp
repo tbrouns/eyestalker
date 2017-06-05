@@ -14,7 +14,6 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-
 #include "mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
@@ -1647,7 +1646,8 @@ void MainWindow::onDialogueOpen()
                    "<b>UEye API:</b> <br><br> (c) 2016, IDS Imaging Advanced Systems GmbH, https://en.ids-imaging.com/<br><br>"
                    "<b>libusb:</b> <br><br> libusb is released under version 2.1 of the GNU Lesser General Public License (LGPL).<br>"
                    "http://libusb.info/ <br><br>"
-                   "<b>QDarkStyleSheet:</b>: Copyright (c) <2013-2014> <Colin Duquesnoy> Released under the MIT license. <br>";
+                   "<b>QDarkStyleSheet:</b> <br><br>"
+                   "Copyright (c) 2013-2014, Colin Duquesnoy. Released under the MIT license. <br>";
 
     ConfirmationWindow mConfirmationWindow(text, false);
     mConfirmationWindow.setWindowTitle("About EyeStalker");
@@ -2611,35 +2611,6 @@ void MainWindow::onCombineData()
 
 void MainWindow::loadSettings(QString filename)
 {
-    static const std::vector<double> parametersEye  = {0.005,   //  0. Gain average
-                                                       0.40,    //  1. Gain features
-                                                       0.25,    //  2. Gain certainty
-                                                       0.75,    //  3. Gain position
-                                                       4,       //  4. Canny blur level
-                                                       5,       //  5. Canny kernel size
-                                                       300.0,   //  6. Canny threshold low
-                                                       600.0,   //  7. Canny threshold high
-                                                       2.5,     //  8. Curvature offset
-                                                       0.05,    //  9. Ellipse edge fraction
-                                                       4,       // 10. Maximum number of edges
-                                                       0.60,    // 11. Maximum fit error
-                                                       12,      // 12. Glint size
-                                                       290,     // 13. Circumference max
-                                                       60,      // 14. Circumference min
-                                                       0.4,     // 15. Aspect ratio min
-                                                       0.12,    // 16. Circumference change threshold upper
-                                                       0.03,    // 17. Circumference change threshold lower
-                                                       0.09,    // 18. Aspect ratio  change threshold upper
-                                                       0.03,    // 19. Aspect ratio  change threshold lower
-                                                       6,       // 20. Displacement  change threshold upper
-                                                       3,       // 21. Displacement  change threshold lower
-                                                       0.30,    // 22. Score threshold edge
-                                                       0.10,    // 23. Score threshold fit
-                                                       0.60,    // 24. Score difference threshold edge
-                                                       0.10,    // 25. Score difference threshold fit
-                                                       7,       // 26. Edge window length
-                                                       6};      // 27. Maximum number of fits
-
     static const std::vector<double> parametersBead = {0.005,   //  0. Gain average
                                                        0.40,    //  1. Gain features
                                                        0.25,    //  2. Gain certainty

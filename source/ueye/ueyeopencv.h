@@ -19,9 +19,9 @@
 
 // Files
 
-#include "constants.h"
-#include "parameters.h"
-#include "structures.h"
+#include "../constants.h"
+#include "../parameters.h"
+#include "../structures.h"
 
 // Libraries
 

@@ -23,18 +23,19 @@
 
 // Files
 
-#include "confirmationwindow.h"
-#include "constants.h"
-#include "drawfunctions.h"
-#include "eyestalker.h"
-#include "parameters.h"
-#include "parameterwidget.h"
-#include "sliderdouble.h"
-#include "structures.h"
-#include "qimageopencv.h"
+#include "../confirmationwindow.h"
+#include "../constants.h"
+#include "../drawfunctions.h"
+#include "../eyestalker.h"
+#include "../parameters.h"
+#include "../parameterwidget.h"
+#include "../sliderdouble.h"
+#include "../structures.h"
+#include "../qimageopencv.h"
+#include "../variablewidget.h"
+
 #include "qwtplotwidget.h"
 #include "ueyeopencv.h"
-#include "variablewidget.h"
 
 // Standard Template
 

@@ -24,7 +24,38 @@
 #endif
 #endif
 
+#include <vector>
+
 // Parameter initial values
+
+static const std::vector<double> parametersEye  = {0.005,   //  0. Gain average
+                                                   0.40,    //  1. Gain features
+                                                   0.25,    //  2. Gain certainty
+                                                   0.75,    //  3. Gain position
+                                                   4,       //  4. Canny blur level
+                                                   5,       //  5. Canny kernel size
+                                                   300.0,   //  6. Canny threshold low
+                                                   600.0,   //  7. Canny threshold high
+                                                   2.5,     //  8. Curvature offset
+                                                   0.05,    //  9. Ellipse edge fraction
+                                                   4,       // 10. Maximum number of edges
+                                                   0.60,    // 11. Maximum fit error
+                                                   12,      // 12. Glint size
+                                                   290,     // 13. Circumference max
+                                                   60,      // 14. Circumference min
+                                                   0.4,     // 15. Aspect ratio min
+                                                   0.12,    // 16. Circumference change threshold upper
+                                                   0.03,    // 17. Circumference change threshold lower
+                                                   0.09,    // 18. Aspect ratio  change threshold upper
+                                                   0.03,    // 19. Aspect ratio  change threshold lower
+                                                   6,       // 20. Displacement  change threshold upper
+                                                   3,       // 21. Displacement  change threshold lower
+                                                   0.30,    // 22. Score threshold edge
+                                                   0.10,    // 23. Score threshold fit
+                                                   0.60,    // 24. Score difference threshold edge
+                                                   0.10,    // 25. Score difference threshold fit
+                                                   7,       // 26. Edge window length
+                                                   6};      // 27. Maximum number of fits
 
 const double initialAspectRatio = 0.9;
 const double initialCurvature   =  30;
