@@ -1,5 +1,9 @@
-# EyeStalker (UEye version)
+# EyeStalker: robust video-based eye tracking using recursive estimation of pupil characteristics
 
-This repository contains source code and release version of the EyeStalker application for users who wish to use the program in conjuction with an UEye USB camera. 
+![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
 
-Other users should visit https://github.com/tbrouns/eyestalker for the generic version of the program. 
+Link to published paper. 
+
+
+
+Copyright (C) 2017 Terence Brouns 
