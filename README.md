@@ -2,6 +2,10 @@
 
 Video-based eye tracking is a valuable technique in many research fields. Numerous open-source eye tracking algorithms have been developed in recent years, primarily designed for general application with many different camera types. However, these algorithms do not capitalize on the high frame rate of eye tracking cameras often employed in psychophysical studies. We present a pupil detection method that utilizes this high-speed property to obtain reliable predictions through recursive estimation about certain pupil characteristics in successive camera frames. These predictions are subsequently used to carry out novel image segmentation and classification routines to improve pupil detection performance. Based on results from hand-labelled eye images, our approach was found to have a greater detection rate, accuracy and speed compared to other recently published open-source pupil detection algorithms.
 
+<b>Paper</b>
+
+Will be added soon. 
+
 <b>GUI Layout</b>
 
 ![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
@@ -44,7 +48,7 @@ If you select *Box* and *Edges*, the Haar-like feature detector and Canny edges 
 
 Pressing the *Quit* button will ensure that a *config_user.ini* file is saved in the same directory as the AppImage, which contains your current parameter configuration. This INI file is automatically loaded next time you start the application. To reset all parameters you can remove the INI file and restart the application or press the *Reset parameters* button. 
 
-More instructions, plus detailed methodology paper, will be added soon!
+More details will be added soon.
 
 <b>Citation</b>
 
