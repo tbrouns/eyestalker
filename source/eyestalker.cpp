@@ -97,7 +97,7 @@ inline double gaussian(double x, double x0, double sigma)
 double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::vector<double>& featureValues, bool USE_LENGTH, bool USE_CERTAINTY)
 {   
     // Circumference, radius, radius variance, curvature, gradient, intensity, beta
-    static const std::vector<double> weightVector = { 0.7072,   0.8594,   1.1492,   1.3682,   0.6608,   1.3662, 0.9316};
+    static const std::vector<double> weightVector = { 0.71, 0.86, 1.15, 1.37, 0.66, 1.37, 0.93};
 
     // Circumference, radius, radius variance, curvature, gradient, intensity
     static const std::vector<double> sigmaVector  = {0.59913, 0.057042, 0.005819, 0.057370, 5.281300, 9.904200};
@@ -365,13 +365,12 @@ inline double haarFeatureResponse(int x, int y, const std::vector<unsigned int>&
     return response;
 }
 
-AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const  AOIProperties& searchAOI, AOIProperties& haarAOI, const AOIProperties& glintAOI)
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const double responsePrediction, const  AOIProperties& searchAOI, AOIProperties& haarAOI, const AOIProperties& glintAOI)
 {
-    double responseMax = -std::numeric_limits<double>::max(); // set to minimum double value;
+    double diffMin = std::numeric_limits<double>::max(); // set to maximum double value;
     
     haarAOI.xPos = 0;
     haarAOI.yPos = 0;
-    
     
     int wdth = searchAOI.wdth - haarAOI.wdth;
     int hght = searchAOI.hght - haarAOI.hght;
@@ -382,11 +381,13 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const  AOIPr
         {
             double response = haarFeatureResponse(x, y, I, searchAOI, haarAOI, glintAOI);
 
-            if (response > responseMax)
+            double diff = std::abs(responsePrediction - response);
+
+            if (diff < diffMin)
             {
                 haarAOI.xPos = x;
                 haarAOI.yPos = y;
-                responseMax = response;
+                diffMin = diff;
             }
         }
     }
@@ -2315,7 +2316,7 @@ std::vector<int> edgeClassification(const detectionVariables& mDetectionVariable
     }
 }
 
-std::vector<double> EllipseRotationTransformation(const std::vector<double>& c)
+std::vector<double> ellipseRotationTransformation(const std::vector<double>& c)
 {
     double A = c[0];
     double B = c[1];
@@ -2440,7 +2441,7 @@ ellipseProperties fitEllipse(std::vector<int> edgePointIndices, const AOIPropert
     
     // calculate size, shape and position of ellipse
     
-    std::vector<double> ellipseParameters = EllipseRotationTransformation(ellipseFitCoefficients);
+    std::vector<double> ellipseParameters = ellipseRotationTransformation(ellipseFitCoefficients);
     
     double semiMajor = ellipseParameters[0];
     double semiMinor = ellipseParameters[1];
@@ -2946,7 +2947,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     glintAOIResized.xPos = searchAOIResized.xPos + glintAOIResized.xPos;
     glintAOIResized.yPos = searchAOIResized.yPos + glintAOIResized.yPos;
 
-    haarAOIResized = detectPupilApprox(integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+    haarAOIResized = detectPupilApprox(integralImage, mDetectionVariables.predictedHaarResponse, searchAOIResized, haarAOIResized, glintAOIResized);
 
     // Upsample to original size
 
@@ -2971,24 +2972,26 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     haarAOI.yPos = searchAOI.yPos + haarAOI.yPos;
 
     { // Update position prediction using Haar-like feature detector response
-        int predictionXPos = round(sizeFactorDown * (mDetectionVariables.predictedXPos - 0.5 * (haarAOI.wdth - 1) - searchAOI.xPos));
-        int predictionYPos = round(sizeFactorDown * (mDetectionVariables.predictedYPos - 0.5 * (haarAOI.hght - 1) - searchAOI.yPos));
-        if (predictionXPos < 0) { predictionXPos = 0; }
-        if (predictionYPos < 0) { predictionYPos = 0; }
-        double responseMaximum    = haarFeatureResponse(haarAOIResized.xPos, haarAOIResized.yPos, integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
-        double responsePrediction = haarFeatureResponse(     predictionXPos,      predictionYPos, integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+
+//        int predictionXPos = round(sizeFactorDown * (mDetectionVariables.predictedXPos - 0.5 * (haarAOI.wdth - 1) - searchAOI.xPos));
+//        int predictionYPos = round(sizeFactorDown * (mDetectionVariables.predictedYPos - 0.5 * (haarAOI.hght - 1) - searchAOI.yPos));
+//        if (predictionXPos < 0) { predictionXPos = 0; }
+//        if (predictionYPos < 0) { predictionYPos = 0; }
+
+//        double responsePrediction = haarFeatureResponse(     predictionXPos,      predictionYPos, integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
+
+//        double responseDeltaPrediction = mDetectionVariables.predictedHaarResponse - std::abs(mDetectionVariables.predictedHaarResponse - responsePrediction);
+
+//        double responseFraction = 0;
+//        if (responseDeltaPrediction > responseDeltaMaximum || responseDeltaMaximum == 0)
+//        { responseFraction = 1; }
+//        else
+//        { responseFraction = responseDeltaPrediction / responseDeltaMaximum; }
+
+        responseFraction = 1;
 
         double AOIXPos   = haarAOI.xPos + 0.5 * (haarAOI.wdth - 1); // centre of haar-like detector
         double AOIYPos   = haarAOI.yPos + 0.5 * (haarAOI.hght - 1);
-
-        double responseDeltaPrediction = mDetectionVariables.predictedHaarResponse - std::abs(mDetectionVariables.predictedHaarResponse - responsePrediction);
-        double responseDeltaMaximum    = mDetectionVariables.predictedHaarResponse - std::abs(mDetectionVariables.predictedHaarResponse - responseMaximum);
-
-        double responseFraction = 0;
-        if (responseDeltaPrediction > responseDeltaMaximum || responseDeltaMaximum == 0)
-        { responseFraction = 1; }
-        else
-        { responseFraction = responseDeltaPrediction / responseDeltaMaximum; }
 
         mDetectionVariables.predictedXPos = AOIXPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedXPos - AOIXPos);
         mDetectionVariables.predictedYPos = AOIYPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedYPos - AOIYPos);
@@ -3369,8 +3372,8 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         double meanWidth         = meanCircumference / M_PI;
         double meanHeight        = meanCircumference / M_PI;
         double meanIntensity     = initialIntensity;
-        double meanGradient      = 0;
-        double meanHaarResponse  = 0;
+        double meanGradient      = initialGradient;
+        double meanHaarResponse  = initialHaarResponse;
         
         double curvatureMax = getCurvatureUpperLimit(meanCircumference, meanAspectRatio, mDetectionVariables.windowLengthEdge);
         double curvatureMin = getCurvatureLowerLimit(meanCircumference, meanAspectRatio, mDetectionVariables.windowLengthEdge);

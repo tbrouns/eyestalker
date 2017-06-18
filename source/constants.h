@@ -57,9 +57,11 @@ static const std::vector<double> parametersEye  = {0.005,   //  0. Gain average
                                                    7,       // 26. Edge window length
                                                    6};      // 27. Maximum number of fits
 
-const double initialAspectRatio = 0.9;
-const double initialCurvature   =  30;
-const double initialIntensity   =  60;
+const double initialAspectRatio  = 0.9;
+const double initialCurvature    =  30;
+const double initialIntensity    =  60;
+const double initialHaarResponse =   0;
+const double initialGradient     =   0;
 
 // Other
 

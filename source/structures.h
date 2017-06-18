@@ -107,6 +107,7 @@ struct detectionParameters
     double cannyThresholdLow;
     int    cannyBlurLevel;
     int    cannyKernelSize;
+    double cameraFrameRate;
     int    glintWdth;
     double curvatureOffset;
     double thresholdAspectRatioMin;
