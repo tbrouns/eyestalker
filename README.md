@@ -10,4 +10,15 @@ If you use this software, please cite:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.810495.svg)](https://doi.org/10.5281/zenodo.810495)
 
+or:
+
+@misc{terence_brouns_2017_810495,
+  author       = {Terence Brouns},
+  title        = {tbrouns/eyestalker: Linux release v.1.0.1},
+  month        = jun,
+  year         = 2017,
+  doi          = {10.5281/zenodo.810495},
+  url          = {https://doi.org/10.5281/zenodo.810495}
+}
+
 Copyright (C) 2017 Terence Brouns 
