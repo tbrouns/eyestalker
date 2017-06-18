@@ -6,19 +6,10 @@ Video-based eye tracking is a valuable technique in many research fields. Numero
 
 ![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
 
-If you use this software, please cite:
+If you use this software, please find the citation here:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.810495.svg)](https://doi.org/10.5281/zenodo.810495)
 
-or:
-
-@misc{terence_brouns_2017_810495,
-  author       = {Terence Brouns},
-  title        = {tbrouns/eyestalker: Linux release v.1.0.1},
-  month        = jun,
-  year         = 2017,
-  doi          = {10.5281/zenodo.810495},
-  url          = {https://doi.org/10.5281/zenodo.810495}
-}
+Or directly for BibTex: https://zenodo.org/record/810495/export/hx
 
 Copyright (C) 2017 Terence Brouns 
