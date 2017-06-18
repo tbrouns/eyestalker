@@ -58,4 +58,16 @@ If you use this software, please find the citation here:
 
 Or directly for BibTex: https://zenodo.org/record/810494/export/hx
 
+<b>Third-party libraries</b>
+
+EyeStalker has been built using:
+
+* Qt, cross-platform application framework (The Qt Company, https://www.qt.io/, version 5)
+* OpenCV, open-source computer vision library (Intel Corporation, Itseez Inc., http://opencv.org/)
+* Eigen, C++ template library for linear algebra (http://eigen.tuxfamily.org)
+* Boost, peer-reviewed portable C++ source libraries (http://www.boost.org/).
+* QDarkStyleSheet, a dark stylesheet for Qt applications (https://github.com/ColinDuquesnoy/QDarkStyleSheet)
+
+EyeStalker been deployed using *linuxdeployqt*, available from: https://github.com/probonopd/linuxdeployqt
+
 Copyright (C) 2017 Terence Brouns 
