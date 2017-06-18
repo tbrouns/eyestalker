@@ -1,5 +1,13 @@
-# EyeStalker (UEye version)
+# EyeStalker: robust video-based eye tracking using recursive estimation of pupil characteristics
 
-This repository contains source code and release version of the EyeStalker application for users who wish to use the program in conjuction with an UEye USB camera. 
+Video-based eye tracking is a valuable technique in many research fields. Numerous open-source eye tracking algorithms have been developed in recent years, primarily designed for general application with many different camera types. However, these algorithms do not capitalize on the high frame rate of eye tracking cameras often employed in psychophysical studies. We present a pupil detection method that utilizes this high-speed property to obtain reliable predictions through recursive estimation about certain pupil characteristics in successive camera frames. These predictions are subsequently used to carry out novel image segmentation and classification routines to improve pupil detection performance. Based on results from hand-labelled eye images, our approach was found to have a greater detection rate, accuracy and speed compared to other recently published open-source pupil detection algorithms.
 
-Other users should visit https://github.com/tbrouns/eyestalker for the generic version of the program. 
+<b>GUI</b>
+
+![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
+
+Link to published paper. 
+
+
+
+Copyright (C) 2017 Terence Brouns 
