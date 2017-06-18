@@ -8,8 +8,8 @@ Video-based eye tracking is a valuable technique in many research fields. Numero
 
 If you use this software, please find the citation here:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.810495.svg)](https://doi.org/10.5281/zenodo.810495)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.810494.svg)](https://doi.org/10.5281/zenodo.810494)
 
-Or directly for BibTex: https://zenodo.org/record/810495/export/hx
+Or directly for BibTex: https://zenodo.org/record/810494/export/hx
 
 Copyright (C) 2017 Terence Brouns 
