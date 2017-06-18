@@ -6,6 +6,8 @@ Video-based eye tracking is a valuable technique in many research fields. Numero
 
 Will be added soon. 
 
+Novel hand-labelled pupil detection dataset of 5000 images from 12 participants, as mentioned in paper, can be downloaded from [here](https://drive.google.com/open?id=0Bw57olSwQ4EbUWV5ajNKeG93NEk).
+
 <b>GUI Layout</b>
 
 ![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
