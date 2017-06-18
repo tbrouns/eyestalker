@@ -12,4 +12,6 @@ If you use this software, please find the citation here:
 
 Or directly for BibTex: https://zenodo.org/record/810494/export/hx
 
+Manual and more details added soon!
+
 Copyright (C) 2017 Terence Brouns 
