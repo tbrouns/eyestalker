@@ -18,20 +18,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    // Get current date
-
-    time_t rawtime;
-    struct tm * timeinfo;
-
-    time (&rawtime);
-    timeinfo = localtime(&rawtime);
-
-    strftime(currentDate, 80, "%Y_%m_%d", timeinfo);
-
     // Initialize default values
-
-    APP_EXIT    = false;
-    APP_RUNNING = true;
 
     Parameters::ellipseDrawCrossSize    = 5;
     Parameters::ellipseDrawOutlineWidth = 0.032;
@@ -39,10 +26,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     guiUpdateFrequency = 30;
 
     mParameterWidgetEye  = new ParameterWidget;
-    mParameterWidgetBead = new ParameterWidget;
 
     mVariableWidgetEye  = new VariableWidget;
-    mVariableWidgetBead = new VariableWidget;
 
     Parameters::eyeAOIRatio.xPos = 0.0;
     Parameters::eyeAOIRatio.yPos = 0.0;
@@ -53,9 +38,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     camImageHght = 200;
     camImageWdth = 400; // size of image in widget
-
-    eyeAOIHghtMin = 75;
-    eyeAOIWdthMin = 100;
 
     // Offline mode
 
@@ -126,6 +108,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     QPushButton *ResetPushButton = new QPushButton("Reset parameters");
     QObject::connect(ResetPushButton, SIGNAL(clicked()), this, SLOT(onResetParameters()));
+
+    QLabel *CameraFrameRateTextBox = new QLabel;
+    CameraFrameRateTextBox->setText("<b>Frame-rate (Hz):</b>");
+
+    CameraFrameRateSpinBox = new QDoubleSpinBox;
+    CameraFrameRateSpinBox->setDecimals(1);
+    CameraFrameRateSpinBox->setRange(30, 1000);
+    CameraFrameRateSpinBox->setValue(cameraFrameRate);
+
+    QObject::connect(CameraFrameRateSpinBox, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCameraFrameRate(double)));
+
+    QHBoxLayout* CameraFrameRateLayout = new QHBoxLayout;
+    CameraFrameRateLayout->addWidget(CameraFrameRateTextBox);
+    CameraFrameRateLayout->addWidget(CameraFrameRateSpinBox);
 
     /////////////////// Offline mode ///////////////////////
 
@@ -218,10 +214,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QWidget *CameraSettings = new QWidget;
     QGridLayout* CameraOutputLayout = new QGridLayout(CameraSettings);
 
-    CameraOutputLayout->addWidget(CamQImage,           0, 1, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(OfflineModeWidget,   1, 1, Qt::AlignCenter);
-    CameraOutputLayout->addLayout(DrawFunctionsLayout, 2, 1, Qt::AlignCenter);
-    CameraOutputLayout->addWidget(ResetPushButton,     3, 1, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(CamQImage,             0, 1, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(OfflineModeWidget,     1, 1, Qt::AlignCenter);
+    CameraOutputLayout->addLayout(CameraFrameRateLayout, 2, 1 ,Qt::AlignCenter);
+    CameraOutputLayout->addLayout(DrawFunctionsLayout,   3, 1, Qt::AlignCenter);
+    CameraOutputLayout->addWidget(ResetPushButton,       4, 1, Qt::AlignCenter);
 
     CameraOutputLayout->setColumnStretch(0, 1);
     CameraOutputLayout->setColumnStretch(3, 1);
@@ -378,6 +375,8 @@ void MainWindow::resetVariablesHard(detectionVariables& mDetectionVariables, con
     mDetectionVariables.certaintyAverages      = 0;
     mDetectionVariables.certaintyAveragesPrime = 0;
 
+    cameraFrameRate = 250;
+
     resetVariablesSoft(mDetectionVariables, mDetectionParameters, mAOI);
 }
 
@@ -466,13 +465,6 @@ int MainWindow::getCurrentTime()
     return td.total_milliseconds(); // return time of day in milliseconds
 }
 
-void MainWindow::onDirectorySelect()
-{
-    QString directory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    DataDirectoryTextBox->setText(directory);
-    dataDirectory = directory.toStdString();
-}
-
 void MainWindow::onDialogueOpen()
 {
     QString text = "EyeStalker: robust video-based eye tracking <br> <br>"
@@ -504,12 +496,6 @@ void MainWindow::onDialogueOpen()
     ConfirmationWindow mConfirmationWindow(text, false);
     mConfirmationWindow.setWindowTitle("About EyeStalker");
     mConfirmationWindow.exec();
-}
-
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-    if      (event->key() == Qt::Key_F8) { FlashStandbySlider->setValue(1); }
-    else if (event->key() == Qt::Key_F5) { FlashStandbySlider->setValue(0); }
 }
 
 void MainWindow::updateAOIx()
@@ -799,6 +785,8 @@ void MainWindow::detectCurrentFrame(int imageIndex)
         mDetectionVariablesEyeTemp  = vDetectionVariablesEye[imageIndex];
         mDetectionParametersEyeTemp = mParameterWidgetEye->getStructure();
 
+        mDetectionParametersEyeTemp.cameraFrameRate = cameraFrameRate;
+
         Parameters::camAOI.wdth = imageRaw.cols;
         Parameters::camAOI.hght = imageRaw.rows;
 
@@ -984,7 +972,6 @@ void MainWindow::onSaveTrialData()
 
         if (timeMatrix.size() > 0) { file << std::setw(3) << std::setfill('0') << timeMatrix[trialIndexOffline][0] << ";"; } // trial index
         file << imageTotalOffline << ";";  // data samples
-        file << cameraFrameRate   << ";";  // sampling rate
         if (timeMatrix.size() > 0) { file << (int) timeMatrix[trialIndexOffline][1] << ";"; } // system clock time
 
         file << std::fixed;
@@ -1078,18 +1065,15 @@ void MainWindow::onSaveTrialData()
 
 void MainWindow::onCombineData()
 {
-    dataFilename = (DataFilenameLineEdit->text()).toStdString();
     std::stringstream fileNameWriteSS;
     fileNameWriteSS << dataDirectoryOffline.toStdString()
-                    << "/"
-                    << dataFilename
-                    << ".dat";
+                    << "/combined_data.dat";
 
     std::string fileNameWrite = fileNameWriteSS.str();
 
     if (boost::filesystem::exists(fileNameWrite))
     {
-        QString text = "The file <b>" + QString::fromStdString(dataFilename) + ".dat</b> already exists in <b>" + dataDirectoryOffline + "/</b>. Do you wish to add data to the end of this file?";
+        QString text = "The file <b>combined_data.dat</b> already exists in <b>" + dataDirectoryOffline + "/</b>. Do you wish to add data to the end of this file?";
         ConfirmationWindow mConfirmationWindow(text);
         mConfirmationWindow.setWindowTitle("Please select option");
 
@@ -1172,6 +1156,7 @@ detectionParameters MainWindow::loadParameters(QString filename, QString prefix,
     mDetectionParameters.thresholdScoreDiffFit              = settings.value(prefix + "ScoreThresholdDiffFit",          parameters[25]).toDouble();
     mDetectionParameters.windowLengthEdge                   = settings.value(prefix + "WindowLengthEdge",               parameters[26]).toDouble();
     mDetectionParameters.fitMaximum                         = settings.value(prefix + "FitMaximum",                     parameters[27]).toDouble();
+    cameraFrameRate                                         = settings.value(prefix + "CameraFrameRate",                           250).toDouble();
 
     return mDetectionParameters;
 }
@@ -1220,6 +1205,7 @@ void MainWindow::saveParameters(QString filename, QString prefix, detectionParam
     settings.setValue(prefix + "ScoreThresholdDiffEdge",    mDetectionParameters.thresholdScoreDiffEdge);
     settings.setValue(prefix + "ScoreThresholdDiffFit",     mDetectionParameters.thresholdScoreDiffFit);
     settings.setValue(prefix + "WindowLengthEdge",          mDetectionParameters.windowLengthEdge);
+    settings.setValue(prefix + "CameraFramerRate",          cameraFrameRate);
 }
 
 void MainWindow::onResetParameters()
@@ -1257,3 +1243,5 @@ void MainWindow::setCurvatureMeasurement(detectionParameters& mDetectionParamete
 void MainWindow::onSetSaveDataEdge (int state) { SAVE_DATA_EDGE  = state; }
 void MainWindow::onSetSaveDataFit  (int state) { SAVE_DATA_FIT   = state; }
 void MainWindow::onSetSaveDataExtra(int state) { SAVE_DATA_EXTRA = state; }
+
+void MainWindow::onSetCameraFrameRate(double val) { cameraFrameRate = val; }

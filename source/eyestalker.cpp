@@ -100,7 +100,9 @@ double calculateScoreTotal(const detectionVariables& mDetectionVariables, std::v
     static const std::vector<double> weightVector = { 0.71, 0.86, 1.15, 1.37, 0.66, 1.37, 0.93};
 
     // Circumference, radius, radius variance, curvature, gradient, intensity
-    static const std::vector<double> sigmaVector  = {0.59913, 0.057042, 0.005819, 0.057370, 5.281300, 9.904200};
+    std::vector<double> sigmaVector  = {0.59913, 0.057042, 0.005819, 0.057370, 5.281300, 9.904200};
+
+    std::transform(sigmaVector.begin(), sigmaVector.end(), sigmaVector.begin(), std::bind1st(std::multiplies<double>(), mDetectionVariables.frameRateFactor));
 
     for (int i = 0, vSize = featureValues.size(); i < vSize; i++) // check for NaNs or Infs
     {
@@ -365,9 +367,9 @@ inline double haarFeatureResponse(int x, int y, const std::vector<unsigned int>&
     return response;
 }
 
-AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const double responsePrediction, const  AOIProperties& searchAOI, AOIProperties& haarAOI, const AOIProperties& glintAOI)
+AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const  AOIProperties& searchAOI, AOIProperties& haarAOI, const AOIProperties& glintAOI)
 {
-    double diffMin = std::numeric_limits<double>::max(); // set to maximum double value;
+    double responseMax = -std::numeric_limits<double>::max(); // set to maximum double value;
     
     haarAOI.xPos = 0;
     haarAOI.yPos = 0;
@@ -381,13 +383,11 @@ AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const double
         {
             double response = haarFeatureResponse(x, y, I, searchAOI, haarAOI, glintAOI);
 
-            double diff = std::abs(responsePrediction - response);
-
-            if (diff < diffMin)
+            if (response > responseMax)
             {
                 haarAOI.xPos = x;
                 haarAOI.yPos = y;
-                diffMin = diff;
+                responseMax  = response;
             }
         }
     }
@@ -2666,11 +2666,11 @@ std::vector<int> ellipseFitFilter(const detectionVariables& mDetectionVariables,
     static const double weightAngle         = 1.50;
     static const double weightRho           = 0.75;
 
-    static const double sigmaAspectRatio   = 0.0103880;
-    static const double sigmaCircumference = 0.0051725;
-    static const double sigmaLength        = 0.2079400;
+    static const double sigmaAspectRatio   = 0.0103880 * mDetectionVariables.frameRateFactor;
+    static const double sigmaCircumference = 0.0051725 * mDetectionVariables.frameRateFactor;
+    static const double sigmaLength        = 0.2079400 * mDetectionVariables.frameRateFactor;
     static const double sigmaError         = 0.0844150;
-    static const double sigmaAngle         = 0.0586360;
+    static const double sigmaAngle         = 0.0586360 * mDetectionVariables.frameRateFactor;
     
     int numFits = vEllipseProperties.size();
 
@@ -2872,6 +2872,10 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
         mDetectionVariables.predictedWidth         = mDetectionVariables.averageWidth;
     }
 
+    // Frame-rate factor. Some parameters need to be rescaled depending on sampling rate. We use 250 Hz reference value
+
+    mDetectionVariables.frameRateFactor = 250 / mDetectionParameters.cameraFrameRate;
+
     // Define search area
 
     double searchAOIOffset = mDetectionVariables.thresholdChangePositionUpper + mDetectionVariables.predictedCircumference * mDetectionVariables.thresholdChangeCircumferenceUpper / (2 * M_PI);
@@ -2947,7 +2951,7 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
     glintAOIResized.xPos = searchAOIResized.xPos + glintAOIResized.xPos;
     glintAOIResized.yPos = searchAOIResized.yPos + glintAOIResized.yPos;
 
-    haarAOIResized = detectPupilApprox(integralImage, mDetectionVariables.predictedHaarResponse, searchAOIResized, haarAOIResized, glintAOIResized);
+    haarAOIResized = detectPupilApprox(integralImage, searchAOIResized, haarAOIResized, glintAOIResized);
 
     // Upsample to original size
 
@@ -2988,13 +2992,14 @@ detectionVariables eyeStalker(const cv::Mat& imageOriginalBGR,
 //        else
 //        { responseFraction = responseDeltaPrediction / responseDeltaMaximum; }
 
-        responseFraction = 1;
-
         double AOIXPos   = haarAOI.xPos + 0.5 * (haarAOI.wdth - 1); // centre of haar-like detector
         double AOIYPos   = haarAOI.yPos + 0.5 * (haarAOI.hght - 1);
 
-        mDetectionVariables.predictedXPos = AOIXPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedXPos - AOIXPos);
-        mDetectionVariables.predictedYPos = AOIYPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedYPos - AOIYPos);
+//        mDetectionVariables.predictedXPos = AOIXPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedXPos - AOIXPos);
+//        mDetectionVariables.predictedYPos = AOIYPos + mDetectionVariables.certaintyPosition * responseFraction * (mDetectionVariables.predictedYPos - AOIYPos);
+
+        mDetectionVariables.predictedXPos = AOIXPos + mDetectionVariables.certaintyPosition * (mDetectionVariables.predictedXPos - AOIXPos);
+        mDetectionVariables.predictedYPos = AOIYPos + mDetectionVariables.certaintyPosition * (mDetectionVariables.predictedYPos - AOIYPos);
     }
 
     // Create new AOI for Canny edge deteciton

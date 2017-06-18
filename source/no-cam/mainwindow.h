@@ -113,175 +113,65 @@ public:
 
 private:
 
-    bool APP_EXIT;
-    bool APP_RUNNING;
-    bool TRIAL_RECORDING;
-    bool FLASH_STANDBY;
     bool OFFLINE_SAVE_DATA;
     bool PROCESSING_ALL_IMAGES;
     bool PROCESSING_ALL_TRIALS;
     bool PROCESSING_ALL_EXPS;
 
-    bool SET_FRAME_RATE;
-
-    char currentDate[80];
-
-    AOIPropertiesDouble camAOIRatioLeft;
-    AOIPropertiesDouble camAOIRatioRght;
-
-    AOIProperties flashAOI;
-    AOIProperties flashAOILeft;
-    AOIProperties flashAOIRght;
-
-    double flashDetection(const cv::Mat&);
-
-    double cameraFrameRate;
-    double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
-    double relativeTime;       // in ms
     std::vector<std::vector<double>> timeMatrix;
-    int cameraAOIHghtMax;
-    int cameraAOIHghtMin;
-    int cameraAOIHghtStepSize;
-    int cameraAOIWdthMax;
-    int cameraAOIWdthMin;
-    int cameraAOIWdthStepSize;
-    int cameraSubSamplingFactor;
     int camImageHght;
     int camImageWdth;
-    int cameraFrameRateDesired;
-    int cameraPixelClock;
     int trialIndexOffline;
     int trialTotalOffline;
     int imageIndexOffline;
     int imageTotalOffline;
-    int eyeAOIHghtMin;
-    int eyeAOIWdthMin;
-    int eyeImageHght;
-    int eyeImageWdth;
-    int flashThreshold;
-    double flashThresholdMin;
-    int frameCount;
     int getCurrentTime();
-    int trialFrameTotal;
-    int trialStartTime;
-    int trialTimeLength;
 
     QImageOpenCV *CamQImage;
-    QLabel *CameraBlackLevelOffsetLabel;
-    QLabel *CameraExposureLabel;
-    QLabel *CameraFrameRateLabel;
-    QLabel *CameraHardwareGainLabel;
-    QLabel *CameraPixelClockLabel;
-    QLabel *DataAnalysisTitleTextBox;
-    QLabel *DataDirectoryTextBox;
-    QLabel *FlashStandbyLabel;
-    QLabel *FlashThresholdLabel;
-    QLabel *OfflineImageFrameTextBox;
-    QLineEdit *DataFilenameLineEdit;
-    QLineEdit *TrialTimeLengthLineEdit;
 
-    QSlider *CameraBlackLevelOffsetSlider;
-    QSlider *CameraHardwareGainSlider;
-    QSlider *CameraPixelClockSlider;
-    QSlider *ExperimentEyeVideoSlider;
-    QSlider *FlashThresholdSlider;
-    QSlider *FlashStandbySlider;
-    QSlider *OfflineImageSlider;
-    QSlider *OfflineTrialSlider;
-    QSpinBox *CameraFrameRateDesiredSpinBox;
-    QSpinBox *OfflineTrialSpinBox;
-    QSpinBox *TrialIndexSpinBox;
+    QLabel      *OfflineImageFrameTextBox;
+    QSlider     *OfflineImageSlider;
+    QSlider     *OfflineTrialSlider;
+    QSpinBox    *OfflineTrialSpinBox;
+
     QString dataDirectoryOffline;
+
+    QDoubleSpinBox *CameraFrameRateSpinBox;
+//    SliderDouble  *CameraFrameRateSpinBox;
+    double         cameraFrameRate;
 
     QString LastUsedSettingsFileName;
     QTabWidget *MainTabWidget;
-    QTimer *UpdateCameraImageTimer;
 
-    std::condition_variable cv;
-    std::condition_variable saveConditionVariable;
     std::condition_variable cvOffline;
-
-    std::mutex mutexAOI_1;
-    std::mutex mutexAOI_2;
-    std::mutex mutexQuit;
     std::mutex mutexOffline;
-
-    std::string dataDirectory;
-    std::string dataFilename;
 
     // Options menu
 
-    QCheckBox* BeadDetectionCheckBox;
-    QCheckBox *OnlineProcessingCheckBox;
-
     // Interface
 
-    QScrollArea *BeadTrackingScrollArea;
     QScrollArea *AdvancedScrollArea;
 
     // AOIs
 
-    SliderDouble *CamAOIHghtSlider;
-    SliderDouble *CamAOIWdthSlider;
-    SliderDouble *CamAOIXPosSlider;
-    SliderDouble *CamAOIYPosSlider;
-
-    SliderDouble *EyeAOIHghtSlider;
-    SliderDouble *EyeAOIWdthSlider;
-
-    SliderDouble *BeadAOIHghtSlider;
-    SliderDouble *BeadAOIWdthSlider;
-
-    void updateCamAOIx();
-    void updateCamAOIy();
     void updateAOIx();
     void updateAOIy();
-
-    // AOI Flash
-
-    bool checkFlashAOI(AOIProperties&, const AOIProperties&, const AOIProperties&);
-
-    // Camera interface
-
-    QCheckBox *CameraHardwareGainAutoCheckBox;
-    QCheckBox *CameraHardwareGainBoostCheckBox;
-
-    SliderDouble *CameraExposureSlider;
-    SliderDouble *CameraFrameRateSlider;
-
-    // Camera functions and variables
-
-    cv::Mat imageCamera;
-
-    void findCamera();
-    void getCameraParameters();
 
     // Variables and parameters
 
     void resetVariablesHard(detectionVariables&, const detectionParameters&, const AOIProperties&);
     void resetVariablesSoft(detectionVariables&, const detectionParameters&, const AOIProperties&);
 
-    detectionVariables mDetectionVariablesBead;
-    detectionVariables mDetectionVariablesEye;
+    detectionVariables  mDetectionVariablesEye;
+    drawVariables       mDrawVariablesEye;
+    dataVariables       mDataVariablesEye;
 
-    std::vector<detectionVariables> vDetectionVariablesBead;
     std::vector<detectionVariables> vDetectionVariablesEye;
+    std::vector<dataVariables>      vDataVariablesEye;
 
-    std::vector<dataVariables> vDataVariablesEye;
-    std::vector<dataVariables> vDataVariablesBead;
-
-    drawVariables mDrawVariablesEye;
-    dataVariables mDataVariablesEye;
-
-    drawVariables mDrawVariablesBead;
-    dataVariables mDataVariablesBead;
-
-    ParameterWidget *mParameterWidgetBead;
     ParameterWidget *mParameterWidgetEye;
-
-    VariableWidget *mVariableWidgetEye;
-    VariableWidget *mVariableWidgetBead;
+    VariableWidget  *mVariableWidgetEye;
 
     // Saving and loading settings
 
@@ -290,22 +180,12 @@ private:
     void loadSettings(QString);
     void saveSettings(QString);
 
-    // Threads
-
-    void pupilTracking();
-
     // Experimental
 
     bool SAVE_ASPECT_RATIO;
     bool SAVE_CIRCUMFERENCE;
     bool SAVE_POSITION;
     bool SAVE_EYE_IMAGE;
-
-    unsigned long long absoluteTime; // in units of 0.1 microseconds
-    unsigned long long startTime;
-
-    void startTrialRecording();
-    void saveTrialData();
 
     // Offline interface
 
@@ -338,14 +218,7 @@ private:
 
 protected:
 
-    void keyPressEvent(QKeyEvent *event);
-
 signals:
-
-    void startTimer(int);
-    void stopTimer();
-
-    void showPlot();
 
 public slots:
 
@@ -357,7 +230,6 @@ private slots:
     void onDetectAllTrials          ();
     void onDetectCurrentFrame       ();
     void onDialogueOpen             ();
-    void onDirectorySelect          ();
     void onImageNext                ();
     void onImagePrevious            ();
     void onLoadSession              ();
@@ -365,6 +237,7 @@ private slots:
     void onResetParameters          ();
     void onSaveTrialData            ();
     void onSetAdvancedMode          (bool);
+    void onSetCameraFrameRate       (double);
     void onSetDrawEdge              (int);
     void onSetDrawElps              (int);
     void onSetDrawHaar              (int);

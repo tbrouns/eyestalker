@@ -146,6 +146,7 @@ struct detectionVariables
     double certaintyAveragesPrime;
     double certaintyFeaturesPrime;
     double certaintyPositionPrime;
+    double frameRateFactor;
     double momentumAspectRatio;
     double momentumCircumference;
     double momentumHeight;

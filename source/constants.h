@@ -63,16 +63,14 @@ const double initialIntensity    =  60;
 const double initialHaarResponse =   0;
 const double initialGradient     =   0;
 
-// Other
+// Should probably be adjustable parameters
 
 const double fitMinRange      = 0.30;
 const double fitMinEdgeLength = 0.30;
 const double scoreStepSize    = 0.20;
 const double aspectRatioSlope = 154;
 
-const double frameRateOffset = 1.0; // frequency that camera frame-rate should be within (in Hz)
-
-// Functions
+// Can be static constants
 
 const double windowLengthFraction = 0.04;
 const int    windowLengthMin      = 5;
