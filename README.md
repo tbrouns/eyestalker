@@ -37,7 +37,7 @@ You can give the *data* directory any name you wish, but the subdirectories and 
 
 In the GUI, press *Load session* and select the *data* directory. We will now perform pupil detection on the whole data set by clicking *All frames*. The program will run through every image and draw a teal ellipse on the pupil-iris boundary together with a cross which marks the pupil centre, if it has successfully detected the pupil.  The result is immediately visible in the display frame. Once detection is completed, you can move through all the images with the slider (directly to the right of  *Combine*) to see the result for each individual frame. 
 
-In the *trial_0* directory, a new subdirectory will have been created called *processed*, which contains all the processed images for display purposes. Furthermore, there will be a DAT file called *tracking_data.dat* that contains the eye tracking measurements. The DAT file contains a single row of data. The first value gives the number of samples, which is 375 for the sample data set. This is followed by 5 concatenated data vectors, each containing 375 elements. These are:
+In the *trial_0* directory, a new subdirectory will have been created called *processed*, which contains all the processed images for display purposes. Furthermore, there will be a DAT file called *tracking_data.dat* that contains the eye tracking measurements. The DAT file consists of a single row of data. The first value gives the number of samples, which is 375 for the sample data set. This is followed by 5 concatenated data vectors, each having 375 elements. These are:
 1. The first vector comprises of ones and zeroes, indicating whether the pupil was detected in the corresponding camera frame (Yes = 1, No = 0).
 2. Pupil centre x-position in image coordinates (pixels)
 3. Pupil centre y-position in image coordinates (pixels)
@@ -70,6 +70,6 @@ EyeStalker has been built using:
 * Boost, peer-reviewed portable C++ source libraries (http://www.boost.org/).
 * QDarkStyleSheet, a dark stylesheet for Qt applications (https://github.com/ColinDuquesnoy/QDarkStyleSheet)
 
-EyeStalker been deployed using *linuxdeployqt*, available from: https://github.com/probonopd/linuxdeployqt
+EyeStalker has been deployed using *linuxdeployqt*, available from: https://github.com/probonopd/linuxdeployqt
 
 Copyright (C) 2017 Terence Brouns 
