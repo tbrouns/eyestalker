@@ -16,7 +16,7 @@ Will be added soon.
 
 ## Quick start
 
-Follow the install instructions on "Releases" page (https://github.com/tbrouns/eyestalker/releases/latest). After starting up the application, a GUI similar to the one shown above should appear, but without the displayed eye image. To see the eye tracking algorithm in action, we will test it on a sample data set. You can download it from here (*data.zip*):
+Follow the installation instructions on "Releases" page (https://github.com/tbrouns/eyestalker/releases/latest). After starting up the application, a GUI similar to the one shown above should appear, but without the displayed eye image. To see the eye tracking algorithm in action, we will test it on a sample data set. You can download it from here (*data.zip*):
 
 [Download data set here](https://drive.google.com/open?id=0Bw57olSwQ4EbOG9kVTAzUjBtNTA)
 
