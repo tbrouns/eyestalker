@@ -207,15 +207,17 @@ AOIProperties detectGlint(const cv::Mat& img, AOIProperties searchAOI, AOIProper
     int glintRadius = round(0.5 * glintAOI.wdth);
     
     uchar *ptr = img.data;
-    
-    std::vector<double> imageGradient(searchAOI.wdth * searchAOI.hght, 0.0);
-    
+
     std::vector<int> dZ(numDirections);
     dZ[0] = -searchAOI.wdth - 1;
     dZ[1] = -searchAOI.wdth + 1;
     dZ[2] =  searchAOI.wdth + 1;
     dZ[3] =  searchAOI.wdth - 1;
     
+    int glintIndex = 0;
+
+    double responseMax = -std::numeric_limits<double>::max(); // set to minimum double value;
+
     for (int y = gradientWindowLength; y < searchAOI.hght - gradientWindowLength; y++)
     {
         for (int x = gradientWindowLength; x < searchAOI.wdth - gradientWindowLength; x++)
@@ -229,13 +231,16 @@ AOIProperties detectGlint(const cv::Mat& img, AOIProperties searchAOI, AOIProper
             {
                 double surroundSum = 0;
                 for (int m = 0; m < numDirections; m++) { surroundSum += ptr[j + gradientWindowLength * dZ[m]]; }
-                imageGradient[i] = centreIntensity / surroundSum;
+                double response = centreIntensity / surroundSum;
+                if (response > responseMax)
+                {
+                    responseMax = response;
+                    glintIndex  = i;
+                }
             }
         }
     }
-    
-    int glintIndex = std::distance(imageGradient.begin(), std::max_element(imageGradient.begin(), imageGradient.end()));
-    
+
     int x = glintIndex % searchAOI.wdth;
     int y = (glintIndex - x) / searchAOI.wdth;
     
@@ -369,7 +374,7 @@ inline double haarFeatureResponse(int x, int y, const std::vector<unsigned int>&
 
 AOIProperties detectPupilApprox(const std::vector<unsigned int>& I, const  AOIProperties& searchAOI, AOIProperties& haarAOI, const AOIProperties& glintAOI)
 {
-    double responseMax = -std::numeric_limits<double>::max(); // set to maximum double value;
+    double responseMax = -std::numeric_limits<double>::max(); // set to minimum double value;
     
     haarAOI.xPos = 0;
     haarAOI.yPos = 0;

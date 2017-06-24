@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     CameraFrameRateSpinBox->setRange(30, 1000);
     CameraFrameRateSpinBox->setValue(cameraFrameRate);
 
-    QObject::connect(CameraFrameRateSpinBox, SIGNAL(doubleValueChanged(double)), this, SLOT(onSetCameraFrameRate(double)));
+    QObject::connect(CameraFrameRateSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onSetCameraFrameRate(double)));
 
     QHBoxLayout* CameraFrameRateLayout = new QHBoxLayout;
     CameraFrameRateLayout->addWidget(CameraFrameRateTextBox);

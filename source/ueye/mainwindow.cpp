@@ -49,10 +49,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     Parameters::ellipseDrawCrossSize    = 5;
     Parameters::ellipseDrawOutlineWidth = 0.032;
 
-    cameraPixelClock = 24;
-
+    cameraPixelClock   = 24;  // MHz
+    frameRateOffset    = 1.0; // Hz
     frameCount         = 0;
-    guiUpdateFrequency = 30;
+    guiUpdateFrequency = 30;  // Hz
     relativeTime       = 0;
 
     startTime         = 0;

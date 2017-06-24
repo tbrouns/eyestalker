@@ -140,6 +140,7 @@ private:
     double flashDetection(const cv::Mat&);
 
     double cameraFrameRate;
+    double frameRateOffset;
     double flashMinIntensity;
     double guiUpdateFrequency; // refresh frequency of GUI (in Hz)
     double relativeTime;       // in ms
