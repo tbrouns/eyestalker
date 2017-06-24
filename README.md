@@ -56,7 +56,7 @@ More details will be added soon.
 
 ## Build from source
 
-To build the application from source, you must include all the files in the *source* directory as well as the files in the *no-cam* directory. See <b>Third-party libraries</b> for dependencies.
+To build the application from source, you must include all the files in the *source* directory as well as the files in the *no-cam* directory. See <b>Third-party libraries</b> for dependencies. Build with *-DEIGEN_NO_DEBUG* flag for optimization.
 
 The *ueye* subdirectory should be ignored, unless you want to use the eye tracking algorithm in combination with a UEye camera by IDS Imaging Development Systems (Obersulm, Germany). In that case, you must include the files in the *ueye* directory instead of the *no-cam* directory. This is really only relevant for the research department the eye tracking algorithm was originally developed for.
 
