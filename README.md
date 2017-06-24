@@ -2,17 +2,21 @@
 
 Video-based eye tracking is a valuable technique in many research fields. Numerous open-source eye tracking algorithms have been developed in recent years, primarily designed for general application with many different camera types. However, these algorithms do not capitalize on the high frame rate of eye tracking cameras often employed in psychophysical studies. We present a pupil detection method that utilizes this high-speed property to obtain reliable predictions through recursive estimation about certain pupil characteristics in successive camera frames. These predictions are subsequently used to carry out novel image segmentation and classification routines to improve pupil detection performance. Based on results from hand-labelled eye images, our approach was found to have a greater detection rate, accuracy and speed compared to other recently published open-source pupil detection algorithms.
 
-<b>Paper</b>
+## Paper
 
 Will be added soon. 
 
 Novel hand-labelled pupil detection dataset of 5000 images from 12 participants, as mentioned in paper, can be downloaded from [here](https://drive.google.com/open?id=0Bw57olSwQ4EbUWV5ajNKeG93NEk).
 
-<b>GUI Layout</b>
+## Citation
+
+Will be added soon. 
+
+## GUI Layout
 
 ![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
 
-<b>Quick start</b>
+## Quick start
 
 Follow the install instructions on "Releases" page (https://github.com/tbrouns/eyestalker/releases/latest). After starting up the application, a GUI similar to the one shown above should appear, but without the displayed eye image. To see the eye tracking algorithm in action, we will test it on a sample data set. You can download it from here (*data.zip*):
 
@@ -52,17 +56,15 @@ Pressing the *Quit* button will ensure that a *config_user.ini* file is saved in
 
 More details will be added soon.
 
-<b>Citation</b>
+## Build from source
 
-If you use this software, please find the citation here:
+To build the application from source, you must include all the files in the *source* directory as well as the files in the *no-cam* directory. See <b>Third-party libraries</b> for dependencies.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.810494.svg)](https://doi.org/10.5281/zenodo.810494)
+The *ueye* subdirectory should be ignored, unless you want to use the eye tracking algorithm in combination with a UEye camera by IDS Imaging Development Systems (Obersulm, Germany). In that case, you must include the files in the *ueye* directory instead of the *no-cam* directory. This is really only relevant for the research department the eye tracking algorithm was originally developed for.
 
-Or directly for BibTex: https://zenodo.org/record/810494/export/hx
+## Third-party libraries
 
-<b>Third-party libraries</b>
-
-EyeStalker has been built using:
+EyeStalker is built using:
 
 * Qt, cross-platform application framework (The Qt Company, https://www.qt.io/, version 5)
 * OpenCV, open-source computer vision library (Intel Corporation, Itseez Inc., http://opencv.org/)
@@ -72,4 +74,7 @@ EyeStalker has been built using:
 
 EyeStalker has been deployed using *linuxdeployqt*, available from: https://github.com/probonopd/linuxdeployqt
 
-Copyright (C) 2017 Terence Brouns 
+## To do
+
+* Windows release
+* Improve instructions
