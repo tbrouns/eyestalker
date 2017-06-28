@@ -4,11 +4,7 @@ Video-based eye tracking is a valuable technique in many research fields. Numero
 
 ## Paper
 
-Will be added soon. 
-
-## Citation
-
-Will be added soon. 
+Please cite: https://arxiv.org/abs/1706.08189
 
 ## GUI Layout
 
