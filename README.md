@@ -69,8 +69,3 @@ EyeStalker is built using:
 * QDarkStyleSheet, a dark stylesheet for Qt applications (https://github.com/ColinDuquesnoy/QDarkStyleSheet)
 
 EyeStalker has been deployed using *linuxdeployqt*, available from: https://github.com/probonopd/linuxdeployqt
-
-## To do
-
-* Windows release
-* Improve instructions
