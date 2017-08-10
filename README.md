@@ -8,7 +8,7 @@ Please cite: https://arxiv.org/abs/1706.08189
 
 ## GUI Layout
 
-![alt text](https://cloud.githubusercontent.com/assets/10850074/26767383/ef50d9d2-499f-11e7-858e-4c08660d4b82.png)
+![alt text](https://user-images.githubusercontent.com/10850074/29176713-ee4bad74-7dec-11e7-99e8-88550aba6396.png)
 
 ## Quick start
 
