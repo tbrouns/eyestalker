@@ -48,7 +48,9 @@ If you select *Box* and *Edges*, the Haar-like feature detector and Canny edges 
 
 Pressing the *Quit* button will ensure that a *config_user.ini* file is saved in the same directory as the AppImage, which contains your current parameter configuration. This INI file is automatically loaded next time you start the application. To reset all parameters you can remove the INI file and restart the application or press the *Reset parameters* button. 
 
-More details will be added soon.
+## Manual
+
+[Download manual here](https://drive.google.com/open?id=0Bw57olSwQ4Eba0hrSV92VGlxM1k)
 
 ## Build from source
 
