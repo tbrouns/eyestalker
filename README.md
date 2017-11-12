@@ -4,7 +4,23 @@ Video-based eye tracking is a valuable technique in many research fields. Numero
 
 ## Paper
 
-Please cite: https://arxiv.org/abs/1706.08189
+Please cite the following paper: https://arxiv.org/abs/1706.08189
+
+Biblatex format:
+
+```
+@article{brouns2017robust,
+	author = {Brouns, Terence},
+	title = "{Robust Video-Based Eye Tracking Using Recursive Estimation of Pupil Characteristics}",
+	journal = {ArXiv e-prints},
+	archivePrefix = "arXiv",
+	eprint = {1706.08189},
+	primaryClass = "cs.CV",
+	keywords = {Computer Science - Computer Vision and Pattern Recognition},
+	year = 2017,
+	month = jun,
+}
+```
 
 ## GUI Layout
 
